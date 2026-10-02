@@ -1,0 +1,36 @@
+# Локальные файлы ОС и редакторов
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Flutter/Dart: правила действуют во всех приложениях monorepo
+.dart_tool/
+.pub-cache/
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+.widget_preview/
+**/build/
+**/coverage/
+**/doc/api/
+*.symbols
+app.*.map.json
+
+# Локальные SDK, signing и секреты
+**/local.properties
+**/key.properties
+*.jks
+*.keystore
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/*service-account*.json
+
+# Generated-файлы дополнительно исключаются в apps/mobile/*/.gitignore.
+# pubspec.lock отслеживается для воспроизводимых зависимостей приложения.
