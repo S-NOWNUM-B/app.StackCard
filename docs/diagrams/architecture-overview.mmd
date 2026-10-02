@@ -1,0 +1,15 @@
+flowchart LR
+    Owner["Владелец портфолио"]
+    Visitor["Посетитель"]
+    Mobile["Flutter mobile<br/>Android / iOS"]
+    Web["Next.js web<br/>главная, скачивание, редактор, портфолио"]
+    Firebase["Firebase<br/>Auth / Firestore / Storage"]
+    GitHub["GitHub REST API<br/>публичные данные"]
+
+    Owner --> Mobile
+    Owner --> Web
+    Visitor --> Web
+    Mobile <-->|"draft / sync"| Firebase
+    Web <-->|"draft / published"| Firebase
+    GitHub -->|"импорт / предложения"| Mobile
+    GitHub -->|"импорт / предложения"| Web

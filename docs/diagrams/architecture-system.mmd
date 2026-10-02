@@ -1,0 +1,45 @@
+flowchart LR
+    Owner["Владелец портфолио"]
+    Visitor["Посетитель"]
+    GitHub["GitHub REST API<br/>public metadata"]
+
+    subgraph Mobile["apps/mobile · Flutter"]
+        MobileEditor["Редактор Android / iOS"]
+        LocalDraft[("Локальный draft / cache")]
+        MobileEditor <--> LocalDraft
+    end
+
+    subgraph Web["apps/web · Next.js · план"]
+        Site["Главная / download"]
+        AuthPages["Вход / регистрация"]
+        WebEditor["Защищённый кабинет / редактор"]
+        PublicPage["Публичное портфолио<br/>/u/username"]
+    end
+
+    subgraph Backend["Firebase · план"]
+        Auth["Firebase Auth"]
+        Draft[("Firestore<br/>private account / draft")]
+        Publish["Явная публикация<br/>owner checks / validation"]
+        Snapshot[("Firestore<br/>published snapshot")]
+        Storage["Storage<br/>portfolio media"]
+    end
+
+    Owner --> MobileEditor
+    Owner --> AuthPages
+    AuthPages --> WebEditor
+    Visitor --> Site
+    Visitor --> PublicPage
+    MobileEditor <--> Auth
+    AuthPages --> Auth
+    WebEditor <--> Auth
+    MobileEditor <-->|"draft / sync"| Draft
+    WebEditor <-->|"draft / save"| Draft
+    MobileEditor -->|"publish action"| Publish
+    WebEditor -->|"publish action"| Publish
+    Draft -->|"одобренные данные"| Publish
+    Publish --> Snapshot
+    Snapshot --> PublicPage
+    MobileEditor <--> Storage
+    WebEditor <--> Storage
+    GitHub -->|"импорт / предложения"| MobileEditor
+    GitHub -->|"импорт / предложения"| WebEditor
