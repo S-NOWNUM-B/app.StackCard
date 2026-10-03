@@ -5,7 +5,7 @@
 **Эволюция темы и границы Provider/Riverpod в мобильном приложении**
 
 ![Learning state management](https://raster.shields.io/badge/Learning-state_management-09090B?style=for-the-badge)
-![Scope Phase 2](https://raster.shields.io/badge/Scope-Phase_2-FF0012?style=for-the-badge)
+![Scope Phases 2–4](https://raster.shields.io/badge/Scope-Phases_2--4-FF0012?style=for-the-badge)
 
 </div>
 
@@ -17,6 +17,8 @@
 - [Переходы темы](#переходы-темы)
 - [Итоговые владельцы состояния](#итоговые-владельцы-состояния)
 - [Почему поиск проектов использует Riverpod](#почему-поиск-проектов-использует-riverpod)
+- [Repository и DI на Phase 3](#repository-и-di-на-phase-3)
+- [GitHub Import на Phase 4](#github-import-на-phase-4)
 - [Воспроизведение учебных вариантов](#воспроизведение-учебных-вариантов)
 - [Проверки и ограничения](#проверки-и-ограничения)
 
@@ -128,7 +130,15 @@ Theme закономерно обновляет использующие её wi
 |:---|:---|
 | ThemeMode | AppearanceController через Provider, app session |
 | Query и выбранный фильтр Projects | ProjectFiltersNotifier через Riverpod, app session |
-| Отфильтрованный список | visibleDemoProjectsProvider, вычисляется из query/filter и mock data |
+| Полный список проектов и профиль | projectsProvider/profileProvider, async repository state в app session |
+| Отфильтрованный список | visibleProjectsProvider, AsyncValue из query/filter и полного списка |
+| Featured проекты | featuredProjectsProvider и pure selectFeaturedProjects, независимы от поиска |
+| Demo-session и действие входа | AuthController через AsyncNotifier, repository вызывается через DI |
+| Home/Portfolio/preview данные | PortfolioOverview в presentation объединяет публичные profile/projects states |
+| GitHub username, профиль, repositories и loading/error flags | GitHubImportController через autoDispose Notifier, время жизни экрана GitHub Import |
+| GitHub query и фильтр | Immutable GitHubImportState; controller применяет локальный query после debounce 300 ms |
+| GitHub repository и rate-limit deadline | DioGitHubImportRepository через feature-root DI, app session; уход с экрана не сбрасывает deadline |
+| GitHub ETag response cache | MemoryGitHubResponseCache через feature-root DI, app session; только online conditional requests |
 | Редактируемый текст поля | TextEditingController экрана, синхронизируется с query |
 | Form validation и preview loading/empty/error | Локальное UI-состояние соответствующего экрана |
 | GoRouter | State корневого приложения, disposal при закрытии дерева |
@@ -146,32 +156,116 @@ ThemeMode: Locale будет добавлен вместе с переводам
 
 Поиск и фильтры — существующий пользовательский сценарий Projects, а не
 абстракция будущего backend. До Phase 2 widget одновременно хранил query/filter
-и вычислял список. Теперь
-[`project_filters.dart`](../../apps/mobile/lib/features/projects/project_filters.dart)
-задаёт immutable `ProjectFilters`, действия `ProjectFiltersNotifier`
-и `visibleDemoProjectsProvider`.
+и вычислял список. Phase 2 ввела immutable state и Notifier; Phase 3 разделила
+[`ProjectFilters`](../../apps/mobile/lib/features/projects/domain/project_filters.dart)
+и правила отбора в pure Dart domain,
+[`ProjectFiltersNotifier`](../../apps/mobile/lib/features/projects/presentation/project_filters.dart)
+в presentation и async derived providers в feature composition.
 
 ```dart
 final filters = ref.watch(projectFiltersProvider);
-final projects = ref.watch(visibleDemoProjectsProvider);
+final projects = ref.watch(visibleProjectsProvider);
 
 // В обработчике поля:
 ref.read(projectFiltersProvider.notifier).setQuery(value);
 ```
 
 Каждое действие заменяет immutable state; derived provider наблюдает его через
-[`ref.watch`](https://riverpod.dev/docs/concepts2/refs) и возвращает неизменяемый список результатов. Список не копируется
+[`ref.watch`](https://riverpod.dev/docs/concepts2/refs) и возвращает `AsyncValue` с неизменяемым списком результатов через `whenData`. Список не копируется
 во второе mutable поле. Правила поиска проверяются через
 [ProviderContainer](https://riverpod.dev/docs/concepts2/containers)
-без BuildContext; widget отвечает за отображение, input controller и действия.
+без BuildContext; pure domain rules проверяются отдельно. Widget отвечает
+за отображение AsyncValue, input controller и действия.
 Рекомендуемый синхронный API —
 [Notifier/NotifierProvider](https://riverpod.dev/docs/concepts2/providers).
 
 Providers не используют `autoDispose`: при переходе в другой экран фильтры
 сохраняются в текущем ProviderScope. При пересоздании приложения container
 создаётся заново, фильтры возвращаются к исходным. Ни Provider, ни Riverpod
-не добавляют persistence сами; оно относится к Phase 5. Repository/data layers,
-network и расширение архитектуры относятся к следующим фазам.
+не добавляют persistence сами; оно относится к Phase 5. Repository/data layers
+реализованы на Phase 3. Phase 4 добавила network в отдельную GitHub Import feature;
+Projects по-прежнему показывает curated demo-данные через свой repository.
+
+---
+
+## Repository и DI на Phase 3
+
+Riverpod связывает используемые repository contracts с demo/mock реализациями.
+Feature-root `auth_providers.dart`, `profile_dependencies.dart` и
+`projects_providers.dart` владеют DI; widgets используют controller/providers и
+domain, не concrete repositories. Между features импортируются публичные APIs.
+
+`FutureProvider` загружает Profile и список Project; `AsyncNotifier` выполняет
+`AuthRepository.openDemo`. `AsyncValue` распространяет loading/error/data;
+shared widgets показывают ожидание, ошибку и явный retry. Смена query/filter
+вычисляет новый вид списка и не повторяет repository запрос.
+`featuredProjectsProvider` и `PortfolioOverview` используют полный список:
+поиск в Projects не меняет карточки Home, Portfolio или preview.
+
+```dart
+StackCardApp(
+  providerOverrides: [
+    projectsRepositoryProvider.overrideWithValue(alternativeRepository),
+  ],
+)
+```
+
+`alternativeRepository` реализует pure Dart `ProjectsRepository`.
+`providerOverrides` поступает во внутренний `ProviderScope`; тест видит другой
+источник на реальном экране. Это DI, а не второе mutable состояние продукта.
+Provider остаётся владельцем простой темы через widget tree, Riverpod — владельцем
+product state, асинхронных действий и repository composition. Два механизма
+не конкурируют за одно значение.
+
+Модель ProfileReadiness содержит demo-snapshot счётчиков, PortfolioOverview —
+модель чтения presentation. Full Builder, алгоритм полноты и draft/published
+контракты вводятся на своих фазах; Repository сам по себе не реализует их.
+
+---
+
+## GitHub Import на Phase 4
+
+[`GitHubImportState`](../../apps/mobile/lib/features/github_import/presentation/github_import_state.dart)
+хранит username, профиль, immutable repositories, nextPage, query/filter и
+отдельные flags initial loading, refreshing и loadingMore. Главная failure и
+pageFailure позволяют показать ошибку запроса рядом с сохранёнными карточками.
+`visibleRepositories` использует pure domain filter по загруженному списку.
+
+[`GitHubImportController`](../../apps/mobile/lib/features/github_import/presentation/github_import_controller.dart)
+публикует новый профиль вместе с первой страницей только после успеха обоих
+запросов. Refresh сохраняет query/filter и прежний успешный список до получения
+новых данных; его ошибка оставляет список доступным. Load more объединяет
+repositories по стабильному ID, не создавая дублей. Новый username очищает
+прошлые данные, поиск и фильтр; некорректный username не вызывает HTTP.
+
+Ввод username отправляется формой. `setQuery` откладывает изменение query на
+300 ms, не обращаясь к API; `setFilter` применяет локальный отбор. Controller
+не запускает одинаковое действие одновременно. Refresh может заменить
+незавершённую pagination; generation guards и `ref.mounted` предотвращают
+запись позднего ответа. `autoDispose` отменяет запросы и timer при уходе с экрана.
+Это отличается от app-session фильтров Projects, которые сохраняются при навигации.
+
+[`github_import_providers.dart`](../../apps/mobile/lib/features/github_import/github_import_providers.dart)
+связывает pure `GitHubImportRepository` с Dio-реализацией, clock и response cache.
+DTO mapping, HTTP timeout, проверка Link origin/user path и conditional ETag
+requests принадлежат data. Публичный
+[`github_import.dart`](../../apps/mobile/lib/features/github_import/github_import.dart)
+предоставляет contract для router, экрана и provider overrides; widgets не
+импортируют concrete repository или DTO.
+
+`GitHubFailure` различает invalid username, not found, network, timeout, rate
+limit, forbidden, server, invalid response и cancellation. Retry выполняется
+явно; failure с будущим `retryAt` блокирует новый HTTP до deadline. Отмена
+запроса не отображается как пользовательская ошибка. Initial и refresh ошибки
+повторяются через `retry`, page error — через `loadMore`.
+
+Memory cache хранит сериализованный ответ, ETag и Link по request URI. После
+`304` data использует проверенные cached metadata; при ошибке сети cache не
+подменяет ответ offline-данными. Cache и repository живут в app session;
+закрытие экрана освобождает controller, сохраняя rate-limit deadline источника.
+Persistence и TTL относятся к Phase 5; прочитанные GitHub
+данные пока не изменяют curated portfolio или draft. Тема продолжает принадлежать
+Provider и не зависит от network state.
 
 ---
 
@@ -179,7 +273,8 @@ network и расширение архитектуры относятся к с�
 
 Patches преобразуют итоговую Provider-версию темы в один учебный вариант.
 Применяй каждый patch независимо к новой временной копии итогового проекта.
-Остальное состояние продукта остаётся на Riverpod. Рабочий checkout сохраняет
+Repository/DI, `StackCardApp.providerOverrides`, асинхронный профиль Settings,
+GitHub Import и остальное состояние продукта остаются на Riverpod. Рабочий checkout сохраняет
 итоговую реализацию; `git restore` и переключение веток для урока не нужны.
 
 macOS — zsh/bash, из корня репозитория; нужны Git, rsync, Flutter и уже
@@ -207,11 +302,20 @@ flutter run -d <device-id>
 
 ## Проверки и ограничения
 
+На Phase 3 оба patches согласованы с текущими feature APIs и
+`StackCardApp.providerOverrides`. Каждый прошёл `git apply --check` в независимой
+временной копии полного проекта, затем пять tests из `test/widget_test.dart`.
+Проверены demo-вход, навигация, поиск/детали Projects, смена темы со states/retry
+и клавиатура; async profile в Settings и Repository/DI сохранены.
+
 Промежуточная InheritedWidget-версия действительно выполнялась: пять tests
 из `test/widget_test.dart` прошли, включая переключение темы и навигацию.
 Итоговые проверки контроллера, Riverpod state, UI и реконструкции этапов,
 результаты запуска и ограничения среды фиксируются в
 [product spec](../product/product-spec.md#phase-2--basic-state-management).
 
-Этапы сравнивают одинаковый theme сценарий. Общий mock content и оформление
-сохранены; данные не синхронизируются с сетью и не сохраняются на диск.
+Этапы сравнивают одинаковый theme сценарий. Учебные patches меняют только
+механизм темы; demo/mock портфолио и отдельный network state GitHub Import
+сохраняются. ThemeMode, query/filter и GitHub response cache не сохраняются
+на диск. Итоговый статус GitHub API и проверки текущего приложения — в
+[product spec](../product/product-spec.md#phase-4--github-api).

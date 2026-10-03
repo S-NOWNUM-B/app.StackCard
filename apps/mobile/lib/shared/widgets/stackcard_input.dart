@@ -8,6 +8,7 @@ class StackCardInput extends StatelessWidget {
     this.controller,
     this.onChanged,
     this.validator,
+    this.enabled = true,
     this.prefixIcon,
     this.keyboardType,
     this.textInputAction,
@@ -21,6 +22,7 @@ class StackCardInput extends StatelessWidget {
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
   final FormFieldValidator<String>? validator;
+  final bool enabled;
   final IconData? prefixIcon;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
@@ -34,6 +36,7 @@ class StackCardInput extends StatelessWidget {
       controller: controller,
       onChanged: onChanged,
       validator: validator,
+      enabled: enabled,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       onFieldSubmitted: onFieldSubmitted,

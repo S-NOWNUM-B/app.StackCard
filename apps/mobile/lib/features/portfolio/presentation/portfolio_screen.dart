@@ -1,13 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/stackcard_colors.dart';
-import '../../core/theme/stackcard_tokens.dart';
-import '../../shared/mock_portfolio.dart';
-import '../../shared/widgets/stackcard_button.dart';
-import '../../shared/widgets/stackcard_card.dart';
+import '../../../core/theme/stackcard_colors.dart';
+import '../../../core/theme/stackcard_tokens.dart';
+import '../../profile/profile.dart';
+import '../../projects/projects.dart';
+import 'portfolio_overview.dart';
+import '../../../shared/widgets/stackcard_async_view.dart';
+import '../../../shared/widgets/stackcard_button.dart';
+import '../../../shared/widgets/stackcard_card.dart';
 
-class PortfolioScreen extends StatelessWidget {
+class PortfolioScreen extends ConsumerWidget {
   const PortfolioScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => StackCardAsyncView(
+    state: ref.watch(portfolioOverviewProvider),
+    onRetry: () {
+      ref.invalidate(profileProvider);
+      ref.invalidate(projectsProvider);
+    },
+    data: (overview) => _PortfolioContent(overview: overview),
+  );
+}
+
+class _PortfolioContent extends StatelessWidget {
+  const _PortfolioContent({required this.overview});
+
+  final PortfolioOverview overview;
 
   @override
   Widget build(BuildContext context) {
@@ -47,15 +67,21 @@ class PortfolioScreen extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Expanded(flex: 7, child: _ProfileCard()),
+                        Expanded(
+                          flex: 7,
+                          child: _ProfileCard(profile: overview.profile),
+                        ),
                         const SizedBox(width: StackCardSpacing.lg),
-                        Expanded(flex: 4, child: _DraftCard()),
+                        Expanded(
+                          flex: 4,
+                          child: _DraftCard(overview: overview),
+                        ),
                       ],
                     )
                   else ...[
-                    const _ProfileCard(),
+                    _ProfileCard(profile: overview.profile),
                     const SizedBox(height: StackCardSpacing.lg),
-                    _DraftCard(),
+                    _DraftCard(overview: overview),
                   ],
                   const SizedBox(height: StackCardSpacing.xl),
                   Text(
@@ -64,27 +90,29 @@ class PortfolioScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: StackCardSpacing.lg),
                   if (wide)
-                    const Row(
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           flex: 7,
                           child: Column(
                             children: [
-                              _AboutCard(),
+                              _AboutCard(profile: overview.profile),
                               SizedBox(height: StackCardSpacing.lg),
-                              _FeaturedCard(),
+                              _FeaturedCard(
+                                projects: overview.featuredProjects,
+                              ),
                             ],
                           ),
                         ),
-                        SizedBox(width: StackCardSpacing.lg),
+                        const SizedBox(width: StackCardSpacing.lg),
                         Expanded(
                           flex: 4,
                           child: Column(
                             children: [
-                              _SkillsCard(),
+                              _SkillsCard(profile: overview.profile),
                               SizedBox(height: StackCardSpacing.lg),
-                              _StoryCard(),
+                              _StoryCard(profile: overview.profile),
                               SizedBox(height: StackCardSpacing.lg),
                               _LinksCard(),
                             ],
@@ -93,13 +121,13 @@ class PortfolioScreen extends StatelessWidget {
                       ],
                     )
                   else ...[
-                    const _AboutCard(),
+                    _AboutCard(profile: overview.profile),
                     const SizedBox(height: StackCardSpacing.lg),
-                    const _SkillsCard(),
+                    _SkillsCard(profile: overview.profile),
                     const SizedBox(height: StackCardSpacing.lg),
-                    const _FeaturedCard(),
+                    _FeaturedCard(projects: overview.featuredProjects),
                     const SizedBox(height: StackCardSpacing.lg),
-                    const _StoryCard(),
+                    _StoryCard(profile: overview.profile),
                     const SizedBox(height: StackCardSpacing.lg),
                     const _LinksCard(),
                   ],
@@ -122,7 +150,9 @@ class PortfolioScreen extends StatelessWidget {
 }
 
 class _ProfileCard extends StatelessWidget {
-  const _ProfileCard();
+  const _ProfileCard({required this.profile});
+
+  final Profile profile;
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +173,7 @@ class _ProfileCard extends StatelessWidget {
                   border: Border.all(color: context.colors.border),
                 ),
                 child: Text(
-                  DemoPortfolio.initials,
+                  profile.initials,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
@@ -153,12 +183,12 @@ class _ProfileCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      DemoPortfolio.name,
+                      profile.name,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: StackCardSpacing.xs),
                     Text(
-                      '@${DemoPortfolio.handle}',
+                      '@${profile.handle}',
                       style: Theme.of(context).textTheme.bodyMedium
                           ?.copyWith(color: context.colors.textSecondary),
                     ),
@@ -168,10 +198,7 @@ class _ProfileCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: StackCardSpacing.xl),
-          Text(
-            DemoPortfolio.role,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(profile.role, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: StackCardSpacing.md),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,7 +211,7 @@ class _ProfileCard extends StatelessWidget {
               const SizedBox(width: StackCardSpacing.sm),
               Expanded(
                 child: Text(
-                  DemoPortfolio.location,
+                  profile.location,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
@@ -208,6 +235,9 @@ class _ProfileCard extends StatelessWidget {
 }
 
 class _DraftCard extends StatelessWidget {
+  const _DraftCard({required this.overview});
+
+  final PortfolioOverview overview;
   @override
   Widget build(BuildContext context) {
     return StackCardCard(
@@ -243,7 +273,7 @@ class _DraftCard extends StatelessWidget {
             label: 'Предпросмотр',
             icon: Icons.visibility_outlined,
             primary: true,
-            onPressed: () => _showPreview(context),
+            onPressed: () => _showPreview(context, overview),
           ),
           const SizedBox(height: StackCardSpacing.md),
           Text(
@@ -258,7 +288,9 @@ class _DraftCard extends StatelessWidget {
 }
 
 class _AboutCard extends StatelessWidget {
-  const _AboutCard();
+  const _AboutCard({required this.profile});
+
+  final Profile profile;
 
   @override
   Widget build(BuildContext context) {
@@ -268,10 +300,7 @@ class _AboutCard extends StatelessWidget {
         children: [
           Text('01 / Обо мне', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: StackCardSpacing.lg),
-          Text(
-            DemoPortfolio.about,
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+          Text(profile.about, style: Theme.of(context).textTheme.bodyLarge),
         ],
       ),
     );
@@ -279,7 +308,9 @@ class _AboutCard extends StatelessWidget {
 }
 
 class _SkillsCard extends StatelessWidget {
-  const _SkillsCard();
+  const _SkillsCard({required this.profile});
+
+  final Profile profile;
 
   @override
   Widget build(BuildContext context) {
@@ -293,7 +324,7 @@ class _SkillsCard extends StatelessWidget {
             spacing: StackCardSpacing.sm,
             runSpacing: StackCardSpacing.sm,
             children: [
-              for (final skill in DemoPortfolio.skills)
+              for (final skill in profile.skills)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: StackCardSpacing.md,
@@ -318,7 +349,9 @@ class _SkillsCard extends StatelessWidget {
 }
 
 class _FeaturedCard extends StatelessWidget {
-  const _FeaturedCard();
+  const _FeaturedCard({required this.projects});
+
+  final List<Project> projects;
 
   @override
   Widget build(BuildContext context) {
@@ -331,9 +364,7 @@ class _FeaturedCard extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: StackCardSpacing.lg),
-          for (final project in DemoPortfolio.projects.where(
-            (project) => project.featured,
-          ))
+          for (final project in projects)
             Padding(
               padding: const EdgeInsets.only(bottom: StackCardSpacing.lg),
               child: Row(
@@ -382,7 +413,9 @@ class _FeaturedCard extends StatelessWidget {
 }
 
 class _StoryCard extends StatelessWidget {
-  const _StoryCard();
+  const _StoryCard({required this.profile});
+
+  final Profile profile;
 
   @override
   Widget build(BuildContext context) {
@@ -395,30 +428,34 @@ class _StoryCard extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: StackCardSpacing.lg),
-          Text(
-            'Frontend Developer',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: StackCardSpacing.xs),
-          Text(
-            'Studio Example · 2024–2026',
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: context.colors.textSecondary),
-          ),
-          const SizedBox(height: StackCardSpacing.lg),
-          Divider(color: context.colors.borderSubtle),
-          const SizedBox(height: StackCardSpacing.lg),
-          Text(
-            'Software Engineering',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: StackCardSpacing.xs),
-          Text(
-            'Пример учебного профиля · 2023–2027',
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: context.colors.textSecondary),
-          ),
-          const SizedBox(height: StackCardSpacing.lg),
+          if (profile.experience != null) ...[
+            Text(
+              profile.experience!.title,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: StackCardSpacing.xs),
+            Text(
+              profile.experience!.details,
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: context.colors.textSecondary),
+            ),
+            const SizedBox(height: StackCardSpacing.lg),
+            Divider(color: context.colors.borderSubtle),
+            const SizedBox(height: StackCardSpacing.lg),
+          ],
+          if (profile.education != null) ...[
+            Text(
+              profile.education!.title,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: StackCardSpacing.xs),
+            Text(
+              profile.education!.details,
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: context.colors.textSecondary),
+            ),
+            const SizedBox(height: StackCardSpacing.lg),
+          ],
           Text(
             'Все записи в этом блоке демонстрационные.',
             style: Theme.of(context).textTheme.bodySmall
@@ -468,7 +505,7 @@ class _LinksCard extends StatelessWidget {
   }
 }
 
-void _showPreview(BuildContext context) {
+void _showPreview(BuildContext context, PortfolioOverview overview) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -498,15 +535,15 @@ void _showPreview(BuildContext context) {
                   ?.copyWith(color: context.colors.textSecondary),
             ),
             const SizedBox(height: StackCardSpacing.xl),
-            const _ProfileCard(),
+            _ProfileCard(profile: overview.profile),
             const SizedBox(height: StackCardSpacing.lg),
-            const _AboutCard(),
+            _AboutCard(profile: overview.profile),
             const SizedBox(height: StackCardSpacing.lg),
-            const _SkillsCard(),
+            _SkillsCard(profile: overview.profile),
             const SizedBox(height: StackCardSpacing.lg),
-            const _FeaturedCard(),
+            _FeaturedCard(projects: overview.featuredProjects),
             const SizedBox(height: StackCardSpacing.lg),
-            const _StoryCard(),
+            _StoryCard(profile: overview.profile),
             const SizedBox(height: StackCardSpacing.lg),
             const _LinksCard(),
             const SizedBox(height: StackCardSpacing.xl),

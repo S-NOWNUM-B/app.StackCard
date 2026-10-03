@@ -4,7 +4,7 @@
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage Phase 2](https://raster.shields.io/badge/Stage-Phase_2-111111?style=for-the-badge)
+![Stage Phase 3](https://raster.shields.io/badge/Stage-Phase_3-111111?style=for-the-badge)
 ![Mobile + Web planned](https://raster.shields.io/badge/Mobile_%2B_Web-planned-FF0012?style=for-the-badge)
 
 </div>
@@ -37,6 +37,11 @@ debug APK собран и запущен на Android-эмуляторе, изм
 По следующему поручению выполнена **Phase 2: Basic state management**:
 эволюция темы `setState → InheritedWidget → Provider`, Riverpod для поиска/фильтров
 Projects и воспроизводимые учебные этапы вне рабочего кода.
+По текущему поручению завершена **Phase 3: Architecture**: features
+auth/profile/projects разделены на `presentation/domain/data`, Repository
+contracts и Riverpod DI позволяют заменять демонстрационные источники.
+Результаты проверок и Android-запуска зафиксированы в
+[разделе Phase 3](#phase-3--architecture).
 Этот документ отделяет реализованный интерфейс от целевых функций.
 Flutter-приложение находится в `apps/mobile`; в `apps/web`
 сейчас только README. Remote `origin` уже подключён; `main` отслеживает `origin/main`.
@@ -49,9 +54,12 @@ Commit и push выполняются только по запросу поль�
 
 Приложение использует демонстрационные данные: Firebase, GitHub API, web,
 сохранение, редактирование и публикация ещё не подключены. Тема принадлежит
-AppearanceController через Provider; поиск/фильтры Projects — Riverpod.
-Выбор сохраняется между экранами только в текущей app session. Дальнейшая работа
-ведётся в `dev`; переход к Phase 3 требует отдельного поручения пользователя.
+AppearanceController через Provider; demo-вход, загрузка профиля/проектов
+и query/filter state — Riverpod. Home, Portfolio и идентичность в Settings читают
+один профиль через Repository; предпросмотр использует данные того же источника.
+Выбор сохраняется между экранами только в текущей app session. Текущее поручение
+расширено до Phase 4 прямым поручением пользователя. GitHub API реализуется
+в отдельном GitHub Import; Phase 5 и последующие этапы пока не разрешены.
 
 ---
 
@@ -333,10 +341,10 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 web-редактор и публичные портфолио. Этот раздел владеет roadmap; технические решения
 подробно фиксируются в architecture и ADR, команды — в CONTRIBUTING.
 
-**Phase 0–2 завершены:** основа, UI foundation и basic state management проверены;
+**Phase 0–3 завершены:** основа, UI, состояние и архитектура проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
-Текущее поручение ограничено Phase 2. Фазы 3–20 остаются планом;
-дальнейшая разработка ведётся в `dev` после отдельного поручения пользователя.
+Текущее поручение — Phase 4: отдельный GitHub Import. Фазы 5–20 остаются
+планом и требуют отдельного поручения пользователя.
 
 Чекбокс `- [x]` означает подтверждённый результат, `- [ ]` — оставшуюся задачу
 или непроверенный сценарий. При отметке проверки рядом фиксируются результат
@@ -349,8 +357,8 @@ web-редактор и публичные портфолио. Этот разд
 | Phase 0 — Product foundation | Завершена; код, документы и нативный запуск на Android проверены |
 | Phase 1 — UI foundation | Завершена; UI, темы, навигация и mock-сценарии проверены |
 | Phase 2 — Basic state management | Завершена; три этапа темы, итоговый Provider и Riverpod state проверены |
-| Phase 3 — Architecture | Запланирована |
-| Phase 4 — GitHub API | Запланирована |
+| Phase 3 — Architecture | Завершена; Repository/DI, чистый domain, UI и Android-запуск проверены |
+| Phase 4 — GitHub API | В работе; переход подтверждён пользователем |
 | Phase 5 — Local persistence / offline | Запланирована |
 | Phase 6 — Portfolio domain и локальный Builder | Запланирована |
 | Phase 7 — Firebase authentication | Запланирована |
@@ -559,21 +567,65 @@ web-редактор и публичные портфолио. Этот разд
 
 **Задачи**
 
-- [ ] Разделить существующие auth/profile/projects сценарии на features с
+- [x] Разделить существующие auth/profile/projects сценарии на features с
   `presentation/domain/data`, Repository pattern и Riverpod dependency injection.
-- [ ] Убрать бизнес-правила из widgets; domain не связывать с Flutter, Dio, Hive
+- [x] Убрать бизнес-правила из widgets; domain не связывать с Flutter, Dio, Hive
   или Firebase. Mock-реализации пока остаются источником данных.
-- [ ] Создавать UseCase/DataSource только под содержательную логику или источник.
-  Обновить architecture и обоснование Provider/Riverpod в документации.
+- [x] Ограничить слои текущими сценариями: отдельные UseCase/DataSource для
+  демонстрационных источников не потребовались.
+- [x] Завершить синхронизацию architecture и обоснования Provider/Riverpod
+  с итоговой реализацией и результатами приёмки.
 
 **Проверки и приёмка**
 
-- [ ] UI получает данные через Repository и Riverpod DI; смена mock-источника
+- [x] UI получает данные через Repository и Riverpod DI; смена mock-источника
   не требует переписывать widgets.
-- [ ] Domain не зависит от Flutter, Dio, Hive или Firebase; бизнес-правила
+- [x] Domain не зависит от Flutter, Dio, Hive или Firebase; бизнес-правила
   вынесены из widgets, пустые слои не созданы.
-- [ ] Существующие сценарии и значимые tests проходят; architecture и
-  обоснование state management согласованы с кодом.
+- [x] Существующие сценарии и значимые tests проходят; architecture и
+  обоснование state management согласованы с кодом; Android-сценарии подтверждены.
+
+**Реализовано и проверено в Phase 3 — 3 октября 2026**
+
+- Публичные API `auth.dart`, `profile.dart` и `projects.dart` объединяют
+  используемые модели, Repository contracts и presentation/providers каждой
+  feature. Domain содержит правила email, выбора проектов и демонстрационный
+  снимок готовности профиля; data владеет mock-реализациями. Общий
+  `shared/mock_portfolio.dart` удалён, widgets получают модели через DI.
+- `AuthController` открывает демо через `AuthRepository`: pending блокирует
+  форму, ошибка позволяет повторить действие, навигация выполняется после
+  успеха. Email нормализуется в `DemoSession` внутри app session; постоянное
+  хранение и настоящая авторизация появятся в соответствующих фазах.
+- `ProfileRepository` и `ProjectsRepository` доступны через Riverpod
+  FutureProvider. Home и Portfolio используют общий `PortfolioOverview`,
+  Settings читает идентичность из того же profile state. Поиск/фильтры Projects
+  остаются независимым Notifier; выбор featured не зависит от фильтра экрана.
+  Loading/error/retry используют общий UI-компонент, ожидание повторного
+  запроса заменяет прежнюю ошибку состоянием загрузки.
+- Замена источников проверяется Repository/DI tests, включая форму входа,
+  loading/error/retry, альтернативный профиль и проекты в Home, Portfolio
+  и предпросмотре. Domain остаётся чистым Dart; новых зависимостей,
+  network, persistence и сервисов будущих фаз не добавлено. Полный Portfolio
+  domain, правила заполнения и локальный Builder остаются задачами Phase 6.
+- `flutter pub get --offline` прошёл; manifest и lockfile не изменились.
+  Итоговый format: 50 Dart-файлов, без изменений; `flutter analyze --no-pub` —
+  без замечаний. Полный suite — **142 tests**, включая подмену Repository
+  в реальных widgets, loading/error/empty/retry, pending повторной загрузки,
+  навигацию и неизменяемость моделей. **40 golden-сравнений** с сохранёнными
+  PNG прошли без обновления снимков; палитра и компоновка Phase 1 сохранены.
+- Android debug APK собран и запущен на `main_phone` (arm64). UI hierarchy
+  и снимки подтверждают demo-вход, загрузку Home/Projects, поиск `React`
+  → один Readme Studio, Portfolio Preview с отметкой неопубликованного draft,
+  единый профиль в Settings и переключение в light mode. Снимки просмотрены.
+- `flutter doctor -v`: Xcode неполный, CocoaPods отсутствует; iOS не проверен.
+  Android cmdline-tools и подтверждение лицензий по-прежнему отсутствуют,
+  хотя debug сборка и запуск прошли. Domain imports проверены: зависимостей
+  от Flutter/Riverpod/data/presentation нет. Widgets не импортируют concrete
+  mock-источники. Architecture, ADR, AI scope и учебные материалы синхронизированы;
+  документы/ссылки, project context и `git diff --check` проверены.
+- Учебные patches темы адаптированы к новым source paths и DI. Оба варианта
+  проверены отдельно во временных копиях; рабочий код сохранил Provider.
+  Commit/push не выполнялись; Phase 4 не начата.
 
 **Готово, когда:** UI получает данные через согласованные границы, источник можно
 заменить без переписывания widgets, существующие сценарии продолжают работать.
@@ -1025,8 +1077,7 @@ browser push автоматически в scope не добавляется.
 App Distribution или deploy web требует запроса пользователя; iOS-публикация
 не заявляется выполненной по одному Android release.
 
-**Phase 0–2 завершены. Дальнейшая разработка — в `dev`;
-Phase 3 требует отдельного поручения пользователя.**
+**Phase 0–3 завершены. Phase 4 в работе по прямому поручению пользователя.**
 
 ---
 

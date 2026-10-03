@@ -14,9 +14,11 @@
 | Разработка продукта: scope, фазы, задачи и сценарии | [План разработки](../product/product-spec.md#план-разработки), [Product spec](../product/product-spec.md), [правила фаз](AGENTS.md#разработка-по-плану) | Статус и критерии фазы в product spec, подтверждение пользователя и фактическая реализация |
 | Структура/зависимости mobile | [Mobile rules](scopes/mobile.md), [architecture](../architecture/architecture.md), [решения](../decisions/README.md) | `apps/mobile/pubspec.yaml`, `apps/mobile/pubspec.lock`, `apps/mobile/lib`, platform configs |
 | Структура и scope web | [Web README](../../apps/web/README.md), [architecture](../architecture/architecture.md) | `apps/web/README.md`; configs/code появятся при создании Next.js-приложения |
+| Repository, DI и feature boundaries | [Architecture](../architecture/architecture.md#mobile-modules--при-реальных-сценариях), [Mobile rules](scopes/mobile.md), [решения](../decisions/README.md) | Public feature APIs, domain contracts, feature-root providers/dependencies, data implementations |
+| GitHub HTTP, pagination, retry и кэш | [GitHub Import contract](../architecture/architecture.md#github-import-http-и-session-кэш), [Mobile rules](scopes/mobile.md), [решения](../decisions/README.md) | `features/github_import` models, DTO, repository/cache и controller; Dio settings в DI |
 | UI и branding | [Design system](../design/design-system.md) | `assets/branding/stackcard-link-brand-kit.json`, SVG; существующие widgets |
 | Запуск, lint, tests | [CONTRIBUTING](../../CONTRIBUTING.md#быстрый-старт), [Mobile README](../../apps/mobile/README.md) | `apps/mobile/analysis_options.yaml`, `test`, Flutter SDK |
-| State management и учебные этапы | [Mobile rules](scopes/mobile.md), [state management](../learning/state-management.md) | AppearanceController, Projects providers в `apps/mobile/lib`; учебные patches вне runtime |
+| State management и учебные этапы | [Mobile rules](scopes/mobile.md), [state management](../learning/state-management.md) | AppearanceController; публичные auth/profile/projects APIs и Riverpod DI; учебные patches вне runtime |
 | Публичное описание проекта | [Root README](../../README.md), [Product spec](../product/product-spec.md) | Назначение, подтверждённые сценарии и фактическая доступность продукта |
 
 Порядок: инструкции → актуальные sources и аналог → непосредственно применимые

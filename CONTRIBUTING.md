@@ -5,7 +5,7 @@
 **Процесс работы, проверки и правила внесения согласованных изменений**
 
 ![Contributing guide](https://raster.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
-![Scope Phase 2](https://raster.shields.io/badge/Scope-Phase_2-FF0012?style=for-the-badge)
+![Scope Phase 4](https://raster.shields.io/badge/Scope-Phase_4-FF0012?style=for-the-badge)
 
 </div>
 
@@ -26,8 +26,10 @@
 
 ## Что вносить
 
-Phase 0 и UI foundation Phase 1 завершены; по поручению пользователя выполнен
-Basic state management Phase 2.
+Phase 0–3 завершены; текущее поручение — GitHub API на Phase 4.
+Реализован отдельный GitHub Import для чтения публичного профиля и repositories.
+Окончательный статус приёмки и результаты проверок находятся в
+[product spec](docs/product/product-spec.md#phase-4--github-api).
 Продуктовые функции вводятся последовательно по
 [roadmap](docs/product/product-spec.md#roadmap),
 переход к следующей фазе требует подтверждения пользователя.
@@ -43,14 +45,18 @@ Basic state management Phase 2.
 | **Направление** | **Допустимые изменения сейчас** |
 |:---|:---|
 | Документация | Уточнение сценариев, границ, источников и способов работы |
-| Mobile UI foundation | Пять экранов на mock data, app shell, темы и общие компоненты |
-| Mobile state | Provider для ThemeMode, Riverpod для поиска/фильтров Projects, учебные patches вне runtime |
+| Mobile UI и GitHub API | Demo-экраны, app shell, темы, общие компоненты и отдельный GitHub Import с публичными данными |
+| Mobile state и architecture | Provider для ThemeMode; Riverpod для repository loading/actions, DI и filters; presentation/domain/data в auth/profile/projects/github_import, учебные patches вне runtime |
 | Структура | Согласование путей, ignore rules и общего AI-контекста |
 | Brand assets | Сохранение оригиналов и описания их применения |
 
 </div>
 
-В `apps/mobile` реализована UI foundation для Android и iOS с GoRouter и mock data.
+В `apps/mobile` реализованы UI foundation и Repository/DI границы
+для Android/iOS с GoRouter: core-портфолио использует demo/mock sources,
+GitHub Import читает public API через Dio. Его ETag-кэш хранится в памяти app
+session; disk cache и offline fallback относятся к Phase 5. Прочитанные данные
+не добавляются автоматически в curated-портфолио.
 В `apps/web` подготовлен README; Next.js-приложение появится на Phase 13.
 Firebase, web dependencies и packages будущих фаз заранее не подключаются.
 
@@ -72,6 +78,17 @@ Firebase, web dependencies и packages будущих фаз заранее не
 Перед реализацией открой затронутые code/config и ближайший аналог.
 Версии и зависимости проверяй в manifests/lockfiles. Разделяй работу на
 небольшие самостоятельные шаги; сначала используй существующий механизм.
+
+Auth/profile/projects/github_import используют `presentation/domain/data`; DI связывается у
+корня feature. Domain остаётся pure Dart; concrete repositories не импортируются
+widgets. Между features используй публичные barrels. `PortfolioOverview` —
+presentation read model для Home, Portfolio и preview, а не полный Builder domain.
+В GitHub Import data слой владеет Dio, DTO mapping, Link pagination и ETag
+validators; controller — загрузкой, refresh, локальным debounce и обработкой
+typed failures. Сетевые ошибки и rate-limit deadline проверяются через
+подменяемые repository и clock providers.
+Подробное направление зависимостей — в
+[architecture](docs/architecture/architecture.md#mobile-modules--при-реальных-сценариях).
 
 Flutter/Dart-команды выполняются в `apps/mobile`; Git — из корня monorepo.
 Нативные платформы mobile — Android и iOS, для iOS-разработки нужен macOS host.
@@ -129,9 +146,14 @@ flutter run -d <device-id>
 Открывай `apps/mobile`, если IDE не обнаруживает Flutter-проект в корне monorepo.
 
 После запуска появляется экран знакомства со StackCard. «Открыть демо» ведёт
-на главную; в навигации доступны Портфолио, Проекты и Настройки. Все данные
-демонстрационные. Тема переключается в Настройках и пока не сохраняется
-после закрытия приложения; авторизация и web-редактор вводятся на своих фазах.
+на главную; в навигации доступны Портфолио, Проекты и Настройки. Core-портфолио
+использует демонстрационные данные. Кнопка «GitHub Import» на Projects открывает
+`/github-import`: отправка username загружает публичный профиль и repositories.
+Поиск работает по уже загруженным данным с debounce 300 ms; «Загрузить ещё»
+читает следующую страницу из Link. Ошибки повторяются только по действию
+пользователя; rate-limit deadline блокирует сетевой retry до разрешённого времени.
+Тема переключается в Настройках и пока не сохраняется после закрытия приложения;
+авторизация, сохранение draft и web-редактор вводятся на своих фазах.
 
 ---
 
@@ -183,9 +205,21 @@ flutter test
 `test/project_filters_test.dart` — правила поиска, сочетания фильтров и срок жизни.
 `test/state_management_test.dart` проверяет общую тему, system brightness,
 сохранение query/filter при навигации, синхронизацию поля и новую app session.
+`test/auth_repository_test.dart`, `test/profile_repository_test.dart` и
+`test/projects_repository_test.dart` проверяют contracts, чистые правила и
+immutable данные. Соответствующие `auth_di_test.dart`, `profile_di_test.dart`,
+`projects_di_test.dart` подменяют источник в реальных экранах через
+`StackCardApp.providerOverrides`, проверяют loading/error/empty и явный retry.
+`test/github_data_test.dart` проверяет DTO, HTTP failures, Link pagination и
+условные ETag-запросы; `test/github_import_controller_test.dart` — debounce,
+retry deadline, отмену, конкурирующие запросы и сохранение результатов.
+`test/github_import_widget_test.dart` проверяет GitHub Import на реальном экране
+с подменяемым источником, включая refresh, pagination и UI states.
 Сравнение подходов и проверка сохранённых учебных вариантов — в
 [state management guide](docs/learning/state-management.md).
-Цель coverage из roadmap относится к Phase 17.
+Учебные patches применяются независимо к временным копиям текущего проекта;
+они сохраняют Repository/DI и меняют только механизм темы. Цель coverage
+из roadmap относится к Phase 17.
 
 Снимки для визуальной сверки сохраняются в `docs/design/previews`; это результаты
 рендеринга Flutter. Чтобы обновить их после согласованного изменения UI,

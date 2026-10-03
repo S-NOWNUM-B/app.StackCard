@@ -31,8 +31,15 @@
 - Сохранять стиль из [design guide](../design/design-system.md) и оригиналы
   `assets/branding`. Mobile использует `lib/core/theme` и `lib/shared/widgets`;
   расширять эти механизмы, не вводить параллельные tokens и компоненты.
-  Экраны текущего UI работают с mock data; наличие demo-кнопки не разрешает
+  Экраны получают demo/mock и GitHub source data через Repository и Riverpod DI; widgets
+  не импортируют concrete sources. Публичные feature APIs и направления
+  зависимостей описаны в [architecture](../architecture/architecture.md#mobile-modules--при-реальных-сценариях).
+  Наличие demo-кнопки не разрешает
   подключение функций будущих фаз.
+- GitHub Import — отдельный просмотр публичного источника. HTTP/DTO/session cache
+  принадлежат `features/github_import/data`, контроллер — presentation;
+  domain остаётся pure Dart. Import не меняет demo/curated/published данные.
+  Persistent cache, offline fallback и Hive вводятся на Phase 5.
 - Имена кода/файлов — английские; комментарии и объяснения — русские.
 
 ## Разработка по плану

@@ -1,5 +1,4 @@
-import 'package:app_stackcard/features/projects/project_filters.dart';
-import 'package:app_stackcard/features/projects/projects_screen.dart';
+import 'package:app_stackcard/features/projects/projects.dart';
 import 'package:app_stackcard/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

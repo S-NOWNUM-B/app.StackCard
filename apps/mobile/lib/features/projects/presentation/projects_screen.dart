@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../core/theme/stackcard_colors.dart';
-import '../../core/theme/stackcard_tokens.dart';
-import '../../shared/mock_portfolio.dart';
-import '../../shared/widgets/stackcard_button.dart';
-import '../../shared/widgets/stackcard_card.dart';
-import '../../shared/widgets/stackcard_input.dart';
-import '../../shared/widgets/stackcard_states.dart';
+import '../../../core/theme/stackcard_colors.dart';
+import '../../../core/theme/stackcard_tokens.dart';
+import '../../../shared/widgets/stackcard_async_view.dart';
+import '../../../shared/widgets/stackcard_button.dart';
+import '../../../shared/widgets/stackcard_card.dart';
+import '../../../shared/widgets/stackcard_input.dart';
+import '../../../shared/widgets/stackcard_states.dart';
+import '../domain/project.dart';
+import '../domain/project_filters.dart';
+import '../projects_providers.dart';
 import 'project_filters.dart';
 
 class ProjectsScreen extends ConsumerStatefulWidget {
@@ -44,7 +48,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         ? context.colors.textPrimary
         : context.colors.textSecondary;
     final filters = ref.watch(projectFiltersProvider);
-    final projects = ref.watch(visibleDemoProjectsProvider);
+    final projectsState = ref.watch(visibleProjectsProvider);
     ref.listen(projectFiltersProvider.select((filters) => filters.query), (
       previous,
       query,
@@ -57,131 +61,147 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       }
     });
 
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        padding: EdgeInsets.all(
-          constraints.maxWidth >= 700
-              ? StackCardSpacing.xl
-              : StackCardSpacing.lg,
-        ),
-        child: Align(
-          alignment: Alignment.topLeft,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1160),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Сделано тобой',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: StackCardSpacing.sm),
-                Text(
-                  'От pet project до большого продукта — каждой работе есть место.',
-                  style: Theme.of(context).textTheme.bodyLarge
-                      ?.copyWith(color: pageTextColor),
-                ),
-                const SizedBox(height: StackCardSpacing.xl),
-                StackCardCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      StackCardInput(
-                        key: const ValueKey('project_search'),
-                        label: 'Поиск проектов',
-                        hint: 'Название или технология',
-                        controller: _searchController,
-                        prefixIcon: Icons.search_rounded,
-                        textInputAction: TextInputAction.search,
-                        onChanged: (value) => ref
-                            .read(projectFiltersProvider.notifier)
-                            .setQuery(value),
-                      ),
-                      const SizedBox(height: StackCardSpacing.lg),
-                      Wrap(
-                        spacing: StackCardSpacing.sm,
-                        runSpacing: StackCardSpacing.sm,
-                        children: [
-                          for (final filter in ProjectFilter.values)
-                            ChoiceChip(
-                              label: Text(filter.label),
-                              selected: filters.filter == filter,
-                              onSelected: (_) => ref
-                                  .read(projectFiltersProvider.notifier)
-                                  .setFilter(filter),
-                              selectedColor: context.colors.accentSoft,
-                              backgroundColor: context.colors.surface,
-                              checkmarkColor: context.colors.textPrimary,
-                              side: BorderSide(
-                                color: filters.filter == filter
-                                    ? context.colors.accent
-                                    : context.colors.textSecondary,
-                              ),
-                              labelStyle: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(color: context.colors.textPrimary),
-                            ),
-                        ],
-                      ),
-                    ],
+    return StackCardAsyncView<List<Project>>(
+      state: projectsState,
+      onRetry: () => ref.invalidate(projectsProvider),
+      data: (projects) => LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          padding: EdgeInsets.all(
+            constraints.maxWidth >= 700
+                ? StackCardSpacing.xl
+                : StackCardSpacing.lg,
+          ),
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1160),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Сделано тобой',
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
-                ),
-                const SizedBox(height: StackCardSpacing.xl),
-                Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    'Проекты: ${projects.length}',
-                    style: Theme.of(context).textTheme.titleLarge,
+                  const SizedBox(height: StackCardSpacing.sm),
+                  Text(
+                    'От pet project до большого продукта — каждой работе есть место.',
+                    style: Theme.of(context).textTheme.bodyLarge
+                        ?.copyWith(color: pageTextColor),
                   ),
-                ),
-                const SizedBox(height: StackCardSpacing.lg),
-                if (projects.isEmpty)
+                  const SizedBox(height: StackCardSpacing.xl),
+                  StackCardButton(
+                    label: 'GitHub Import',
+                    icon: Icons.download_rounded,
+                    onPressed: () => context.push('/github-import'),
+                  ),
+                  const SizedBox(height: StackCardSpacing.lg),
                   StackCardCard(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const StackCardStateView(
-                          kind: StackCardViewState.empty,
-                          title: 'Ничего не найдено',
-                          message: 'Попробуй другое название, технологию или сбрось фильтры.',
+                        StackCardInput(
+                          key: const ValueKey('project_search'),
+                          label: 'Поиск проектов',
+                          hint: 'Название или технология',
+                          controller: _searchController,
+                          prefixIcon: Icons.search_rounded,
+                          textInputAction: TextInputAction.search,
+                          onChanged: (value) => ref
+                              .read(projectFiltersProvider.notifier)
+                              .setQuery(value),
                         ),
-                        StackCardButton(
-                          label: 'Сбросить фильтры',
-                          icon: Icons.refresh_rounded,
-                          onPressed: _resetFilters,
+                        const SizedBox(height: StackCardSpacing.lg),
+                        Wrap(
+                          spacing: StackCardSpacing.sm,
+                          runSpacing: StackCardSpacing.sm,
+                          children: [
+                            for (final filter in ProjectFilter.values)
+                              ChoiceChip(
+                                label: Text(filter.label),
+                                selected: filters.filter == filter,
+                                onSelected: (_) => ref
+                                    .read(projectFiltersProvider.notifier)
+                                    .setFilter(filter),
+                                selectedColor: context.colors.accentSoft,
+                                backgroundColor: context.colors.surface,
+                                checkmarkColor: context.colors.textPrimary,
+                                side: BorderSide(
+                                  color: filters.filter == filter
+                                      ? context.colors.accent
+                                      : context.colors.textSecondary,
+                                ),
+                                labelStyle: Theme.of(context)
+                                    .textTheme
+                                    .labelLarge
+                                    ?.copyWith(
+                                      color: context.colors.textPrimary,
+                                    ),
+                              ),
+                          ],
                         ),
                       ],
                     ),
-                  )
-                else
-                  LayoutBuilder(
-                    builder: (context, gridConstraints) {
-                      final twoColumns =
-                          gridConstraints.maxWidth >= 700 &&
-                          MediaQuery.textScalerOf(context).scale(1) < 1.7;
-                      final cardWidth = twoColumns
-                          ? (gridConstraints.maxWidth - StackCardSpacing.lg) / 2
-                          : gridConstraints.maxWidth;
-                      return Wrap(
-                        spacing: StackCardSpacing.lg,
-                        runSpacing: StackCardSpacing.lg,
-                        children: [
-                          for (final project in projects)
-                            SizedBox(
-                              width: cardWidth,
-                              child: _ProjectCard(project: project),
-                            ),
-                        ],
-                      );
-                    },
                   ),
-                const SizedBox(height: StackCardSpacing.xl),
-                Text(
-                  'Все карточки — демонстрационные. Поиск и фильтры работают '
-                  'с примерами; импорт, создание и редактирование проектов '
-                  'появятся на следующих этапах.',
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(color: pageTextColor),
-                ),
-              ],
+                  const SizedBox(height: StackCardSpacing.xl),
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      'Проекты: ${projects.length}',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  const SizedBox(height: StackCardSpacing.lg),
+                  if (projects.isEmpty)
+                    StackCardCard(
+                      child: Column(
+                        children: [
+                          const StackCardStateView(
+                            kind: StackCardViewState.empty,
+                            title: 'Ничего не найдено',
+                            message: 'Попробуй другое название, технологию или сбрось фильтры.',
+                          ),
+                          StackCardButton(
+                            label: 'Сбросить фильтры',
+                            icon: Icons.refresh_rounded,
+                            onPressed: _resetFilters,
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    LayoutBuilder(
+                      builder: (context, gridConstraints) {
+                        final twoColumns =
+                            gridConstraints.maxWidth >= 700 &&
+                            MediaQuery.textScalerOf(context).scale(1) < 1.7;
+                        final cardWidth = twoColumns
+                            ? (gridConstraints.maxWidth - StackCardSpacing.lg) /
+                                  2
+                            : gridConstraints.maxWidth;
+                        return Wrap(
+                          spacing: StackCardSpacing.lg,
+                          runSpacing: StackCardSpacing.lg,
+                          children: [
+                            for (final project in projects)
+                              SizedBox(
+                                width: cardWidth,
+                                child: _ProjectCard(project: project),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  const SizedBox(height: StackCardSpacing.xl),
+                  Text(
+                    'Все карточки — демонстрационные. Поиск и фильтры работают '
+                    'с примерами. GitHub Import показывает публичные репозитории '
+                    'отдельно; добавление в портфолио и редактирование '
+                    'появятся на следующих этапах.',
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: pageTextColor),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -193,7 +213,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 class _ProjectCard extends StatelessWidget {
   const _ProjectCard({required this.project});
 
-  final DemoProject project;
+  final Project project;
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +229,7 @@ class _ProjectCard extends StatelessWidget {
             runSpacing: StackCardSpacing.sm,
             children: [
               Text(
-                project.source,
+                project.source.label,
                 style: Theme.of(context).textTheme.labelLarge
                     ?.copyWith(color: context.colors.textSecondary),
               ),
@@ -262,7 +282,7 @@ class _ProjectCard extends StatelessWidget {
 class _ProjectCover extends StatelessWidget {
   const _ProjectCover({required this.project});
 
-  final DemoProject project;
+  final Project project;
 
   @override
   Widget build(BuildContext context) {
@@ -367,7 +387,7 @@ class _TechnologyTag extends StatelessWidget {
   }
 }
 
-void _showProjectDetails(BuildContext context, DemoProject project) {
+void _showProjectDetails(BuildContext context, Project project) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -394,7 +414,7 @@ void _showProjectDetails(BuildContext context, DemoProject project) {
             ),
             const SizedBox(height: StackCardSpacing.sm),
             Text(
-              '${project.source} · демонстрационные данные',
+              '${project.source.label} · демонстрационные данные',
               style: Theme.of(context).textTheme.bodyMedium
                   ?.copyWith(color: context.colors.textSecondary),
             ),

@@ -1,14 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
-import '../../shared/mock_portfolio.dart';
+import '../profile/profile.dart';
+import '../projects/projects.dart';
+import '../portfolio/portfolio.dart';
+import '../../shared/widgets/stackcard_async_view.dart';
+import '../../shared/widgets/stackcard_states.dart';
 import '../../shared/widgets/stackcard_button.dart';
 import '../../shared/widgets/stackcard_card.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => StackCardAsyncView(
+    state: ref.watch(portfolioOverviewProvider),
+    onRetry: () {
+      ref.invalidate(profileProvider);
+      ref.invalidate(projectsProvider);
+    },
+    data: (overview) => _HomeContent(overview: overview),
+  );
+}
+
+class _HomeContent extends StatelessWidget {
+  const _HomeContent({required this.overview});
+
+  final PortfolioOverview overview;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +55,7 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Привет, Alex',
+                    'Привет, ${overview.profile.firstName}',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: StackCardSpacing.sm),
@@ -48,15 +69,23 @@ class HomeScreen extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Expanded(flex: 7, child: _ProfileHero()),
+                        Expanded(
+                          flex: 7,
+                          child: _ProfileHero(profile: overview.profile),
+                        ),
                         const SizedBox(width: StackCardSpacing.lg),
-                        const Expanded(flex: 4, child: _ReadinessCard()),
+                        Expanded(
+                          flex: 4,
+                          child: _ReadinessCard(
+                            readiness: overview.profile.readiness,
+                          ),
+                        ),
                       ],
                     )
                   else ...[
-                    const _ProfileHero(),
+                    _ProfileHero(profile: overview.profile),
                     const SizedBox(height: StackCardSpacing.lg),
-                    const _ReadinessCard(),
+                    _ReadinessCard(readiness: overview.profile.readiness),
                   ],
                   const SizedBox(height: StackCardSpacing.xl),
                   const _SectionHeading(
@@ -68,15 +97,23 @@ class HomeScreen extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Expanded(flex: 7, child: _FeaturedProject()),
+                        Expanded(
+                          flex: 7,
+                          child: _FeaturedProject(
+                            project: overview.highlightedProject,
+                          ),
+                        ),
                         const SizedBox(width: StackCardSpacing.lg),
-                        const Expanded(flex: 4, child: _WorkspaceCard()),
+                        Expanded(
+                          flex: 4,
+                          child: _WorkspaceCard(overview: overview),
+                        ),
                       ],
                     )
                   else ...[
-                    const _FeaturedProject(),
+                    _FeaturedProject(project: overview.highlightedProject),
                     const SizedBox(height: StackCardSpacing.lg),
-                    const _WorkspaceCard(),
+                    _WorkspaceCard(overview: overview),
                   ],
                   const SizedBox(height: StackCardSpacing.xl),
                   StackCardCard(
@@ -110,7 +147,9 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _ProfileHero extends StatelessWidget {
-  const _ProfileHero();
+  const _ProfileHero({required this.profile});
+
+  final Profile profile;
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +178,7 @@ class _ProfileHero extends StatelessWidget {
                   border: Border.all(color: context.colors.border),
                 ),
                 child: Text(
-                  DemoPortfolio.initials,
+                  profile.initials,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
@@ -149,12 +188,12 @@ class _ProfileHero extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      DemoPortfolio.name,
+                      profile.name,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: StackCardSpacing.xs),
                     Text(
-                      DemoPortfolio.role,
+                      profile.role,
                       style: Theme.of(context).textTheme.bodyMedium
                           ?.copyWith(color: context.colors.textSecondary),
                     ),
@@ -199,7 +238,9 @@ class _ProfileHero extends StatelessWidget {
 }
 
 class _ReadinessCard extends StatelessWidget {
-  const _ReadinessCard();
+  const _ReadinessCard({required this.readiness});
+
+  final ProfileReadiness readiness;
 
   @override
   Widget build(BuildContext context) {
@@ -223,21 +264,25 @@ class _ReadinessCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: StackCardSpacing.xl),
-          Text('80%', style: Theme.of(context).textTheme.displaySmall),
+          Text(
+            '${readiness.percent}%',
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
           const SizedBox(height: StackCardSpacing.sm),
           Text(
-            'Пример заполнения · 4 из 5 блоков',
+            'Пример заполнения · ${readiness.completedBlocks} из ${readiness.totalBlocks} блоков',
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: context.colors.textSecondary),
           ),
           const SizedBox(height: StackCardSpacing.lg),
           Semantics(
-            label: 'Демонстрационное заполнение профиля: 80 процентов',
+            label:
+                'Демонстрационное заполнение профиля: ${readiness.percent} процентов',
             child: ExcludeSemantics(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(StackCardRadius.small),
                 child: LinearProgressIndicator(
-                  value: DemoPortfolio.completion,
+                  value: readiness.fraction,
                   minHeight: 6,
                   color: context.colors.accent,
                   backgroundColor: context.colors.surfaceHover,
@@ -266,11 +311,22 @@ class _ReadinessCard extends StatelessWidget {
 }
 
 class _FeaturedProject extends StatelessWidget {
-  const _FeaturedProject();
+  const _FeaturedProject({required this.project});
+
+  final Project? project;
 
   @override
   Widget build(BuildContext context) {
-    final project = DemoPortfolio.projects.first;
+    final project = this.project;
+    if (project == null) {
+      return const StackCardCard(
+        child: StackCardStateView(
+          kind: StackCardViewState.empty,
+          title: 'Нет избранных проектов',
+          message: 'Здесь появятся проекты на первом плане.',
+        ),
+      );
+    }
     return StackCardCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,7 +357,7 @@ class _FeaturedProject extends StatelessWidget {
                 ),
                 const SizedBox(height: StackCardSpacing.xl),
                 Text(
-                  'A / ATLAS',
+                  '${project.symbol} / ${project.title.split(' ').first.toUpperCase()}',
                   style: Theme.of(context).textTheme.headlineLarge,
                 ),
                 const SizedBox(height: StackCardSpacing.sm),
@@ -343,7 +399,9 @@ class _FeaturedProject extends StatelessWidget {
 }
 
 class _WorkspaceCard extends StatelessWidget {
-  const _WorkspaceCard();
+  const _WorkspaceCard({required this.overview});
+
+  final PortfolioOverview overview;
 
   @override
   Widget build(BuildContext context) {
@@ -356,15 +414,16 @@ class _WorkspaceCard extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: StackCardSpacing.xl),
-          const _CompactInfo(
+          _CompactInfo(
             icon: Icons.layers_outlined,
-            title: '4 проекта',
-            description: '2 featured · демонстрационные данные',
+            title: overview.projectsLabel,
+            description:
+                '${overview.featuredProjects.length} featured · демонстрационные данные',
           ),
           const SizedBox(height: StackCardSpacing.xl),
-          const _CompactInfo(
+          _CompactInfo(
             icon: Icons.code_rounded,
-            title: '8 навыков',
+            title: overview.skillsLabel,
             description: 'Мобильная и веб-разработка',
           ),
           const SizedBox(height: StackCardSpacing.xl),

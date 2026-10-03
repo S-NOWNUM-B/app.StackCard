@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/auth/sign_in_screen.dart';
+import '../features/auth/auth.dart';
+import '../features/github_import/github_import.dart';
 import '../features/home/home_screen.dart';
-import '../features/portfolio/portfolio_screen.dart';
-import '../features/projects/projects_screen.dart';
+import '../features/portfolio/portfolio.dart';
+import '../features/projects/projects.dart';
 import '../features/settings/settings_screen.dart';
 import '../shared/widgets/stackcard_states.dart';
 import 'app_shell.dart';
@@ -13,6 +14,10 @@ GoRouter createAppRouter({required String initialLocation}) => GoRouter(
   initialLocation: initialLocation,
   routes: [
     GoRoute(path: '/sign-in', builder: (_, _) => const SignInScreen()),
+    GoRoute(
+      path: '/github-import',
+      builder: (_, _) => const GitHubImportScreen(),
+    ),
     GoRoute(path: '/', redirect: (_, _) => '/home'),
     ShellRoute(
       builder: (context, state, child) =>

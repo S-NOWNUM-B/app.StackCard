@@ -37,14 +37,53 @@
 Сравнение подходов, переходы и воспроизведение находятся в
 [state management guide](../learning/state-management.md).
 
+## Принято для Phase 3
+
+| Решение | Причина и последствия |
+| --- | --- |
+| `presentation/domain/data` в auth/profile/projects | Реальные demo-сценарии получают pure Dart модели/правила и repository contracts; data хранит mock content, widgets рендерят состояния |
+| Repository contracts + Riverpod DI у корня feature | Concrete реализации заменяются provider override без переписывания экранов; FutureProvider/AsyncNotifier обслуживают загрузку и действия, Provider остаётся владельцем темы |
+| Public feature barrels для межмодульных зависимостей | `auth.dart`, `profile.dart`, `projects.dart`, `portfolio.dart` раскрывают намеренный API; внутренние файлы другой feature не становятся общим контрактом |
+| Immutable models и domain selection | `ProjectSource` отделяет происхождение от UI-подписи; query/filter и featured-отбор работают без Flutter/Riverpod; коллекции защищены от внешней мутации |
+| `PortfolioOverview` как presentation read model | Объединяет profile/projects для Home, Portfolio и preview; полный featured-список не зависит от поиска на Projects. Full Builder/domain остаётся задачей Phase 6 |
+| `ProfileReadiness` как demo-snapshot | Валидация счётчиков и расчёт доли не утверждают алгоритм полноты будущего Builder |
+| Без дополнительных UseCase/DataSource | Текущие mock repositories и простые правила не требуют пустого промежуточного слоя; network/persistence вводятся на соответствующих фазах |
+| Явный retry для asynchronous repository state | Loading/error отображаются shared widgets; пользовательский retry повторяет запрос, сохранённые query/filter остаются в app session |
+
+Подробные границы и текущие источники — в
+[architecture](../architecture/architecture.md#mobile-modules--при-реальных-сценариях),
+сравнение state mechanisms — в [учебном guide](../learning/state-management.md).
+Результаты приёмки и ограничения фиксируются в
+[product spec](../product/product-spec.md#phase-3--architecture).
+
+## Принято для Phase 4
+
+| Решение | Рассмотренная альтернатива | Причина и последствия |
+| --- | --- | --- |
+| Отдельный GitHub Import и public `github_import.dart` | Сразу заменить curated Projects ответами API | Публичные GitHub metadata читаются на `/github-import`; demo-портфолио и будущие curated/draft/published модели сохраняют собственные contracts |
+| Dio и DTO в data, pure Dart repository/models/failures в domain | HTTP и raw JSON внутри widgets | Data проверяет ответы и преобразует их в immutable модели; feature-root DI подменяет repository, clock и response cache, widgets читают presentation state |
+| Controller через `NotifierProvider.autoDispose` | Хранить запросы и таймеры в widget или бессрочной app session | Controller владеет атомарной initial load, refresh и pagination; уход с экрана отменяет запросы и debounce, generation guards и `ref.mounted` отсекают поздние ответы |
+| Pagination по `Link` с проверкой origin и user path | Угадывать следующий номер страницы | Поддерживаются username и canonical numeric-ID paths GitHub; объединение по repository ID сохраняет порядок и исключает дубли |
+| Локальные фильтры и query debounce 300 ms | Новый API search на каждый ввод | Поиск применяется только к загруженным repositories; новый username сбрасывает filters, refresh сохраняет их |
+| Typed failures и явный retry с rate-limit deadline | Автоматические повторы без учёта API headers | Initial error, refresh error и page error различаются; успешный список сохраняется при ошибке refresh/more, повторный HTTP блокируется до разрешённого времени. Repository живёт в app session, чтобы закрытие экрана не сбрасывало deadline |
+| ETag conditional requests с serialized response cache в памяти | Сразу добавить Hive и offline fallback | Cache индексируется request URI и переживает закрытие экрана в app session; `304` повторно использует проверенный ответ. Disk persistence, TTL и versioned schema остаются Phase 5 |
+
+Границы реализации — в
+[architecture](../architecture/architecture.md#mobile-modules--при-реальных-сценариях),
+использование экрана — в [mobile guide](../../apps/mobile/README.md#прочитать-публичные-данные-github),
+состояния и lifecycle — в [state management guide](../learning/state-management.md#github-import-на-phase-4).
+Результаты приёмки фиксируются в
+[product spec](../product/product-spec.md#phase-4--github-api).
+
 ## Решить перед соответствующими фазами
 
 - Sync conflict strategy и поведение при нескольких устройствах, включая правки
   из mobile и web; согласование и проверка совместимости data contracts.
 - Firestore schema, private draft/public snapshot, username uniqueness,
   атомарность publish/unpublish.
-- Storage/cache schema и migrations; причина альтернативы Hive, если нужна.
-- GitHub rate limits, retry и cache lifetime после проверки актуального API.
+- На Phase 5 определить TTL, versioned storage/cache schema и migrations,
+  сохранение ETag validators и offline fallback; обосновать альтернативу Hive,
+  если она нужна.
 - Contact spam/rate limiting и доверенная отправка notifications.
 - Application IDs, signing и release configuration до публикации.
 - Точные web routes, зависимости, способы auth/session и проверки определить

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -16,10 +17,12 @@ class StackCardApp extends StatefulWidget {
     super.key,
     this.initialLocation = '/sign-in',
     this.initialThemeMode = ThemeMode.dark,
+    this.providerOverrides = const [],
   });
 
   final String initialLocation;
   final ThemeMode initialThemeMode;
+  final List<Override> providerOverrides;
 
   @override
   State<StackCardApp> createState() => _StackCardAppState();
@@ -39,6 +42,7 @@ class _StackCardAppState extends State<StackCardApp> {
   @override
   Widget build(BuildContext context) {
     return riverpod.ProviderScope(
+      overrides: widget.providerOverrides,
       child: ChangeNotifierProvider(
         create: (_) => AppearanceController(themeMode: widget.initialThemeMode),
         child: Selector<AppearanceController, ThemeMode>(

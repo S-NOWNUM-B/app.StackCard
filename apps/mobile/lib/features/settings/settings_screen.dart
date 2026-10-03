@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +8,8 @@ import '../../core/state/appearance_controller.dart';
 import '../../shared/widgets/stackcard_button.dart';
 import '../../shared/widgets/stackcard_card.dart';
 import '../../shared/widgets/stackcard_states.dart';
+import '../../shared/widgets/stackcard_async_view.dart';
+import '../profile/profile.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -91,9 +94,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'Alex Morgan · alex-dev-demo',
-                      style: Theme.of(context).textTheme.bodyLarge,
+                    riverpod.Consumer(
+                      builder: (context, ref, _) => StackCardAsyncView(
+                        state: ref.watch(profileProvider),
+                        onRetry: () => ref.invalidate(profileProvider),
+                        data: (profile) => Text(
+                          '${profile.name} · ${profile.handle}',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(

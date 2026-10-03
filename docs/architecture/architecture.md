@@ -5,7 +5,7 @@
 **Текущая Flutter-основа и целевые границы mobile, web и общего backend**
 
 ![Architecture guide](https://raster.shields.io/badge/Architecture-guide-09090B?style=for-the-badge)
-![Stage Phase 2 state](https://raster.shields.io/badge/Stage-Phase_2_state-FF0012?style=for-the-badge)
+![Stage Phase 4 GitHub API](https://raster.shields.io/badge/Stage-Phase_4_GitHub_API-FF0012?style=for-the-badge)
 
 </div>
 
@@ -13,12 +13,13 @@
 
 ## Содержание
 
-- [Текущее состояние — Phase 2](#текущее-состояние--phase-2)
+- [Текущее состояние — Phase 4](#текущее-состояние--phase-4)
 - [Схема системы](#схема-системы)
 - [Зоны ответственности](#зоны-ответственности)
 - [Целевые границы — ещё не реализованы](#целевые-границы--ещё-не-реализованы)
 - [Web и общие контракты](#web-и-общие-контракты)
 - [Mobile modules — при реальных сценариях](#mobile-modules--при-реальных-сценариях)
+- [GitHub Import: HTTP и session-кэш](#github-import-http-и-session-кэш)
 - [Source, draft и публикация](#source-draft-и-публикация)
 - [Ключевые потоки](#ключевые-потоки)
 - [Границы расширения](#границы-расширения)
@@ -27,15 +28,17 @@
 
 ---
 
-## Текущее состояние — Phase 2
+## Текущее состояние — Phase 4
 
-В monorepo есть одно Flutter-приложение в `apps/mobile`. UI foundation
-реализована: entry point
-[`lib/main.dart`](../../apps/mobile/lib/main.dart) создаёт `MaterialApp.router`,
-Material 3 light/dark и GoRouter. Sign In, Home, Portfolio, Projects и Settings
-работают с [общими mock data](../../apps/mobile/lib/shared/mock_portfolio.dart).
-Поиск/фильтры и preview состояний локальны; authentication, backend, хранилища,
-редактирование и публикация подключаются по roadmap.
+В monorepo есть одно Flutter-приложение в `apps/mobile`. Код Architecture
+Phase 3 реализован поверх UI foundation и basic state management;
+окончательная приёмка и фактические результаты проверок ведутся в
+[product spec](../product/product-spec.md#phase-3--architecture).
+Sign In, Home, Portfolio, Projects и Settings сохраняют общий app shell,
+Material 3 light/dark и демонстрационный контент. Данные приходят через
+Repository contracts и Riverpod DI. Phase 4 добавляет отдельный GitHub Import
+с публичным HTTP-источником; реальная авторизация, постоянное хранение,
+редактирование и публикация вводятся по roadmap.
 
 Текущие используемые области:
 
@@ -43,35 +46,50 @@ Material 3 light/dark и GoRouter. Sign In, Home, Portfolio, Projects и Setting
 apps/mobile/
 ├── assets/fonts/             # локальные шрифты и лицензии
 ├── lib/
-│   ├── main.dart             # composition, ProviderScope и GoRouter lifecycle
+│   ├── main.dart             # ProviderScope, overrides и GoRouter lifecycle
 │   ├── app/                  # app_router.dart, app_shell.dart
 │   ├── core/state/           # AppearanceController для ThemeMode
 │   ├── core/theme/           # цвета, Material 3, spacing/radius
-│   ├── shared/
-│   │   ├── mock_portfolio.dart
-│   │   └── widgets/          # card, button, input, states, brand
-│   └── features/             # экраны; Projects filters через Riverpod
-└── test/                     # навигация, темы, формы и responsive UI
+│   ├── shared/widgets/       # card, button, input, states, async view, brand
+│   └── features/
+│       ├── auth/             # public API, DI, presentation/domain/data
+│       ├── profile/          # public API, DI, presentation/domain/data
+│       ├── projects/         # public API, DI, presentation/domain/data
+│       ├── github_import/    # public GitHub source, DTO, Dio, session-кэш
+│       ├── portfolio/        # public API, presentation read model и preview
+│       ├── home/             # экран на PortfolioOverview
+│       └── settings/         # тема, профиль через provider, preview состояний
+└── test/                     # contracts, DI, состояние, UI и responsive
 ```
 
 Маршруты заданы в
 [`app_router.dart`](../../apps/mobile/lib/app/app_router.dart): `/sign-in`,
-`/home`, `/portfolio`, `/projects`, `/settings`; `/` перенаправляет на `/home`.
-Sign In расположен вне shell, четыре остальных экрана используют общую
-навигацию. Auth guards пока отсутствуют, demo-вход не авторизует аккаунт.
+`/home`, `/portfolio`, `/projects`, `/settings`, `/github-import`;
+`/` перенаправляет на `/home`. Sign In и GitHub Import расположены вне shell,
+четыре основных экрана используют общую
+навигацию. Auth guards пока отсутствуют: `DemoSession` отражает demo-вход,
+но не авторизует аккаунт.
+
 Dark — режим по умолчанию. Выбор dark/light/system принадлежит
 [`AppearanceController`](../../apps/mobile/lib/core/state/appearance_controller.dart),
 созданному `ChangeNotifierProvider`. `Selector` подключает его к `MaterialApp`,
 Settings читает выбранный mode через `select` и меняет его через `read`.
 Router не передаёт theme callbacks и сохраняет экземпляр при смене темы.
 
-[`project_filters.dart`](../../apps/mobile/lib/features/projects/project_filters.dart)
-владеет immutable query/filter state через Riverpod `Notifier` и производным
-списком проектов. Обычный provider без `autoDispose` сохраняет выбор между
-экранами в пределах app session. Тема и фильтры сбрасываются при новом запуске;
-persistence относится к Phase 5. Locale пока не вводится: переводы UI отсутствуют.
-Учебная эволюция и границы двух механизмов объяснены в
-[state management guide](../learning/state-management.md).
+[`project_filters.dart`](../../apps/mobile/lib/features/projects/presentation/project_filters.dart)
+владеет query/filter state через Riverpod `Notifier`; чистый
+[`ProjectFilters`](../../apps/mobile/lib/features/projects/domain/project_filters.dart)
+отбирает проекты. `projectsProvider` загружает полный список из repository,
+`visibleProjectsProvider` вычисляет `AsyncValue` с результатами поиска,
+`featuredProjectsProvider` отбирает featured независимо от поиска.
+Providers без `autoDispose` сохраняют состояние в app session. Тема, demo-session
+и фильтры сбрасываются при новом запуске; persistence относится к Phase 5.
+Locale пока не вводится: переводы UI отсутствуют.
+
+[`StackCardApp`](../../apps/mobile/lib/main.dart) принимает `providerOverrides`
+и передаёт их своему `ProviderScope`. Замена repository в DI изменяет данные
+реальных экранов без правки widgets. Эволюция темы и границы двух механизмов
+объяснены в [state management guide](../learning/state-management.md).
 
 Canonical sources: [`pubspec.yaml`](../../apps/mobile/pubspec.yaml),
 [`pubspec.lock`](../../apps/mobile/pubspec.lock),
@@ -82,24 +100,20 @@ directories приложения. `.metadata` и generated-файлы вручн
 Mobile scope — Android и iOS; их native scaffolds сохранены, Android — первый
 release target. Desktop и Flutter web targets в `apps/mobile` отсутствуют.
 Сайт с публичными страницами и защищённым редактором планируется отдельно
-в Next.js-приложении `apps/web` на Phase 13.
-
-В [apps/web](../../apps/web/README.md) сейчас только README с назначением каталога;
-web-приложение, его зависимости и команды запуска ещё не созданы.
+на Phase 13. В [apps/web](../../apps/web/README.md) сейчас только README;
+Next.js-приложение, его зависимости и команды запуска ещё не созданы.
 
 Цветовая система и эскизы описаны в [design guide](../design/design-system.md).
 Local DM Sans и Noto Sans fallback зарегистрированы в pubspec. Знак в
 `StackCardBrand` повторяет paths оригинальных SVG через `CustomPainter`;
 logo originals в `assets/branding` сохранены без изменения.
-Результаты проверок и приёмки находятся в
-[product spec](../product/product-spec.md#phase-2--basic-state-management).
 
 ---
 
 ## Схема системы
 
-**Целевая архитектура, ещё не реализованная целиком.** UI foundation —
-текущая основа mobile. Остальные узлы и связи вводятся на своих фазах.
+**Целевая архитектура, ещё не реализованная целиком.** UI и локальные
+Repository/DI границы — текущая основа mobile. Остальные узлы и связи вводятся на своих фазах.
 Схема описывает ответственность компонентов; точная Firestore schema и
 механизм публикации определяются перед интеграцией backend.
 
@@ -128,7 +142,7 @@ logo originals в `assets/branding` сохранены без изменения
 ### apps/mobile
 
 Исполняемый Flutter-клиент для Android и iOS. Сейчас владеет app shell,
-пятью demo-экранами, общей темой/widgets и UI tests. Offline draft/cache
+пятью demo-экранами, GitHub Import, Repository/DI границами, общей темой/widgets и tests. Offline draft/cache
 и native integrations вводятся по фазам.
 Mobile не владеет реализацией сайта или доверенными серверными операциями.
 
@@ -216,42 +230,113 @@ Phase 13 развивается по шагам: **13a** — public shell, гл�
 
 ## Mobile modules — при реальных сценариях
 
-На Phase 3 первые features получат `presentation/domain/data`, Repository Pattern
-и Riverpod dependency injection. Пример целевого размещения, **не текущий tree**:
+На Phase 3 `auth`, `profile` и `projects` разделены на используемые слои:
 
 ```text
-lib/
-├── main.dart
-├── app/                     # composition и app shell
-├── core/                    # только используемые общие механизмы
-│   ├── routing/
-│   ├── theme/
-│   ├── network/
-│   ├── storage/
-│   └── errors/
-├── shared/widgets/           # существующие общие UI-компоненты
-└── features/
-    └── <feature>/
-        ├── presentation/    # widgets, controllers, UI states
-        ├── domain/          # модели/правила, contracts repositories
-        └── data/            # DTO, mapping, реализации sources/repositories
+features/<feature>/
+├── <feature>.dart            # намеренный публичный API
+├── *_providers.dart          # либо *_dependencies.dart: DI feature
+├── presentation/             # widgets, controllers/notifiers, AsyncValue
+├── domain/                   # pure Dart модели, правила и repository contracts
+└── data/                     # demo/mock реализации repositories
 ```
 
-На Phase 1 уже есть экранные области auth, home, portfolio, projects и settings.
-Доменные/data слои и новые модули добавляются вместе с реальными функциями.
-Пустые директории, универсальный framework и интерфейсы «на будущее» не нужны.
+<div align="center">
 
-Зависимости: presentation → domain, data → domain. `app`/providers связывают
-реализации. Domain не зависит от widgets, Firebase, Dio или Hive. Widget обращается
-к controller/notifier, тот — к repository или UseCase с содержательной бизнес-логикой.
-DataSource выделяется при реальной необходимости источника данных/тестирования.
+| **Область** | **Ответственность и публичная граница** |
+|:---|:---|
+| [auth](../../apps/mobile/lib/features/auth/auth.dart) | `AuthRepository`, нормализация `DemoSession`, проверка demo-email; `AuthController` выполняет асинхронное действие через DI, `DemoAuthRepository` остаётся локальным источником |
+| [profile](../../apps/mobile/lib/features/profile/profile.dart) | Immutable `Profile`, `ProfileHighlight`, `ProfileReadiness`, `ProfileRepository`; `profileProvider` получает snapshot из `MockProfileRepository` |
+| [projects](../../apps/mobile/lib/features/projects/projects.dart) | Immutable `Project`, typed `ProjectSource`, `ProjectsRepository`, pure query/filter и featured-отбор; loading/error/data и session state через Riverpod |
+| [github_import](../../apps/mobile/lib/features/github_import/github_import.dart) | Public source models и `GitHubImportRepository`; Dio/DTO/cache в data, отдельный Riverpod controller и экран. Не меняет profile/projects/portfolio repositories |
+| [portfolio](../../apps/mobile/lib/features/portfolio/portfolio.dart) | `PortfolioOverview` в presentation объединяет публичные profile/projects states для Home, Portfolio и preview; это модель чтения |
+| Home и Settings | Рендерят данные публичных feature APIs; Home использует overview, Settings — profile state и отдельную тему через Provider |
+
+</div>
+
+Зависимости: presentation → domain, data → domain. Корневые DI-файлы feature
+связывают repository contract с реализацией. Widgets не импортируют concrete
+repositories или mock content. Между features используются публичные
+`auth.dart`, `profile.dart`, `projects.dart`, `portfolio.dart`; внутренние файлы
+другой feature не импортируются.
+
+Domain использует только Dart и не зависит от Flutter, Riverpod, Dio, Hive или
+Firebase. Model collections защищены от внешнего изменения. UI получает
+`AsyncValue`: loading/error и явный retry показываются общими widgets, empty
+обрабатывается соответствующим экраном. Repository отвечает за источник,
+controller/notifier — за действие или состояние; pure domain — за правила.
+UseCase/DataSource не созданы: mock repositories и GitHub HTTP-adapter
+достаточны для текущих сценариев, без дополнительного промежуточного слоя.
+
+`ProfileReadiness` проверяет корректность счётчиков demo-snapshot и предоставляет
+долю/процент. Алгоритм полноты профиля, полный portfolio domain и Builder относятся
+к Phase 6. `PortfolioOverview` не является draft, опубликованной версией или
+контрактом синхронизации.
 
 Provider ограничивается базовыми настройками: сейчас только ThemeMode,
-Locale допускается при появлении переводов. Riverpod управляет состоянием
-поиска/фильтров Projects. Эволюция `setState → InheritedWidget → Provider`
+Locale допускается при появлении переводов. Riverpod управляет product state,
+асинхронными repository данными и DI. Эволюция `setState → InheritedWidget → Provider`
 сохранена в [учебном guide](../learning/state-management.md), в `lib` осталась
-одна итоговая реализация темы. GoRouter —
-routing/guards, Dio — GitHub. Serialization вводится вместе с реальными моделями.
+одна итоговая реализация темы. GoRouter владеет маршрутизацией; Dio и JSON DTO
+используются GitHub Import, auth guards вводятся вместе с настоящей авторизацией.
+
+---
+
+## GitHub Import: HTTP и session-кэш
+
+`Projects → GitHub Import → username → profile + repositories` — отдельный
+просмотр источника. `GitHubProfile` и `GitHubRepository` не являются `Profile`
+или curated `Project`; преобразование для импорта появится на Phase 9.
+
+[`GitHubImportController`](../../apps/mobile/lib/features/github_import/presentation/github_import_controller.dart)
+управляет загрузкой, refresh, pagination и локальным поиском. Первые profile/page
+публикуются как один успешный snapshot. При неудачном refresh или запросе следующей
+страницы прежний список остаётся виден вместе с ошибкой и retry. Новый username
+заменяет результат; controller отменяет старые запросы и проверяет generation,
+чтобы запоздалый ответ не заменил новый профиль. Закрытие экрана освобождает
+autoDispose scope и debounce timer.
+HTTP repository остаётся в app session: повторное открытие экрана не сбрасывает
+rate deadline. Controller отменяет активные requests при dispose; Dio закрывается
+при завершении app scope.
+
+[`DioGitHubImportRepository`](../../apps/mobile/lib/features/github_import/data/dio_github_import_repository.dart)
+владеет HTTP, строгим parsing DTO, отменой и преобразованием сетевых ошибок в
+pure Dart `GitHubFailure`. Feature-root DI создаёт Dio с ограниченными timeout;
+widgets не знают о transport. JSON `fromJson/toJson` написаны вручную для двух
+небольших DTO: codegen dependencies не нужны. Ответы с null/пустыми optional
+полями допустимы, некорректные обязательные поля дают `invalidResponse`.
+
+Pagination следует `Link` с `rel="next"`, включая numeric `/user/{id}/repos`,
+который реально возвращает GitHub. Принимаются только HTTPS-ссылки
+`api.github.com` на repositories загруженного профиля. Кнопка «Загрузить ещё»
+запрашивает следующую страницу; результаты объединяются по стабильному ID.
+Поиск по названию/описанию/языку имеет debounce 300 ms, фильтры работают локально
+на загруженных страницах; GitHub Search API не используется.
+
+[`GitHubResponseCache`](../../apps/mobile/lib/features/github_import/data/github_response_cache.dart)
+— используемый async contract data-слоя. Текущая memory-реализация хранит JSON,
+ETag и Link только в app session. Повторный GET всегда проверяет источник,
+посылает `If-None-Match` и восстанавливает body/next link при `304`. Повреждённый
+ответ не записывается. Это подготовка persistent cache Phase 5: offline fallback,
+TTL, versioned storage и Hive пока отсутствуют.
+
+На 3 октября 2026 проверены официальные
+[users](https://docs.github.com/en/rest/users/users#get-a-user),
+[repositories](https://docs.github.com/en/rest/repos/repos#list-repositories-for-a-user),
+[pagination](https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api),
+[API versions](https://docs.github.com/en/rest/about-the-rest-api/api-versions) и
+[rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api).
+API version явно закреплена в adapter/DI. Публичный доступ без токена имеет
+60 запросов в час на исходящий IP. Retry выполняется явно; `403/429` с признаками
+rate limit показывают срок из `Retry-After`/`X-RateLimit-Reset` или безопасную
+паузу, до которого новые запросы блокируются. Unauthenticated `304` не заявляется
+как обход rate limit: освобождение от primary quota требует корректной
+авторизации по [GitHub best practices](https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api).
+
+Парсинг, HTTP/cache/сбои, controller races и реальные widgets проверяются
+`github_data_test.dart`, `github_import_controller_test.dart` и
+`github_import_widget_test.dart`; итоговые результаты и native limitations — в
+[приёмке Phase 4](../product/product-spec.md#phase-4--github-api).
 
 ---
 
@@ -264,8 +349,9 @@ routing/guards, Dio — GitHub. Serialization вводится вместе с �
 3. **Published representation:** явно опубликованные данные публичной страницы.
    Изменения draft и GitHub sync не становятся публичными сами по себе.
 
-GitHub не является абсолютным source of truth. Будущий Project связан с repository
-через стабильный ID и хранит источник (`manual`/`github`), время/состояние sync.
+GitHub не является абсолютным source of truth. Текущий `Project` хранит typed
+происхождение `manual`/`github`. Связь с repository через стабильный ID и
+время/состояние sync будут введены вместе с импортом и синхронизацией.
 Пользовательские overrides отличаются от импортированных полей. Новые/изменённые
 repositories дают предложения, которые пользователь просматривает.
 
@@ -292,12 +378,15 @@ ProjectScore необязательно показывать; UI объясня�
 
 1. Flutter вызывает `main` в `apps/mobile/lib/main.dart`.
 2. `StackCardApp` создаёт `MaterialApp.router`, обе темы и GoRouter.
-3. Sign In проверяет формат demo-email и открывает Home. App shell позволяет
+3. Sign In использует pure demo-email validation и `AuthController`;
+   успешный `AuthRepository.openDemo` открывает Home. App shell позволяет
    переходить на Portfolio, Projects и Settings, возвращаться назад.
-4. Projects меняет Riverpod query/filter state; derived provider фильтрует mock
-   data. Settings меняет AppearanceController и локальный preview состояний
-   loading/empty/error с retry.
-5. UI tests проверяют эти сценарии и layouts на разных размерах.
+4. Profile и Projects загружаются из заменяемых repositories через Riverpod.
+   `PortfolioOverview` объединяет их для Home, Portfolio и preview; поиск Projects
+   не меняет полный список или featured на других экранах.
+5. Settings меняет AppearanceController, читает profile provider и сохраняет
+   локальный preview loading/empty/error с retry. Tests проверяют contracts,
+   замену источника, асинхронные состояния, навигацию и layouts.
 
 Этот поток не обращается к сети, Firebase или хранилищу.
 
