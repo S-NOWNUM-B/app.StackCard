@@ -4,7 +4,7 @@
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage Phase 3](https://raster.shields.io/badge/Stage-Phase_3-111111?style=for-the-badge)
+![Stage Phase 4](https://raster.shields.io/badge/Stage-Phase_4-111111?style=for-the-badge)
 ![Mobile + Web planned](https://raster.shields.io/badge/Mobile_%2B_Web-planned-FF0012?style=for-the-badge)
 
 </div>
@@ -37,11 +37,14 @@ debug APK собран и запущен на Android-эмуляторе, изм
 По следующему поручению выполнена **Phase 2: Basic state management**:
 эволюция темы `setState → InheritedWidget → Provider`, Riverpod для поиска/фильтров
 Projects и воспроизводимые учебные этапы вне рабочего кода.
-По текущему поручению завершена **Phase 3: Architecture**: features
+По следующему поручению завершена **Phase 3: Architecture**: features
 auth/profile/projects разделены на `presentation/domain/data`, Repository
 contracts и Riverpod DI позволяют заменять демонстрационные источники.
+По текущему поручению завершена **Phase 4: GitHub API**: отдельный GitHub Import
+загружает публичный профиль и repositories через Dio, поддерживает pagination,
+refresh, локальный поиск/filter и повтор запроса после ошибки.
 Результаты проверок и Android-запуска зафиксированы в
-[разделе Phase 3](#phase-3--architecture).
+[разделе Phase 4](#phase-4--github-api).
 Этот документ отделяет реализованный интерфейс от целевых функций.
 Flutter-приложение находится в `apps/mobile`; в `apps/web`
 сейчас только README. Remote `origin` уже подключён; `main` отслеживает `origin/main`.
@@ -52,14 +55,15 @@ Commit и push выполняются только по запросу поль�
 закреплён в [общих AI-правилах](../AI/AGENTS.md#разработка-по-плану),
 корневом/mobile AGENTS, router и CONTRIBUTING.
 
-Приложение использует демонстрационные данные: Firebase, GitHub API, web,
-сохранение, редактирование и публикация ещё не подключены. Тема принадлежит
+Основные экраны портфолио используют демонстрационные данные; GitHub Import
+отдельно читает публичный GitHub API. Firebase, web, постоянное сохранение,
+редактирование и публикация ещё не подключены. Тема принадлежит
 AppearanceController через Provider; demo-вход, загрузка профиля/проектов
 и query/filter state — Riverpod. Home, Portfolio и идентичность в Settings читают
 один профиль через Repository; предпросмотр использует данные того же источника.
-Выбор сохраняется между экранами только в текущей app session. Текущее поручение
-расширено до Phase 4 прямым поручением пользователя. GitHub API реализуется
-в отдельном GitHub Import; Phase 5 и последующие этапы пока не разрешены.
+Выбор и GitHub response cache сохраняются только в текущей app session.
+GitHub Import не изменяет curated portfolio и не публикует данные.
+Phase 5 и последующие этапы пока не разрешены.
 
 ---
 
@@ -341,10 +345,9 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 web-редактор и публичные портфолио. Этот раздел владеет roadmap; технические решения
 подробно фиксируются в architecture и ADR, команды — в CONTRIBUTING.
 
-**Phase 0–3 завершены:** основа, UI, состояние и архитектура проверены;
+**Phase 0–4 завершены:** основа, UI, состояние, архитектура и GitHub Import проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
-Текущее поручение — Phase 4: отдельный GitHub Import. Фазы 5–20 остаются
-планом и требуют отдельного поручения пользователя.
+Фазы 5–20 остаются планом и требуют отдельного поручения пользователя.
 
 Чекбокс `- [x]` означает подтверждённый результат, `- [ ]` — оставшуюся задачу
 или непроверенный сценарий. При отметке проверки рядом фиксируются результат
@@ -358,7 +361,7 @@ web-редактор и публичные портфолио. Этот разд
 | Phase 1 — UI foundation | Завершена; UI, темы, навигация и mock-сценарии проверены |
 | Phase 2 — Basic state management | Завершена; три этапа темы, итоговый Provider и Riverpod state проверены |
 | Phase 3 — Architecture | Завершена; Repository/DI, чистый domain, UI и Android-запуск проверены |
-| Phase 4 — GitHub API | В работе; переход подтверждён пользователем |
+| Phase 4 — GitHub API | Завершена; HTTP, pagination, refresh, состояния и Android-запуск проверены |
 | Phase 5 — Local persistence / offline | Запланирована |
 | Phase 6 — Portfolio domain и локальный Builder | Запланирована |
 | Phase 7 — Firebase authentication | Запланирована |
@@ -634,21 +637,57 @@ web-редактор и публичные портфолио. Этот разд
 
 **Задачи**
 
-- [ ] Реализовать отдельный GitHub Import: ввод username, публичный профиль и repositories
+- [x] Реализовать отдельный GitHub Import: ввод username, публичный профиль и repositories
   через Dio, модели и JSON serialization.
-- [ ] Добавить pagination, timeout, retry, pull-to-refresh и поиск/filter с debounce,
+- [x] Добавить pagination, timeout, retry, pull-to-refresh и поиск/filter с debounce,
   где он нужен сценарию. Проверить актуальные rate limits и поведение API перед кодом.
-- [ ] Показать loading/success/empty/error; отделить сетевой источник от UI и подготовить
+- [x] Показать loading/success/empty/error; отделить сетевой источник от UI и подготовить
   используемый контракт кэша. Протестировать parsing и обработку сетевых сбоев.
 
 **Проверки и приёмка**
 
-- [ ] Публичный профиль и repositories загружаются; pagination, refresh
+- [x] Публичный профиль и repositories загружаются; pagination, refresh
   и используемый поиск/filter с debounce работают.
-- [ ] Loading/success/empty/error, timeout и retry проверены; пустой профиль
+- [x] Loading/success/empty/error, timeout и retry проверены; пустой профиль
   и сетевой сбой не ломают экран.
-- [ ] Parsing и обработка сбоев покрыты tests; rate limits и поведение API
+- [x] Parsing и обработка сбоев покрыты tests; rate limits и поведение API
   сверены с актуальной документацией. Импорт в portfolio ещё не выполняется.
+
+**Реализовано и проверено в Phase 4 — 3 октября 2026**
+
+- Из Projects открывается отдельный `/github-import`: username валидируется до
+  запроса, публичный профиль и repositories загружаются через Dio. JSON DTO
+  преобразуются в pure Dart domain models; widgets используют Repository через
+  Riverpod DI. Новый экран сохраняет существующие tokens и shared components.
+- Следующая страница берётся из GitHub `Link`; разрешены только проверенные
+  GitHub API URL текущего пользователя. Повторяющиеся repositories удаляются по
+  ID. Поиск с debounce и фильтры работают по загруженным страницам; UI показывает
+  их число и явно объясняет эту границу. Есть refresh и pull-to-refresh.
+- Ошибки timeout/network/not found/rate limit/invalid response преобразуются
+  в типизированные состояния с понятным текстом и явным retry. Ошибка refresh
+  или следующей страницы сохраняет уже загруженный список. Замена username
+  и закрытие экрана отменяют запросы; устаревший ответ не меняет актуальное состояние.
+- Используется контракт `GitHubResponseCache` и его реализация в памяти app session:
+  JSON, ETag и Link поддерживают conditional requests и ответы 304. Repository
+  сохраняет rate-limit deadline при повторном открытии экрана. Disk cache,
+  offline fallback и импорт в portfolio остаются задачами последующих фаз.
+  Версия API, pagination и rate limits сверены с официальной документацией;
+  ссылки и HTTP/cache contract записаны в [architecture](../architecture/architecture.md#github-import-http-и-session-кэш).
+- Добавлены 72 tests: 37 для DTO/HTTP/cache/errors, 17 для controller и 18 для
+  widgets/DI/responsive. Полный `flutter test` прошёл: **214 tests**, включая
+  **40 golden-сравнений**. После добавления входа в GitHub Import обновлены
+  8 Projects preview; остальные 32 preview сохранены. `flutter analyze` — без
+  замечаний, format — 70 Dart-файлов без изменений.
+- Debug APK собран и установлен на Android-эмулятор. Реальный API загрузил
+  профили `flutter` и `google`; локальный поиск, следующая страница и явный refresh
+  проверены на устройстве. Две страницы `google` дали 59 уникальных repositories
+  после удаления дубля по ID; финальная сборка успешно обновила первую страницу.
+  Pull-to-refresh, пустые данные и ошибки дополнительно проверены widget tests.
+- Учебные patches темы проверены отдельно: оба применяются и проходят по 5 tests.
+  Документы, локальные ссылки, project context и diff проверены. Android debug
+  работает; doctor по-прежнему отмечает отсутствие cmdline-tools и неизвестный
+  статус licenses. iOS-запуск не проверен: Xcode и CocoaPods не готовы.
+  Phase 5 не начата.
 
 **Готово, когда:** repositories загружаются и листаются, ошибку можно повторить,
 пустой профиль не ломает экран. Импорт в портфолио и Firebase ещё не выполняется.
@@ -1077,7 +1116,7 @@ browser push автоматически в scope не добавляется.
 App Distribution или deploy web требует запроса пользователя; iOS-публикация
 не заявляется выполненной по одному Android release.
 
-**Phase 0–3 завершены. Phase 4 в работе по прямому поручению пользователя.**
+**Phase 0–4 завершены. Переход к Phase 5 требует поручения пользователя.**
 
 ---
 

@@ -26,7 +26,7 @@
 
 ## Что вносить
 
-Phase 0–3 завершены; текущее поручение — GitHub API на Phase 4.
+Phase 0–4 завершены; последнее поручение — GitHub API на Phase 4.
 Реализован отдельный GitHub Import для чтения публичного профиля и repositories.
 Окончательный статус приёмки и результаты проверок находятся в
 [product spec](docs/product/product-spec.md#phase-4--github-api).

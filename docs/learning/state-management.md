@@ -308,6 +308,11 @@ flutter run -d <device-id>
 Проверены demo-вход, навигация, поиск/детали Projects, смена темы со states/retry
 и клавиатура; async profile в Settings и Repository/DI сохранены.
 
+На Phase 4 оба patches повторно прошли `git apply --check` на текущем checkout
+и UI tests из `test/widget_test.dart` в независимых временных копиях. GitHub Import
+sources, repository lifetime, Provider overrides и async profile Settings
+сохранены; runtime-код и сами patches для этой проверки не изменялись.
+
 Промежуточная InheritedWidget-версия действительно выполнялась: пять tests
 из `test/widget_test.dart` прошли, включая переключение темы и навигацию.
 Итоговые проверки контроллера, Riverpod state, UI и реконструкции этапов,

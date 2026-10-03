@@ -32,12 +32,12 @@
 
 В monorepo есть одно Flutter-приложение в `apps/mobile`. Код Architecture
 Phase 3 реализован поверх UI foundation и basic state management;
-окончательная приёмка и фактические результаты проверок ведутся в
-[product spec](../product/product-spec.md#phase-3--architecture).
+Phase 4 добавила отдельный GitHub Import с публичным HTTP-источником.
+Окончательная приёмка и фактические результаты проверок ведутся в
+[product spec](../product/product-spec.md#phase-4--github-api).
 Sign In, Home, Portfolio, Projects и Settings сохраняют общий app shell,
 Material 3 light/dark и демонстрационный контент. Данные приходят через
-Repository contracts и Riverpod DI. Phase 4 добавляет отдельный GitHub Import
-с публичным HTTP-источником; реальная авторизация, постоянное хранение,
+Repository contracts и Riverpod DI. Реальная авторизация, постоянное хранение,
 редактирование и публикация вводятся по roadmap.
 
 Текущие используемые области:
@@ -257,13 +257,14 @@ features/<feature>/
 Зависимости: presentation → domain, data → domain. Корневые DI-файлы feature
 связывают repository contract с реализацией. Widgets не импортируют concrete
 repositories или mock content. Между features используются публичные
-`auth.dart`, `profile.dart`, `projects.dart`, `portfolio.dart`; внутренние файлы
-другой feature не импортируются.
+`auth.dart`, `profile.dart`, `projects.dart`, `portfolio.dart`, `github_import.dart`;
+внутренние файлы другой feature не импортируются.
 
 Domain использует только Dart и не зависит от Flutter, Riverpod, Dio, Hive или
-Firebase. Model collections защищены от внешнего изменения. UI получает
-`AsyncValue`: loading/error и явный retry показываются общими widgets, empty
-обрабатывается соответствующим экраном. Repository отвечает за источник,
+Firebase. Model collections защищены от внешнего изменения. UI auth/profile/projects
+получает `AsyncValue`; GitHub Import использует `GitHubImportState` для списка,
+refresh и pagination. Loading/error и явный retry показываются общими widgets,
+empty обрабатывается соответствующим экраном. Repository отвечает за источник,
 controller/notifier — за действие или состояние; pure domain — за правила.
 UseCase/DataSource не созданы: mock repositories и GitHub HTTP-adapter
 достаточны для текущих сценариев, без дополнительного промежуточного слоя.
@@ -316,8 +317,9 @@ Pagination следует `Link` с `rel="next"`, включая numeric `/user/
 [`GitHubResponseCache`](../../apps/mobile/lib/features/github_import/data/github_response_cache.dart)
 — используемый async contract data-слоя. Текущая memory-реализация хранит JSON,
 ETag и Link только в app session. Повторный GET всегда проверяет источник,
-посылает `If-None-Match` и восстанавливает body/next link при `304`. Повреждённый
-ответ не записывается. Это подготовка persistent cache Phase 5: offline fallback,
+посылает `If-None-Match` при сохранённом ETag и восстанавливает body/next link
+при `304`. Повреждённый ответ не записывается. Это подготовка persistent cache
+Phase 5: offline fallback,
 TTL, versioned storage и Hive пока отсутствуют.
 
 На 3 октября 2026 проверены официальные
@@ -448,7 +450,8 @@ Package, UseCase или DataSource выделяется под существу�
 
 - Widget получает Loading/Success/Empty/Error; ошибки timeout/network/auth/parsing/
   validation/cache преобразуются на границах, без разбросанного `try/catch` в UI.
-- GitHub import поддержит pagination, retry, pull-to-refresh и cache; это не GitHub client.
+- GitHub Import поддерживает pagination, retry, pull-to-refresh и session ETag/cache;
+  persistent offline cache вводится на Phase 5.
 - Private writes ограничены owner; посторонние читают только опубликованные данные.
   Firestore/Storage Rules тестируются при интеграции. Secrets и signing data не в Git.
 - Location публикуется как город/страна, без точных GPS; denied/permanently denied/

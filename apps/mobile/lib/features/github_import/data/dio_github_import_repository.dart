@@ -221,7 +221,7 @@ final class DioGitHubImportRepository implements GitHubImportRepository {
       final now = _clock().toUtc();
       final seconds = int.tryParse(_header(headers, 'retry-after') ?? '');
       final reset = int.tryParse(_header(headers, 'x-ratelimit-reset') ?? '');
-      // Invalid or overflowing headers fall back to GitHub's one-minute wait.
+      // Некорректные или слишком большие headers дают минуту ожидания.
       const maxEpochSeconds = 8640000000000;
       final retryAt =
           seconds != null &&
