@@ -3,9 +3,15 @@
 Начало: [общие правила](AGENTS.md). Общие правила хранятся в репозитории;
 отдельные копии для разных AI-клиентов не требуются.
 
+Перед любой задачей по разработке продукта обязательно прочитай
+[план разработки](../product/product-spec.md#план-разработки),
+[текущий статус](../product/product-spec.md#статус-и-границы-текущей-работы)
+и раздел выполняемой фазы. Порядок работы и переходов задают
+[общие правила выполнения плана](AGENTS.md#разработка-по-плану).
+
 | Задача | Читать | Canonical source |
 | --- | --- | --- |
-| Scope, фазы, продуктовые сценарии | [Product spec](../product/product-spec.md) | Подтверждённая текущая фаза и фактическая реализация |
+| Разработка продукта: scope, фазы, задачи и сценарии | [План разработки](../product/product-spec.md#план-разработки), [Product spec](../product/product-spec.md), [правила фаз](AGENTS.md#разработка-по-плану) | Статус и критерии фазы в product spec, подтверждение пользователя и фактическая реализация |
 | Структура/зависимости mobile | [Mobile rules](scopes/mobile.md), [architecture](../architecture/architecture.md), [решения](../decisions/README.md) | `apps/mobile/pubspec.yaml`, `apps/mobile/pubspec.lock`, `apps/mobile/lib`, platform configs |
 | Структура и scope web | [Web README](../../apps/web/README.md), [architecture](../architecture/architecture.md) | `apps/web/README.md`; configs/code появятся при создании Next.js-приложения |
 | UI и branding | [Design system](../design/design-system.md) | `assets/branding/stackcard-link-brand-kit.json`, SVG; существующие widgets |

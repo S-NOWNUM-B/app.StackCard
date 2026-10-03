@@ -23,21 +23,31 @@
 - [Offline, приватность и безопасность](#offline-приватность-и-безопасность)
 - [Техническое направление и качество](#техническое-направление-и-качество)
 - [Non-goals v1](#non-goals-v1)
-- [Roadmap](#roadmap)
+- [План разработки](#план-разработки)
+- [Учебные требования и сдача](#учебные-требования-и-сдача)
 
 ---
 
 ## Статус и границы текущей работы
 
-Текущий этап — **Phase 0: Product foundation**. Этот документ фиксирует
+Текущий этап — **Phase 0: Product foundation**. Проверки кода и документов пройдены;
+нативный запуск ещё не подтверждён, поэтому фаза не закрыта.
+Текущее поручение ограничено проверкой Phase 0; Phase 1 остаётся запланированной
+и в этой задаче не начинается. Этот документ фиксирует
 целевой продукт, а не реализованные возможности. В локальной основе подготовлены
 документация и минимальное Flutter-приложение в `apps/mobile`; в `apps/web`
-сейчас только README. Подключение удалённого репозитория и дальнейшая разработка —
-последующие действия. Commit и push выполняются только по запросу пользователя.
+сейчас только README. Remote `origin` уже подключён; `main` отслеживает `origin/main`.
+Для дальнейшей разработки создана и выбрана локальная ветка `dev`. Commit и push выполняются
+только по запросу пользователя.
+
+План фаз 0–20 документирован; обязательный порядок дальнейшей разработки
+закреплён в [общих AI-правилах](../AI/AGENTS.md#разработка-по-плану),
+корневом/mobile AGENTS, router и CONTRIBUTING.
 
 Phase 0 не включает подключение Firebase, GitHub API, Riverpod, реализацию web,
-бизнес-функции и новые зависимости на будущее. После неё работа останавливается;
-переход к Phase 1 требует подтверждения пользователя.
+бизнес-функции и новые зависимости на будущее. После проверки Phase 0
+продуктовая разработка в этой задаче останавливается. Дальнейшая работа ведётся
+в `dev`; начало Phase 1 требует отдельного поручения пользователя.
 
 ---
 
@@ -310,53 +320,695 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 
 ---
 
-## Roadmap
+<a id="roadmap"></a>
 
-Фазы выполняются последовательно. После каждой фазы приложение должно оставаться
-запускаемым; выполнение следующей не начинается автоматически. Phase 0 завершается
-подготовкой локальной основы и отчётом; первый commit — только после отдельного
-запроса. Текущий запрос не включает подключение remote.
+## План разработки
+
+План объединяет исходное описание StackCard, требования учебного задания
+`individual_project_flutter_ru.docx` и актуальный scope выше: mobile, полноценный
+web-редактор и публичные портфолио. Этот раздел владеет roadmap; технические решения
+подробно фиксируются в architecture и ADR, команды — в CONTRIBUTING.
+
+**Текущая фаза — 0, ожидает проверки нативного запуска.** Проверки Flutter-кода
+и документов пройдены; результаты записаны ниже. Текущее поручение ограничено
+проверкой Phase 0. Фазы 1–20 остаются планом и в этой задаче не начинаются;
+дальнейшая разработка ведётся в `dev` после отдельного поручения пользователя.
+
+Чекбокс `- [x]` означает подтверждённый результат, `- [ ]` — оставшуюся задачу
+или непроверенный сценарий. При отметке проверки рядом фиксируются результат
+и ограничения среды. Фаза завершена только после приёмки обязательных сценариев.
 
 <div align="center">
 
-| **Фаза** | **Проверяемый результат** |
+| **Фаза** | **Статус** |
 |:---|:---|
-| **0 — Product foundation** | Локальный репозиторий, README, product/architecture/design docs и ADR, `.gitignore`, минимальный Flutter app в `apps/mobile`, доступные doctor/pub get/analyze и проверка запуска. Без Firebase, GitHub API, web и сложной архитектуры. |
-| 1 — UI foundation | Material 3, light/dark theme, tokens, common widgets, app shell и GoRouter; статические Sign In, Home, Portfolio, Projects, Settings на mock data. |
-| 2 — Basic state management | Учебная эволюция setState → InheritedWidget → Provider для одного простого сценария при необходимости; Provider для ThemeMode/Locale, Riverpod для основного состояния; решение документируется. |
-| 3 — Architecture | Feature modules с presentation/domain/data, Repository pattern и Riverpod DI для первых реальных auth/profile/projects features. |
-| 4 — GitHub API | Независимый GitHub Import по username: Dio, user/repositories, serialization, pagination, loading/empty/error/retry, cache abstraction; без импорта в Firebase. |
-| 5 — Local persistence / offline | SharedPreferences, Hive, GitHub cache и local portfolio draft; ранее загруженное доступно без сети. |
-| 6 — Portfolio domain | Profile, Skill, Project, Experience, Education, SocialLink, PortfolioBlock, PortfolioTheme; локальный builder с add/edit/delete/reorder/show/hide/preview. |
-| 7 — Firebase authentication | Email/password, Google, auth state, route guards, sign out и привязка local user к Firebase uid. |
-| 8 — Firestore synchronization | Local cache + remote через Repository; явная conflict strategy и состояния synced/pending/error. |
-| 9 — Living Portfolio | Import repository → Project, manual/github source, repository identity, last sync и detection изменений. |
-| 10 — Portfolio Suggestions | Deterministic rules с независимой от UI проверкой. |
-| 11 — Media | Firebase Storage, avatar/project images, camera/gallery, compression, cache и Storage Rules. |
-| 12 — Location | Geolocator, Google Maps, Location Picker, permissions и approximate public location. |
-| 13 — Website и web editor | Создание Next.js-приложения в `apps/web`: главная, скачивание mobile, auth/кабинет, редактор общего draft и public portfolio с SEO/metadata/OpenGraph. Последовательность — 13a → 13b → 13c ниже. |
-| 14 — Contact / Inbox / FCM | ContactRequest из web form, mobile/web Inbox и mobile уведомление владельцу. |
-| 15 — Developer Card | Визуальная визитка, QR и Android sharing через MethodChannel + Kotlin. |
-| 16 — Performance | Профилирование списков, images, rebuilds, memory и frame rendering; исправление измеренных проблем с результатами до/после. |
-| 17 — Testing | Unit/widget/integration, coverage >40%, clean analyze. |
-| 18 — CI/CD | GitHub Actions: dependency resolution, format, analyze, tests/coverage, APK build и сохранение artifact; AAB позднее. |
-| 19 — Production hardening | Crashlytics, audit rules, error logging, loading/error/empty UX, privacy policy, permissions descriptions, app icon, splash, versioning. |
-| 20 — Release | Android keystore, signed release/AAB, obfuscation, internal testing или Firebase App Distribution, screenshots и store description. |
+| Phase 0 — Product foundation | Код и документы проверены; нативный запуск не подтверждён |
+| Phase 1 — UI foundation | Запланирована |
+| Phase 2 — Basic state management | Запланирована |
+| Phase 3 — Architecture | Запланирована |
+| Phase 4 — GitHub API | Запланирована |
+| Phase 5 — Local persistence / offline | Запланирована |
+| Phase 6 — Portfolio domain и локальный Builder | Запланирована |
+| Phase 7 — Firebase authentication | Запланирована |
+| Phase 8 — Firestore synchronization | Запланирована |
+| Phase 9 — Living Portfolio / Smart GitHub Sync | Запланирована |
+| Phase 10 — Portfolio Suggestions | Запланирована |
+| Phase 11 — Media | Запланирована |
+| Phase 12 — Location | Запланирована |
+| Phase 13a — Public shell | Запланирована |
+| Phase 13b — Auth и редактор | Запланирована |
+| Phase 13c — Public portfolio | Запланирована |
+| Phase 14 — Contact / Inbox / FCM | Запланирована |
+| Phase 15 — Developer Card и native sharing | Запланирована |
+| Phase 16 — Performance | Запланирована |
+| Phase 17 — Testing | Запланирована |
+| Phase 18 — CI/CD | Запланирована |
+| Phase 19 — Production hardening | Запланирована |
+| Phase 20 — Release | Запланирована |
 
 </div>
 
-Phase 13 расширена до полноценного сайта и выполняется последовательно:
+### Как выполнять план
 
-1. **13a — Public shell:** Next.js foundation, responsive layout, главная о проекте
-   и `/download`. CTA и ссылки отражают реально доступные возможности/релизы.
-2. **13b — Auth и редактор:** вход, защищённый `/app`, профиль/проекты/блоки,
-   общий private draft, состояния сохранения и sync. Включает проверку совместимости
-   data contracts и conflict strategy с mobile.
-3. **13c — Public portfolio и публикация:** preview, явные publish/unpublish,
-   `/u/[username]` с чтением только published snapshot, SEO/metadata/OpenGraph.
-   Contact form и Inbox подключаются на Phase 14.
+- Выполнять одну фазу за раз. Сначала завершить её задачи и проверки, затем
+  показать результат. Переходить дальше по уже полученному разрешению пользователя;
+  если следующая фаза не разрешена, получить подтверждение перед её началом.
+- Внутри фазы двигаться небольшими изменениями с проверяемым пользовательским
+  сценарием. После каждого шага приложение должно запускаться.
+- Добавлять зависимости и слои вместе с реальным использованием. До соответствующей
+  фазы не создавать Firebase, Next.js, пустые features или универсальные abstractions.
+- Добавлять значимые tests по мере появления поведения. Phase 17 доводит покрытие;
+  security rules проверяются при подключении сервиса, а не только перед релизом.
+- При приёмке фиксировать: выполненные задачи, результат запуска, проверки,
+  ограничения и решения. Не отмечать фазу готовой по одному списку файлов.
+- В этом документе обновлять фактический прогресс и результаты проверок фазы.
+  После подтверждённого перехода обновлять текущую фазу в разделе статуса
+  и связанные описания; правила работы по плану закреплены в
+  [общих инструкциях](../AI/AGENTS.md#разработка-по-плану).
+- Commit, push, подключение remote и публикация выполняются по отдельному запросу.
+  План не задаёт календарные сроки; темы курса сопоставлены в следующем разделе.
 
-В Phase 0 подготовлен каталог `apps/web` с README. Создание Next.js-приложения
-и реализация сайта остаются задачами Phase 13.
+### Phase 0 — Product foundation
 
-**После Phase 0 остановиться; Phase 1 — только с подтверждением пользователя.**
+**Задачи**
+
+- [x] Проверить существующий monorepo и сохранить Flutter-приложение в `apps/mobile`
+  с Android/iOS targets; повторно генерировать scaffold не нужно.
+- [x] Зафиксировать scope, MVP, экраны, архитектурное направление и дизайн в текущих
+  README и guides. Сохранить `.gitignore`, lockfile, ADR и branding originals.
+- [x] Выполнить доступные проверки окружения, зависимостей, format, analyze, widget test
+  и попытку запуска по [CONTRIBUTING](../../CONTRIBUTING.md#проверки);
+  ограничения нативной проверки записаны ниже.
+- [x] Подготовить отчёт о фундаменте и ограничениях среды. Commit возможен
+  только по запросу пользователя.
+
+**Проверки и приёмка**
+
+- [x] Подтверждены структура monorepo, Android/iOS targets, lockfile, ignore rules,
+  ADR и сохранность оригиналов branding.
+- [x] Окружение и зависимости проверены; format, analyze и widget test выполнены
+  по CONTRIBUTING, результаты и ограничения записаны.
+- [ ] Минимальное приложение запущено на доступном Android/iOS target;
+  непроверенный target и причина явно указаны.
+- [x] Документы согласованы с существующей основой; отчёт о фазе подготовлен.
+
+**Результаты проверки — 3 октября 2026**
+
+- `flutter --version`: Flutter 3.47.4 stable, Dart 3.13.3; SDK constraint выполнен.
+- `flutter pub get`: успешно; manifest и lockfile не изменились.
+- `dart format --output=none --set-exit-if-changed lib test`: успешно,
+  оба файла уже отформатированы.
+- `flutter analyze`: `No issues found`.
+- `flutter test`: 1/1 widget test прошёл, включая обновление счётчика.
+- Проверка документации: 12 файлов без ошибок оформления и локальных ссылок;
+  `project_context.py` и `git diff --check` прошли.
+- Mobile содержит только Android/iOS targets; builds, caches и `local.properties`
+  исключены из Git. Все шесть SVG совпадают с embedded originals brand kit.
+- Android-эмулятор `main_phone` загрузился. `flutter run -d emulator-5554`
+  начал сборку, но пробная сборка остановлена до завершения первой загрузки
+  Gradle 9.3.1; APK и работающий экран не проверены. Это не подтверждение
+  ошибки исходного кода.
+- `flutter doctor -v`: для Android отсутствуют cmdline-tools, статус лицензий
+  неизвестен; Xcode установлен неполностью, CocoaPods отсутствует. iOS-запуск
+  не проверялся. Для закрытия фазы остаётся подтвердить запуск счётчика на
+  Android/iOS target и записать результат.
+- Локальная ветка `dev` создана от текущего `main` и выбрана для дальнейшей работы;
+  незакоммиченные изменения сохранены. В этой задаче commit/push не выполнялись.
+
+**Готово, когда:** минимальное приложение запускается, документы согласованы,
+проверки выполнены или их ограничения явно указаны. Firebase, GitHub API,
+продуктовые features и Next.js на этой фазе не вводятся.
+
+### Phase 1 — UI foundation
+
+**Задачи**
+
+- [ ] Перенести tokens из [design system](../design/design-system.md) в Material 3
+  theme: light/dark, typography, spacing, radius и правила Signal Red.
+- [ ] Создать используемые общие buttons, cards, inputs и состояния loading/error/empty.
+- [ ] Добавить app shell и GoRouter; показать Sign In, Home, Portfolio, Projects,
+  Settings на mock data. Inbox подключается со своим сценарием позднее.
+- [ ] Подготовить эскизы и проверить пять экранов на телефоне и планшете,
+  в portrait/landscape; проверить читаемость, контраст и работу с клавиатурой.
+
+**Проверки и приёмка**
+
+- [ ] Sign In, Home, Portfolio, Projects и Settings доступны через app shell;
+  переходы и возврат работают на mock data.
+- [ ] Light/dark темы, typography, spacing, radius и применение Signal Red
+  соответствуют design system; общие компоненты используются на экранах.
+- [ ] Экраны сверены с эскизами на телефоне и планшете в обеих ориентациях;
+  читаемость, контраст, keyboard navigation и отсутствие overflow проверены.
+- [ ] Loading/error/empty состояния проверены; format, analyze и значимые
+  UI tests проходят, результаты запуска и ограничения записаны.
+
+**Готово, когда:** навигация и обе темы работают, основные экраны соответствуют
+эскизам и сохраняют компоновку на разных размерах. Backend не требуется.
+
+### Phase 2 — Basic state management
+
+**Задачи**
+
+- [ ] Выполнить обязательную для курса эволюцию одного простого сценария, например
+  переключения темы: `setState → InheritedWidget → Provider`.
+- [ ] Сохранить сравнение подходов и этапов рефакторинга; в рабочем коде оставить
+  одну итоговую реализацию сценария.
+- [ ] Ограничить Provider базовыми ThemeMode/Locale; ввести Riverpod для первого
+  реального состояния продукта и обосновать выбор в документации.
+
+**Проверки и приёмка**
+
+- [ ] Один сценарий продемонстрирован последовательно через setState,
+  InheritedWidget и Provider; итоговое состояние обновляет нужные widgets.
+- [ ] Сравнение и обоснование Provider/Riverpod сохранены; в рабочем коде
+  осталась одна итоговая реализация сценария.
+- [ ] Поведение состояния проверено; разработчик может объяснить различия
+  подходов. Persistence не заявлена до Phase 5.
+
+**Готово, когда:** базовое состояние доступно нужным widgets, обновляется
+предсказуемо, а разработчик может объяснить различия трёх подходов. Сохранение
+настроек между запусками добавляется на Phase 5.
+
+### Phase 3 — Architecture
+
+**Задачи**
+
+- [ ] Разделить существующие auth/profile/projects сценарии на features с
+  `presentation/domain/data`, Repository pattern и Riverpod dependency injection.
+- [ ] Убрать бизнес-правила из widgets; domain не связывать с Flutter, Dio, Hive
+  или Firebase. Mock-реализации пока остаются источником данных.
+- [ ] Создавать UseCase/DataSource только под содержательную логику или источник.
+  Обновить architecture и обоснование Provider/Riverpod в документации.
+
+**Проверки и приёмка**
+
+- [ ] UI получает данные через Repository и Riverpod DI; смена mock-источника
+  не требует переписывать widgets.
+- [ ] Domain не зависит от Flutter, Dio, Hive или Firebase; бизнес-правила
+  вынесены из widgets, пустые слои не созданы.
+- [ ] Существующие сценарии и значимые tests проходят; architecture и
+  обоснование state management согласованы с кодом.
+
+**Готово, когда:** UI получает данные через согласованные границы, источник можно
+заменить без переписывания widgets, существующие сценарии продолжают работать.
+
+### Phase 4 — GitHub API
+
+**Задачи**
+
+- [ ] Реализовать отдельный GitHub Import: ввод username, публичный профиль и repositories
+  через Dio, модели и JSON serialization.
+- [ ] Добавить pagination, timeout, retry, pull-to-refresh и поиск/filter с debounce,
+  где он нужен сценарию. Проверить актуальные rate limits и поведение API перед кодом.
+- [ ] Показать loading/success/empty/error; отделить сетевой источник от UI и подготовить
+  используемый контракт кэша. Протестировать parsing и обработку сетевых сбоев.
+
+**Проверки и приёмка**
+
+- [ ] Публичный профиль и repositories загружаются; pagination, refresh
+  и используемый поиск/filter с debounce работают.
+- [ ] Loading/success/empty/error, timeout и retry проверены; пустой профиль
+  и сетевой сбой не ломают экран.
+- [ ] Parsing и обработка сбоев покрыты tests; rate limits и поведение API
+  сверены с актуальной документацией. Импорт в portfolio ещё не выполняется.
+
+**Готово, когда:** repositories загружаются и листаются, ошибку можно повторить,
+пустой профиль не ломает экран. Импорт в портфолио и Firebase ещё не выполняется.
+
+### Phase 5 — Local persistence / offline
+
+**Задачи**
+
+- [ ] Сохранять theme, locale и простые настройки в SharedPreferences.
+- [ ] Использовать Hive для GitHub cache и local portfolio draft; альтернативу
+  обосновать в ADR до реализации.
+- [ ] Определить cache lifetime, хранение несинхронизированных изменений и версию
+  локальной модели; показывать доступные сохранённые данные без сети.
+- [ ] Проверить перезапуск, отсутствие сети, пустой/повреждённый кэш и восстановление
+  соединения без потери draft.
+
+**Проверки и приёмка**
+
+- [ ] Theme, locale и простые настройки сохраняются после перезапуска.
+- [ ] Ранее загруженные repositories и local draft доступны без сети;
+  несинхронизированные изменения не теряются.
+- [ ] Пустой/повреждённый кэш и reconnect проверены; cache lifetime,
+  версия модели и решение о локальном хранилище зафиксированы.
+
+**Готово, когда:** настройки переживают перезапуск, ранее загруженные repositories
+доступны offline, локальные изменения сохраняются. Remote sync появится на Phase 8.
+
+### Phase 6 — Portfolio domain и локальный Builder
+
+**Задачи**
+
+- [ ] Ввести Profile, Skill, Project, Experience, Education, SocialLink, PortfolioBlock
+  и PortfolioTheme по реальным формам, без окончательной Firestore schema заранее.
+- [ ] Реализовать ручные проекты и редактирование профиля, skills, links, experience,
+  education и содержимого Resume; формат resume определить перед реализацией.
+- [ ] Добавить add/edit/delete, featured, block reorder, show/hide, validation и preview.
+  Сохранять изменения в локальный draft.
+- [ ] Рассчитать portfolio completion и покрыть правила/validation unit tests,
+  основной сценарий editor — widget tests.
+
+**Проверки и приёмка**
+
+- [ ] Ручные проекты и данные профиля можно добавить, изменить и удалить;
+  featured, порядок и видимость блоков отражаются в preview.
+- [ ] Draft сохраняется, открывается после перезапуска и просматривается offline.
+- [ ] Validation и completion покрыты unit tests, основной путь editor —
+  widget tests; формат Resume определён. Public publication ещё не доступна.
+
+**Готово, когда:** портфолио можно собрать, сохранить, открыть после перезапуска
+и просмотреть offline. Публичной публикации пока нет.
+
+### Phase 7 — Firebase authentication
+
+**Задачи**
+
+- [ ] Подключить Firebase для Android/iOS; описать configuration и environment handling.
+- [ ] Реализовать email/password и Google sign-in, регистрацию, восстановление пароля,
+  auth state и sign out.
+- [ ] Добавить именованные routes, параметры, вложенную навигацию и auth redirects
+  в GoRouter; проверить переходы, восстановление сессии и выход.
+- [ ] Привязать local draft к Firebase uid, определить перенос гостевого draft
+  и изоляцию данных при смене аккаунта.
+
+**Проверки и приёмка**
+
+- [ ] Email/password, Google sign-in, регистрация, восстановление пароля,
+  восстановление сессии и sign out проверены.
+- [ ] Auth redirects, именованные routes, параметры и вложенная навигация
+  корректно открывают защищённые экраны владельцу.
+- [ ] Гостевой draft переносится по выбранному правилу; sign out и смена
+  аккаунта не раскрывают чужие локальные данные.
+
+**Готово, когда:** оба способа входа работают, защищённые экраны доступны владельцу,
+sign out и смена пользователя не раскрывают чужой локальный draft.
+
+### Phase 8 — Firestore synchronization
+
+**Задачи**
+
+- [ ] До remote writes спроектировать private account/draft, public snapshot,
+  username uniqueness и проверяемую атомарность publish/unpublish. Зафиксировать ADR.
+- [ ] Ввести remote repository поверх local cache; выбрать conflict strategy для
+  нескольких устройств и будущего web-клиента, описать последствия.
+- [ ] Реализовать `pending/synced/error`, повтор синхронизации и обработку потери сети.
+- [ ] Создать Firestore Rules и проверки owner access, отказа чужому пользователю
+  и анонимного доступа только к опубликованным данным.
+
+**Проверки и приёмка**
+
+- [ ] Offline-правки синхронизируются после reconnect; pending/synced/error
+  и повтор после сбоя отражают фактическое состояние.
+- [ ] Конфликт нескольких клиентов обработан по выбранной стратегии;
+  private/public schema, username uniqueness и атомарность публикации описаны в ADR.
+- [ ] Firestore Rules tests подтверждают owner access, отказ чужому пользователю
+  и анонимное чтение только published данных; private draft остаётся private.
+
+**Готово, когда:** offline-правки доходят до облака после восстановления сети,
+конфликт обрабатывается по выбранной стратегии, private данные остаются private.
+Механизм явной публикации подготовлен; public web появится на Phase 13.
+
+### Phase 9 — Living Portfolio / Smart GitHub Sync
+
+**Задачи**
+
+- [ ] Добавить импорт repository → Project с `source = manual | github`,
+  `githubRepositoryId`, `lastGitHubSyncAt` и sync status.
+- [ ] Разделить source metadata и пользовательские overrides; повторный импорт
+  одного repository не должен создавать дубликаты.
+- [ ] Обнаруживать новые/изменённые repositories и показывать Ignore, Preview,
+  Add to portfolio и Review changes.
+- [ ] Проверить повторную синхронизацию, сохранение ручных правок и отсутствие
+  автоматического изменения published snapshot.
+
+**Проверки и приёмка**
+
+- [ ] Выбранный repository импортируется в Project; повторный импорт
+  не создаёт дубликат, source metadata и overrides сохраняются раздельно.
+- [ ] Новые и изменённые repositories предлагают Ignore, Preview,
+  Add to portfolio и Review changes; владелец выбирает действие.
+- [ ] Повторный sync сохраняет ручные правки и не меняет published snapshot
+  без явной публикации; сценарии проверены.
+
+**Готово, когда:** владелец импортирует и принимает выбранные изменения,
+а обновление GitHub не перезаписывает curated данные и публичную версию молча.
+
+### Phase 10 — Portfolio Suggestions
+
+**Задачи**
+
+- [ ] Реализовать deterministic rules: новый repository, активность, отсутствующие
+  description/preview и кандидаты для featured.
+- [ ] Если нужен внутренний ProjectScore, определить факторы и пороги в одном месте;
+  UI показывает причину и полезное действие.
+- [ ] Проверить правила unit tests независимо от UI и внешних сервисов.
+
+**Проверки и приёмка**
+
+- [ ] Одинаковые входные данные дают одинаковые suggestions;
+  новый repository, активность и отсутствие description/preview проверены.
+- [ ] Каждая suggestion объясняет причину и предлагает действие владельцу;
+  факторы и пороги ProjectScore определены в одном месте, если он используется.
+- [ ] Unit tests правил проходят без UI и внешних сервисов; AI и
+  автоматическая публикация не введены.
+
+**Готово, когда:** одинаковые входные данные дают объяснимые suggestions,
+владелец выбирает действие; AI и автоматическая публикация не используются.
+
+### Phase 11 — Media
+
+**Задачи**
+
+- [ ] Подключить Firebase Storage для avatar и project images, camera/gallery.
+  При выбранном файловом формате resume добавить его загрузку здесь.
+- [ ] Ввести MIME/size validation, compression/resize, upload progress, retry
+  и image caching через cached_network_image; обработать отказ в permissions
+  и отмену выбора.
+- [ ] Создать Storage Rules, проверку ownership и public/private доступа,
+  определить очистку заменённых файлов.
+
+**Проверки и приёмка**
+
+- [ ] Avatar и project images выбираются через camera/gallery,
+  проходят MIME/size validation, compression/resize и отображаются после upload.
+- [ ] Progress, retry, caching, отказ в permissions и отмена выбора проверены
+  на устройстве; выбранный файловый Resume обрабатывается, если он предусмотрен.
+- [ ] Storage Rules tests подтверждают ownership и public/private доступ;
+  чужие/private файлы недоступны, очистка заменённых файлов определена.
+
+**Готово, когда:** изображения загружаются и отображаются, сбой даёт повтор,
+чужие/private файлы недоступны. Нативный сценарий проверен на устройстве.
+
+### Phase 12 — Location
+
+**Задачи**
+
+- [ ] Подключить geolocator и Google Maps к Profile Location Picker.
+- [ ] Получить геопозицию по действию пользователя, показать marker и дать
+  подтвердить местоположение на карте.
+- [ ] Обработать denied, permanently denied и service disabled; в публичное
+  представление передавать только выбранный город/страну без точных coordinates.
+
+**Проверки и приёмка**
+
+- [ ] Геопозиция запрашивается по действию пользователя; marker показан,
+  выбранное местоположение подтверждается и сохраняется.
+- [ ] Denied, permanently denied и service disabled проверены;
+  отказ не блокирует editor.
+- [ ] Public представление содержит только выбранный город/страну;
+  точные GPS coordinates не раскрываются.
+
+**Готово, когда:** location выбирается и сохраняется, отказ не блокирует editor,
+публичное портфолио не раскрывает точную геопозицию.
+
+### Phase 13 — Website и web editor
+
+Только здесь создать Next.js-приложение в подготовленном `apps/web`, выбрать
+зависимости и реальные format/lint/typecheck/test/build команды. Выполнять
+подэтапы **13a → 13b → 13c**, сохраняя единые data contracts с mobile.
+
+#### 13a — Public shell
+
+**Задачи**
+
+- [ ] Создать Next.js-приложение в `apps/web`; выбрать используемые зависимости
+  и реальные format/lint/typecheck/test/build команды.
+- [ ] Реализовать responsive layout, главную и `/download` в принятом
+  визуальном стиле.
+- [ ] Показать CTA и download links по фактической доступности;
+  до релиза не показывать фиктивные ссылки на магазин.
+
+**Проверки и приёмка**
+
+- [ ] Главная и `/download` читаемы и доступны на телефоне, планшете и desktop;
+  layout соответствует принятому стилю.
+- [ ] CTA ведут к доступным действиям; фиктивных store/download links нет.
+- [ ] Выбранные web checks и build проходят по реальным configs;
+  результаты и ограничения записаны.
+
+#### 13b — Auth и редактор
+
+**Задачи**
+
+- [ ] Реализовать вход и защищённый `/app` для владельца.
+- [ ] Добавить профиль, проекты, блоки и GitHub import общего private draft.
+- [ ] Показать saving/saved/error/retry; web v1 оставить online-first.
+- [ ] Проверить owner access и обмен правками mobile ↔ web.
+
+**Проверки и приёмка**
+
+- [ ] Auth guards закрывают private редактор от анонимного и чужого пользователя.
+- [ ] Владелец редактирует одно портфолио из обоих клиентов;
+  правки передаются mobile ↔ web по общей модели и conflict strategy.
+- [ ] Saving/saved/error/retry отражают реальное состояние;
+  сбой online-сохранения даёт понятный повтор, проверки редактора проходят.
+
+#### 13c — Public portfolio
+
+**Задачи**
+
+- [ ] Реализовать preview и явные publish/unpublish в обоих редакторах.
+- [ ] Создать `/u/[username]`, metadata, SEO/OpenGraph.
+- [ ] Публичному клиенту разрешить чтение только published snapshot;
+  корректно обработать неизвестный/unpublished username.
+
+**Проверки и приёмка**
+
+- [ ] Посетитель видит только опубликованную версию;
+  изменение draft не меняет public page до Publish.
+- [ ] Publish обновляет публичную версию, Unpublish прекращает доступ;
+  неизвестный и unpublished username обработаны корректно.
+- [ ] Metadata и SEO/OpenGraph проверены; private данные не раскрываются,
+  publication tests и общий сценарий mobile ↔ web проходят.
+
+**Проверки и приёмка Phase 13**
+
+- [ ] Подэтапы 13a → 13b → 13c приняты последовательно;
+  общие data contracts согласованы с mobile, web checks проходят.
+- [ ] Сценарий редактирование → preview → publish → правка draft → unpublish
+  подтверждён в обоих клиентах и на public page.
+
+**Готово, когда:** владелец редактирует одно портфолио из двух клиентов, посетитель
+видит только опубликованную версию, новая правка draft не меняет public page
+до Publish, Unpublish прекращает доступ. Contact form подключается на Phase 14.
+
+### Phase 14 — Contact / Inbox / FCM
+
+**Задачи**
+
+- [ ] Добавить web Contact me с name/email/message и validation; определить
+  anti-spam/rate limiting до публичного открытия формы.
+- [ ] Создать ContactRequest и Inbox в mobile/web; обращения читает только владелец.
+- [ ] Настроить mobile FCM: device tokens, permissions и переход из уведомления
+  к обращению. Отправку выполнять с доверенной стороны, с Functions при необходимости.
+- [ ] Проверить доставку на устройстве, отказ в уведомлениях и смену аккаунта;
+  Inbox остаётся источником обращения при недоставленном push.
+
+**Проверки и приёмка**
+
+- [ ] Валидное обращение с public page появляется в mobile/web Inbox;
+  validation, anti-spam и rate limiting проверены до публичного открытия формы.
+- [ ] Обращение читает только владелец; отказ постороннему подтверждён
+  проверками доступа.
+- [ ] FCM доставлен на устройство, переход открывает обращение;
+  отказ в notifications и смена аккаунта проверены, без push обращение остаётся в Inbox.
+
+**Готово, когда:** обращение с public page появляется в обоих кабинетах,
+владелец получает mobile notification, посторонний не читает Inbox. Это не чат;
+browser push автоматически в scope не добавляется.
+
+### Phase 15 — Developer Card и native sharing
+
+**Задачи**
+
+- [ ] Создать карточку с avatar, name, role, technologies, username, logo и public URL.
+- [ ] Добавить QR-код; обработать состояние портфолио, которое ещё не опубликовано.
+- [ ] Реализовать собственный MethodChannel → Android/Kotlin → `Intent.ACTION_SEND`.
+  Поведение sharing для iOS определить и проверить отдельно.
+
+**Проверки и приёмка**
+
+- [ ] Developer Card содержит avatar, name, role, technologies, username,
+  logo и корректный public URL; unpublished состояние обработано.
+- [ ] QR открывает опубликованное portfolio.
+- [ ] Собственный Kotlin MethodChannel и Android share sheet передают ссылку
+  на реальном устройстве; результат проверки iOS sharing указан отдельно.
+
+**Готово, когда:** QR открывает public portfolio, native Android share sheet
+передаёт корректную ссылку, Platform Channel работает на реальном устройстве.
+
+### Phase 16 — Performance
+
+**Задачи**
+
+- [ ] Проверить большие списки, pagination, изображения, rebuilds, memory и frames
+  в Flutter DevTools; ListView.builder и image caching вводить уже при появлении сценариев.
+- [ ] Сохранить исходные измерения и screenshots, исправить обнаруженные проблемы
+  и повторить тот же сценарий на том же устройстве.
+- [ ] Проверить public web/editor после появления реальных данных и изображений.
+
+**Проверки и приёмка**
+
+- [ ] Большие списки, pagination, изображения, rebuilds, memory и frames
+  измерены в Flutter DevTools на указанном устройстве.
+- [ ] Сохранены сопоставимые measurements/screenshots до и после;
+  один сценарий повторён на том же устройстве, каждая оптимизация объяснена.
+- [ ] Public web/editor проверены с реальными данными и изображениями;
+  ненужные микрооптимизации не добавлены.
+
+**Готово, когда:** есть сопоставимые результаты до/после и объяснение каждой
+оптимизации. Микрооптимизация без измеренной проблемы не требуется.
+
+### Phase 17 — Testing
+
+**Задачи**
+
+- [ ] Довести unit tests repositories, validation, completion, sync и suggestions;
+  widget tests auth, project card, builder и loading/error/empty states.
+- [ ] Добавить минимум один integration test: sign in → create/edit project →
+  preview → publish. Проверить offline/reconnect и private/public границу.
+- [ ] Получить `flutter test --coverage` с coverage **более 40%**, clean analyze
+  и отчёт о покрытии. Проверить web auth guards, публикацию и обмен draft с mobile.
+
+**Проверки и приёмка**
+
+- [ ] Unit и widget tests для repositories, validation, completion, sync,
+  suggestions, auth, project card, builder и UI states проходят.
+- [ ] Integration test sign in → create/edit project → preview → publish
+  проходит; offline/reconnect и private/public граница подтверждены.
+- [ ] Coverage по flutter test --coverage превышает 40%, analyze чистый;
+  отчёт сохранён, web auth guards, publication и обмен draft с mobile проверены.
+
+**Готово, когда:** tests проходят, coverage превышает учебный порог, сквозной
+сценарий подтверждён. Tests предыдущих фаз сохраняются и дополняются.
+
+### Phase 18 — CI/CD
+
+**Задачи**
+
+- [ ] Добавить GitHub Actions для каждого push/PR: dependency resolution, format check,
+  analyze, tests с coverage, APK build и сохранение artifact.
+- [ ] Настроить проверку порога coverage, воспроизводимое окружение и отдельные
+  проверки web по его реальным configs.
+- [ ] Проверить, что ошибка проверки делает pipeline неуспешным; signing secrets
+  не хранить в коде. Release AAB подключить на фазе выпуска.
+
+**Проверки и приёмка**
+
+- [ ] Pipeline запускается на push/PR, проходит dependency resolution,
+  format, analyze, tests, coverage и APK build; artifact доступен.
+- [ ] Ошибка format/analyze/tests или недостаточное coverage делает
+  pipeline неуспешным; негативный сценарий проверен.
+- [ ] Окружение воспроизводимо, web checks соответствуют реальным configs;
+  signing secrets отсутствуют в коде, release AAB остаётся задачей выпуска.
+
+**Готово, когда:** pipeline проходит на рабочей версии, APK artifact доступен,
+нарушение format/analyze/tests/coverage блокирует успешный результат.
+
+### Phase 19 — Production hardening
+
+**Задачи**
+
+- [ ] Подключить Crashlytics и подтвердить доставку тестового отчёта; настроить
+  безопасное error logging без private данных.
+- [ ] Провести audit Firestore/Storage Rules и public/private границ, проверить
+  validation, permission descriptions, account deletion и обработку сбоев.
+- [ ] Завершить onboarding, loading/error/empty UX, app icon, splash, versioning
+  и privacy policy; проверить оба мобильных targets и responsive web.
+
+**Проверки и приёмка**
+
+- [ ] Тестовый Crashlytics report доставлен; error logging не содержит
+  private данных.
+- [ ] Firestore/Storage Rules, validation, account deletion, permission
+  descriptions и обработка сбоев проверены; значимые дефекты устранены.
+- [ ] Onboarding, loading/error/empty UX, icon, splash, versioning и privacy
+  policy готовы; Android, iOS и responsive web проверены.
+
+**Готово, когда:** диагностический отчёт доставлен, значимые security/UX дефекты
+устранены, разрешения и работа с данными объяснены пользователю.
+
+### Phase 20 — Release
+
+**Задачи**
+
+- [ ] Утвердить application IDs и signing configuration, создать и безопасно хранить
+  Android keystore; собрать подписанный release AAB с obfuscation и сохранить symbols.
+- [ ] Проверить release на устройстве, подготовить screenshots, описание и privacy policy.
+- [ ] Подготовить Google Play internal testing; при отсутствии developer account —
+  подписанный AAB и пакет материалов, раздачу через Firebase App Distribution.
+- [ ] Опубликовать реальные download links после появления релиза; отдельно описать
+  шаги iOS/App Store и подготовить демонстрацию проекта.
+
+**Проверки и приёмка**
+
+- [ ] Подписанный Android release AAB с obfuscation собран и проверен
+  на устройстве; signing configuration, keystore и symbols хранятся безопасно.
+- [ ] Screenshots, описание, privacy policy и демонстрация готовы;
+  Google Play internal testing либо пакет AAB/App Distribution подготовлен.
+- [ ] Выполнен только разрешённый пользователем способ распространения;
+  download links ведут к реальному release.
+- [ ] Шаги iOS/App Store описаны отдельно; Android release не выдаётся
+  за выполненную iOS-публикацию.
+
+**Готово, когда:** подписанный Android release проверен, материалы для магазина
+готовы, выполнен разрешённый способ распространения. Загрузка в Google Play,
+App Distribution или deploy web требует запроса пользователя; iOS-публикация
+не заявляется выполненной по одному Android release.
+
+**Сейчас проверить только Phase 0. Дальнейшая разработка — в `dev`;
+Phase 1 в этой задаче не начинается.**
+
+---
+
+## Учебные требования и сдача
+
+Учебное задание задаёт **16 недель**, продуктовый план — **21 фазу (0–20)**.
+Это разные единицы: таблица сопоставляет темы и результаты, не назначает
+фазе длительность в одну неделю. Все обязательные компоненты курса включены
+в задачи выше; готовность подтверждается работой приложения и проверками.
+
+<div align="center">
+
+| **Неделя курса** | **Фазы и подтверждение результата** |
+|:---|:---|
+| 1 — Flutter/Dart | Phase 0: окружение и Hello World; Dart-задачи на null safety, classes, collections, async/await; постановка задачи, аудитория, список экранов и сравнение 2–3 аналогов. |
+| 2 — Widgets/UI | Phase 1: эскизы и статические экраны, Stateless/Stateful widgets, Material 3. |
+| 3 — Basic state | Phase 2: один сценарий setState → InheritedWidget → Provider и сравнительная заметка. |
+| 4 — Advanced state/architecture | Phases 2–3: Riverpod, presentation/domain/data, Repository, DI и обоснование выбора. |
+| 5 — REST/JSON | Phase 4: GitHub API, serialization, states, timeout/retry, refresh и debounce. |
+| 6 — Persistence | Phase 5: настройки, кэш и доступ без сети; локальный Builder развивается на Phase 6. |
+| 7 — Navigation/adaptive UI | Phases 1 и 7: routes/parameters/nested navigation, auth redirect после подключения auth, телефон/планшет и обе ориентации. |
+| 8 — Firebase/РК1 | Phases 7–8 и 14: email/Google, Firestore, Rules, FCM на устройстве; материалы текущих заданий недель 1–7. |
+| 9 — Maps/location | Phase 12: карта, marker, геопозиция и отказ в permissions; use-case Profile Location. |
+| 10 — Performance | Phase 16 и предыдущие API/media фазы: lazy lists, pagination, image cache, DevTools screenshots до/после. |
+| 11 — Native | Phases 11 и 15: camera/gallery и собственный Kotlin MethodChannel на устройстве. |
+| 12 — CI/CD | Phase 18: зелёный pipeline, build/analyze/tests на push и APK artifact. |
+| 13 — Tests | Phase 17: unit/widget/integration tests, coverage >40%, отчёт и запуск в CI. |
+| 14 — Publication | Phases 19–20: Crashlytics, signed AAB, store materials/internal testing либо App Distribution; описание iOS-публикации. |
+| 15 — Presentation/РК2 | Демонстрация 7–10 минут: сценарий, архитектура, tests и profiling; материалы заданий недель 8–15. |
+| 16 — Exam | Индивидуальная защита: работа приложения, разбор кода/архитектуры и способность объяснить и воспроизвести выбранный фрагмент. |
+
+</div>
+
+**Календарное расхождение:** курс требует FCM уже на неделе 8, карты — на 9,
+CI — на 12; текущий продуктовый roadmap вводит их на Phases 14, 12 и 18.
+Web-редактор добавляет работу сверх обязательного учебного объёма. Если недельные сроки обязательны,
+до начала следующих фаз нужен отдельно согласованный учебный график: он должен
+перенести учебные milestones раньше и выделить дополнительные функции продукта.
+Следование текущей последовательности само по себе не гарантирует сдачу по неделям.
+
+Для учебной подготовки дополнительно:
+
+- Подтвердить у преподавателя закрепление темы Developer Portfolio; менять тему
+  только по согласованию. Текущая документация не подтверждает административное согласование.
+- Подготовить Dart-упражнения и сравнение 2–3 аналогов. В публичном README
+  оставить краткое обоснование state management со ссылкой на подробное решение;
+  требования/MVP и план остаются в product spec по правилам проекта.
+- Сохранять доказательства по мере работы: эскизы, результаты запусков, отчёт
+  coverage, DevTools до/после, CI artifact, Crashlytics report и release materials.
+- После разрешённых commits использовать историю изменений для объяснения этапов.
+  На защите уметь самостоятельно объяснить код, ограничения и принятые решения.

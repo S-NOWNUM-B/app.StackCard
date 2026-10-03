@@ -333,6 +333,6 @@ Package, UseCase или DataSource выделяется под существу�
 Для её проверки зависимости должны разрешаться, format/analyze/widget test —
 проходить, а scaffold — запускаться на доступном mobile target.
 Ограничения окружения и реально выполненные проверки фиксируются по факту.
-Первый commit/remote — отдельно по
+Commit и синхронизация с remote — отдельно по
 запросу; они не запускают Phase 1 автоматически. Полный [roadmap](../product/product-spec.md)
 и [решения](../decisions/README.md) дополняют этот guide.
