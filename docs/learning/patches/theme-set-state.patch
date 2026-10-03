@@ -196,8 +196,8 @@ diff --git a/apps/mobile/lib/core/state/appearance_controller.dart b/apps/mobile
 diff --git a/apps/mobile/lib/features/settings/settings_screen.dart b/apps/mobile/lib/features/settings/settings_screen.dart
 --- a/apps/mobile/lib/features/settings/settings_screen.dart
 +++ b/apps/mobile/lib/features/settings/settings_screen.dart
-@@ -14,7 +14,13 @@
- import '../profile/profile.dart';
+@@ -15,7 +15,13 @@
+ import '../portfolio_draft/portfolio_draft.dart';
 
  class SettingsScreen extends StatefulWidget {
 -  const SettingsScreen({super.key});
@@ -211,7 +211,7 @@ diff --git a/apps/mobile/lib/features/settings/settings_screen.dart b/apps/mobil
    @override
    State<SettingsScreen> createState() => _SettingsScreenState();
  }
-@@ -23,9 +29,7 @@
+@@ -24,9 +30,7 @@
    StackCardViewState _previewState = StackCardViewState.empty;
    @override
    Widget build(BuildContext context) {
@@ -222,7 +222,7 @@ diff --git a/apps/mobile/lib/features/settings/settings_screen.dart b/apps/mobil
      return SingleChildScrollView(
        padding: EdgeInsets.all(
          MediaQuery.sizeOf(context).width >= 700 ? 24 : 16,
-@@ -76,9 +80,7 @@
+@@ -77,9 +81,7 @@
                              label: Text(item.title),
                              selected: themeMode == item.mode,
                              onSelected: (_) {
@@ -249,7 +249,7 @@ diff --git a/apps/mobile/lib/app/app_router.dart b/apps/mobile/lib/app/app_route
    initialLocation: initialLocation,
    routes: [
      GoRoute(path: '/sign-in', builder: (_, _) => const SignInScreen()),
-@@ -32,7 +36,13 @@
+@@ -73,7 +77,13 @@
          GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
          GoRoute(path: '/portfolio', builder: (_, _) => const PortfolioScreen()),
          GoRoute(path: '/projects', builder: (_, _) => const ProjectsScreen()),

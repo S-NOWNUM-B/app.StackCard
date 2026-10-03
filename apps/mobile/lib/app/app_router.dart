@@ -24,6 +24,47 @@ GoRouter createAppRouter({required String initialLocation}) => GoRouter(
       path: '/portfolio-draft',
       builder: (_, _) => const PortfolioDraftScreen(),
     ),
+    GoRoute(
+      path: '/portfolio/builder',
+      builder: (_, _) => const PortfolioBuilderScreen(),
+    ),
+    GoRoute(
+      path: '/portfolio/builder/profile',
+      builder: (_, _) => const PortfolioProfileEditorScreen(),
+    ),
+    GoRoute(
+      path: '/portfolio/builder/skills',
+      builder: (_, _) => const PortfolioSkillsEditorScreen(),
+    ),
+    GoRoute(
+      path: '/portfolio/builder/experience',
+      builder: (_, _) => const PortfolioExperienceEditorScreen(),
+    ),
+    GoRoute(
+      path: '/portfolio/builder/education',
+      builder: (_, _) => const PortfolioEducationEditorScreen(),
+    ),
+    GoRoute(
+      path: '/portfolio/builder/links',
+      builder: (_, _) => const PortfolioLinksEditorScreen(),
+    ),
+    GoRoute(
+      path: '/portfolio/builder/resume',
+      builder: (_, _) => const PortfolioResumeEditorScreen(),
+    ),
+    GoRoute(
+      path: '/portfolio/preview',
+      builder: (_, _) => const PortfolioPreviewScreen(),
+    ),
+    GoRoute(
+      path: '/projects/new',
+      builder: (_, _) => const PortfolioProjectEditorScreen(),
+    ),
+    GoRoute(
+      path: '/projects/:id/edit',
+      builder: (_, state) =>
+          PortfolioProjectEditorScreen(projectId: state.pathParameters['id']!),
+    ),
     GoRoute(path: '/', redirect: (_, _) => '/home'),
     ShellRoute(
       builder: (context, state, child) =>

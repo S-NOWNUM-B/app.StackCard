@@ -2,13 +2,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../profile/profile.dart';
 import '../../projects/projects.dart';
+import '../../portfolio_draft/portfolio_draft.dart';
 
 class PortfolioOverview {
-  PortfolioOverview({required this.profile, required List<Project> projects})
-    : projects = List.unmodifiable(projects),
-      featuredProjects = selectFeaturedProjects(projects);
+  PortfolioOverview({
+    required this.profile,
+    required List<Project> projects,
+    this.hasDraft = false,
+  }) : projects = List.unmodifiable(projects),
+       featuredProjects = selectFeaturedProjects(projects);
 
   final Profile profile;
+  final bool hasDraft;
   final List<Project> projects;
   final List<Project> featuredProjects;
 
@@ -51,6 +56,7 @@ final portfolioOverviewProvider = Provider<AsyncValue<PortfolioOverview>>((
     PortfolioOverview(
       profile: profile.requireValue,
       projects: projects.requireValue,
+      hasDraft: ref.watch(portfolioWorkingContentProvider) != null,
     ),
   );
 });

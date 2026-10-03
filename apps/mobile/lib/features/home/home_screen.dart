@@ -10,6 +10,7 @@ import '../../core/theme/stackcard_tokens.dart';
 import '../profile/profile.dart';
 import '../projects/projects.dart';
 import '../portfolio/portfolio.dart';
+import '../portfolio_draft/portfolio_draft.dart';
 import '../../shared/widgets/stackcard_async_view.dart';
 import '../../shared/widgets/stackcard_states.dart';
 import '../../shared/widgets/stackcard_button.dart';
@@ -22,6 +23,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => StackCardAsyncView(
     state: ref.watch(portfolioOverviewProvider),
     onRetry: () {
+      ref.read(portfolioDraftControllerProvider.notifier).load();
       ref.invalidate(profileProvider);
       ref.invalidate(projectsProvider);
     },
@@ -58,14 +60,20 @@ class _HomeContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    context.strings.tr('home.greeting', {
-                      'name': overview.profile.firstName,
-                    }),
+                    overview.hasDraft && overview.profile.firstName.isEmpty
+                        ? context.strings.tr('builderIntegration.welcome')
+                        : context.strings.tr('home.greeting', {
+                            'name': overview.profile.firstName,
+                          }),
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: StackCardSpacing.sm),
                   Text(
-                    context.strings.tr('home.subtitle'),
+                    context.strings.tr(
+                      overview.hasDraft
+                          ? 'builderIntegration.homeSubtitle'
+                          : 'home.subtitle',
+                    ),
                     style: Theme.of(context).textTheme.bodyLarge
                         ?.copyWith(color: pageTextColor),
                   ),
@@ -76,26 +84,40 @@ class _HomeContent extends StatelessWidget {
                       children: [
                         Expanded(
                           flex: 7,
-                          child: _ProfileHero(profile: overview.profile),
+                          child: _ProfileHero(
+                            profile: overview.profile,
+                            hasDraft: overview.hasDraft,
+                          ),
                         ),
                         const SizedBox(width: StackCardSpacing.lg),
                         Expanded(
                           flex: 4,
                           child: _ReadinessCard(
                             readiness: overview.profile.readiness,
+                            hasDraft: overview.hasDraft,
                           ),
                         ),
                       ],
                     )
                   else ...[
-                    _ProfileHero(profile: overview.profile),
+                    _ProfileHero(
+                      profile: overview.profile,
+                      hasDraft: overview.hasDraft,
+                    ),
                     const SizedBox(height: StackCardSpacing.lg),
-                    _ReadinessCard(readiness: overview.profile.readiness),
+                    _ReadinessCard(
+                      readiness: overview.profile.readiness,
+                      hasDraft: overview.hasDraft,
+                    ),
                   ],
                   const SizedBox(height: StackCardSpacing.xl),
                   _SectionHeading(
                     title: context.strings.tr('home.featured'),
-                    subtitle: context.strings.tr('home.featuredSubtitle'),
+                    subtitle: context.strings.tr(
+                      overview.hasDraft
+                          ? 'builderIntegration.featuredSubtitle'
+                          : 'home.featuredSubtitle',
+                    ),
                   ),
                   const SizedBox(height: StackCardSpacing.lg),
                   if (wide)
@@ -132,7 +154,11 @@ class _HomeContent extends StatelessWidget {
                         const SizedBox(width: StackCardSpacing.md),
                         Expanded(
                           child: Text(
-                            context.strings.tr('home.demoNote'),
+                            context.strings.tr(
+                              overview.hasDraft
+                                  ? 'builderIntegration.localNote'
+                                  : 'home.demoNote',
+                            ),
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),
@@ -150,9 +176,10 @@ class _HomeContent extends StatelessWidget {
 }
 
 class _ProfileHero extends StatelessWidget {
-  const _ProfileHero({required this.profile});
+  const _ProfileHero({required this.profile, required this.hasDraft});
 
   final Profile profile;
+  final bool hasDraft;
 
   @override
   Widget build(BuildContext context) {
@@ -191,7 +218,11 @@ class _ProfileHero extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      profile.name,
+                      profile.name.isEmpty
+                          ? context.strings.tr(
+                              'builderIntegration.emptyProfile',
+                            )
+                          : profile.name,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: StackCardSpacing.xs),
@@ -207,12 +238,18 @@ class _ProfileHero extends StatelessWidget {
           ),
           const SizedBox(height: StackCardSpacing.xl),
           Text(
-            context.strings.tr('home.hero'),
+            context.strings.tr(
+              hasDraft ? 'builderIntegration.yourStory' : 'home.hero',
+            ),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: StackCardSpacing.md),
           Text(
-            context.strings.tr('home.heroDescription'),
+            hasDraft
+                ? (profile.about.isEmpty
+                      ? context.strings.tr('builderIntegration.aboutHint')
+                      : profile.about)
+                : context.strings.tr('home.heroDescription'),
             style: Theme.of(context).textTheme.bodyLarge
                 ?.copyWith(color: context.colors.textSecondary),
           ),
@@ -232,6 +269,12 @@ class _ProfileHero extends StatelessWidget {
                 icon: Icons.grid_view_rounded,
                 onPressed: () => context.push('/projects'),
               ),
+              if (hasDraft)
+                StackCardButton(
+                  label: context.strings.tr('builderIntegration.edit'),
+                  icon: Icons.edit_outlined,
+                  onPressed: () => context.push('/portfolio/builder'),
+                ),
             ],
           ),
         ],
@@ -241,9 +284,10 @@ class _ProfileHero extends StatelessWidget {
 }
 
 class _ReadinessCard extends StatelessWidget {
-  const _ReadinessCard({required this.readiness});
+  const _ReadinessCard({required this.readiness, required this.hasDraft});
 
   final ProfileReadiness readiness;
+  final bool hasDraft;
 
   @override
   Widget build(BuildContext context) {
@@ -273,18 +317,26 @@ class _ReadinessCard extends StatelessWidget {
           ),
           const SizedBox(height: StackCardSpacing.sm),
           Text(
-            context.strings.tr('home.readinessDescription', {
-              'completed': readiness.completedBlocks,
-              'total': readiness.totalBlocks,
-            }),
+            context.strings.tr(
+              hasDraft
+                  ? 'builderIntegration.readiness'
+                  : 'home.readinessDescription',
+              {
+                'completed': readiness.completedBlocks,
+                'total': readiness.totalBlocks,
+              },
+            ),
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: context.colors.textSecondary),
           ),
           const SizedBox(height: StackCardSpacing.lg),
           Semantics(
-            label: context.strings.tr('home.readinessSemantics', {
-              'percent': readiness.percent,
-            }),
+            label: context.strings.tr(
+              hasDraft
+                  ? 'builderIntegration.readinessSemantics'
+                  : 'home.readinessSemantics',
+              {'percent': readiness.percent},
+            ),
             child: ExcludeSemantics(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(StackCardRadius.small),
@@ -369,7 +421,9 @@ class _FeaturedProject extends StatelessWidget {
                 ),
                 const SizedBox(height: StackCardSpacing.sm),
                 Text(
-                  'Less noise. More craft.',
+                  project.id == null
+                      ? 'Less noise. More craft.'
+                      : project.description,
                   style: Theme.of(context).textTheme.bodyLarge
                       ?.copyWith(color: context.colors.textSecondary),
                 ),
@@ -378,7 +432,10 @@ class _FeaturedProject extends StatelessWidget {
                   spacing: StackCardSpacing.sm,
                   runSpacing: StackCardSpacing.sm,
                   children: [
-                    for (final label in ['Components', 'Typography', 'Themes'])
+                    for (final label
+                        in project.id == null
+                            ? ['Components', 'Typography', 'Themes']
+                            : project.technologies)
                       _Tag(label: label),
                   ],
                 ),

@@ -7,6 +7,7 @@ import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../profile/profile.dart';
 import '../../projects/projects.dart';
+import '../../portfolio_draft/portfolio_draft.dart';
 import 'portfolio_overview.dart';
 import '../../../shared/widgets/stackcard_async_view.dart';
 import '../../../shared/widgets/stackcard_button.dart';
@@ -16,13 +17,69 @@ class PortfolioScreen extends ConsumerWidget {
   const PortfolioScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => StackCardAsyncView(
-    state: ref.watch(portfolioOverviewProvider),
-    onRetry: () {
-      ref.invalidate(profileProvider);
-      ref.invalidate(projectsProvider);
-    },
-    data: (overview) => _PortfolioContent(overview: overview),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final content = ref.watch(portfolioWorkingContentProvider);
+    if (content != null) return _LocalPortfolioContent(content: content);
+    return StackCardAsyncView(
+      state: ref.watch(portfolioOverviewProvider),
+      onRetry: () {
+        ref.read(portfolioDraftControllerProvider.notifier).load();
+        ref.invalidate(profileProvider);
+        ref.invalidate(projectsProvider);
+      },
+      data: (overview) => _PortfolioContent(overview: overview),
+    );
+  }
+}
+
+class _LocalPortfolioContent extends StatelessWidget {
+  const _LocalPortfolioContent({required this.content});
+  final PortfolioContent content;
+
+  @override
+  Widget build(BuildContext context) => SingleChildScrollView(
+    padding: const EdgeInsets.all(StackCardSpacing.lg),
+    child: Align(
+      alignment: Alignment.topLeft,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1160),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.strings.tr('home.myPortfolio'),
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: StackCardSpacing.sm),
+            Text(context.strings.tr('builderIntegration.localNote')),
+            const SizedBox(height: StackCardSpacing.lg),
+            Wrap(
+              spacing: StackCardSpacing.md,
+              runSpacing: StackCardSpacing.md,
+              children: [
+                StackCardButton(
+                  label: context.strings.tr('builderIntegration.edit'),
+                  icon: Icons.edit_outlined,
+                  onPressed: () => context.push('/portfolio/builder'),
+                ),
+                StackCardButton(
+                  label: context.strings.tr('builderIntegration.preview'),
+                  icon: Icons.visibility_outlined,
+                  onPressed: () => context.push('/portfolio/preview'),
+                ),
+                StackCardButton(
+                  label: context.strings.tr('draft.open'),
+                  icon: Icons.note_alt_outlined,
+                  onPressed: () => context.push('/portfolio-draft'),
+                ),
+              ],
+            ),
+            const SizedBox(height: StackCardSpacing.xl),
+            PortfolioContentView(content: content),
+          ],
+        ),
+      ),
+    ),
   );
 }
 
@@ -65,10 +122,22 @@ class _PortfolioContent extends StatelessWidget {
                         ?.copyWith(color: pageTextColor),
                   ),
                   const SizedBox(height: StackCardSpacing.xl),
-                  StackCardButton(
-                    label: context.strings.tr('draft.open'),
-                    icon: Icons.note_alt_outlined,
-                    onPressed: () => context.push('/portfolio-draft'),
+                  Wrap(
+                    spacing: StackCardSpacing.md,
+                    runSpacing: StackCardSpacing.md,
+                    children: [
+                      StackCardButton(
+                        label: context.strings.tr('draft.open'),
+                        icon: Icons.note_alt_outlined,
+                        onPressed: () => context.push('/portfolio-draft'),
+                      ),
+                      StackCardButton(
+                        label: context.strings.tr('builderIntegration.open'),
+                        icon: Icons.edit_outlined,
+                        primary: true,
+                        onPressed: () => context.push('/portfolio/builder'),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: StackCardSpacing.xl),
                   if (wide)

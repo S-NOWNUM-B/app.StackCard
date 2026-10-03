@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'draft_strings.dart';
+import 'builder_strings.dart';
+import 'builder_form_strings.dart';
+import 'builder_integration_strings.dart';
 import 'github_strings.dart';
 
 class AppStrings {
@@ -211,6 +214,9 @@ const russianAppStrings = <String, String>{
   "settings.errorMessage": "Пример ошибки. Повтор открывает пустое состояние.",
   ...russianGitHubStrings,
   ...russianDraftStrings,
+  ...builderRussianStrings,
+  ...builderFormRussianStrings,
+  ...builderIntegrationRussianStrings,
 };
 
 const englishAppStrings = <String, String>{
@@ -350,4 +356,7 @@ const englishAppStrings = <String, String>{
   "settings.errorMessage": "An example error. Retry opens the empty state.",
   ...englishGitHubStrings,
   ...englishDraftStrings,
+  ...builderEnglishStrings,
+  ...builderFormEnglishStrings,
+  ...builderIntegrationEnglishStrings,
 };

@@ -4,7 +4,7 @@
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage Phase 5](https://raster.shields.io/badge/Stage-Phase_5-111111?style=for-the-badge)
+![Stage Phase 6](https://raster.shields.io/badge/Stage-Phase_6-111111?style=for-the-badge)
 ![Mobile + Web planned](https://raster.shields.io/badge/Mobile_%2B_Web-planned-FF0012?style=for-the-badge)
 
 </div>
@@ -45,11 +45,14 @@ contracts и Riverpod DI позволяют заменять демонстра�
 refresh, локальный поиск/filter и повтор запроса после ошибки.
 Результаты проверок и Android-запуска зафиксированы в
 [разделе Phase 4](#phase-4--github-api).
-По текущему поручению завершена **Phase 5: Local persistence / offline**:
+По предыдущему поручению завершена **Phase 5: Local persistence / offline**:
 theme, ru/en locale и настройка описаний источника сохраняются в SharedPreferences;
 Hive хранит GitHub cache и отдельные локальные заметки с revision/pendingSync.
 Перезапуск, offline и reconnect проверены на Android;
 подробности — в [приёмке Phase 5](#phase-5--local-persistence--offline).
+По текущему поручению завершена **Phase 6: Portfolio domain и локальный Builder**:
+единый draft, ручные формы и preview без публикации. Resume выбран обычным
+текстом с сохранением переносов строк; файловые вложения в этой фазе не вводятся.
 Этот документ отделяет реализованный интерфейс от целевых функций.
 Flutter-приложение находится в `apps/mobile`; в `apps/web`
 сейчас только README. Remote `origin` уже подключён; `main` отслеживает `origin/main`.
@@ -60,17 +63,17 @@ Commit и push выполняются только по запросу поль�
 закреплён в [общих AI-правилах](../AI/AGENTS.md#разработка-по-плану),
 корневом/mobile AGENTS, router и CONTRIBUTING.
 
-Основные экраны портфолио используют демонстрационные данные; GitHub Import
-отдельно читает публичный GitHub API с persistent cache и offline fallback.
-Firebase, web, полный Builder и публикация ещё не подключены. Тема, язык и
-простые preferences принадлежат AppearanceController через Provider;
-demo-вход, загрузка профиля/проектов
-и query/filter state — Riverpod. Home, Portfolio и идентичность в Settings читают
-один профиль через Repository; предпросмотр использует данные того же источника.
-Settings, GitHub response cache и явно сохранённые notes переживают перезапуск;
+После успешного чтения пустого/legacy draft основные экраны используют demo;
+после начала Builder — единый working PortfolioContent. Home, Projects и Settings
+читают проекции этого content; Portfolio и preview отображают видимые блоки
+в заданном порядке и теме. Ошибка чтения draft показывает failure/retry, без demo fallback.
+GitHub Import отдельно читает публичный GitHub API с persistent cache и offline fallback.
+Firebase, web и публикация ещё не подключены. App settings принадлежат
+AppearanceController через Provider; Builder, demo-вход и filters — Riverpod.
+Settings, GitHub response cache, явно сохранённые content и notes переживают перезапуск;
 demo-session, query/filter и ещё не сохранённый ввод остаются в app session.
 GitHub Import не изменяет curated portfolio и не публикует данные.
-Phase 6 и последующие этапы пока не разрешены.
+Phase 6 принята; Phase 7 и последующие этапы требуют отдельного поручения.
 
 ---
 
@@ -352,9 +355,9 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 web-редактор и публичные портфолио. Этот раздел владеет roadmap; технические решения
 подробно фиксируются в architecture и ADR, команды — в CONTRIBUTING.
 
-**Phase 0–4 завершены:** основа, UI, состояние, архитектура и GitHub Import проверены;
+**Phase 0–6 завершены:** основа, UI, состояние, архитектура, GitHub Import, offline и Builder проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
-Текущее поручение — Phase 5: Local persistence / offline. Фазы 6–20 остаются
+Последнее поручение — Phase 6: Portfolio domain и локальный Builder. Фазы 7–20 остаются
 планом и требуют отдельного поручения пользователя.
 
 Чекбокс `- [x]` означает подтверждённый результат, `- [ ]` — оставшуюся задачу
@@ -371,7 +374,7 @@ web-редактор и публичные портфолио. Этот разд
 | Phase 3 — Architecture | Завершена; Repository/DI, чистый domain, UI и Android-запуск проверены |
 | Phase 4 — GitHub API | Завершена; HTTP, pagination, refresh, состояния и Android-запуск проверены |
 | Phase 5 — Local persistence / offline | Завершена; settings, Hive cache/draft, offline/reconnect и Android restart проверены |
-| Phase 6 — Portfolio domain и локальный Builder | Запланирована |
+| Phase 6 — Portfolio domain и локальный Builder | Завершена; CRUD, validation/completion, preview, migration и Android offline restart проверены |
 | Phase 7 — Firebase authentication | Запланирована |
 | Phase 8 — Firestore synchronization | Запланирована |
 | Phase 9 — Living Portfolio / Smart GitHub Sync | Запланирована |
@@ -695,7 +698,7 @@ web-редактор и публичные портфолио. Этот разд
   Документы, локальные ссылки, project context и diff проверены. Android debug
   работает; doctor по-прежнему отмечает отсутствие cmdline-tools и неизвестный
   статус licenses. iOS-запуск не проверен: Xcode и CocoaPods не готовы.
-  Phase 5 не начата.
+  На момент приёмки Phase 4 следующий этап Phase 5 ещё не выполнялся.
 
 **Готово, когда:** repositories загружаются и листаются, ошибку можно повторить,
 пустой профиль не ломает экран. Импорт в портфолио и Firebase ещё не выполняется.
@@ -763,7 +766,7 @@ web-редактор и публичные портфолио. Этот разд
 - `flutter doctor -v` по-прежнему отмечает отсутствие Android cmdline-tools и
   неизвестный статус licenses при успешной debug сборке. iOS не проверен:
   Xcode неполный, CocoaPods отсутствует. Commit/push не выполнялись;
-  Phase 6 не начата.
+  На момент приёмки Phase 5 следующий этап Phase 6 ещё не выполнялся.
 
 **Готово, когда:** настройки переживают перезапуск, ранее загруженные repositories
 доступны offline, локальные изменения сохраняются. Remote sync появится на Phase 8.
@@ -772,25 +775,72 @@ web-редактор и публичные портфолио. Этот разд
 
 **Задачи**
 
-- [ ] Ввести Profile, Skill, Project, Experience, Education, SocialLink, PortfolioBlock
+- [x] Ввести Profile, Skill, Project, Experience, Education, SocialLink, PortfolioBlock
   и PortfolioTheme по реальным формам, без окончательной Firestore schema заранее.
-- [ ] Реализовать ручные проекты и редактирование профиля, skills, links, experience,
+- [x] Реализовать ручные проекты и редактирование профиля, skills, links, experience,
   education и содержимого Resume; формат resume определить перед реализацией.
-- [ ] Добавить add/edit/delete, featured, block reorder, show/hide, validation и preview.
+- [x] Добавить add/edit/delete, featured, block reorder, show/hide, validation и preview.
   Сохранять изменения в локальный draft.
-- [ ] Рассчитать portfolio completion и покрыть правила/validation unit tests,
+- [x] Рассчитать portfolio completion и покрыть правила/validation unit tests,
   основной сценарий editor — widget tests.
 
 **Проверки и приёмка**
 
-- [ ] Ручные проекты и данные профиля можно добавить, изменить и удалить;
+- [x] Ручные проекты и данные профиля можно добавить, изменить и удалить;
   featured, порядок и видимость блоков отражаются в preview.
-- [ ] Draft сохраняется, открывается после перезапуска и просматривается offline.
-- [ ] Validation и completion покрыты unit tests, основной путь editor —
+- [x] Draft сохраняется, открывается после перезапуска и просматривается offline.
+- [x] Validation и completion покрыты unit tests, основной путь editor —
   widget tests; формат Resume определён. Public publication ещё не доступна.
 
 **Готово, когда:** портфолио можно собрать, сохранить, открыть после перезапуска
 и просмотреть offline. Публичной публикации пока нет.
+
+**Реализовано и проверено в Phase 6 — 3 октября 2026**
+
+- Pure Dart `PortfolioContent` объединяет профиль, skills, ручные projects,
+  experience, education, links, Resume, десять ordered/visible блоков и PortfolioTheme.
+  Коллекции immutable, сущности имеют стабильные IDs и structural equality.
+  Demo Profile/Project остались моделями чтения; mock/GitHub данные не копируются в draft.
+- Семь редакторов используют общие components, ru/en validation и Apply/Cancel.
+  Apply изменяет только свою секцию актуального рабочего content; Cancel не меняет
+  draft. Списки поддерживают CRUD; проект — featured и visibility. Resume выбран
+  plain text с переносами строк и лимитом 20 000 символов, без файлов/upload.
+- Preview читает рабочий draft; порядок, visibility и dark/light оформление
+  применяются сразу. Private notes отделены от рендеримого типа. Home, Portfolio,
+  Projects, Settings и shell показывают тот же content; скрытые проекты остаются
+  доступны владельцу на Projects, но исключаются из featured/preview.
+- Completion вычисляется из пяти шагов: профиль, About, skills, хотя бы один
+  видимый проект, links. Опциональные секции не блокируют 100%; скрытие блока
+  не увеличивает процент. Незавершённый draft можно сохранить, неверные значения — нельзя.
+- Hive schema v2 сохраняет nullable content отдельно от notes/metadata. V1 читается
+  без записи; первый явный Save оставляет raw backup перед заменой. Notes patch
+  сохраняет content; expectedRevision предотвращает устаревшую запись. Corrupt/unknown
+  draft не перезаписывается. Read gate объединяет cold reads и допускает demo
+  только после успешного чтения; ошибки имеют явный retry.
+- Save захватывает content/notes/revision, обновляет durable snapshot после успеха
+  и сохраняет более новый рабочий ввод. Duplicate Save блокируется; failure не
+  удаляет правки. Reload требует подтверждения сброса unsaved content и notes.
+- `dart format lib test`: 131 файл; `flutter analyze`: без замечаний.
+  Полный `flutter test --dart-define=UPDATE_UI_PREVIEWS=true`: **530 tests passed**,
+  включая миграцию, конфликты/races, CRUD, validation/completion, чтение/DI, privacy,
+  keyboard, ru/en и responsive. Сравнение **56 PNG эталонов** прошло: 40 основных
+  и 16 Builder; 16 Portfolio/Projects обновлены из-за новых входов в редактор.
+  Контраст AA и 48px targets новых экранов проверены стандартными guidelines
+  для всей высоты содержимого; реальная прокрутка и 320px/text2.0 проверены отдельно.
+- Оба учебных patch независимо применены к свежим копиям финального source:
+  `git apply --check`, `flutter analyze lib` и по **14/14** widget/localization tests.
+- Финальный Android debug APK собран и установлен на `main_phone`, Android 17/API37,
+  arm64. Через native UI заполнены профиль/About и ручной featured-проект;
+  Save увеличил revision 2→3→4, completion 0→40→60%. После force-stop и нового
+  запуска с Wi-Fi/mobile data отключёнными Home и preview восстановили имя,
+  описание, технологии и проект. Исходное состояние сети восстановлено.
+  [Builder](../design/previews/portfolio_builder_android_phone.png) и
+  [offline preview](../design/previews/portfolio_preview_android_phone.png) просмотрены.
+- Flutter doctor подтверждает неполный Xcode и отсутствие CocoaPods: iOS-запуск
+  не выполнен. Android cmdline-tools отсутствуют, статус лицензий неизвестен;
+  debug build/run при этом успешны. Физические phone/tablet не проверены;
+  tablet/landscape покрыты Flutter rendering. Dependencies не добавлены.
+  Документы/ссылки и diff проверены; commit/push не выполнялись. Phase 7 не начата.
 
 ### Phase 7 — Firebase authentication
 
@@ -1169,7 +1219,7 @@ browser push автоматически в scope не добавляется.
 App Distribution или deploy web требует запроса пользователя; iOS-публикация
 не заявляется выполненной по одному Android release.
 
-**Phase 0–4 завершены. Phase 5 в работе по прямому поручению пользователя.**
+**Phase 0–6 завершены. Phase 7 требует отдельного поручения пользователя.**
 
 ---
 

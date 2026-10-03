@@ -5,7 +5,7 @@
 **Процесс работы, проверки и правила внесения согласованных изменений**
 
 ![Contributing guide](https://raster.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
-![Scope Phase 5](https://raster.shields.io/badge/Scope-Phase_5-FF0012?style=for-the-badge)
+![Scope Phase 6](https://raster.shields.io/badge/Scope-Phase_6-FF0012?style=for-the-badge)
 
 </div>
 
@@ -26,10 +26,10 @@
 
 ## Что вносить
 
-Phase 0–5 завершены; последнее поручение — local persistence/offline на Phase 5.
-Реализованы persistent GitHub cache, локальные заметки и сохранение настроек;
+Phase 0–6 завершены; последнее поручение — локальный Builder на Phase 6.
+Реализованы формы, portfolio domain и preview поверх persistent local draft;
 статус и результаты проверок находятся в
-[product spec](docs/product/product-spec.md#phase-5--local-persistence--offline).
+[product spec](docs/product/product-spec.md#phase-6--portfolio-domain-и-локальный-builder).
 Продуктовые функции вводятся последовательно по
 [roadmap](docs/product/product-spec.md#roadmap),
 переход к следующей фазе требует подтверждения пользователя.
@@ -45,7 +45,7 @@ Phase 0–5 завершены; последнее поручение — local 
 | **Направление** | **Допустимые изменения сейчас** |
 |:---|:---|
 | Документация | Уточнение сценариев, границ, источников и способов работы |
-| Mobile UI и storage | Demo-экраны, GitHub Import с offline copy, локальные заметки и настройки темы/языка/описаний источника |
+| Mobile UI и storage | Локальный Builder/preview, ручные проекты, private notes, GitHub Import с offline copy и app settings |
 | Mobile state и architecture | Provider для ThemeMode/Locale/preferences; Riverpod для repository loading/actions, DI и filters; pure Dart contracts и data adapters, учебные patches вне runtime |
 | Структура | Согласование путей, ignore rules и общего AI-контекста |
 | Brand assets | Сохранение оригиналов и описания их применения |
@@ -53,11 +53,13 @@ Phase 0–5 завершены; последнее поручение — local 
 </div>
 
 В `apps/mobile` реализованы UI foundation и Repository/DI границы
-для Android/iOS с GoRouter: core-портфолио использует demo/mock sources,
+для Android/iOS с GoRouter: до создания Builder core-портфолио использует demo/mock sources,
 GitHub Import читает public API через Dio и сохраняет ответы с ETag/Link в Hive.
 Cache имеет hard TTL 7 дней и проверяется сетью при каждом чтении; fallback
 доступен при network/timeout/server failure с явной датой последней проверки.
-Отдельный draft хранит только заметки. Full Builder остаётся Phase 6;
+Отдельный draft хранит PortfolioContent и приватные заметки. Home/Projects/Settings
+читают проекции working content; Portfolio/preview учитывают порядок и видимость блоков.
+Resume редактируется как plain text; ручные изменения сохраняются явным Save;
 прочитанные данные не добавляются автоматически в curated-портфолио.
 В `apps/web` подготовлен README; Next.js-приложение появится на Phase 13.
 Firebase, web dependencies и packages будущих фаз заранее не подключаются.
@@ -84,7 +86,8 @@ Firebase, web dependencies и packages будущих фаз заранее не
 Auth/profile/projects/github_import/portfolio_draft используют `presentation/domain/data`; DI связывается у
 корня feature. Domain остаётся pure Dart; concrete repositories не импортируются
 widgets. Между features используй публичные barrels. `PortfolioOverview` —
-presentation read model для Home, Portfolio и preview, а не полный Builder domain.
+presentation read model обзора. Чистый Builder domain принадлежит `portfolio_draft`;
+этот feature владеет единственным записываемым repository и app-session controller.
 В GitHub Import data слой владеет Dio, DTO mapping, Link pagination и ETag
 validators и versioned cache; controller — загрузкой, refresh, локальным debounce
 и обработкой typed failures. Settings contracts и app-level состояние находятся
@@ -161,7 +164,10 @@ flutter run -d <device-id>
 descriptions. Переведены UI и сообщения; пользовательские и GitHub тексты
 остаются исходными. В Портфолио «Локальные заметки» открывают `/portfolio-draft`:
 явное сохранение переживает перезапуск, несохранённый ввод — только навигацию
-текущей session. Авторизация, полный Builder и web-редактор вводятся на своих фазах.
+текущей session. «Открыть Builder» позволяет заполнить профиль, списки и Resume,
+добавить ручной проект, изменить featured/видимость и порядок блоков. Preview читает
+рабочий ввод; Save сохраняет всё портфолио и notes. Авторизация и web-редактор
+вводятся на следующих фазах.
 
 ---
 
@@ -234,6 +240,10 @@ snapshot restore, очередь записей/retry, ru/en UI и увелич�
 `test/portfolio_draft_repository_test.dart`, `test/portfolio_draft_controller_test.dart`
 и `test/portfolio_draft_widget_test.dart` проверяют saved notes, revisions,
 сохранность ввода при ошибках, unknown schema и экран локального draft.
+Builder domain/repository tests проверяют validation/completion, schema v1→v2
+и сохранность private notes; controller/forms/preview/integration tests проверяют
+CRUD, рабочее состояние, сохранение и единые проекции. Визуальные проверки
+Builder находятся в `test/portfolio_builder_visual_test.dart`.
 Для сфокусированной проверки storage и настроек из той же директории:
 
 ```sh

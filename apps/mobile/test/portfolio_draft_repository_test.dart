@@ -35,11 +35,12 @@ void main() {
       expect(saved.pendingSync, isTrue);
       expect(box.keys.toList(), ['draft']);
       expect(jsonDecode(box.get('draft') as String), {
-        'schemaVersion': 1,
+        'schemaVersion': 2,
         'notes': saved.notes,
         'revision': 1,
         'updatedAt': now.toIso8601String(),
         'pendingSync': true,
+        'content': null,
       });
     },
   );
@@ -141,7 +142,7 @@ void main() {
     );
   }
 
-  for (final version in [0, 2, 999]) {
+  for (final version in [0, 3, 999]) {
     test(
       'Unknown schema version $version is preserved for explicit migration',
       () async {

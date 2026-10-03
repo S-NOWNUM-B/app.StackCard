@@ -5,7 +5,7 @@
 **Flutter-клиент для Android и iOS с мобильным редактором общего портфолио**
 
 ![Mobile Android + iOS](https://raster.shields.io/badge/Mobile-Android_%2B_iOS-09090B?style=for-the-badge)
-![Stage Phase 5 Local persistence](https://raster.shields.io/badge/Stage-Phase_5_Local_persistence-FF0012?style=for-the-badge)
+![Stage Phase 6 Builder](https://raster.shields.io/badge/Stage-Phase_6_Builder-FF0012?style=for-the-badge)
 
 </div>
 
@@ -28,13 +28,15 @@
 Offline draft/cache и нативные функции относятся к мобильному клиенту.
 
 GitHub Import загружает публичный профиль и repositories через Dio.
-Phase 5 добавляет Hive cache с offline fallback, отдельный draft заметок и
-сохранение настроек с реальными переводами ru/en.
-Sign In, Home, Portfolio, Projects и Settings продолжают получать demo/mock data;
-общий app shell и Material 3 light/dark сохранены. Core-портфолио, backend,
-полный Builder и публикация развиваются по roadmap. Phase 5 завершена;
+Hive сохраняет response cache с offline fallback и отдельный portfolio draft;
+SharedPreferences — настройки приложения, UI переведён на ru/en.
+Локальный Builder позволяет собрать профиль, ручные проекты и разделы,
+выбрать порядок, видимость и тему блоков и посмотреть рабочий результат.
+Home, Portfolio, Projects и Settings читают проекции этого draft; до начала
+Builder показываются demo-данные. Общий app shell и Material 3 light/dark сохранены.
+Backend, GitHub import в curated данные и публикация развиваются по roadmap;
 статус и результаты проверок — в
-[product spec](../../docs/product/product-spec.md#phase-5--local-persistence--offline).
+[product spec](../../docs/product/product-spec.md#phase-6--portfolio-domain-и-локальный-builder).
 ThemeMode/Locale/preferences управляются Provider; product state, repository
 loading и DI — Riverpod. Их границы и
 учебная эволюция описаны в
@@ -59,7 +61,7 @@ loading и DI — Riverpod. Их границы и
 | [lib/shared/widgets](lib/shared/widgets/) | Используемые общие widgets, loading/error/retry и async view |
 | [lib/features](lib/features/) | Auth/profile/projects/github_import/portfolio_draft: presentation/domain/data и public APIs; portfolio read model, Home и Settings |
 | [lib/features/github_import/github_import.dart](lib/features/github_import/github_import.dart) | Публичный API GitHub Import; DI связывает repository, clock и response cache, native bootstrap подставляет Hive adapter |
-| [lib/features/portfolio_draft/portfolio_draft.dart](lib/features/portfolio_draft/portfolio_draft.dart) | Отдельные локальные заметки: repository, state и экран `/portfolio-draft` |
+| [lib/features/portfolio_draft/portfolio_draft.dart](lib/features/portfolio_draft/portfolio_draft.dart) | Portfolio domain, validation/completion, repository, единый session controller, Builder/preview и private notes |
 | [lib/features/settings/data/shared_preferences_settings_repository.dart](lib/features/settings/data/shared_preferences_settings_repository.dart) | Один versioned snapshot настроек через SharedPreferencesAsync |
 | [assets/fonts](assets/fonts/) | Локальные DM Sans, Noto Sans fallback и SIL OFL лицензии |
 | [test/widget_test.dart](test/widget_test.dart), [test/responsive_test.dart](test/responsive_test.dart) | UI-сценарии, навигация, темы и адаптивность |
@@ -69,7 +71,7 @@ loading и DI — Riverpod. Их границы и
 | [test/github_data_test.dart](test/github_data_test.dart), [test/github_import_controller_test.dart](test/github_import_controller_test.dart), [test/github_import_widget_test.dart](test/github_import_widget_test.dart) | DTO/HTTP/ETag, запросы и lifecycle controller, локальные фильтры и экран GitHub Import |
 | [test/github_persistence_test.dart](test/github_persistence_test.dart), [test/local_storage_test.dart](test/local_storage_test.dart) | Реальный Hive reopen, TTL/fallback/304, ошибки записи, изоляция boxes и повреждённые файлы |
 | [test/settings_persistence_test.dart](test/settings_persistence_test.dart), [test/localization_test.dart](test/localization_test.dart) | Restore/сохранение настроек, write retry и переведённый UI |
-| [test/portfolio_draft_repository_test.dart](test/portfolio_draft_repository_test.dart), [test/portfolio_draft_controller_test.dart](test/portfolio_draft_controller_test.dart), [test/portfolio_draft_widget_test.dart](test/portfolio_draft_widget_test.dart) | Заметки, revisions, unknown schema, асинхронные действия и экран draft |
+| [test/portfolio_draft_repository_test.dart](test/portfolio_draft_repository_test.dart), [test/portfolio_draft_controller_test.dart](test/portfolio_draft_controller_test.dart), [test/portfolio_draft_widget_test.dart](test/portfolio_draft_widget_test.dart) | Persistence, revisions, unknown schema, input retention, асинхронные действия и private notes |
 | [pubspec.yaml](pubspec.yaml), [pubspec.lock](pubspec.lock) | SDK constraint, dependencies и разрешённые версии |
 | [analysis_options.yaml](analysis_options.yaml) | Dart analyzer и lint rules |
 | `android/`, `ios/` | Native scaffolds и платформенные настройки |
@@ -80,9 +82,10 @@ loading и DI — Riverpod. Их границы и
 pure Dart модели, правила и repository contracts; data содержит demo/mock
 источники, Dio-реализацию GitHub repository и storage adapters. DI связывается у корня
 feature, `StackCardApp.providerOverrides`
-передаётся внутреннему ProviderScope для замены источника. `PortfolioOverview`
-объединяет profile/projects для Home, Portfolio и preview; полный Builder/domain
-остаётся задачей Phase 6. Подробные границы — в
+передаётся внутреннему ProviderScope для замены источника. `PortfolioContent`
+принадлежит единому draft; profile/projects остаются read model проекциями,
+`PortfolioOverview` объединяет их для Home и demo Portfolio. Builder preview
+читает рабочий content и не показывает private notes. Подробные границы — в
 [architecture](../../docs/architecture/architecture.md#mobile-modules--при-реальных-сценариях). Brand originals находятся в
 [assets/branding](../../assets/branding/); `StackCardBrand` отрисовывает
 оригинальные mark paths через `CustomPainter` без SVG package.
@@ -97,8 +100,9 @@ feature, `StackCardApp.providerOverrides`
 Sign In проверяет формат demo-email и вызывает repository через AuthController;
 успех открывает Home без реальной авторизации аккаунта.
 Через app shell доступны Portfolio, Projects и Settings; переходы поддерживают
-возврат назад. Projects позволяет искать и фильтровать mock data, открывать
-карточку с подробностями. Loading/error/retry работают с текущими repository
+возврат назад. Projects позволяет искать и фильтровать ручные проекты Builder
+либо demo-данные до его начала, открывать карточку с подробностями.
+Loading/error/retry работают с текущими repository
 states; подмена источника не требует правки widgets. Settings получает профиль
 из того же profile provider, переключает dark/light/system и показывает
 loading/empty/error с retry. Dark — тема по умолчанию; выбранная тема сохраняется
@@ -145,19 +149,42 @@ UI, navigation и сообщения переведены; исходные на
 применяется к UI. Bootstrap восстанавливает настройки и открывает Hive boxes
 до первого экрана `StackCardApp`; ошибка открытия показывает повторный запуск.
 
-Из Portfolio открой «Локальные заметки». `/portfolio-draft` сохраняет только
-notes в отдельном `portfolio_draft` box: явный Save увеличивает revision,
-записывает UTC `updatedAt` и `pendingSync`. Saved notes переживают перезапуск;
+Из Portfolio открой «Локальные заметки». `/portfolio-draft` редактирует private
+notes в том же draft, отдельно от показываемого в preview content.
+Явный Save сохраняет рабочий draft в `portfolio_draft` box, увеличивает revision,
+записывает UTC `updatedAt` и `pendingSync`. Saved draft переживает перезапуск;
 несохранённый ввод сохраняется при навигации в текущей session. Ошибка Save
 оставляет ввод доступным. Повреждённая запись или неизвестная schema сохраняются
 с блокировкой перезаписи. `pendingSync` пока обозначает ожидающую синхронизацию;
-cloud sync появится на своей фазе. Полный Builder относится к Phase 6.
+cloud sync появится на своей фазе. Cache recovery не изменяет portfolio draft.
 
 ### Редактировать портфолио
 
-Целевой сценарий: создать профиль и проекты, импортировать данные GitHub,
-сохранить draft, просмотреть результат и явно опубликовать портфолио.
-Этот путь вводится по [roadmap](../../docs/product/product-spec.md#roadmap).
+Из Portfolio открой Builder (`/portfolio/builder`). Начало создаёт пустое
+портфолио без копирования demo/GitHub source. Заполни профиль, добавь навыки,
+опыт, образование, ссылки и Resume; Resume — обычный текст с переносами строк.
+Форма применяет изменения целиком, отмена оставляет прежние значения.
+Ручной проект можно создать из Builder или Projects, изменить или удалить,
+выбрать featured и видимость.
+
+В Builder перемещай десять блоков вверх/вниз и включай нужные разделы.
+Пустые блоки пропускаются; Featured Projects показывает видимые проекты с отметкой
+featured, а Builder/Projects сохраняют все ручные записи для редактирования.
+Тема портфолио dark/light применяется к отображению Portfolio/preview отдельно
+от темы приложения.
+Полнота вычисляется по профилю, About, навыкам, видимому проекту и ссылкам;
+опциональные разделы не обязательны, скрытие блока не увеличивает процент.
+Preview (`/portfolio/preview`) показывает рабочие изменения до Save и их статус.
+
+Явный Save сохраняет весь draft. Ошибка оставляет ввод доступным; новые правки
+во время записи остаются несохранёнными. Сохранённое портфолио открывается
+после перезапуска и без сети. Прежний draft заметок v1 читается без перезаписи;
+первая явная запись v2 сохраняет backup исходной записи. Неизвестный или
+повреждённый формат блокирует перезапись. Conflict revision разрешается явным
+действием перечитать сохранённую версию, которое отбрасывает несохранённые правки.
+
+Импорт GitHub в curated проекты, remote sync и публичная публикация вводятся
+по [roadmap](../../docs/product/product-spec.md#roadmap).
 
 ### Использовать общий backend и функции устройства
 

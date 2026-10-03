@@ -195,7 +195,7 @@ diff --git a/apps/mobile/lib/features/settings/settings_screen.dart b/apps/mobil
  import '../../shared/widgets/stackcard_button.dart';
  import '../../shared/widgets/stackcard_card.dart';
  import '../../shared/widgets/stackcard_states.dart';
-@@ -23,9 +24,7 @@
+@@ -24,9 +25,7 @@
    StackCardViewState _previewState = StackCardViewState.empty;
    @override
    Widget build(BuildContext context) {
@@ -206,7 +206,7 @@ diff --git a/apps/mobile/lib/features/settings/settings_screen.dart b/apps/mobil
      return SingleChildScrollView(
        padding: EdgeInsets.all(
          MediaQuery.sizeOf(context).width >= 700 ? 24 : 16,
-@@ -76,9 +75,8 @@
+@@ -77,9 +76,8 @@
                              label: Text(item.title),
                              selected: themeMode == item.mode,
                              onSelected: (_) {

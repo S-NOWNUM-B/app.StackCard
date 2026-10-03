@@ -11,6 +11,8 @@ final class Project {
     required this.source,
     required this.featured,
     required this.details,
+    this.id,
+    this.visible = true,
   }) : technologies = List.unmodifiable(technologies);
 
   final String title;
@@ -21,6 +23,8 @@ final class Project {
   final ProjectSource source;
   final bool featured;
   final String details;
+  final String? id;
+  final bool visible;
 
   bool get isFromGitHub => source == ProjectSource.github;
 }

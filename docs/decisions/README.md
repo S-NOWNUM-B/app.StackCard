@@ -45,8 +45,8 @@
 | Repository contracts + Riverpod DI у корня feature | Concrete реализации заменяются provider override без переписывания экранов; FutureProvider/AsyncNotifier обслуживают загрузку и действия, Provider остаётся владельцем темы |
 | Public feature barrels для межмодульных зависимостей | `auth.dart`, `profile.dart`, `projects.dart`, `portfolio.dart` раскрывают намеренный API; внутренние файлы другой feature не становятся общим контрактом |
 | Immutable models и domain selection | `ProjectSource` отделяет происхождение от UI-подписи; query/filter и featured-отбор работают без Flutter/Riverpod; коллекции защищены от внешней мутации |
-| `PortfolioOverview` как presentation read model | Объединяет profile/projects для Home, Portfolio и preview; полный featured-список не зависит от поиска на Projects. Full Builder/domain остаётся задачей Phase 6 |
-| `ProfileReadiness` как demo-snapshot | Валидация счётчиков и расчёт доли не утверждают алгоритм полноты будущего Builder |
+| `PortfolioOverview` как presentation read model | Объединяет profile/projects; полный featured-список не зависит от поиска на Projects. На Phase 3 Builder/domain ещё отсутствовал; Phase 6 вводит его отдельно от read models |
+| `ProfileReadiness` как demo-snapshot | На Phase 3 валидация счётчиков и расчёт доли не задавали алгоритм полноты Builder; Phase 6 сохраняет read model и подставляет вычисленный результат |
 | Без дополнительных UseCase/DataSource | Текущие mock repositories и простые правила не требуют пустого промежуточного слоя; network/persistence вводятся на соответствующих фазах |
 | Явный retry для asynchronous repository state | Loading/error отображаются shared widgets; пользовательский retry повторяет запрос, сохранённые query/filter остаются в app session |
 
@@ -77,7 +77,8 @@
 
 ## Принято для Phase 5
 
-Решения ниже реализованы в текущем runtime. Приёмка и её доказательства находятся в
+Решения ниже введены на Phase 5; notes-only schema расширена решением Phase 6 ниже.
+Приёмка и её доказательства находятся в
 [product spec](../product/product-spec.md#phase-5--local-persistence--offline).
 
 | Решение | Рассмотренная альтернатива | Причина и последствия |
@@ -87,7 +88,7 @@
 | Network-first cache, schema 1 и hard TTL 7 дней | Бессрочный offline cache или cache-first без проверки | URI key хранит body, ETag, Link и UTC `validatedAt`; только успешные `200`/`304` продлевают срок. Возраст от 7 дней исключает fallback; отмена проверяется после storage awaits |
 | Offline fallback только для network/timeout/server | Подменять cache любой HTTP failure | Not found, forbidden, rate limit, invalid response и cancellation сохраняют смысл ошибки. Проверенный cached DTO/Link используется только в допустимом возрасте, offline-чтение не продлевает TTL |
 | Метаданные чтения и явное предупреждение UI | Выдать cached ответы за свежие данные | `GitHubReadMetadata` передаёт источник, дату и storage failures; aggregate объединяет профиль/страницы с самой ранней датой. Успешный HTTP остаётся доступным при ошибке cache write, UI сообщает, что offline copy не гарантирована |
-| Отдельный notes draft, schema 1, revision и `pendingSync` | Сразу реализовать весь Builder или cloud sync | `portfolio_draft` хранит notes, монотонную revision, UTC `updatedAt` и pendingSync одним awaited write; очередь исключает конкурирующие revisions. Full Builder остаётся Phase 6, sync — своей фазой |
+| Отдельный notes draft, schema 1, revision и `pendingSync` | Сразу реализовать весь Builder или cloud sync | На Phase 5 `portfolio_draft` сохранял notes, revision, UTC `updatedAt` и pendingSync одним awaited write; очередь исключает конкурирующие revisions. Schema 2 и Builder вводятся на Phase 6, remote sync — своей фазой |
 | Cache evict, draft preserve при повреждении/unknown schema | Автоматически сбросить оба хранилища | Некорректная, expired или future-schema cache row удаляется. Draft repository сохраняет исходную запись и блокирует перезапись до совместимого формата; неизвестные версии не мигрируются догадкой |
 | Backup нечитаемого cache-файла; `crashRecovery: false` для boxes | Автоматическая обрезка повреждённого Hive-файла | `LocalStorage` переименовывает cache в `.hive.unreadable-<UTC stamp>` и пробует открыть новый. Повреждённый draft не обрезается: bootstrap показывает ошибку/retry, файл сохраняется, уже открытый cache закрывается |
 | Два публичных `openBox` в одном `Future.wait` | Наблюдать только первый Future | Shim для Hive 2.2.3 обрабатывает оба Future, завершающиеся ошибкой при неудачном открытии; оба вызова получают один box. Поведение и сохранность файлов проверяются real-file tests |
@@ -110,6 +111,29 @@ Runtime composition — [LocalRuntime](../../apps/mobile/lib/app/local_runtime.d
 [settings](../../apps/mobile/test/settings_persistence_test.dart),
 [localization](../../apps/mobile/test/localization_test.dart) и
 [draft repository](../../apps/mobile/test/portfolio_draft_repository_test.dart).
+
+## Принято для Phase 6
+
+| Решение | Рассмотренная альтернатива | Причина и последствия |
+| --- | --- | --- |
+| Единый `PortfolioContent` в `portfolio_draft`, `Profile`/`Project` — read models | Отдельный write store для каждого экрана | Формы изменяют один domain content; Home/Portfolio/Projects/Settings читают проекции через публичные feature APIs. Existing demo Repository/DI остаётся fallback до начала Builder |
+| Nullable content для legacy draft и пустой content при начале Builder | Скопировать demo/GitHub data в пользовательский draft | Notes-only v1 не выдаётся за заполненное портфолио; null отличается от начатого пустого Builder. GitHub Import остаётся отдельным source и не меняет curated content |
+| Private notes вне `PortfolioContent` | Включить notes в рендеримый content | `/portfolio-draft` использует тот же controller/repository, но preview получает только content; заметки не становятся частью портфолио |
+| Envelope v2 с raw v1 backup перед явной записью | Переписать v1 при чтении или обнулить неподдерживаемый draft | Чтение сохраняет точные notes/metadata без write. Backup/write failure оставляет прежний durable draft; corrupted/unknown schema блокирует перезапись, cache eviction не затрагивает draft |
+| Последовательный Save с `expectedRevision` | Перезаписывать без проверки durable revision | Stale revision даёт conflict без потери более свежей записи. UI сохраняет рабочий ввод; явный reload требует решения отбросить несохранённые изменения. Это локальная защита, remote multi-device strategy ещё не выбрана |
+| Рабочий content и durable snapshot в одном session controller | Preview только последней записи или второй mutable preview store | Preview показывает applied изменения до Save с честным unsaved status. Save захватывает snapshot, более новые правки остаются unsaved; failure сохраняет ввод, duplicate Save блокируется |
+| Pure validation и пять шагов полноты | Сохранять процент либо считать только видимые блоки | Профиль, About, навыки, видимый проект и ссылки дают полноту; optional разделы не обязательны, скрытие блока не повышает процент. Неполный draft допустим, некорректные значения не сохраняются |
+| `PortfolioTheme` отдельно от app ThemeMode | Менять тему приложения при выборе оформления портфолио | Dark/light хранится в content и использует существующую StackCardTheme для отображения Portfolio/preview; AppearanceController продолжает владеть настройками приложения |
+| Resume — plain text, без новых dependencies | Markdown renderer или файловое resume на этой фазе | Реальная multiline форма сохраняет переносы строк; файлы, media и экспорт вводятся по отдельным сценариям roadmap |
+
+Sources: публичный [portfolio draft API](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart),
+[PortfolioContent](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_content.dart),
+[validation](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_validation.dart),
+[completion](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_completion.dart),
+[controller](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_draft_controller.dart) и
+[Hive repository](../../apps/mobile/lib/features/portfolio_draft/data/hive_portfolio_draft_repository.dart).
+Подробный contract — в [architecture](../architecture/architecture.md#portfolio-domain-и-локальный-builder),
+приёмка и ограничения — в [Phase 6](../product/product-spec.md#phase-6--portfolio-domain-и-локальный-builder).
 
 ## Решить перед соответствующими фазами
 

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/stackcard_colors.dart';
 import '../core/localization/app_strings.dart';
 import '../shared/widgets/stackcard_brand.dart';
+import '../features/portfolio_draft/portfolio_draft.dart';
+import '../features/profile/profile.dart';
 
 const _destinations = [
   (path: '/home', label: 'nav.home', icon: Icons.space_dashboard_outlined),
@@ -12,13 +15,15 @@ const _destinations = [
   (path: '/settings', label: 'nav.settings', icon: Icons.tune_rounded),
 ];
 
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.location, required this.child});
   final String location;
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final draft = ref.watch(portfolioDraftControllerProvider);
+    final initials = ref.watch(profileProvider).value?.initials ?? '?';
     final selected = _destinations.indexWhere((item) => item.path == location);
     final index = selected < 0 ? 0 : selected;
     final wide = MediaQuery.sizeOf(context).width >= 700;
@@ -73,9 +78,9 @@ class AppShell extends StatelessWidget {
                               icon: Icon(_destinations[i].icon),
                             ),
                           ),
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.symmetric(vertical: 24),
-                          child: CircleAvatar(child: Text('AM')),
+                          child: CircleAvatar(child: Text(initials)),
                         ),
                       ],
                     ),
@@ -95,7 +100,13 @@ class AppShell extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'STACKCARD / DEMO',
+                                draft.content != null
+                                    ? context.strings.tr(
+                                        'builderIntegration.shellDraft',
+                                      )
+                                    : draft.loaded
+                                    ? 'STACKCARD / DEMO'
+                                    : 'STACKCARD',
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),
                               const SizedBox(height: 4),

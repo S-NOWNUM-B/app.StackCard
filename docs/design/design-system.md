@@ -36,8 +36,9 @@ ThemeMode/Locale/preferences принадлежат
 [AppearanceController](../../apps/mobile/lib/core/state/appearance_controller.dart)
 и распространяются через Provider; палитра и Material 3 остаются в theme.
 Bootstrap восстанавливает настройки до первого экрана приложения.
-Phase 5 завершена; статус и проверки фиксируются в
-[product spec](../product/product-spec.md#phase-5--local-persistence--offline).
+Локальный Builder Phase 6 сохраняет этот стиль и общие компоненты;
+статус и проверки фиксируются в
+[product spec](../product/product-spec.md#phase-6--portfolio-domain-и-локальный-builder).
 
 Палитра находится в
 [StackCardColors](../../apps/mobile/lib/core/theme/stackcard_colors.dart),
@@ -197,11 +198,14 @@ Mobile поставляет локальные variable fonts
 |:---|:---|:---|
 | Sign In | Знак и вступление → demo-форма с email → кнопка открытия демо | Вступление слева, форма справа при достаточной ширине; иначе одна колонка |
 | Home | Приветствие → профиль и CTA → готовность → featured-проект → workspace | Bento: профиль рядом с готовностью, featured-проект рядом с workspace |
-| Portfolio | Локальные заметки → профиль → статус черновика → «Обо мне» → навыки → проекты → история и ссылки | Профиль и черновик рядом; последующие блоки сгруппированы в две колонки |
+| Portfolio | Builder/preview/notes → блоки working draft; до создания Builder — demo-обзор | Блоки в заданном пользователем порядке; demo-обзор сохраняет две колонки |
 | Projects | Поиск → фильтры → число результатов → список карточек | Поиск и фильтры над сеткой из двух колонок; пустой результат с действием сброса |
 | Settings | Тема → язык → показ описаний источника → demo-аккаунт → loading/empty/error preview и retry | Та же последовательность в ограниченной по ширине колонке |
 | GitHub Import | Username → источник и дата cached copy при fallback → профиль → поиск/фильтры → repositories и pagination | Repositories переходят в две колонки при достаточной ширине |
-| Локальные заметки | Область notes → поле → явное сохранение → unsaved/saving/saved status → revision, дата и pendingSync | Одна читаемая колонка; полный Builder вводится на Phase 6 |
+| Локальные заметки | Область private notes → поле → явное сохранение → unsaved/saving/saved status → revision, дата и pendingSync | Одна читаемая колонка; заметки не входят в preview |
+| Builder | Статус/полнота → Save/preview → разделы → проекты → порядок/видимость блоков → тема → notes/reload | Читаемая колонка; Up/Down кнопки переставляют блоки, Switch меняет видимость |
+| Редакторы | Поля одной секции или CRUD списка → Apply/Cancel | Ограниченная ширина, прокрутка при клавиатуре; Cancel не меняет draft |
+| Preview | Статус рабочего draft → видимые блоки в выбранном порядке | Та же логика; PortfolioTheme использует существующую dark/light палитру независимо от app theme |
 
 Референс игрового интерфейса адаптирован через rounded panels, боковую
 навигацию и bento-группировку. Контент относится к developer-портфолио;
@@ -238,6 +242,20 @@ Revision и дата относятся к последнему успешном
 формат draft показывает причину и блокирует перезапись. Bootstrap использует
 loading/error/retry до открытия app runtime; Settings сообщает о записи
 preferences и её ошибке с повтором.
+
+Builder показывает вычисленную полноту и оставшиеся шаги, не обещая публикацию.
+Save сохраняет текущий snapshot; дальнейший ввод остаётся несохранённым.
+При revision conflict повторное чтение требует явного согласия на сброс рабочих
+правок. Profile, About, Skills, Featured Projects, Experience, Education, GitHub,
+Links, Resume и Location имеют по одному блоку с порядком и видимостью.
+Resume — текст с переносами строк; ссылки и длинный контент переносятся в preview.
+
+В `previews` сохранены 16 эталонов `builder_*` для hub, профиля, проекта и preview
+в обеих темах на phone/tablet. Нативные
+[Builder](previews/portfolio_builder_android_phone.png) и
+[offline preview](previews/portfolio_preview_android_phone.png) показывают сохранённый
+профиль и ручной featured-проект после Android restart. Результаты responsive,
+контраста и target-size проверок — в приёмке Phase 6 product spec.
 
 UI-подписи, navigation, validation и состояния имеют переводы ru/en;
 пользовательские и source тексты не переводятся автоматически. Проверять обе

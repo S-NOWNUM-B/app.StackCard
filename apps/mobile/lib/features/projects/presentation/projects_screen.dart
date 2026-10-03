@@ -15,6 +15,7 @@ import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/project.dart';
 import '../domain/project_filters.dart';
 import '../projects_providers.dart';
+import '../../portfolio_draft/portfolio_draft.dart';
 import 'project_filters.dart';
 
 class ProjectsScreen extends ConsumerStatefulWidget {
@@ -52,6 +53,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         : context.colors.textSecondary;
     final filters = ref.watch(projectFiltersProvider);
     final projectsState = ref.watch(visibleProjectsProvider);
+    final hasDraft = ref.watch(portfolioWorkingContentProvider) != null;
     ref.listen(projectFiltersProvider.select((filters) => filters.query), (
       previous,
       query,
@@ -66,7 +68,10 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 
     return StackCardAsyncView<List<Project>>(
       state: projectsState,
-      onRetry: () => ref.invalidate(projectsProvider),
+      onRetry: () {
+        ref.read(portfolioDraftControllerProvider.notifier).load();
+        ref.invalidate(projectsProvider);
+      },
       data: (projects) => LayoutBuilder(
         builder: (context, constraints) => SingleChildScrollView(
           padding: EdgeInsets.all(
@@ -87,15 +92,38 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                   ),
                   const SizedBox(height: StackCardSpacing.sm),
                   Text(
-                    context.strings.tr('projects.subtitle'),
+                    context.strings.tr(
+                      hasDraft
+                          ? 'builderIntegration.projectsSubtitle'
+                          : 'projects.subtitle',
+                    ),
                     style: Theme.of(context).textTheme.bodyLarge
                         ?.copyWith(color: pageTextColor),
                   ),
                   const SizedBox(height: StackCardSpacing.xl),
-                  StackCardButton(
-                    label: 'GitHub Import',
-                    icon: Icons.download_rounded,
-                    onPressed: () => context.push('/github-import'),
+                  Wrap(
+                    spacing: StackCardSpacing.md,
+                    runSpacing: StackCardSpacing.md,
+                    children: [
+                      StackCardButton(
+                        label: 'GitHub Import',
+                        icon: Icons.download_rounded,
+                        onPressed: () => context.push('/github-import'),
+                      ),
+                      StackCardButton(
+                        label: context.strings.tr(
+                          'builderIntegration.addProject',
+                        ),
+                        icon: Icons.add_rounded,
+                        onPressed: () => context.push('/projects/new'),
+                      ),
+                      if (hasDraft)
+                        StackCardButton(
+                          label: context.strings.tr('builderIntegration.edit'),
+                          icon: Icons.tune_rounded,
+                          onPressed: () => context.push('/portfolio/builder'),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: StackCardSpacing.lg),
                   StackCardCard(
@@ -200,7 +228,11 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                     ),
                   const SizedBox(height: StackCardSpacing.xl),
                   Text(
-                    context.strings.tr('projects.demoNote'),
+                    context.strings.tr(
+                      hasDraft
+                          ? 'builderIntegration.localNote'
+                          : 'projects.demoNote',
+                    ),
                     style: Theme.of(context).textTheme.bodyMedium
                         ?.copyWith(color: pageTextColor),
                   ),
@@ -252,6 +284,8 @@ class _ProjectCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 ),
+              if (!project.visible)
+                Text(context.strings.tr('builderIntegration.hidden')),
             ],
           ),
           const SizedBox(height: StackCardSpacing.md),
@@ -279,6 +313,16 @@ class _ProjectCard extends StatelessWidget {
             icon: Icons.arrow_outward_rounded,
             onPressed: () => _showProjectDetails(context, project),
           ),
+          if (project.id != null) ...[
+            const SizedBox(height: StackCardSpacing.sm),
+            StackCardButton(
+              label: context.strings.tr('builderIntegration.editProject'),
+              icon: Icons.edit_outlined,
+              onPressed: () => context.push(
+                '/projects/${Uri.encodeComponent(project.id!)}/edit',
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -316,8 +360,11 @@ class _ProjectCover extends StatelessWidget {
             children: [
               Text(
                 project.symbol,
-                style: Theme.of(context).textTheme.displayMedium
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style:
+                    (project.id == null
+                            ? Theme.of(context).textTheme.displayMedium
+                            : Theme.of(context).textTheme.headlineSmall)
+                        ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(width: StackCardSpacing.lg),
               Expanded(
@@ -362,7 +409,11 @@ class _ProjectCover extends StatelessWidget {
           ),
           const SizedBox(height: StackCardSpacing.lg),
           Text(
-            context.strings.tr('projects.demoCase'),
+            context.strings.tr(
+              project.id == null
+                  ? 'projects.demoCase'
+                  : 'builderIntegration.manualCase',
+            ),
             style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: context.colors.textSecondary),
           ),

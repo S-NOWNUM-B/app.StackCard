@@ -5,7 +5,7 @@
 **Эволюция темы и границы Provider/Riverpod в мобильном приложении**
 
 ![Learning state management](https://raster.shields.io/badge/Learning-state_management-09090B?style=for-the-badge)
-![Scope Phases 2–5](https://raster.shields.io/badge/Scope-Phases_2--5-FF0012?style=for-the-badge)
+![Scope Phases 2–6](https://raster.shields.io/badge/Scope-Phases_2--6-FF0012?style=for-the-badge)
 
 </div>
 
@@ -20,6 +20,7 @@
 - [Repository и DI на Phase 3](#repository-и-di-на-phase-3)
 - [GitHub Import на Phase 4](#github-import-на-phase-4)
 - [Локальное сохранение на Phase 5](#локальное-сохранение-на-phase-5)
+- [Рабочий draft и Builder на Phase 6](#рабочий-draft-и-builder-на-phase-6)
 - [Воспроизведение учебных вариантов](#воспроизведение-учебных-вариантов)
 - [Проверки и ограничения](#проверки-и-ограничения)
 
@@ -134,18 +135,21 @@ Theme закономерно обновляет использующие её wi
 | ThemeMode, locale ru/en и showSourceDescriptions | AppSettings в AppearanceController через Provider; восстановление и сохранение через SharedPreferences |
 | Очередь сохранения настроек и save failure | AppearanceController, app session; последние изменения записываются последовательно, retry явный |
 | Query и выбранный фильтр Projects | ProjectFiltersNotifier через Riverpod, app session |
-| Полный список проектов и профиль | projectsProvider/profileProvider, async repository state в app session |
+| Полный список проектов и профиль | projectsProvider/profileProvider, проекции рабочего Builder content либо async demo repository state |
 | Отфильтрованный список | visibleProjectsProvider, AsyncValue из query/filter и полного списка |
 | Featured проекты | featuredProjectsProvider и pure selectFeaturedProjects, независимы от поиска |
 | Demo-session и действие входа | AuthController через AsyncNotifier, repository вызывается через DI |
-| Home/Portfolio/preview данные | PortfolioOverview в presentation объединяет публичные profile/projects states |
+| Home и demo Portfolio | PortfolioOverview в presentation объединяет публичные profile/projects states |
+| Builder Portfolio и preview | Рабочий PortfolioContent через публичный portfolioWorkingContentProvider, порядок/видимость блоков и выбранная тема |
 | GitHub username, профиль, repositories и loading/error flags | GitHubImportController через autoDispose Notifier, время жизни экрана GitHub Import |
 | GitHub query и фильтр | Immutable GitHubImportState; controller применяет локальный query после debounce 300 ms |
 | GitHub repository и rate-limit deadline | DioGitHubImportRepository через feature-root DI, app session; уход с экрана не сбрасывает deadline |
 | GitHub response cache и metadata | Native bootstrap подставляет HiveGitHubResponseCache; body/ETag/Link/validatedAt переживают запуск, TTL — 7 дней; readMetadata сообщает offline fallback и проблемы cache |
-| Ещё не сохранённые draft notes | PortfolioDraftController через Riverpod, app session; ввод сохраняется при навигации |
-| Сохранённые draft notes, revision и pendingSync | HivePortfolioDraftRepository; успешная запись увеличивает revision и помечает pendingSync |
-| Редактируемый текст поля | TextEditingController экрана; query и notes синхронизируются с feature state |
+| Рабочий portfolio content и private notes | PortfolioDraftController через Riverpod, app session; применённые изменения сохраняются при навигации |
+| Последний сохранённый portfolio draft, revision и pendingSync | HivePortfolioDraftRepository; успешная запись увеличивает revision и помечает pendingSync |
+| Полнота портфолио | Pure calculatePortfolioCompletion от рабочего content; отдельного mutable значения нет |
+| Тема портфолио dark/light | PortfolioContent.theme в том же draft; применяется к отображению content независимо от app ThemeMode |
+| Редактируемый текст поля | TextEditingController экрана; query/notes синхронизируются с feature state, формы Builder применяют результат целиком |
 | Form validation и preview loading/empty/error | Локальное UI-состояние соответствующего экрана |
 | GoRouter | State корневого приложения, disposal при закрытии дерева |
 
@@ -191,7 +195,8 @@ Providers не используют `autoDispose`: при переходе в д
 не добавляют persistence сами; Phase 5 подключает конкретные storage adapters.
 Query/filter Projects продолжают жить только в app session. Repository/data layers
 реализованы на Phase 3. Phase 4 добавила network в отдельную GitHub Import feature;
-Projects по-прежнему показывает curated demo-данные через свой repository.
+На Phase 6 Projects читает проекцию ручных проектов Builder, а до его начала —
+curated demo-данные через свой repository.
 
 ---
 
@@ -224,10 +229,11 @@ Provider остаётся владельцем простой темы чере�
 product state, асинхронных действий и repository composition. Два механизма
 не конкурируют за одно значение.
 
-Модель ProfileReadiness содержит demo-snapshot счётчиков, PortfolioOverview —
-модель чтения presentation. Notes-only draft появился на Phase 5; full Builder,
-алгоритм полноты и published контракты вводятся на своих фазах. Repository сам
-по себе не реализует их.
+Модель ProfileReadiness содержит счётчики read model, PortfolioOverview —
+модель чтения presentation. Demo repository задаёт счётчики в snapshot;
+проекция Builder получает их из pure алгоритма полноты. Notes-only draft появился
+на Phase 5, единый portfolio content и Builder — на Phase 6. Repository отвечает
+за сохранение draft; published контракты вводятся на своей фазе.
 
 ---
 
@@ -313,14 +319,65 @@ Rate limit, not found и forbidden не подменяются успешным 
 Memory adapter остаётся для независимых tests и отдельно созданного StackCardApp.
 
 [`PortfolioDraftController`](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_draft_controller.dart)
-хранит несохранённый notes input в app session. Явный save записывает локальный
-draft в отдельную Hive box; snapshot содержит notes, revision, updatedAt и
+на Phase 5 сохранял несохранённый notes input в app session. Явный save записывал
+локальный draft в отдельную Hive box; envelope v1 содержал notes, revision, updatedAt и
 pendingSync. Успешный save увеличивает revision, ставит pendingSync и записывает
 updatedAt в UTC. Правка во время save остаётся несохранённой, даже если прежний
 snapshot записался успешно. При записи failure ввод сохраняется для retry.
 Повреждённый или неизвестный draft не очищается и не перезаписывается;
-cache eviction его не затрагивает. Remote sync ещё отсутствует, full Builder
-и редактирование остальных блоков относятся к Phase 6.
+cache eviction его не затрагивает. Phase 6 расширяет тот же механизм portfolio
+content; remote sync ещё отсутствует.
+
+---
+
+## Рабочий draft и Builder на Phase 6
+
+[`PortfolioContent`](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_content.dart)
+— immutable значения профиля, навыков, ручных проектов, опыта, образования,
+ссылок, Resume, блоков и темы портфолио. Nullable content в `PortfolioDraft`
+отделяет ещё не начатый Builder от пустого пользовательского портфолио.
+Начало создаёт пустой content без копирования demo/source. Notes остаются
+приватными вне content и не отображаются в preview.
+
+Controller хранит рабочие notes/content и последний durable draft. Формы держат
+ещё не применённый ввод локально и изменяют feature state одним действием Apply;
+Cancel оставляет content прежним. После Apply данные видны на Home, Portfolio,
+Projects и Settings через read model проекции публичного
+`portfolioWorkingContentProvider`. Эти проекции не создают второго mutable
+владельца и не пишут в repository. Preview читает рабочий content в порядке
+видимых блоков и показывает статус несохранённых изменений.
+
+```dart
+final content = ref.watch(portfolioWorkingContentProvider);
+
+// В обработчике Apply после validation:
+ref.read(portfolioDraftControllerProvider.notifier).updateContent(nextContent);
+
+// Явное сохранение всего рабочего draft:
+await ref.read(portfolioDraftControllerProvider.notifier).save();
+```
+
+Save захватывает content, notes и durable revision; успешная запись обновляет
+только durable snapshot. Если пользователь изменил поля во время записи,
+новые значения остаются unsaved. Duplicate Save блокируется, failure сохраняет
+ввод. Repository последовательно проверяет expected revision; conflict не
+перезаписывает более свежую сохранённую версию. Явный reload отбрасывает
+несохранённые правки, поэтому вызывается после соответствующего действия UI.
+
+Hive envelope v2 содержит nullable content. Чтение v1 сохраняет notes/metadata
+и возвращает content null без записи. Первая явная запись v2 предварительно
+сохраняет raw v1 backup; ошибки backup/write оставляют старую durable запись.
+`saveNotes` меняет только notes и сохраняет portfolio content.
+
+Validation и вычисление полноты — pure domain, независимо от widget tree/storage.
+Неполный профиль допустим для draft; некорректные значения не сохраняются.
+Полнота учитывает профиль, About, навыки, видимый проект и ссылки; опциональные
+разделы не мешают получить 100%, скрытие блока не увеличивает процент.
+`PortfolioTheme` хранится в content отдельно от AppearanceController ThemeMode.
+PortfolioContentView и preview используют имеющуюся StackCardTheme; Resume — обычный текст с переносами
+строк. Детали persistence и boundaries — в
+[architecture](../architecture/architecture.md#portfolio-domain-и-локальный-builder),
+приёмка — в [Phase 6](../product/product-spec.md#phase-6--portfolio-domain-и-локальный-builder).
 
 ---
 
@@ -332,7 +389,7 @@ Repository/DI, `StackCardApp.providerOverrides`, асинхронный проф
 GitHub Import и остальное состояние продукта остаются на Riverpod. Рабочий checkout сохраняет
 итоговую реализацию; `git restore` и переключение веток для урока не нужны.
 
-На Phase 5 patches переносят целый AppSettings snapshot в родительский State,
+Patches переносят целый AppSettings snapshot в родительский State,
 чтобы у темы оставался один владелец и сохранялась запись цельного snapshot.
 AppearanceController в учебной копии не содержит ThemeMode API: это forwarding
 и persistence adapter для locale/descriptions и save status, читающий snapshot
@@ -367,7 +424,15 @@ flutter run -d <device-id>
 
 ## Проверки и ограничения
 
-Текущие patches Phase 5 независимо применены через `git apply --check` к свежим
+Финальная проверка Phase 6: оба patches независимо применены к свежим копиям
+текущего source через `git apply --check` и `git apply`. В каждой копии
+`flutter analyze lib` завершился без замечаний, пять `widget_test.dart` и девять
+`localization_test.dart` tests прошли — 14/14. Builder, AppShell identity,
+read gate профиля/проектов и persistence sources совпадают с итоговой интеграцией;
+отличаются только целевые theme files учебного patch. Canonical controller tests
+проверяют итоговый Provider API и не относятся к forwarding adapter учебных вариантов.
+
+Историческая проверка Phase 5: patches независимо применены через `git apply --check` к свежим
 копиям полного проекта. В каждом варианте прошли пять `widget_test.dart` tests
 и девять `localization_test.dart` tests: theme/navigation, восстановленные ru/en
 настройки, locale без смены router, descriptions preference и save failure/retry.
@@ -393,8 +458,8 @@ sources, repository lifetime, Provider overrides и async profile Settings
 [product spec](../product/product-spec.md#phase-2--basic-state-management).
 
 Этапы сравнивают одинаковый theme сценарий. Учебные patches меняют только
-механизм темы; demo/mock портфолио и отдельный network state GitHub Import
-сохраняются. ThemeMode/Locale/preferences, GitHub cache и явно сохранённые draft notes
+механизм темы; Riverpod portfolio state и отдельный network state GitHub Import
+сохраняются. ThemeMode/Locale/preferences, GitHub cache и явно сохранённый portfolio draft
 переживают запуск; query/filter и ещё не сохранённый ввод остаются в app session.
 Итоговый статус persistence и проверки текущего приложения — в
-[product spec](../product/product-spec.md#phase-5--local-persistence--offline).
+[product spec](../product/product-spec.md#phase-6--portfolio-domain-и-локальный-builder).

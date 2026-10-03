@@ -3,7 +3,9 @@ import 'project.dart';
 enum ProjectFilter { all, featured, github, manual }
 
 List<Project> selectFeaturedProjects(Iterable<Project> projects) =>
-    List.unmodifiable(projects.where((project) => project.featured));
+    List.unmodifiable(
+      projects.where((project) => project.featured && project.visible),
+    );
 
 /// Правила отбора проектов, независимые от UI и способа загрузки данных.
 final class ProjectFilters {

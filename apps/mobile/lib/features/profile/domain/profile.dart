@@ -33,7 +33,7 @@ class ProfileHighlight {
   final String details;
 }
 
-// Это снимок демонстрационной готовности; правила builder появятся в Phase 6.
+// Снимок для UI: demo counters либо вычисленная domain-полнота working draft.
 class ProfileReadiness {
   ProfileReadiness({required this.completedBlocks, required this.totalBlocks}) {
     if (totalBlocks <= 0 ||

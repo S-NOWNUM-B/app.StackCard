@@ -10,6 +10,7 @@ import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/portfolio_draft_repository.dart';
+import 'portfolio_builder_actions.dart';
 import 'portfolio_draft_controller.dart';
 
 class PortfolioDraftScreen extends ConsumerStatefulWidget {
@@ -98,6 +99,10 @@ class _PortfolioDraftScreenState extends ConsumerState<PortfolioDraftScreen> {
                           'draft.corrupted',
                         PortfolioDraftFailureKind.unsupportedVersion =>
                           'draft.unsupportedVersion',
+                        PortfolioDraftFailureKind.conflict =>
+                          'builder.failure.conflict',
+                        PortfolioDraftFailureKind.invalidContent =>
+                          'builder.failure.invalidContent',
                       }),
                     ),
                     if (!state.loaded)
@@ -105,11 +110,26 @@ class _PortfolioDraftScreenState extends ConsumerState<PortfolioDraftScreen> {
                         label: strings.tr('draft.retryRead'),
                         onPressed: controller.load,
                       ),
+                    if (failure.kind == PortfolioDraftFailureKind.conflict)
+                      StackCardButton(
+                        label: strings.tr('builder.reload'),
+                        onPressed: state.saving
+                            ? null
+                            : () => confirmDraftReload(context, controller),
+                      ),
                     if (state.hasUnsavedChanges)
                       Text(
                         strings.tr('draft.inputRetained'),
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
+                    const SizedBox(height: StackCardSpacing.lg),
+                  ],
+                  if (state.validationCodes.isNotEmpty) ...[
+                    Text(strings.tr('builder.invalid')),
+                    StackCardButton(
+                      label: strings.tr('builder.title'),
+                      onPressed: () => context.push('/portfolio/builder'),
+                    ),
                     const SizedBox(height: StackCardSpacing.lg),
                   ],
                   StackCardCard(

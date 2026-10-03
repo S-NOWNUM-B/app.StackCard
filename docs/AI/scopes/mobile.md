@@ -47,7 +47,9 @@ guides. Этот файл дополняет их только для Flutter-п
   Между features импортировать только публичные APIs; `domain` остаётся pure Dart.
   Presentation использует domain и providers, data реализует repository contracts.
 - DI находится у корня feature: auth/projects providers и profile dependencies
-  связывают concrete demo/mock repositories. Widgets не импортируют data sources.
+  связывают concrete repositories; profile/projects providers читают рабочий
+  Builder content через публичный draft API либо demo repositories при content null.
+  Widgets не импортируют data sources.
   `StackCardApp.providerOverrides` передаётся своему ProviderScope и позволяет
   менять источник для реальных экранов. Native `LocalRuntime` подставляет Hive
   cache/draft adapters; memory defaults сохраняют изоляцию тестов `StackCardApp`.
@@ -73,21 +75,48 @@ guides. Этот файл дополняет их только для Flutter-п
   Публичный [GitHubReadMetadata](../../../apps/mobile/lib/features/github_import/domain/github_read_metadata.dart)
   сообщает источник, дату и storage failures; смешанные страницы сохраняют
   предупреждение. Отмена проверяется после storage awaits и перед fallback.
-- Local notes draft: публичный `portfolio_draft.dart` раскрывает pure Dart
-  `PortfolioDraft`/repository и экран `/portfolio-draft`; сохраняются только notes,
-  revision, UTC updatedAt и pendingSync. Полный Builder — Phase 6, remote sync
-  ещё не подключён. Session controller сохраняет несохранённый ввод при навигации,
-  явный Save и retry — действия repository.
+- Local portfolio draft: публичный `portfolio_draft.dart` раскрывает pure Dart
+  `PortfolioDraft`, `PortfolioContent`, validation/completion, repository,
+  session state/controller и Builder/preview. Private notes лежат вне content;
+  экран `/portfolio-draft` использует тот же controller, preview не показывает notes.
+  Content null означает прежние заметки или ещё не начатый Builder; начало создаёт
+  пустой content без копирования demo/GitHub source. Controller хранит рабочий
+  notes/content и durable snapshot; навигация не теряет применённые, но ещё
+  не сохранённые правки. Формы применяют валидный результат целиком; отмена
+  не меняет content. Save сохраняет захваченный snapshot, более новый ввод
+  остаётся unsaved; повторная запись одновременно не выполняется.
   [HivePortfolioDraftRepository](../../../apps/mobile/lib/features/portfolio_draft/data/hive_portfolio_draft_repository.dart)
-  сериализует записи; corrupted/unsupported draft сохраняет исходную запись и
-  блокирует перезапись. GitHub cache и draft используют отдельные boxes:
+  последовательно проверяет expected revision и пишет envelope v2; conflict
+  сохраняет несохранённые правки и требует явного решения перечитать durable draft.
+  `saveNotes` изменяет только notes, сохраняя content. Чтение v1 не пишет migration:
+  точные notes/metadata возвращаются с content null; первая явная запись сохраняет
+  raw v1 backup перед заменой. Ошибка backup/write сохраняет прежний durable draft;
+  corrupted/unsupported draft блокирует перезапись. Draft не имеет TTL.
+  Profile/Projects сначала ждут coalesced `ensureLoaded()`; demo fallback допустим
+  только после успешного read с content null. Подписка read model ставится после
+  первого await, чтобы не повторять source call; failure/retry видны общим экранам.
+  GitHub cache и draft используют отдельные boxes:
   cache можно удалить/восстановить, draft не затрагивается. LocalStorage сохраняет
   нечитаемый cache file как backup; повреждённый draft не обрезается автоматически.
+- Builder routes: `/portfolio/builder` и дочерние `profile`, `skills`, `experience`,
+  `education`, `links`, `resume`; ручные проекты — `/projects/new`,
+  `/projects/:id/edit`; preview — `/portfolio/preview`. Десять уникальных блоков
+  меняют порядок и видимость; preview читает текущий рабочий content.
+  Пустые блоки пропускаются; Featured Projects показывает visible/featured проекты,
+  Builder/Projects — все ручные записи для редактирования.
+  `PortfolioTheme` dark/light использует существующую StackCardTheme при отображении
+  content на Portfolio/preview отдельно от app ThemeMode. Resume — обычный текст
+  с переносами строк, без Markdown/файлов.
+  Pure domain validation/completion живут в `features/portfolio_draft/domain`;
+  процент вычисляется, скрытие блоков его не увеличивает. Remote sync,
+  окончательная Firestore schema и публикация ещё не подключены.
 - [PortfolioOverview](../../../apps/mobile/lib/features/portfolio/presentation/portfolio_overview.dart)
-  объединяет profile/projects для Home, Portfolio и preview; query/filter Projects
+  объединяет profile/projects для Home и demo Portfolio; query/filter Projects
   не влияет на полный или featured список других экранов. Это presentation read model,
-  не draft/published domain. `ProfileReadiness` — demo-snapshot счётчиков; Builder
-  и алгоритм полноты вводятся на Phase 6.
+  не draft/published domain. `Profile`/`Project` также остаются read models;
+  Home/Portfolio/Projects/Settings читают проекции единого Builder content через
+  публичные feature APIs, без отдельных write stores. `ProfileReadiness` получает
+  счётчики из demo snapshot либо pure вычисления полноты Builder.
 - Loading/error/retry: [StackCardAsyncView](../../../apps/mobile/lib/shared/widgets/stackcard_async_view.dart)
   использует существующий StackCardStateView; empty принадлежит экрану.
   Асинхронные запросы повторяются явно через UI retry; сетевой GitHub Import
@@ -114,6 +143,9 @@ guides. Этот файл дополняет их только для Flutter-п
   проверяются в `test/portfolio_draft_repository_test.dart`,
   `test/portfolio_draft_controller_test.dart`, `test/portfolio_draft_widget_test.dart`:
   revision, input retention, unknown schema, Save failures и навигация.
+  Builder checks дополнительно проверяют validation/completion, CRUD, порядок/
+  видимость/тему preview, v1 → v2 migration, stale revision и сохранение новых
+  правок во время Save; имена актуальных tests — в `apps/mobile/test`.
 - Локальные шрифты и лицензии: [assets/fonts](../../../apps/mobile/assets/fonts/);
   регистрация остаётся в pubspec. Logo paths повторяют оригиналы branding.
 - Native configs находятся в platform directories этого приложения.

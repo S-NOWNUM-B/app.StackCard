@@ -315,6 +315,19 @@ class _Source implements PortfolioDraftRepository {
       readNotes == null ? null : await readNotes!();
 
   @override
+  Future<PortfolioDraft> save(
+    PortfolioContent content, {
+    required int expectedRevision,
+    required String notes,
+  }) async => PortfolioDraft(
+    notes: notes,
+    revision: expectedRevision + 1,
+    updatedAt: DateTime.utc(2026),
+    pendingSync: true,
+    content: content,
+  );
+
+  @override
   Future<PortfolioDraft> saveNotes(String notes) async =>
       saveNotesCallback == null
       ? _draft(notes)
