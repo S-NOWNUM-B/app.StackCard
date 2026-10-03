@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/stackcard_colors.dart';
+import '../../core/localization/app_strings.dart';
+import '../../core/state/app_settings.dart';
 import '../../core/state/appearance_controller.dart';
 import '../../shared/widgets/stackcard_button.dart';
 import '../../shared/widgets/stackcard_card.dart';
@@ -39,12 +41,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Внешний вид',
+                      context.strings.tr('settings.appearance'),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Выберите комфортную тему. Она действует до закрытия приложения.',
+                      context.strings.tr('settings.appearanceNote'),
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 20),
@@ -55,17 +57,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         for (final item in [
                           (
                             mode: ThemeMode.dark,
-                            title: 'Тёмная',
+                            title: context.strings.tr('settings.dark'),
                             icon: Icons.dark_mode_outlined,
                           ),
                           (
                             mode: ThemeMode.light,
-                            title: 'Светлая',
+                            title: context.strings.tr('settings.light'),
                             icon: Icons.light_mode_outlined,
                           ),
                           (
                             mode: ThemeMode.system,
-                            title: 'Системная',
+                            title: context.strings.tr('settings.system'),
                             icon: Icons.brightness_auto_outlined,
                           ),
                         ])
@@ -85,12 +87,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              const _PreferencesCard(),
+              const SizedBox(height: 16),
               StackCardCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Демонстрационный аккаунт',
+                      context.strings.tr('settings.demoAccount'),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
@@ -106,13 +110,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Профиль, проекты и показатели — примеры. GitHub, уведомления и публикация будут подключены на следующих этапах.',
+                      context.strings.tr('settings.demoNote'),
                       style: Theme.of(context).textTheme.bodyMedium
                           ?.copyWith(color: context.colors.textSecondary),
                     ),
                     const SizedBox(height: 20),
                     StackCardButton(
-                      label: 'Вернуться ко входу',
+                      label: context.strings.tr('settings.signOut'),
                       icon: Icons.logout_rounded,
                       onPressed: () => context.go('/sign-in'),
                     ),
@@ -125,12 +129,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Состояния интерфейса',
+                      context.strings.tr('settings.states'),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Примеры загрузки, пустого списка и ошибки.',
+                      context.strings.tr('settings.statesNote'),
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),
@@ -141,10 +145,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         for (final item in [
                           (
                             state: StackCardViewState.loading,
-                            label: 'Загрузка',
+                            label: context.strings.tr('common.loading'),
                           ),
-                          (state: StackCardViewState.empty, label: 'Пусто'),
-                          (state: StackCardViewState.error, label: 'Ошибка'),
+                          (
+                            state: StackCardViewState.empty,
+                            label: context.strings.tr('settings.empty'),
+                          ),
+                          (
+                            state: StackCardViewState.error,
+                            label: context.strings.tr('settings.error'),
+                          ),
                         ])
                           ChoiceChip(
                             label: Text(item.label),
@@ -158,18 +168,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     StackCardStateView(
                       kind: _previewState,
                       title: switch (_previewState) {
-                        StackCardViewState.loading => 'Загружаем проекты',
-                        StackCardViewState.empty =>
-                          'Здесь появятся ваши проекты',
-                        StackCardViewState.error =>
-                          'Не удалось загрузить проекты',
+                        StackCardViewState.loading => context.strings.tr(
+                          'settings.loadingTitle',
+                        ),
+                        StackCardViewState.empty => context.strings.tr(
+                          'settings.emptyTitle',
+                        ),
+                        StackCardViewState.error => context.strings.tr(
+                          'settings.errorTitle',
+                        ),
                       },
                       message: switch (_previewState) {
-                        StackCardViewState.loading =>
-                          'Пример состояния ожидания.',
-                        StackCardViewState.empty => 'Добавьте первый проект, когда будет доступен редактор.',
-                        StackCardViewState.error =>
-                          'Пример ошибки. Повтор открывает пустое состояние.',
+                        StackCardViewState.loading => context.strings.tr(
+                          'settings.loadingMessage',
+                        ),
+                        StackCardViewState.empty => context.strings.tr(
+                          'settings.emptyMessage',
+                        ),
+                        StackCardViewState.error => context.strings.tr(
+                          'settings.errorMessage',
+                        ),
                       },
                       onRetry: _previewState == StackCardViewState.error
                           ? () => setState(
@@ -183,6 +201,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PreferencesCard extends StatelessWidget {
+  const _PreferencesCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final appearance = context.watch<AppearanceController>();
+    return StackCardCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.strings.tr('settings.language'),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(context.strings.tr('settings.languageNote')),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final item in [
+                (language: AppLanguage.ru, label: 'Русский'),
+                (language: AppLanguage.en, label: 'English'),
+              ])
+                ChoiceChip(
+                  label: Text(item.label),
+                  selected: appearance.settings.language == item.language,
+                  onSelected: (_) => appearance.setLanguage(item.language),
+                ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Material(
+            type: MaterialType.transparency,
+            child: SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: Text(context.strings.tr('settings.sourceDescriptions')),
+              subtitle: Text(
+                context.strings.tr('settings.sourceDescriptionsNote'),
+              ),
+              value: appearance.showSourceDescriptions,
+              onChanged: appearance.setShowSourceDescriptions,
+            ),
+          ),
+          if (appearance.isSaving) ...[
+            const SizedBox(height: 8),
+            Semantics(
+              liveRegion: true,
+              child: Text(context.strings.tr('settings.saving')),
+            ),
+          ],
+          if (appearance.saveFailure != null) ...[
+            const SizedBox(height: 8),
+            StackCardStateView(
+              kind: StackCardViewState.error,
+              title: context.strings.tr('settings.saveError'),
+              message: context.strings.tr('settings.saveErrorNote'),
+              onRetry: appearance.retrySave,
+            ),
+          ],
+        ],
       ),
     );
   }

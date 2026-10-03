@@ -1,6 +1,7 @@
 import '../domain/github_failure.dart';
 import '../domain/github_filters.dart';
 import '../domain/github_profile.dart';
+import '../domain/github_read_metadata.dart';
 import '../domain/github_repository.dart';
 
 const _unchanged = Object();
@@ -18,6 +19,7 @@ final class GitHubImportState {
     this.pageFailure,
     this.query = '',
     this.filter = GitHubRepositoryFilter.all,
+    this.readMetadata = const GitHubReadMetadata(),
   }) : repositories = List.unmodifiable(repositories);
 
   final String username;
@@ -31,6 +33,7 @@ final class GitHubImportState {
   final GitHubFailure? pageFailure;
   final String query;
   final GitHubRepositoryFilter filter;
+  final GitHubReadMetadata readMetadata;
 
   List<GitHubRepository> get visibleRepositories =>
       filterGitHubRepositories(repositories, query: query, filter: filter);
@@ -47,6 +50,7 @@ final class GitHubImportState {
     Object? pageFailure = _unchanged,
     String? query,
     GitHubRepositoryFilter? filter,
+    GitHubReadMetadata? readMetadata,
   }) => GitHubImportState(
     username: username ?? this.username,
     profile: identical(profile, _unchanged)
@@ -67,5 +71,6 @@ final class GitHubImportState {
         : pageFailure as GitHubFailure?,
     query: query ?? this.query,
     filter: filter ?? this.filter,
+    readMetadata: readMetadata ?? this.readMetadata,
   );
 }

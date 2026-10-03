@@ -5,7 +5,7 @@
 **Процесс работы, проверки и правила внесения согласованных изменений**
 
 ![Contributing guide](https://raster.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
-![Scope Phase 4](https://raster.shields.io/badge/Scope-Phase_4-FF0012?style=for-the-badge)
+![Scope Phase 5](https://raster.shields.io/badge/Scope-Phase_5-FF0012?style=for-the-badge)
 
 </div>
 
@@ -26,10 +26,10 @@
 
 ## Что вносить
 
-Phase 0–4 завершены; последнее поручение — GitHub API на Phase 4.
-Реализован отдельный GitHub Import для чтения публичного профиля и repositories.
-Окончательный статус приёмки и результаты проверок находятся в
-[product spec](docs/product/product-spec.md#phase-4--github-api).
+Phase 0–5 завершены; последнее поручение — local persistence/offline на Phase 5.
+Реализованы persistent GitHub cache, локальные заметки и сохранение настроек;
+статус и результаты проверок находятся в
+[product spec](docs/product/product-spec.md#phase-5--local-persistence--offline).
 Продуктовые функции вводятся последовательно по
 [roadmap](docs/product/product-spec.md#roadmap),
 переход к следующей фазе требует подтверждения пользователя.
@@ -45,8 +45,8 @@ Phase 0–4 завершены; последнее поручение — GitHub
 | **Направление** | **Допустимые изменения сейчас** |
 |:---|:---|
 | Документация | Уточнение сценариев, границ, источников и способов работы |
-| Mobile UI и GitHub API | Demo-экраны, app shell, темы, общие компоненты и отдельный GitHub Import с публичными данными |
-| Mobile state и architecture | Provider для ThemeMode; Riverpod для repository loading/actions, DI и filters; presentation/domain/data в auth/profile/projects/github_import, учебные patches вне runtime |
+| Mobile UI и storage | Demo-экраны, GitHub Import с offline copy, локальные заметки и настройки темы/языка/описаний источника |
+| Mobile state и architecture | Provider для ThemeMode/Locale/preferences; Riverpod для repository loading/actions, DI и filters; pure Dart contracts и data adapters, учебные patches вне runtime |
 | Структура | Согласование путей, ignore rules и общего AI-контекста |
 | Brand assets | Сохранение оригиналов и описания их применения |
 
@@ -54,9 +54,11 @@ Phase 0–4 завершены; последнее поручение — GitHub
 
 В `apps/mobile` реализованы UI foundation и Repository/DI границы
 для Android/iOS с GoRouter: core-портфолио использует demo/mock sources,
-GitHub Import читает public API через Dio. Его ETag-кэш хранится в памяти app
-session; disk cache и offline fallback относятся к Phase 5. Прочитанные данные
-не добавляются автоматически в curated-портфолио.
+GitHub Import читает public API через Dio и сохраняет ответы с ETag/Link в Hive.
+Cache имеет hard TTL 7 дней и проверяется сетью при каждом чтении; fallback
+доступен при network/timeout/server failure с явной датой последней проверки.
+Отдельный draft хранит только заметки. Full Builder остаётся Phase 6;
+прочитанные данные не добавляются автоматически в curated-портфолио.
 В `apps/web` подготовлен README; Next.js-приложение появится на Phase 13.
 Firebase, web dependencies и packages будущих фаз заранее не подключаются.
 
@@ -79,14 +81,17 @@ Firebase, web dependencies и packages будущих фаз заранее не
 Версии и зависимости проверяй в manifests/lockfiles. Разделяй работу на
 небольшие самостоятельные шаги; сначала используй существующий механизм.
 
-Auth/profile/projects/github_import используют `presentation/domain/data`; DI связывается у
+Auth/profile/projects/github_import/portfolio_draft используют `presentation/domain/data`; DI связывается у
 корня feature. Domain остаётся pure Dart; concrete repositories не импортируются
 widgets. Между features используй публичные barrels. `PortfolioOverview` —
 presentation read model для Home, Portfolio и preview, а не полный Builder domain.
 В GitHub Import data слой владеет Dio, DTO mapping, Link pagination и ETag
-validators; controller — загрузкой, refresh, локальным debounce и обработкой
-typed failures. Сетевые ошибки и rate-limit deadline проверяются через
-подменяемые repository и clock providers.
+validators и versioned cache; controller — загрузкой, refresh, локальным debounce
+и обработкой typed failures. Settings contracts и app-level состояние находятся
+в нейтральном `core/state`; data adapter пишет один version 1 snapshot через
+SharedPreferencesAsync. Bootstrap восстанавливает настройки и открывает отдельные
+Hive boxes до создания `StackCardApp`. Storage, network failures и rate-limit
+deadline проверяются через подменяемые repositories, cache и clock.
 Подробное направление зависимостей — в
 [architecture](docs/architecture/architecture.md#mobile-modules--при-реальных-сценариях).
 
@@ -152,8 +157,11 @@ flutter run -d <device-id>
 Поиск работает по уже загруженным данным с debounce 300 ms; «Загрузить ещё»
 читает следующую страницу из Link. Ошибки повторяются только по действию
 пользователя; rate-limit deadline блокирует сетевой retry до разрешённого времени.
-Тема переключается в Настройках и пока не сохраняется после закрытия приложения;
-авторизация, сохранение draft и web-редактор вводятся на своих фазах.
+В Настройках сохраняются dark/light/system, Русский/English и показ source
+descriptions. Переведены UI и сообщения; пользовательские и GitHub тексты
+остаются исходными. В Портфолио «Локальные заметки» открывают `/portfolio-draft`:
+явное сохранение переживает перезапуск, несохранённый ввод — только навигацию
+текущей session. Авторизация, полный Builder и web-редактор вводятся на своих фазах.
 
 ---
 
@@ -215,6 +223,23 @@ immutable данные. Соответствующие `auth_di_test.dart`, `pro
 retry deadline, отмену, конкурирующие запросы и сохранение результатов.
 `test/github_import_widget_test.dart` проверяет GitHub Import на реальном экране
 с подменяемым источником, включая refresh, pagination и UI states.
+`test/github_persistence_test.dart` проверяет реальный Hive reopen, hard TTL,
+schema/corruption, offline fallback, reconnect/304, ошибки storage и отмену.
+`test/local_storage_test.dart` проверяет раздельные boxes, backup повреждённого
+cache-файла, сохранность повреждённого draft и закрытие draft при cache close failure.
+`test/local_runtime_widget_test.dart` проверяет runtime reopen, безопасный startup
+retry, source notice и reconnect UI.
+`test/settings_persistence_test.dart` и `test/localization_test.dart` проверяют
+snapshot restore, очередь записей/retry, ru/en UI и увеличенный текст.
+`test/portfolio_draft_repository_test.dart`, `test/portfolio_draft_controller_test.dart`
+и `test/portfolio_draft_widget_test.dart` проверяют saved notes, revisions,
+сохранность ввода при ошибках, unknown schema и экран локального draft.
+Для сфокусированной проверки storage и настроек из той же директории:
+
+```sh
+flutter test test/github_persistence_test.dart test/local_storage_test.dart test/local_runtime_widget_test.dart test/settings_persistence_test.dart test/localization_test.dart test/portfolio_draft_repository_test.dart test/portfolio_draft_controller_test.dart test/portfolio_draft_widget_test.dart
+```
+
 Сравнение подходов и проверка сохранённых учебных вариантов — в
 [state management guide](docs/learning/state-management.md).
 Учебные patches применяются независимо к временным копиям текущего проекта;

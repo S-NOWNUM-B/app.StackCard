@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../core/localization/app_strings.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -55,12 +58,14 @@ class _HomeContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Привет, ${overview.profile.firstName}',
+                    context.strings.tr('home.greeting', {
+                      'name': overview.profile.firstName,
+                    }),
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: StackCardSpacing.sm),
                   Text(
-                    'Твои проекты. Твоя история. Один StackCard.',
+                    context.strings.tr('home.subtitle'),
                     style: Theme.of(context).textTheme.bodyLarge
                         ?.copyWith(color: pageTextColor),
                   ),
@@ -88,9 +93,9 @@ class _HomeContent extends StatelessWidget {
                     _ReadinessCard(readiness: overview.profile.readiness),
                   ],
                   const SizedBox(height: StackCardSpacing.xl),
-                  const _SectionHeading(
-                    title: 'На первом плане',
-                    subtitle: 'Избранный проект демонстрационного портфолио',
+                  _SectionHeading(
+                    title: context.strings.tr('home.featured'),
+                    subtitle: context.strings.tr('home.featuredSubtitle'),
                   ),
                   const SizedBox(height: StackCardSpacing.lg),
                   if (wide)
@@ -127,9 +132,7 @@ class _HomeContent extends StatelessWidget {
                         const SizedBox(width: StackCardSpacing.md),
                         Expanded(
                           child: Text(
-                            'Сейчас это демо интерфейса. Все проекты, навыки '
-                            'и показатели — примеры. Аккаунт, GitHub sync '
-                            'и публикация появятся на следующих этапах.',
+                            context.strings.tr('home.demoNote'),
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),
@@ -204,12 +207,12 @@ class _ProfileHero extends StatelessWidget {
           ),
           const SizedBox(height: StackCardSpacing.xl),
           Text(
-            'Идеи становятся\nработающими продуктами.',
+            context.strings.tr('home.hero'),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: StackCardSpacing.md),
           Text(
-            'Собери лучшее из того, что создаёшь, и покажи свой подход к работе.',
+            context.strings.tr('home.heroDescription'),
             style: Theme.of(context).textTheme.bodyLarge
                 ?.copyWith(color: context.colors.textSecondary),
           ),
@@ -219,13 +222,13 @@ class _ProfileHero extends StatelessWidget {
             runSpacing: StackCardSpacing.md,
             children: [
               StackCardButton(
-                label: 'Моё портфолио',
+                label: context.strings.tr('home.myPortfolio'),
                 icon: Icons.arrow_forward_rounded,
                 primary: true,
                 onPressed: () => context.push('/portfolio'),
               ),
               StackCardButton(
-                label: 'Проекты',
+                label: context.strings.tr('nav.projects'),
                 icon: Icons.grid_view_rounded,
                 onPressed: () => context.push('/projects'),
               ),
@@ -257,7 +260,7 @@ class _ReadinessCard extends StatelessWidget {
               const SizedBox(width: StackCardSpacing.sm),
               Expanded(
                 child: Text(
-                  'Готовность профиля',
+                  context.strings.tr('home.readiness'),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
@@ -270,14 +273,18 @@ class _ReadinessCard extends StatelessWidget {
           ),
           const SizedBox(height: StackCardSpacing.sm),
           Text(
-            'Пример заполнения · ${readiness.completedBlocks} из ${readiness.totalBlocks} блоков',
+            context.strings.tr('home.readinessDescription', {
+              'completed': readiness.completedBlocks,
+              'total': readiness.totalBlocks,
+            }),
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: context.colors.textSecondary),
           ),
           const SizedBox(height: StackCardSpacing.lg),
           Semantics(
-            label:
-                'Демонстрационное заполнение профиля: ${readiness.percent} процентов',
+            label: context.strings.tr('home.readinessSemantics', {
+              'percent': readiness.percent,
+            }),
             child: ExcludeSemantics(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(StackCardRadius.small),
@@ -293,16 +300,16 @@ class _ReadinessCard extends StatelessWidget {
           const SizedBox(height: StackCardSpacing.xl),
           Divider(color: context.colors.borderSubtle),
           const SizedBox(height: StackCardSpacing.md),
-          const _CompactInfo(
+          _CompactInfo(
             icon: Icons.visibility_off_outlined,
-            title: 'Черновик',
-            description: 'Не опубликован',
+            title: context.strings.tr('common.draft'),
+            description: context.strings.tr('home.unpublished'),
           ),
           const SizedBox(height: StackCardSpacing.lg),
-          const _CompactInfo(
+          _CompactInfo(
             icon: Icons.add_link_rounded,
-            title: 'Публичная ссылка',
-            description: 'Появится после публикации',
+            title: context.strings.tr('home.publicLink'),
+            description: context.strings.tr('home.afterPublish'),
           ),
         ],
       ),
@@ -319,11 +326,11 @@ class _FeaturedProject extends StatelessWidget {
   Widget build(BuildContext context) {
     final project = this.project;
     if (project == null) {
-      return const StackCardCard(
+      return StackCardCard(
         child: StackCardStateView(
           kind: StackCardViewState.empty,
-          title: 'Нет избранных проектов',
-          message: 'Здесь появятся проекты на первом плане.',
+          title: context.strings.tr('home.noFeatured'),
+          message: context.strings.tr('home.noFeaturedMessage'),
         ),
       );
     }
@@ -388,7 +395,7 @@ class _FeaturedProject extends StatelessWidget {
           ),
           const SizedBox(height: StackCardSpacing.lg),
           StackCardButton(
-            label: 'Смотреть проекты',
+            label: context.strings.tr('home.viewProjects'),
             icon: Icons.arrow_outward_rounded,
             onPressed: () => context.push('/projects'),
           ),
@@ -410,33 +417,33 @@ class _WorkspaceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'В твоём workspace',
+            context.strings.tr('home.workspace'),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: StackCardSpacing.xl),
           _CompactInfo(
             icon: Icons.layers_outlined,
-            title: overview.projectsLabel,
-            description:
-                '${overview.featuredProjects.length} featured · демонстрационные данные',
+            title: context.strings.projectCount(overview.projects.length),
+            description: context.strings.tr('home.featuredCount', {
+              'count': overview.featuredProjects.length,
+            }),
           ),
           const SizedBox(height: StackCardSpacing.xl),
           _CompactInfo(
             icon: Icons.code_rounded,
-            title: overview.skillsLabel,
-            description: 'Мобильная и веб-разработка',
+            title: context.strings.skillCount(overview.profile.skills.length),
+            description: context.strings.tr('home.development'),
           ),
           const SizedBox(height: StackCardSpacing.xl),
           Divider(color: context.colors.borderSubtle),
           const SizedBox(height: StackCardSpacing.lg),
           Text(
-            'GitHub пока не подключён',
+            context.strings.tr('home.githubTitle'),
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: StackCardSpacing.sm),
           Text(
-            'После подключения ты сможешь выбирать репозитории для портфолио. '
-            'Сейчас здесь показаны примеры импортированных карточек.',
+            context.strings.tr('home.githubNote'),
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: context.colors.textSecondary),
           ),

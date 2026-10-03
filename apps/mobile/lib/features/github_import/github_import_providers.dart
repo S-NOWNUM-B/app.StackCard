@@ -9,7 +9,7 @@ final githubImportClockProvider = Provider<DateTime Function()>(
   (ref) => DateTime.now,
 );
 
-/// Только session-кэш; постоянное хранение вводится на Phase 5.
+/// Bootstrap заменяет memory default на Hive; override сохраняет test isolation.
 final githubResponseCacheProvider = Provider<GitHubResponseCache>(
   (ref) => MemoryGitHubResponseCache(),
 );

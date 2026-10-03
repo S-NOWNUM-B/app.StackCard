@@ -15,6 +15,8 @@ class StackCardInput extends StatelessWidget {
     this.onFieldSubmitted,
     this.obscureText = false,
     this.autofocus = false,
+    this.minLines,
+    this.maxLines = 1,
   });
 
   final String label;
@@ -29,6 +31,8 @@ class StackCardInput extends StatelessWidget {
   final ValueChanged<String>? onFieldSubmitted;
   final bool obscureText;
   final bool autofocus;
+  final int? minLines;
+  final int? maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +46,8 @@ class StackCardInput extends StatelessWidget {
       onFieldSubmitted: onFieldSubmitted,
       obscureText: obscureText,
       autofocus: autofocus,
+      minLines: minLines,
+      maxLines: maxLines,
       autocorrect: !obscureText,
       enableSuggestions: !obscureText,
       style: Theme.of(context).textTheme.bodyLarge,

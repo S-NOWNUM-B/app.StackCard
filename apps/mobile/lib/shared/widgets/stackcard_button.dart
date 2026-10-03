@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_strings.dart';
+
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
 
@@ -99,7 +101,7 @@ class StackCardButton extends StatelessWidget {
     );
     return Semantics(
       liveRegion: loading,
-      value: loading ? 'Загрузка' : null,
+      value: loading ? context.strings.tr('common.loading') : null,
       child: button,
     );
   }

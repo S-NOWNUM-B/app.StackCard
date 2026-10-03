@@ -6,6 +6,7 @@ import '../domain/github_failure.dart';
 import '../domain/github_filters.dart';
 import '../domain/github_import_repository.dart';
 import '../domain/github_profile.dart';
+import '../domain/github_read_metadata.dart';
 import '../domain/github_repository.dart';
 import 'github_profile_dto.dart';
 import 'github_repository_dto.dart';
@@ -42,7 +43,8 @@ final class DioGitHubImportRepository implements GitHubImportRepository {
     }
     return _read(
       Uri.https('api.github.com', '/users/$normalized'),
-      (body, _) => GitHubProfileDto.fromJson(body).profile,
+      (body, _, metadata) =>
+          GitHubProfileDto.fromJson(body, readMetadata: metadata).profile,
     );
   }
 
@@ -65,7 +67,7 @@ final class DioGitHubImportRepository implements GitHubImportRepository {
           'per_page': '30',
         });
     _verifyPage(uri, profile);
-    return _read(uri, (body, link) {
+    return _read(uri, (body, link, metadata) {
       if (body is! List) throw const FormatException('Ожидался JSON array');
       final next = _nextPage(link);
       if (next != null) _verifyPage(next, profile);
@@ -74,6 +76,7 @@ final class DioGitHubImportRepository implements GitHubImportRepository {
           (item) => GitHubRepositoryDto.fromJson(item).repository,
         ),
         nextPage: next,
+        readMetadata: metadata,
       );
     });
   }
@@ -112,12 +115,55 @@ final class DioGitHubImportRepository implements GitHubImportRepository {
     return null;
   }
 
-  Future<T> _read<T>(Uri uri, T Function(Object?, String?) parse) async {
+  Future<T> _read<T>(
+    Uri uri,
+    T Function(Object?, String?, GitHubReadMetadata) parse,
+  ) async {
     final generation = _generation;
     _ensureAllowed();
-    final cached = await _cache.read(uri.toString());
+    final key = uri.toString();
+    CachedGitHubResponse? cached;
+    var cacheUnavailable = false;
+    try {
+      cached = await _cache.read(key);
+    } catch (_) {
+      cacheUnavailable = true;
+    }
     _ensureCurrent(generation);
     _ensureAllowed();
+    if (cached != null) {
+      var invalid = false;
+      try {
+        final checkedAt = cached.validatedAt;
+        final age = checkedAt == null
+            ? null
+            : _clock().toUtc().difference(checkedAt);
+        if (age != null && (age < Duration.zero || age >= githubCacheMaxAge)) {
+          invalid = true;
+        } else {
+          parse(
+            jsonDecode(cached.body),
+            cached.link,
+            const GitHubReadMetadata(),
+          );
+        }
+      } on FormatException {
+        invalid = true;
+      } on GitHubFailure {
+        invalid = true;
+      }
+      if (invalid) {
+        if (_cache case final EvictableGitHubResponseCache cache) {
+          try {
+            await cache.remove(key);
+          } catch (_) {
+            cacheUnavailable = true;
+          }
+          _ensureCurrent(generation);
+        }
+        cached = null;
+      }
+    }
     final token = CancelToken();
     _tokens.add(token);
     try {
@@ -149,23 +195,61 @@ final class DioGitHubImportRepository implements GitHubImportRepository {
         link = _header(response.headers, 'link');
       }
       // Проверяем body и pagination до сохранения HTTP validators.
-      final value = parse(body, link);
+      final validatedAt = _clock().toUtc();
+      parse(body, link, const GitHubReadMetadata());
       _ensureCurrent(generation);
-      await _cache.write(
-        uri.toString(),
-        CachedGitHubResponse(
-          body: jsonEncode(body),
-          etag:
-              _header(response.headers, 'etag') ??
-              (response.statusCode == 304 ? cached?.etag : null),
-          link: link,
+      var cacheWriteFailed = false;
+      try {
+        await _cache.write(
+          key,
+          CachedGitHubResponse(
+            body: jsonEncode(body),
+            etag:
+                _header(response.headers, 'etag') ??
+                (response.statusCode == 304 ? cached?.etag : null),
+            link: link,
+            validatedAt: validatedAt,
+          ),
+        );
+      } catch (_) {
+        cacheWriteFailed = true;
+      }
+      _ensureCurrent(generation);
+      return parse(
+        body,
+        link,
+        GitHubReadMetadata(
+          validatedAt: validatedAt,
+          cacheUnavailable: cacheUnavailable,
+          cacheWriteFailed: cacheWriteFailed,
         ),
       );
-      _ensureCurrent(generation);
-      return value;
     } on DioException catch (error) {
       _ensureCurrent(generation);
-      throw _failure(error);
+      final failure = _failure(error);
+      if ({
+            GitHubFailureKind.network,
+            GitHubFailureKind.timeout,
+            GitHubFailureKind.server,
+          }.contains(failure.kind) &&
+          cached?.validatedAt != null) {
+        final age = _clock().toUtc().difference(cached!.validatedAt!);
+        if (age >= Duration.zero && age < githubCacheMaxAge) {
+          final result = parse(
+            jsonDecode(cached.body),
+            cached.link,
+            GitHubReadMetadata(
+              fromCache: true,
+              validatedAt: cached.validatedAt,
+              fallbackFailure: failure,
+              cacheUnavailable: cacheUnavailable,
+            ),
+          );
+          _ensureCurrent(generation);
+          return result;
+        }
+      }
+      throw failure;
     } on FormatException {
       throw const GitHubFailure(GitHubFailureKind.invalidResponse);
     } finally {

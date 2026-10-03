@@ -36,10 +36,20 @@
   зависимостей описаны в [architecture](../architecture/architecture.md#mobile-modules--при-реальных-сценариях).
   Наличие demo-кнопки не разрешает
   подключение функций будущих фаз.
-- GitHub Import — отдельный просмотр публичного источника. HTTP/DTO/session cache
+- GitHub Import — отдельный просмотр публичного источника. HTTP/DTO/response cache
   принадлежат `features/github_import/data`, контроллер — presentation;
-  domain остаётся pure Dart. Import не меняет demo/curated/published данные.
-  Persistent cache, offline fallback и Hive вводятся на Phase 5.
+  domain и публичные metadata остаются pure Dart. Import не меняет
+  demo/curated/published данные. Hive cache проверяется сетью; hard TTL 7 дней
+  и fallback только для network/timeout/server определены в data contract.
+  UI явно показывает сохранённую копию, дату и ошибки локального хранения.
+- Native bootstrap через `LocalRuntime` восстанавливает `AppSettings` и открывает
+  раздельные Hive boxes для GitHub cache и notes draft до `StackCardApp`.
+  ThemeMode/Locale и простые preferences принадлежат Provider AppearanceController;
+  SharedPreferencesAsync сохраняет цельный settings snapshot, UI переведён на ru/en.
+  `portfolio_draft` — отдельный публичный notes-only API; полный Builder остаётся
+  Phase 6. Cache recovery/очистка не изменяют draft; неизвестный или повреждённый
+  формат draft сохраняется с блокировкой перезаписи. Sources — в
+  [mobile rules](scopes/mobile.md).
 - Имена кода/файлов — английские; комментарии и объяснения — русские.
 
 ## Разработка по плану

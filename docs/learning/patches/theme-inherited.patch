@@ -1,63 +1,201 @@
+diff --git a/apps/mobile/lib/main.dart b/apps/mobile/lib/main.dart
 --- a/apps/mobile/lib/main.dart
 +++ b/apps/mobile/lib/main.dart
-@@ -2,10 +2,9 @@
- import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
- import 'package:flutter_riverpod/misc.dart' show Override;
- import 'package:go_router/go_router.dart';
--import 'package:provider/provider.dart';
- 
- import 'app/app_router.dart';
--import 'core/state/appearance_controller.dart';
+@@ -10,6 +10,7 @@
+ import 'core/localization/app_strings.dart';
+ import 'core/state/app_settings.dart';
+ import 'core/state/appearance_controller.dart';
 +import 'core/state/appearance_scope.dart';
+ import 'core/state/settings_repository.dart';
  import 'core/theme/stackcard_theme.dart';
- 
- void main() {
-@@ -29,6 +28,7 @@
+ import 'features/github_import/github_import.dart';
+@@ -135,36 +136,70 @@
  }
- 
+
  class _StackCardAppState extends State<StackCardApp> {
-+  late ThemeMode _themeMode = widget.initialThemeMode;
++  // Единственный mutable snapshot настроек в учебном варианте.
++  late AppSettings _settings =
++      widget.initialSettings ??
++      AppSettings(
++        theme: switch (widget.initialThemeMode) {
++          ThemeMode.dark => AppTheme.dark,
++          ThemeMode.light => AppTheme.light,
++          ThemeMode.system => AppTheme.system,
++        },
++      );
++  late final AppearanceController _preferences = AppearanceController(
++    readSettings: () => _settings,
++    changeSettings: _changeSettings,
++    settingsRepository: widget.settingsRepository,
++  );
    late final GoRouter _router = createAppRouter(
      initialLocation: widget.initialLocation,
    );
-@@ -43,16 +43,16 @@
-   Widget build(BuildContext context) {
-     return riverpod.ProviderScope(
-       overrides: widget.providerOverrides,
+
++  ThemeMode get _themeMode => switch (_settings.theme) {
++    AppTheme.dark => ThemeMode.dark,
++    AppTheme.light => ThemeMode.light,
++    AppTheme.system => ThemeMode.system,
++  };
++
++  Future<void> _setThemeMode(ThemeMode mode) => _changeSettings(
++    _settings.copyWith(
++      theme: switch (mode) {
++        ThemeMode.dark => AppTheme.dark,
++        ThemeMode.light => AppTheme.light,
++        ThemeMode.system => AppTheme.system,
++      },
++    ),
++  );
++
++  Future<void> _changeSettings(AppSettings next) {
++    if (!mounted || next == _settings) return Future.value();
++    setState(() => _settings = next);
++    return _preferences.persistSettings();
++  }
++
+   @override
+   void dispose() {
++    _preferences.dispose();
+     _router.dispose();
+     super.dispose();
+   }
+
+   @override
+-  Widget build(BuildContext context) {
+-    return riverpod.ProviderScope(
+-      overrides: widget.providerOverrides,
 -      child: ChangeNotifierProvider(
--        create: (_) => AppearanceController(themeMode: widget.initialThemeMode),
--        child: Selector<AppearanceController, ThemeMode>(
--          selector: (_, controller) => controller.themeMode,
--          builder: (context, themeMode, _) => MaterialApp.router(
+-        create: (_) => AppearanceController(
+-          themeMode: widget.initialThemeMode,
+-          initialSettings: widget.initialSettings,
+-          settingsRepository: widget.settingsRepository,
+-        ),
+-        child: Selector<AppearanceController, (ThemeMode, Locale)>(
+-          selector: (_, controller) =>
+-              (controller.themeMode, controller.locale),
+-          builder: (context, appearance, _) => MaterialApp.router(
++  Widget build(BuildContext context) => riverpod.ProviderScope(
++    overrides: widget.providerOverrides,
++    child: ChangeNotifierProvider.value(
++      value: _preferences,
 +      child: AppearanceScope(
 +        themeMode: _themeMode,
-+        onThemeChanged: (mode) => setState(() => _themeMode = mode),
++        onThemeChanged: _setThemeMode,
 +        child: Builder(
 +          builder: (context) => MaterialApp.router(
              title: 'StackCard',
              debugShowCheckedModeBanner: false,
              theme: StackCardTheme.light,
              darkTheme: StackCardTheme.dark,
--            themeMode: themeMode,
+-            themeMode: appearance.$1,
+-            locale: appearance.$2,
 +            themeMode: AppearanceScope.of(context).themeMode,
-             themeAnimationDuration: Duration.zero,
-             routerConfig: _router,
++            locale: Locale(_settings.language.name),
+             supportedLocales: AppStrings.supportedLocales,
+             localizationsDelegates: const [
+               AppStrings.delegate,
+@@ -177,6 +212,6 @@
            ),
+         ),
+       ),
+-    );
+-  }
+-}
++    ),
++  );
++}
+diff --git a/apps/mobile/lib/core/state/appearance_controller.dart b/apps/mobile/lib/core/state/appearance_controller.dart
+--- a/apps/mobile/lib/core/state/appearance_controller.dart
++++ b/apps/mobile/lib/core/state/appearance_controller.dart
+@@ -5,13 +5,13 @@
+
+ class AppearanceController extends ChangeNotifier {
+   AppearanceController({
+-    ThemeMode themeMode = ThemeMode.dark,
+-    AppSettings? initialSettings,
++    required this.readSettings,
++    required this.changeSettings,
+     SettingsRepository? settingsRepository,
+-  }) : _settings = initialSettings ?? AppSettings(theme: _appTheme(themeMode)),
+-       _repository = settingsRepository;
++  }) : _repository = settingsRepository;
+
+-  AppSettings _settings;
++  final AppSettings Function() readSettings;
++  final Future<void> Function(AppSettings) changeSettings;
+   final SettingsRepository? _repository;
+   AppSettings? _pending;
+   Future<void>? _writeFuture;
+@@ -19,29 +19,21 @@
+   bool _isSaving = false;
+   bool _disposed = false;
+
+-  AppSettings get settings => _settings;
+-  ThemeMode get themeMode => switch (_settings.theme) {
+-    AppTheme.dark => ThemeMode.dark,
+-    AppTheme.light => ThemeMode.light,
+-    AppTheme.system => ThemeMode.system,
+-  };
+-  Locale get locale => Locale(_settings.language.name);
+-  bool get showSourceDescriptions => _settings.showSourceDescriptions;
++  AppSettings get settings => readSettings();
++  Locale get locale => Locale(settings.language.name);
++  bool get showSourceDescriptions => settings.showSourceDescriptions;
+   bool get isSaving => _isSaving;
+   SettingsFailure? get saveFailure => _saveFailure;
+
+-  Future<void> setThemeMode(ThemeMode mode) =>
+-      _update(_settings.copyWith(theme: _appTheme(mode)));
+-
+   Future<void> setLanguage(AppLanguage language) =>
+-      _update(_settings.copyWith(language: language));
++      changeSettings(settings.copyWith(language: language));
+
+   Future<void> setShowSourceDescriptions(bool value) =>
+-      _update(_settings.copyWith(showSourceDescriptions: value));
++      changeSettings(settings.copyWith(showSourceDescriptions: value));
+
+-  Future<void> _update(AppSettings next) {
+-    if (_disposed || next == _settings) return Future.value();
+-    _settings = next;
++  // State — единственный владелец AppSettings; здесь только запись и уведомления.
++  Future<void> persistSettings() {
++    if (_disposed) return Future.value();
+     _saveFailure = null;
+     notifyListeners();
+     return _queueSave();
+@@ -51,7 +43,7 @@
+
+   Future<void> _queueSave() {
+     if (_repository == null) return Future.value();
+-    _pending = _settings;
++    _pending = settings;
+     _saveFailure = null;
+     if (_writeFuture != null) return _writeFuture!;
+     _isSaving = true;
+@@ -85,9 +77,3 @@
+     super.dispose();
+   }
+ }
+-
+-AppTheme _appTheme(ThemeMode mode) => switch (mode) {
+-  ThemeMode.dark => AppTheme.dark,
+-  ThemeMode.light => AppTheme.light,
+-  ThemeMode.system => AppTheme.system,
+-};
+diff --git a/apps/mobile/lib/features/settings/settings_screen.dart b/apps/mobile/lib/features/settings/settings_screen.dart
 --- a/apps/mobile/lib/features/settings/settings_screen.dart
 +++ b/apps/mobile/lib/features/settings/settings_screen.dart
-@@ -1,10 +1,9 @@
- import 'package:flutter/material.dart';
- import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
- import 'package:go_router/go_router.dart';
--import 'package:provider/provider.dart';
- 
- import '../../core/theme/stackcard_colors.dart';
--import '../../core/state/appearance_controller.dart';
+@@ -7,6 +7,7 @@
+ import '../../core/localization/app_strings.dart';
+ import '../../core/state/app_settings.dart';
+ import '../../core/state/appearance_controller.dart';
 +import '../../core/state/appearance_scope.dart';
  import '../../shared/widgets/stackcard_button.dart';
  import '../../shared/widgets/stackcard_card.dart';
  import '../../shared/widgets/stackcard_states.dart';
-@@ -21,9 +20,7 @@
+@@ -23,9 +24,7 @@
    StackCardViewState _previewState = StackCardViewState.empty;
    @override
    Widget build(BuildContext context) {
@@ -68,39 +206,25 @@
      return SingleChildScrollView(
        padding: EdgeInsets.all(
          MediaQuery.sizeOf(context).width >= 700 ? 24 : 16,
-@@ -74,7 +71,7 @@
+@@ -76,9 +75,8 @@
                              label: Text(item.title),
                              selected: themeMode == item.mode,
                              onSelected: (_) {
 -                              context.read<AppearanceController>().setThemeMode(
-+                              AppearanceScope.of(context).onThemeChanged(
-                                 item.mode,
-                               );
+-                                item.mode,
+-                              );
++                              AppearanceScope.of(context)
++                                  .onThemeChanged(item.mode);
                              },
---- a/apps/mobile/lib/core/state/appearance_controller.dart
-+++ /dev/null
-@@ -1,15 +0,0 @@
--import 'package:flutter/material.dart';
--
--class AppearanceController extends ChangeNotifier {
--  AppearanceController({this._themeMode = ThemeMode.dark});
--
--  ThemeMode _themeMode;
--
--  ThemeMode get themeMode => _themeMode;
--
--  void setThemeMode(ThemeMode mode) {
--    if (_themeMode == mode) return;
--    _themeMode = mode;
--    notifyListeners();
--  }
--}
+                           ),
+                       ],
+diff --git a/apps/mobile/lib/core/state/appearance_scope.dart b/apps/mobile/lib/core/state/appearance_scope.dart
+new file mode 100644
 --- /dev/null
 +++ b/apps/mobile/lib/core/state/appearance_scope.dart
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,20 @@
 +import 'package:flutter/material.dart';
 +
-+// Промежуточный учебный этап: состояние ещё принадлежит StackCardApp.
 +class AppearanceScope extends InheritedWidget {
 +  const AppearanceScope({
 +    super.key,
@@ -110,13 +234,10 @@
 +  });
 +
 +  final ThemeMode themeMode;
-+  final ValueChanged<ThemeMode> onThemeChanged;
++  final Future<void> Function(ThemeMode) onThemeChanged;
 +
-+  static AppearanceScope of(BuildContext context) {
-+    final scope = context.dependOnInheritedWidgetOfExactType<AppearanceScope>();
-+    assert(scope != null, 'AppearanceScope отсутствует в дереве');
-+    return scope!;
-+  }
++  static AppearanceScope of(BuildContext context) =>
++      context.dependOnInheritedWidgetOfExactType<AppearanceScope>()!;
 +
 +  @override
 +  bool updateShouldNotify(AppearanceScope oldWidget) =>

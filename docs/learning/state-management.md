@@ -5,7 +5,7 @@
 **Эволюция темы и границы Provider/Riverpod в мобильном приложении**
 
 ![Learning state management](https://raster.shields.io/badge/Learning-state_management-09090B?style=for-the-badge)
-![Scope Phases 2–4](https://raster.shields.io/badge/Scope-Phases_2--4-FF0012?style=for-the-badge)
+![Scope Phases 2–5](https://raster.shields.io/badge/Scope-Phases_2--5-FF0012?style=for-the-badge)
 
 </div>
 
@@ -19,6 +19,7 @@
 - [Почему поиск проектов использует Riverpod](#почему-поиск-проектов-использует-riverpod)
 - [Repository и DI на Phase 3](#repository-и-di-на-phase-3)
 - [GitHub Import на Phase 4](#github-import-на-phase-4)
+- [Локальное сохранение на Phase 5](#локальное-сохранение-на-phase-5)
 - [Воспроизведение учебных вариантов](#воспроизведение-учебных-вариантов)
 - [Проверки и ограничения](#проверки-и-ограничения)
 
@@ -27,16 +28,17 @@
 ## Один сценарий, три подхода
 
 Учебный сценарий — выбор dark/light/system в Settings. Результат одинаков:
-MaterialApp получает новый ThemeMode, текущий маршрут сохраняется, выбор
-действует до нового запуска. В Phase 1 этот сценарий использовал `setState`;
-на Phase 2 он последовательно прошёл InheritedWidget и Provider.
+MaterialApp получает новый ThemeMode, текущий маршрут сохраняется. На Phase 2
+выбор действовал до нового запуска; Phase 5 добавила сохранение настроек.
+В Phase 1 этот сценарий использовал `setState`; на Phase 2 он последовательно
+прошёл InheritedWidget и Provider. Учебные patches обновлены под текущие contracts.
 
 <div align="center">
 
 | **Подход** | **Владелец значения** | **Как UI получает изменения** |
 |:---|:---|:---|
-| `setState` | `State<StackCardApp>` | Значение и callback передаются в Settings через router |
-| `InheritedWidget` | Тот же родительский `State` | AppearanceScope предоставляет значение/callback зависимым widgets |
+| `setState` | AppSettings snapshot в `State<StackCardApp>` | ThemeMode getter и callback передаются в Settings через router; MaterialApp читает State |
+| `InheritedWidget` | Тот же родительский `State` | AppearanceScope предоставляет ThemeMode/callback; Builder и Settings регистрируют dependency |
 | `Provider` | AppearanceController | `Selector`/`select` подписывают UI, `read` вызывает действие |
 
 </div>
@@ -69,15 +71,16 @@ Provider сохраняет доставку через widget tree и берё�
 ### setState: значение в корне
 
 ```dart
-late ThemeMode _themeMode = widget.initialThemeMode;
-
-void changeTheme(ThemeMode mode) {
-  setState(() => _themeMode = mode);
+Future<void> _changeSettings(AppSettings next) {
+  setState(() => _settings = next);
+  return _preferences.persistSettings();
 }
 ```
 
-MaterialApp читает `_themeMode`; Settings получает getter и действие через
-аргументы router. Вариант сохранён в
+В текущем patch `_settings` — единственный mutable AppSettings snapshot.
+ThemeMode вычисляется из него; MaterialApp читает State, Settings получает
+getter и действие через router. Сохранение snapshot не создаёт второго владельца
+темы. Вариант сохранён в
 [theme-set-state.patch](patches/theme-set-state.patch).
 
 ### InheritedWidget: доставка через scope
@@ -94,8 +97,8 @@ bool updateShouldNotify(AppearanceScope oldWidget) =>
 
 AppearanceScope расположен над MaterialApp; Builder под scope регистрирует
 зависимость для чтения ThemeMode. Settings читает scope самостоятельно.
-Mutable mode всё ещё принадлежит родительскому State. Вариант реально
-внедрялся и прошёл пять существовавших UI tests; сохранён в
+Mutable snapshot всё ещё принадлежит родительскому State. Историческая версия
+Phase 2 реально внедрялась и прошла пять существовавших UI tests; текущий вариант сохранён в
 [theme-inherited.patch](patches/theme-inherited.patch).
 
 ### Provider: отдельный контроллер
@@ -110,10 +113,10 @@ context.read<AppearanceController>().setThemeMode(ThemeMode.light);
 ```
 
 [`AppearanceController`](../../apps/mobile/lib/core/state/appearance_controller.dart)
-хранит mode и вызывает `notifyListeners` только при новом значении.
+хранит AppSettings snapshot и уведомляет UI о новом выборе и статусе сохранения.
 [`main.dart`](../../apps/mobile/lib/main.dart) создаёт его через
-`ChangeNotifierProvider`; `Selector<AppearanceController, ThemeMode>` передаёт
-выбор в MaterialApp. Settings использует `select/read`, router больше не
+`ChangeNotifierProvider`; `Selector<AppearanceController, (ThemeMode, Locale)>` передаёт
+тему и язык в MaterialApp. Settings использует `select/read`, router больше не
 передаёт theme параметры. `State<StackCardApp>` управляет lifecycle GoRouter.
 
 `select` сокращает перестроения от уведомлений контроллера. Сама смена Flutter
@@ -128,7 +131,8 @@ Theme закономерно обновляет использующие её wi
 
 | **Состояние** | **Владелец и срок жизни** |
 |:---|:---|
-| ThemeMode | AppearanceController через Provider, app session |
+| ThemeMode, locale ru/en и showSourceDescriptions | AppSettings в AppearanceController через Provider; восстановление и сохранение через SharedPreferences |
+| Очередь сохранения настроек и save failure | AppearanceController, app session; последние изменения записываются последовательно, retry явный |
 | Query и выбранный фильтр Projects | ProjectFiltersNotifier через Riverpod, app session |
 | Полный список проектов и профиль | projectsProvider/profileProvider, async repository state в app session |
 | Отфильтрованный список | visibleProjectsProvider, AsyncValue из query/filter и полного списка |
@@ -138,17 +142,19 @@ Theme закономерно обновляет использующие её wi
 | GitHub username, профиль, repositories и loading/error flags | GitHubImportController через autoDispose Notifier, время жизни экрана GitHub Import |
 | GitHub query и фильтр | Immutable GitHubImportState; controller применяет локальный query после debounce 300 ms |
 | GitHub repository и rate-limit deadline | DioGitHubImportRepository через feature-root DI, app session; уход с экрана не сбрасывает deadline |
-| GitHub ETag response cache | MemoryGitHubResponseCache через feature-root DI, app session; только online conditional requests |
-| Редактируемый текст поля | TextEditingController экрана, синхронизируется с query |
+| GitHub response cache и metadata | Native bootstrap подставляет HiveGitHubResponseCache; body/ETag/Link/validatedAt переживают запуск, TTL — 7 дней; readMetadata сообщает offline fallback и проблемы cache |
+| Ещё не сохранённые draft notes | PortfolioDraftController через Riverpod, app session; ввод сохраняется при навигации |
+| Сохранённые draft notes, revision и pendingSync | HivePortfolioDraftRepository; успешная запись увеличивает revision и помечает pendingSync |
+| Редактируемый текст поля | TextEditingController экрана; query и notes синхронизируются с feature state |
 | Form validation и preview loading/empty/error | Локальное UI-состояние соответствующего экрана |
 | GoRouter | State корневого приложения, disposal при закрытии дерева |
 
 </div>
 
-Provider ограничен базовыми настройками ThemeMode/Locale. Сейчас есть только
-ThemeMode: Locale будет добавлен вместе с переводами. Два state-management
-пакета выполняют разные обязанности; тема не дублируется в Riverpod, query/filter
-не дублируются в widget `setState`.
+Provider управляет базовыми настройками: ThemeMode, locale с реальными ru/en
+переводами и используемая preference описаний GitHub. Два state-management
+пакета выполняют разные обязанности; настройки не дублируются в Riverpod,
+query/filter не дублируются в widget `setState`.
 
 ---
 
@@ -182,7 +188,8 @@ ref.read(projectFiltersProvider.notifier).setQuery(value);
 Providers не используют `autoDispose`: при переходе в другой экран фильтры
 сохраняются в текущем ProviderScope. При пересоздании приложения container
 создаётся заново, фильтры возвращаются к исходным. Ни Provider, ни Riverpod
-не добавляют persistence сами; оно относится к Phase 5. Repository/data layers
+не добавляют persistence сами; Phase 5 подключает конкретные storage adapters.
+Query/filter Projects продолжают жить только в app session. Repository/data layers
 реализованы на Phase 3. Phase 4 добавила network в отдельную GitHub Import feature;
 Projects по-прежнему показывает curated demo-данные через свой repository.
 
@@ -218,8 +225,9 @@ product state, асинхронных действий и repository composition
 не конкурируют за одно значение.
 
 Модель ProfileReadiness содержит demo-snapshot счётчиков, PortfolioOverview —
-модель чтения presentation. Full Builder, алгоритм полноты и draft/published
-контракты вводятся на своих фазах; Repository сам по себе не реализует их.
+модель чтения presentation. Notes-only draft появился на Phase 5; full Builder,
+алгоритм полноты и published контракты вводятся на своих фазах. Repository сам
+по себе не реализует их.
 
 ---
 
@@ -259,13 +267,60 @@ limit, forbidden, server, invalid response и cancellation. Retry выполня
 запроса не отображается как пользовательская ошибка. Initial и refresh ошибки
 повторяются через `retry`, page error — через `loadMore`.
 
-Memory cache хранит сериализованный ответ, ETag и Link по request URI. После
-`304` data использует проверенные cached metadata; при ошибке сети cache не
-подменяет ответ offline-данными. Cache и repository живут в app session;
-закрытие экрана освобождает controller, сохраняя rate-limit deadline источника.
-Persistence и TTL относятся к Phase 5; прочитанные GitHub
-данные пока не изменяют curated portfolio или draft. Тема продолжает принадлежать
-Provider и не зависит от network state.
+Исторически на Phase 4 memory cache хранил сериализованный ответ, ETag и Link
+по request URI, поддерживая только online `304` revalidation. Cache и repository
+жили в app session; закрытие экрана освобождало controller, сохраняя rate-limit
+deadline источника. Phase 5 добавила persistent cache и offline fallback,
+описанные ниже. Прочитанные GitHub данные по-прежнему не изменяют curated portfolio
+или draft; network state не управляет темой.
+
+---
+
+## Локальное сохранение на Phase 5
+
+Pure Dart
+[`AppSettings`](../../apps/mobile/lib/core/state/app_settings.dart) и
+[`SettingsRepository`](../../apps/mobile/lib/core/state/settings_repository.dart)
+задают тему, язык и `showSourceDescriptions`. Native
+[`LocalRuntime`](../../apps/mobile/lib/app/local_runtime.dart) читает настройки
+и открывает Hive до появления первого экрана приложения. `StackCardApp`
+получает восстановленный snapshot и repository; ThemeMode/Locale применяются
+сразу. `AppStrings` и Flutter delegates переводят interface labels, validation
+и states; содержимое профиля, GitHub и draft остаётся данными источника.
+
+[`SharedPreferencesSettingsRepository`](../../apps/mobile/lib/features/settings/data/shared_preferences_settings_repository.dart)
+сохраняет versioned JSON snapshot через SharedPreferencesAsync. Отсутствующие,
+повреждённые и неподдерживаемые настройки используют defaults; ошибки доступа
+имеют typed failure. AppearanceController сразу применяет выбор к UI и
+последовательно записывает snapshots, объединяя быстрые изменения. Save failure
+не откатывает текущий выбор; Settings показывает ошибку и явный retry.
+`showSourceDescriptions` управляет видимостью описаний в GitHub cards.
+
+Native bootstrap подставляет
+[`HiveGitHubResponseCache`](../../apps/mobile/lib/features/github_import/data/hive_github_response_cache.dart)
+в existing async cache contract. Versioned envelope хранит body, ETag, Link и
+UTC validatedAt по request URI. Срок доступности —
+[`githubCacheMaxAge`](../../apps/mobile/lib/features/github_import/data/github_response_cache.dart),
+сейчас семь дней после validation. Истёкшая, повреждённая или неподдерживаемая
+cache entry удаляется; она не заменяет пользовательский draft.
+
+Repository перепроверяет DTO и Link identity, выполняет HTTP revalidation с
+ETag при его наличии. При network/timeout/server failure свежий сохранённый
+ответ может быть показан offline. `GitHubReadMetadata` сообщает происхождение
+снимка, время validation, fallback failure и проблемы чтения/записи cache;
+смешанный список остаётся помечен как cached до полного успешного refresh.
+Rate limit, not found и forbidden не подменяются успешным offline-ответом.
+Memory adapter остаётся для независимых tests и отдельно созданного StackCardApp.
+
+[`PortfolioDraftController`](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_draft_controller.dart)
+хранит несохранённый notes input в app session. Явный save записывает локальный
+draft в отдельную Hive box; snapshot содержит notes, revision, updatedAt и
+pendingSync. Успешный save увеличивает revision, ставит pendingSync и записывает
+updatedAt в UTC. Правка во время save остаётся несохранённой, даже если прежний
+snapshot записался успешно. При записи failure ввод сохраняется для retry.
+Повреждённый или неизвестный draft не очищается и не перезаписывается;
+cache eviction его не затрагивает. Remote sync ещё отсутствует, full Builder
+и редактирование остальных блоков относятся к Phase 6.
 
 ---
 
@@ -276,6 +331,16 @@ Patches преобразуют итоговую Provider-версию темы �
 Repository/DI, `StackCardApp.providerOverrides`, асинхронный профиль Settings,
 GitHub Import и остальное состояние продукта остаются на Riverpod. Рабочий checkout сохраняет
 итоговую реализацию; `git restore` и переключение веток для урока не нужны.
+
+На Phase 5 patches переносят целый AppSettings snapshot в родительский State,
+чтобы у темы оставался один владелец и сохранялась запись цельного snapshot.
+AppearanceController в учебной копии не содержит ThemeMode API: это forwarding
+и persistence adapter для locale/descriptions и save status, читающий snapshot
+через getter и изменяющий его через callback. Provider доставляет этот adapter
+другим settings consumers, но не хранит и не распространяет тему MaterialApp.
+State владеет adapter и его disposal; `ChangeNotifierProvider.value` доставляет
+уже созданный объект. Hive bootstrap, localization delegates и Repository DI
+сохраняются. Учебные изменения runtime существуют только внутри patches.
 
 macOS — zsh/bash, из корня репозитория; нужны Git, rsync, Flutter и уже
 разрешённые зависимости приложения:
@@ -302,18 +367,26 @@ flutter run -d <device-id>
 
 ## Проверки и ограничения
 
-На Phase 3 оба patches согласованы с текущими feature APIs и
+Текущие patches Phase 5 независимо применены через `git apply --check` к свежим
+копиям полного проекта. В каждом варианте прошли пять `widget_test.dart` tests
+и девять `localization_test.dart` tests: theme/navigation, восстановленные ru/en
+настройки, locale без смены router, descriptions preference и save failure/retry.
+Canonical runtime не изменялся. Для setState patch изменяет main, Settings,
+AppearanceController adapter и router; для InheritedWidget — main, Settings,
+adapter и добавляет AppearanceScope. Остальные feature/storage sources сохранены.
+
+Историческая проверка Phase 3: оба patches согласованы с feature APIs и
 `StackCardApp.providerOverrides`. Каждый прошёл `git apply --check` в независимой
 временной копии полного проекта, затем пять tests из `test/widget_test.dart`.
 Проверены demo-вход, навигация, поиск/детали Projects, смена темы со states/retry
 и клавиатура; async profile в Settings и Repository/DI сохранены.
 
-На Phase 4 оба patches повторно прошли `git apply --check` на текущем checkout
+Историческая проверка Phase 4: оба patches повторно прошли `git apply --check` на тогдашнем checkout
 и UI tests из `test/widget_test.dart` в независимых временных копиях. GitHub Import
 sources, repository lifetime, Provider overrides и async profile Settings
 сохранены; runtime-код и сами patches для этой проверки не изменялись.
 
-Промежуточная InheritedWidget-версия действительно выполнялась: пять tests
+Историческая промежуточная InheritedWidget-версия Phase 2 действительно выполнялась: пять tests
 из `test/widget_test.dart` прошли, включая переключение темы и навигацию.
 Итоговые проверки контроллера, Riverpod state, UI и реконструкции этапов,
 результаты запуска и ограничения среды фиксируются в
@@ -321,6 +394,7 @@ sources, repository lifetime, Provider overrides и async profile Settings
 
 Этапы сравнивают одинаковый theme сценарий. Учебные patches меняют только
 механизм темы; demo/mock портфолио и отдельный network state GitHub Import
-сохраняются. ThemeMode, query/filter и GitHub response cache не сохраняются
-на диск. Итоговый статус GitHub API и проверки текущего приложения — в
-[product spec](../product/product-spec.md#phase-4--github-api).
+сохраняются. ThemeMode/Locale/preferences, GitHub cache и явно сохранённые draft notes
+переживают запуск; query/filter и ещё не сохранённый ввод остаются в app session.
+Итоговый статус persistence и проверки текущего приложения — в
+[product spec](../product/product-spec.md#phase-5--local-persistence--offline).

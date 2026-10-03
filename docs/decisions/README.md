@@ -75,15 +75,50 @@
 Результаты приёмки фиксируются в
 [product spec](../product/product-spec.md#phase-4--github-api).
 
+## Принято для Phase 5
+
+Решения ниже реализованы в текущем runtime. Приёмка и её доказательства находятся в
+[product spec](../product/product-spec.md#phase-5--local-persistence--offline).
+
+| Решение | Рассмотренная альтернатива | Причина и последствия |
+| --- | --- | --- |
+| Original Hive 2.2.3, JSON envelopes без generator | Prerelease Hive, fork или SQL database | Stable версия выполняет план и текущие key/value сценарии; schema проверяется в data, pure Dart domain не зависит от Hive. Версии фиксирует mobile lockfile |
+| `path_provider` Application Support и отдельные boxes | Общий box или temporary directory | `LocalStorage` открывает `stackcard/github_responses` и `stackcard/portfolio_draft`. Cache воспроизводим; пользовательские notes имеют независимый lifecycle и не удаляются вместе с cache |
+| Network-first cache, schema 1 и hard TTL 7 дней | Бессрочный offline cache или cache-first без проверки | URI key хранит body, ETag, Link и UTC `validatedAt`; только успешные `200`/`304` продлевают срок. Возраст от 7 дней исключает fallback; отмена проверяется после storage awaits |
+| Offline fallback только для network/timeout/server | Подменять cache любой HTTP failure | Not found, forbidden, rate limit, invalid response и cancellation сохраняют смысл ошибки. Проверенный cached DTO/Link используется только в допустимом возрасте, offline-чтение не продлевает TTL |
+| Метаданные чтения и явное предупреждение UI | Выдать cached ответы за свежие данные | `GitHubReadMetadata` передаёт источник, дату и storage failures; aggregate объединяет профиль/страницы с самой ранней датой. Успешный HTTP остаётся доступным при ошибке cache write, UI сообщает, что offline copy не гарантирована |
+| Отдельный notes draft, schema 1, revision и `pendingSync` | Сразу реализовать весь Builder или cloud sync | `portfolio_draft` хранит notes, монотонную revision, UTC `updatedAt` и pendingSync одним awaited write; очередь исключает конкурирующие revisions. Full Builder остаётся Phase 6, sync — своей фазой |
+| Cache evict, draft preserve при повреждении/unknown schema | Автоматически сбросить оба хранилища | Некорректная, expired или future-schema cache row удаляется. Draft repository сохраняет исходную запись и блокирует перезапись до совместимого формата; неизвестные версии не мигрируются догадкой |
+| Backup нечитаемого cache-файла; `crashRecovery: false` для boxes | Автоматическая обрезка повреждённого Hive-файла | `LocalStorage` переименовывает cache в `.hive.unreadable-<UTC stamp>` и пробует открыть новый. Повреждённый draft не обрезается: bootstrap показывает ошибку/retry, файл сохраняется, уже открытый cache закрывается |
+| Два публичных `openBox` в одном `Future.wait` | Наблюдать только первый Future | Shim для Hive 2.2.3 обрабатывает оба Future, завершающиеся ошибкой при неудачном открытии; оба вызова получают один box. Поведение и сохранность файлов проверяются real-file tests |
+| Нейтральные settings contracts и SharedPreferencesAsync | Theme/locale внутри widgets или настройки в draft box | `core/state` владеет AppSettings/SettingsRepository и Provider controller. Один version 1 snapshot в `stackcard.settings.v1` объединяет theme/language/source descriptions; последовательные записи и retry не требуют feature imports в core |
+| Restore до `StackCardApp`, реальные ru/en UI-каталоги | Применить настройки после первого экрана или хранить Locale без переводов | Bootstrap читает settings и открывает boxes, затем подставляет persistent adapters. ThemeMode/Locale применяются сразу; source content сохраняет исходный язык |
+
+Sources: [manifest](../../apps/mobile/pubspec.yaml) и
+[lockfile](../../apps/mobile/pubspec.lock), stable
+[Hive 2.2.3](https://pub.dev/packages/hive/versions/2.2.3),
+[Application Support API](https://pub.dev/documentation/path_provider/latest/path_provider/getApplicationSupportDirectory.html).
+[SharedPreferencesAsync 2.5.5](https://pub.dev/packages/shared_preferences/versions/2.5.5)
+обращается к platform storage без собственного cache. Snapshot записывается
+одним ключом; это не гарантия crash-safe disk commit от плагина, поэтому
+пользовательский draft хранится отдельно в Hive.
+
+Runtime composition — [LocalRuntime](../../apps/mobile/lib/app/local_runtime.dart)
+и [LocalStorage](../../apps/mobile/lib/core/storage/local_storage.dart).
+Проверка границ — [GitHub persistence](../../apps/mobile/test/github_persistence_test.dart),
+[storage files](../../apps/mobile/test/local_storage_test.dart),
+[settings](../../apps/mobile/test/settings_persistence_test.dart),
+[localization](../../apps/mobile/test/localization_test.dart) и
+[draft repository](../../apps/mobile/test/portfolio_draft_repository_test.dart).
+
 ## Решить перед соответствующими фазами
 
 - Sync conflict strategy и поведение при нескольких устройствах, включая правки
   из mobile и web; согласование и проверка совместимости data contracts.
 - Firestore schema, private draft/public snapshot, username uniqueness,
   атомарность publish/unpublish.
-- На Phase 5 определить TTL, versioned storage/cache schema и migrations,
-  сохранение ETag validators и offline fallback; обосновать альтернативу Hive,
-  если она нужна.
+- Перед изменением storage schema определить явную migration пользовательского
+  draft и совместимость revisions; cache можно воспроизвести из source API.
 - Contact spam/rate limiting и доверенная отправка notifications.
 - Application IDs, signing и release configuration до публикации.
 - Точные web routes, зависимости, способы auth/session и проверки определить

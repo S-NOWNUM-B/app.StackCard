@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/github_failure.dart';
 import '../domain/github_filters.dart';
 import '../domain/github_import_repository.dart';
+import '../domain/github_read_metadata.dart';
 import '../domain/github_repository.dart';
 import '../github_import_providers.dart';
 import 'github_import_state.dart';
@@ -75,6 +76,10 @@ class GitHubImportController extends Notifier<GitHubImportState> {
         nextPage: page.nextPage,
         loading: false,
         failure: null,
+        readMetadata: combineGitHubReadMetadata([
+          profile.readMetadata,
+          page.readMetadata,
+        ]),
       );
     } on GitHubFailure catch (failure) {
       _finishFailure(generation, operationRef, failure);
@@ -114,6 +119,10 @@ class GitHubImportController extends Notifier<GitHubImportState> {
         nextPage: page.nextPage,
         refreshing: false,
         failure: null,
+        readMetadata: combineGitHubReadMetadata([
+          profile.readMetadata,
+          page.readMetadata,
+        ]),
       );
     } on GitHubFailure catch (failure) {
       _finishFailure(generation, operationRef, failure);
@@ -149,6 +158,10 @@ class GitHubImportController extends Notifier<GitHubImportState> {
         nextPage: page.nextPage,
         loadingMore: false,
         pageFailure: null,
+        readMetadata: combineGitHubReadMetadata([
+          state.readMetadata,
+          page.readMetadata,
+        ]),
       );
     } on GitHubFailure catch (failure) {
       _finishFailure(generation, operationRef, failure, pagination: true);

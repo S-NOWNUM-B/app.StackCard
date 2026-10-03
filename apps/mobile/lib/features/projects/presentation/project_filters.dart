@@ -1,9 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/widgets.dart';
+
+import '../../../core/localization/app_strings.dart';
 
 import '../domain/project.dart';
 import '../domain/project_filters.dart';
 
 extension ProjectFilterLabel on ProjectFilter {
+  String labelFor(BuildContext context) => context.strings.tr('filter.$name');
   String get label => switch (this) {
     ProjectFilter.all => 'Все',
     ProjectFilter.featured => 'Featured',
@@ -13,6 +17,7 @@ extension ProjectFilterLabel on ProjectFilter {
 }
 
 extension ProjectSourceLabel on ProjectSource {
+  String labelFor(BuildContext context) => context.strings.tr('filter.$name');
   String get label => switch (this) {
     ProjectSource.github => 'GitHub',
     ProjectSource.manual => 'Вручную',

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_strings.dart';
+
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
 import 'stackcard_button.dart';
@@ -32,11 +34,11 @@ class StackCardStateView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (kind == StackCardViewState.loading)
-              const SizedBox.square(
+              SizedBox.square(
                 dimension: 28,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  semanticsLabel: 'Загрузка',
+                  semanticsLabel: context.strings.tr('common.loading'),
                 ),
               )
             else
@@ -66,7 +68,7 @@ class StackCardStateView extends StatelessWidget {
             if (kind == StackCardViewState.error && onRetry != null) ...[
               const SizedBox(height: StackCardSpacing.lg),
               StackCardButton(
-                label: 'Повторить',
+                label: context.strings.tr('common.retry'),
                 icon: Icons.refresh_rounded,
                 onPressed: onRetry,
               ),

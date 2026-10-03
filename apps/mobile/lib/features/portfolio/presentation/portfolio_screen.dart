@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../profile/profile.dart';
@@ -53,14 +55,20 @@ class _PortfolioContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Моё портфолио',
+                    context.strings.tr('home.myPortfolio'),
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: StackCardSpacing.sm),
                   Text(
-                    'Профиль, проекты и детали, которые расскажут о тебе.',
+                    context.strings.tr('portfolio.subtitle'),
                     style: Theme.of(context).textTheme.bodyLarge
                         ?.copyWith(color: pageTextColor),
+                  ),
+                  const SizedBox(height: StackCardSpacing.xl),
+                  StackCardButton(
+                    label: context.strings.tr('draft.open'),
+                    icon: Icons.note_alt_outlined,
+                    onPressed: () => context.push('/portfolio-draft'),
                   ),
                   const SizedBox(height: StackCardSpacing.xl),
                   if (wide)
@@ -85,7 +93,7 @@ class _PortfolioContent extends StatelessWidget {
                   ],
                   const SizedBox(height: StackCardSpacing.xl),
                   Text(
-                    'Блоки портфолио',
+                    context.strings.tr('portfolio.blocks'),
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: StackCardSpacing.lg),
@@ -133,9 +141,7 @@ class _PortfolioContent extends StatelessWidget {
                   ],
                   const SizedBox(height: StackCardSpacing.xl),
                   Text(
-                    'Это макет на демонстрационных данных. Редактирование '
-                    'профиля, порядок блоков, резюме и публикация будут '
-                    'подключаться по плану разработки.',
+                    context.strings.tr('portfolio.demoNote'),
                     style: Theme.of(context).textTheme.bodyMedium
                         ?.copyWith(color: pageTextColor),
                   ),
@@ -219,12 +225,12 @@ class _ProfileCard extends StatelessWidget {
           ),
           const SizedBox(height: StackCardSpacing.xl),
           Text(
-            'Открыт к интересным задачам',
+            context.strings.tr('portfolio.available'),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: StackCardSpacing.xs),
           Text(
-            'Демонстрационный профиль',
+            context.strings.tr('portfolio.demoProfile'),
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: context.colors.textSecondary),
           ),
@@ -253,31 +259,33 @@ class _DraftCard extends StatelessWidget {
                 size: 20,
                 color: context.colors.textSecondary,
               ),
-              Text('Черновик', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                context.strings.tr('common.draft'),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ],
           ),
           const SizedBox(height: StackCardSpacing.lg),
           Text(
-            'Только для тебя',
+            context.strings.tr('portfolio.private'),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: StackCardSpacing.sm),
           Text(
-            'Предпросмотр показывает пример будущей страницы. '
-            'Этот профиль не опубликован.',
+            context.strings.tr('portfolio.previewNote'),
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: context.colors.textSecondary),
           ),
           const SizedBox(height: StackCardSpacing.xl),
           StackCardButton(
-            label: 'Предпросмотр',
+            label: context.strings.tr('portfolio.preview'),
             icon: Icons.visibility_outlined,
             primary: true,
             onPressed: () => _showPreview(context, overview),
           ),
           const SizedBox(height: StackCardSpacing.md),
           Text(
-            'Публикация станет доступна после подключения аккаунта и облака.',
+            context.strings.tr('portfolio.publishNote'),
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: context.colors.textSecondary),
           ),
@@ -298,7 +306,10 @@ class _AboutCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('01 / Обо мне', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            context.strings.tr('portfolio.about'),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: StackCardSpacing.lg),
           Text(profile.about, style: Theme.of(context).textTheme.bodyLarge),
         ],
@@ -318,7 +329,10 @@ class _SkillsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('02 / Навыки', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            context.strings.tr('portfolio.skills'),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: StackCardSpacing.lg),
           Wrap(
             spacing: StackCardSpacing.sm,
@@ -360,7 +374,7 @@ class _FeaturedCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '03 / Избранные проекты',
+            context.strings.tr('portfolio.featured'),
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: StackCardSpacing.lg),
@@ -424,7 +438,7 @@ class _StoryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '04 / Опыт и обучение',
+            context.strings.tr('portfolio.experience'),
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: StackCardSpacing.lg),
@@ -457,7 +471,7 @@ class _StoryCard extends StatelessWidget {
             const SizedBox(height: StackCardSpacing.lg),
           ],
           Text(
-            'Все записи в этом блоке демонстрационные.',
+            context.strings.tr('portfolio.demoEntries'),
             style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: context.colors.textSecondary),
           ),
@@ -477,25 +491,28 @@ class _LinksCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '05 / Ссылки и резюме',
+            context.strings.tr('portfolio.links'),
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: StackCardSpacing.lg),
           Text(
-            'Профиль GitHub',
+            context.strings.tr('portfolio.github'),
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: StackCardSpacing.xs),
           Text(
-            'В демо ссылка не подключена',
+            context.strings.tr('portfolio.noLink'),
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: context.colors.textSecondary),
           ),
           const SizedBox(height: StackCardSpacing.lg),
-          Text('Резюме', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            context.strings.tr('portfolio.resume'),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: StackCardSpacing.xs),
           Text(
-            'Файл пока не добавлен',
+            context.strings.tr('portfolio.noResume'),
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: context.colors.textSecondary),
           ),
@@ -525,12 +542,12 @@ void _showPreview(BuildContext context, PortfolioOverview overview) {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Предпросмотр портфолио',
+              context.strings.tr('portfolio.previewTitle'),
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: StackCardSpacing.sm),
             Text(
-              'Демо · черновик не опубликован',
+              context.strings.tr('portfolio.previewStatus'),
               style: Theme.of(context).textTheme.bodyMedium
                   ?.copyWith(color: context.colors.textSecondary),
             ),
@@ -548,7 +565,7 @@ void _showPreview(BuildContext context, PortfolioOverview overview) {
             const _LinksCard(),
             const SizedBox(height: StackCardSpacing.xl),
             StackCardButton(
-              label: 'Закрыть предпросмотр',
+              label: context.strings.tr('portfolio.closePreview'),
               icon: Icons.close_rounded,
               onPressed: () => Navigator.of(context).pop(),
             ),

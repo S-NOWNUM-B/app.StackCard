@@ -5,7 +5,7 @@
 **Flutter-клиент для Android и iOS с мобильным редактором общего портфолио**
 
 ![Mobile Android + iOS](https://raster.shields.io/badge/Mobile-Android_%2B_iOS-09090B?style=for-the-badge)
-![Stage Phase 4 GitHub API](https://raster.shields.io/badge/Stage-Phase_4_GitHub_API-FF0012?style=for-the-badge)
+![Stage Phase 5 Local persistence](https://raster.shields.io/badge/Stage-Phase_5_Local_persistence-FF0012?style=for-the-badge)
 
 </div>
 
@@ -27,14 +27,16 @@
 будет использовать тот же аккаунт, draft и правила публикации, что и web.
 Offline draft/cache и нативные функции относятся к мобильному клиенту.
 
-На Phase 4 к UI foundation и Repository/DI добавлен отдельный GitHub Import:
-username загружает публичный профиль и repositories через Dio.
+GitHub Import загружает публичный профиль и repositories через Dio.
+Phase 5 добавляет Hive cache с offline fallback, отдельный draft заметок и
+сохранение настроек с реальными переводами ru/en.
 Sign In, Home, Portfolio, Projects и Settings продолжают получать demo/mock data;
 общий app shell и Material 3 light/dark сохранены. Core-портфолио, backend,
-редактирование и публикация развиваются по roadmap. Результаты проверок — в
-[product spec](../../docs/product/product-spec.md#phase-4--github-api).
-ThemeMode управляется Provider; product state, repository loading и DI — Riverpod.
-Окончательный статус приёмки Phase 4 хранится в product spec. Их границы и
+полный Builder и публикация развиваются по roadmap. Phase 5 завершена;
+статус и результаты проверок — в
+[product spec](../../docs/product/product-spec.md#phase-5--local-persistence--offline).
+ThemeMode/Locale/preferences управляются Provider; product state, repository
+loading и DI — Riverpod. Их границы и
 учебная эволюция описаны в
 [state management guide](../../docs/learning/state-management.md).
 Сайт развивается отдельно в [apps/web](../web/README.md)
@@ -48,19 +50,26 @@ ThemeMode управляется Provider; product state, repository loading и 
 
 | **Материал** | **Назначение** |
 |:---|:---|
-| [lib/main.dart](lib/main.dart) | `StackCardApp`, composition, ProviderScope и lifecycle GoRouter |
-| [lib/app](lib/app/) | GoRouter и адаптивный app shell |
-| [lib/core/state](lib/core/state/) | AppearanceController для ThemeMode через Provider |
+| [lib/main.dart](lib/main.dart) | Bootstrap, восстановление runtime до `StackCardApp`, ProviderScope и lifecycle GoRouter |
+| [lib/app](lib/app/) | LocalRuntime composition, GoRouter и адаптивный app shell |
+| [lib/core/state](lib/core/state/) | Нейтральные settings contracts и AppearanceController для ThemeMode/Locale/preferences через Provider |
+| [lib/core/storage/local_storage.dart](lib/core/storage/local_storage.dart) | Hive boxes в Application Support, изоляция cache/draft и сохранность повреждённых файлов |
+| [lib/core/localization](lib/core/localization/) | Согласованные UI-каталоги ru/en и Localizations delegate |
 | [lib/core/theme](lib/core/theme/) | Утверждённая палитра, Material 3, typography, spacing/radius |
 | [lib/shared/widgets](lib/shared/widgets/) | Используемые общие widgets, loading/error/retry и async view |
-| [lib/features](lib/features/) | Auth/profile/projects/github_import: presentation/domain/data и public APIs; portfolio read model, Home и Settings |
-| [lib/features/github_import/github_import.dart](lib/features/github_import/github_import.dart) | Публичный API GitHub Import; feature-root DI связывает repository, clock и session response cache |
+| [lib/features](lib/features/) | Auth/profile/projects/github_import/portfolio_draft: presentation/domain/data и public APIs; portfolio read model, Home и Settings |
+| [lib/features/github_import/github_import.dart](lib/features/github_import/github_import.dart) | Публичный API GitHub Import; DI связывает repository, clock и response cache, native bootstrap подставляет Hive adapter |
+| [lib/features/portfolio_draft/portfolio_draft.dart](lib/features/portfolio_draft/portfolio_draft.dart) | Отдельные локальные заметки: repository, state и экран `/portfolio-draft` |
+| [lib/features/settings/data/shared_preferences_settings_repository.dart](lib/features/settings/data/shared_preferences_settings_repository.dart) | Один versioned snapshot настроек через SharedPreferencesAsync |
 | [assets/fonts](assets/fonts/) | Локальные DM Sans, Noto Sans fallback и SIL OFL лицензии |
 | [test/widget_test.dart](test/widget_test.dart), [test/responsive_test.dart](test/responsive_test.dart) | UI-сценарии, навигация, темы и адаптивность |
 | [test/auth_di_test.dart](test/auth_di_test.dart), [test/profile_di_test.dart](test/profile_di_test.dart), [test/projects_di_test.dart](test/projects_di_test.dart) | Подмена repositories в реальных экранах и async states |
 | [test/auth_repository_test.dart](test/auth_repository_test.dart), [test/profile_repository_test.dart](test/profile_repository_test.dart), [test/projects_repository_test.dart](test/projects_repository_test.dart) | Domain rules, demo/mock content и immutable collections |
 | [test/appearance_controller_test.dart](test/appearance_controller_test.dart), [test/project_filters_test.dart](test/project_filters_test.dart), [test/state_management_test.dart](test/state_management_test.dart) | Владельцы состояния, действия, навигация и новая session |
 | [test/github_data_test.dart](test/github_data_test.dart), [test/github_import_controller_test.dart](test/github_import_controller_test.dart), [test/github_import_widget_test.dart](test/github_import_widget_test.dart) | DTO/HTTP/ETag, запросы и lifecycle controller, локальные фильтры и экран GitHub Import |
+| [test/github_persistence_test.dart](test/github_persistence_test.dart), [test/local_storage_test.dart](test/local_storage_test.dart) | Реальный Hive reopen, TTL/fallback/304, ошибки записи, изоляция boxes и повреждённые файлы |
+| [test/settings_persistence_test.dart](test/settings_persistence_test.dart), [test/localization_test.dart](test/localization_test.dart) | Restore/сохранение настроек, write retry и переведённый UI |
+| [test/portfolio_draft_repository_test.dart](test/portfolio_draft_repository_test.dart), [test/portfolio_draft_controller_test.dart](test/portfolio_draft_controller_test.dart), [test/portfolio_draft_widget_test.dart](test/portfolio_draft_widget_test.dart) | Заметки, revisions, unknown schema, асинхронные действия и экран draft |
 | [pubspec.yaml](pubspec.yaml), [pubspec.lock](pubspec.lock) | SDK constraint, dependencies и разрешённые версии |
 | [analysis_options.yaml](analysis_options.yaml) | Dart analyzer и lint rules |
 | `android/`, `ios/` | Native scaffolds и платформенные настройки |
@@ -69,7 +78,7 @@ ThemeMode управляется Provider; product state, repository loading и 
 
 Экраны используют общие tokens/widgets и публичные feature APIs. Domain хранит
 pure Dart модели, правила и repository contracts; data содержит demo/mock
-источники и Dio-реализацию GitHub repository с DTO mapping. DI связывается у корня
+источники, Dio-реализацию GitHub repository и storage adapters. DI связывается у корня
 feature, `StackCardApp.providerOverrides`
 передаётся внутреннему ProviderScope для замены источника. `PortfolioOverview`
 объединяет profile/projects для Home, Portfolio и preview; полный Builder/domain
@@ -92,8 +101,8 @@ Sign In проверяет формат demo-email и вызывает repositor
 карточку с подробностями. Loading/error/retry работают с текущими repository
 states; подмена источника не требует правки widgets. Settings получает профиль
 из того же profile provider, переключает dark/light/system и показывает
-loading/empty/error с retry. Dark — тема по умолчанию; выбор темы и фильтры
-сохраняются между экранами в app session и сбрасываются при новом запуске.
+loading/empty/error с retry. Dark — тема по умолчанию; выбранная тема сохраняется
+после перезапуска. Query/filter state остаётся в app session.
 
 ### Прочитать публичные данные GitHub
 
@@ -114,10 +123,35 @@ Loading, empty и ошибки сети, timeout, отсутствующего �
 фильтры; refresh сохраняет их. Уход с экрана освобождает controller, отменяет
 запросы и debounce; поздний ответ не меняет новое состояние.
 
-ETag response cache хранит сериализованные ответы только в памяти app session
-и используется для online conditional requests. Offline fallback и сохранение
-на диск относятся к Phase 5. Данные GitHub пока не импортируются в curated
-проекты, не редактируют demo-профиль и не публикуются автоматически.
+Native bootstrap подключает Hive response cache: request URI индексирует schema 1
+envelope с body, ETag, Link и UTC `validatedAt`. Каждый запрос сначала проверяет
+сеть; `200`/`304` обновляют дату. При network/timeout/server failure разрешена
+сохранённая копия младше 7 дней. Возраст от 7 дней, повреждение или неизвестная
+schema исключают запись из fallback. Rate limit, not found, forbidden, неверный
+ответ и отмена не подменяются cache.
+
+Экран показывает «Сохранённая копия GitHub» и дату последней проверки; смешанные
+страницы сохраняют предупреждение и самую раннюю дату. Ошибка локальной записи
+не скрывает успешный HTTP-ответ, но показывает недоступность offline copy.
+Данные GitHub пока не импортируются в curated проекты, не редактируют
+demo-профиль и не публикуются автоматически.
+
+### Сохранить настройки и локальные заметки
+
+В Settings выбери dark/light/system, Русский/English и показ описаний источника.
+UI, navigation и сообщения переведены; исходные названия и тексты контента
+сохраняются. Один version 1 snapshot записывается в `stackcard.settings.v1`
+через SharedPreferencesAsync. Ошибка сохранения видна с retry; выбор сразу
+применяется к UI. Bootstrap восстанавливает настройки и открывает Hive boxes
+до первого экрана `StackCardApp`; ошибка открытия показывает повторный запуск.
+
+Из Portfolio открой «Локальные заметки». `/portfolio-draft` сохраняет только
+notes в отдельном `portfolio_draft` box: явный Save увеличивает revision,
+записывает UTC `updatedAt` и `pendingSync`. Saved notes переживают перезапуск;
+несохранённый ввод сохраняется при навигации в текущей session. Ошибка Save
+оставляет ввод доступным. Повреждённая запись или неизвестная schema сохраняются
+с блокировкой перезаписи. `pendingSync` пока обозначает ожидающую синхронизацию;
+cloud sync появится на своей фазе. Полный Builder относится к Phase 6.
 
 ### Редактировать портфолио
 

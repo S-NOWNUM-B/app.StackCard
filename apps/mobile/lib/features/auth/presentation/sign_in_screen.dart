@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/localization/app_strings.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -63,12 +66,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           const StackCardBrand(),
                           const SizedBox(height: 48),
                           Text(
-                            'Ваш код.\nВаша история.',
+                            context.strings.tr('auth.hero'),
                             style: Theme.of(context).textTheme.displaySmall,
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Соберите проекты, навыки и опыт в одном портфолио. Покажите то, что умеете создавать.',
+                            context.strings.tr('auth.intro'),
                             style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(
                                   color:
@@ -82,10 +85,16 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: const [
-                              Chip(label: Text('Проекты')),
-                              Chip(label: Text('Навыки')),
-                              Chip(label: Text('Ваша история')),
+                            children: [
+                              Chip(
+                                label: Text(context.strings.tr('nav.projects')),
+                              ),
+                              Chip(
+                                label: Text(context.strings.tr('auth.skills')),
+                              ),
+                              Chip(
+                                label: Text(context.strings.tr('auth.story')),
+                              ),
                             ],
                           ),
                         ],
@@ -97,19 +106,19 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text(
-                                'Знакомство со StackCard',
+                                context.strings.tr('auth.title'),
                                 style: Theme.of(context)
                                     .textTheme
                                     .headlineSmall,
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Откройте демонстрационное портфолио и изучите интерфейс.',
+                                context.strings.tr('auth.description'),
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                               const SizedBox(height: 24),
                               StackCardInput(
-                                label: 'Email для примера',
+                                label: context.strings.tr('auth.email'),
                                 hint: 'alex@example.dev',
                                 controller: _email,
                                 enabled: !auth.isLoading,
@@ -117,11 +126,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.done,
                                 onFieldSubmitted: (_) => _openDemo(),
-                                validator: validateDemoEmail,
+                                validator: (value) =>
+                                    validateDemoEmail(value) == null
+                                    ? null
+                                    : context.strings.tr('auth.invalidEmail'),
                               ),
                               const SizedBox(height: 20),
                               StackCardButton(
-                                label: 'Открыть демо',
+                                label: context.strings.tr('auth.open'),
                                 icon: Icons.arrow_forward_rounded,
                                 primary: true,
                                 loading: auth.isLoading,
@@ -132,7 +144,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                 Semantics(
                                   liveRegion: true,
                                   child: Text(
-                                    'Не удалось открыть демо. Нажмите «Открыть демо», чтобы повторить.',
+                                    context.strings.tr('auth.error'),
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium,
@@ -141,7 +153,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                               ],
                               const SizedBox(height: 20),
                               Text(
-                                'Это демо на примерах данных. Email проверяется только на экране и не сохраняется. Авторизация будет подключена позднее.',
+                                context.strings.tr('auth.note'),
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color:

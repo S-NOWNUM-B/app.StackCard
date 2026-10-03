@@ -4,7 +4,7 @@
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage Phase 4](https://raster.shields.io/badge/Stage-Phase_4-111111?style=for-the-badge)
+![Stage Phase 5](https://raster.shields.io/badge/Stage-Phase_5-111111?style=for-the-badge)
 ![Mobile + Web planned](https://raster.shields.io/badge/Mobile_%2B_Web-planned-FF0012?style=for-the-badge)
 
 </div>
@@ -40,11 +40,16 @@ Projects и воспроизводимые учебные этапы вне ра
 По следующему поручению завершена **Phase 3: Architecture**: features
 auth/profile/projects разделены на `presentation/domain/data`, Repository
 contracts и Riverpod DI позволяют заменять демонстрационные источники.
-По текущему поручению завершена **Phase 4: GitHub API**: отдельный GitHub Import
+По следующему поручению завершена **Phase 4: GitHub API**: отдельный GitHub Import
 загружает публичный профиль и repositories через Dio, поддерживает pagination,
 refresh, локальный поиск/filter и повтор запроса после ошибки.
 Результаты проверок и Android-запуска зафиксированы в
 [разделе Phase 4](#phase-4--github-api).
+По текущему поручению завершена **Phase 5: Local persistence / offline**:
+theme, ru/en locale и настройка описаний источника сохраняются в SharedPreferences;
+Hive хранит GitHub cache и отдельные локальные заметки с revision/pendingSync.
+Перезапуск, offline и reconnect проверены на Android;
+подробности — в [приёмке Phase 5](#phase-5--local-persistence--offline).
 Этот документ отделяет реализованный интерфейс от целевых функций.
 Flutter-приложение находится в `apps/mobile`; в `apps/web`
 сейчас только README. Remote `origin` уже подключён; `main` отслеживает `origin/main`.
@@ -56,14 +61,16 @@ Commit и push выполняются только по запросу поль�
 корневом/mobile AGENTS, router и CONTRIBUTING.
 
 Основные экраны портфолио используют демонстрационные данные; GitHub Import
-отдельно читает публичный GitHub API. Firebase, web, постоянное сохранение,
-редактирование и публикация ещё не подключены. Тема принадлежит
-AppearanceController через Provider; demo-вход, загрузка профиля/проектов
+отдельно читает публичный GitHub API с persistent cache и offline fallback.
+Firebase, web, полный Builder и публикация ещё не подключены. Тема, язык и
+простые preferences принадлежат AppearanceController через Provider;
+demo-вход, загрузка профиля/проектов
 и query/filter state — Riverpod. Home, Portfolio и идентичность в Settings читают
 один профиль через Repository; предпросмотр использует данные того же источника.
-Выбор и GitHub response cache сохраняются только в текущей app session.
+Settings, GitHub response cache и явно сохранённые notes переживают перезапуск;
+demo-session, query/filter и ещё не сохранённый ввод остаются в app session.
 GitHub Import не изменяет curated portfolio и не публикует данные.
-Phase 5 и последующие этапы пока не разрешены.
+Phase 6 и последующие этапы пока не разрешены.
 
 ---
 
@@ -347,7 +354,8 @@ web-редактор и публичные портфолио. Этот разд
 
 **Phase 0–4 завершены:** основа, UI, состояние, архитектура и GitHub Import проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
-Фазы 5–20 остаются планом и требуют отдельного поручения пользователя.
+Текущее поручение — Phase 5: Local persistence / offline. Фазы 6–20 остаются
+планом и требуют отдельного поручения пользователя.
 
 Чекбокс `- [x]` означает подтверждённый результат, `- [ ]` — оставшуюся задачу
 или непроверенный сценарий. При отметке проверки рядом фиксируются результат
@@ -362,7 +370,7 @@ web-редактор и публичные портфолио. Этот разд
 | Phase 2 — Basic state management | Завершена; три этапа темы, итоговый Provider и Riverpod state проверены |
 | Phase 3 — Architecture | Завершена; Repository/DI, чистый domain, UI и Android-запуск проверены |
 | Phase 4 — GitHub API | Завершена; HTTP, pagination, refresh, состояния и Android-запуск проверены |
-| Phase 5 — Local persistence / offline | Запланирована |
+| Phase 5 — Local persistence / offline | Завершена; settings, Hive cache/draft, offline/reconnect и Android restart проверены |
 | Phase 6 — Portfolio domain и локальный Builder | Запланирована |
 | Phase 7 — Firebase authentication | Запланирована |
 | Phase 8 — Firestore synchronization | Запланирована |
@@ -672,7 +680,7 @@ web-редактор и публичные портфолио. Этот разд
   сохраняет rate-limit deadline при повторном открытии экрана. Disk cache,
   offline fallback и импорт в portfolio остаются задачами последующих фаз.
   Версия API, pagination и rate limits сверены с официальной документацией;
-  ссылки и HTTP/cache contract записаны в [architecture](../architecture/architecture.md#github-import-http-и-session-кэш).
+  ссылки и HTTP/cache contract записаны в [architecture](../architecture/architecture.md#github-import-http-и-persistent-кэш).
 - Добавлены 72 tests: 37 для DTO/HTTP/cache/errors, 17 для controller и 18 для
   widgets/DI/responsive. Полный `flutter test` прошёл: **214 tests**, включая
   **40 golden-сравнений**. После добавления входа в GitHub Import обновлены
@@ -696,21 +704,66 @@ web-редактор и публичные портфолио. Этот разд
 
 **Задачи**
 
-- [ ] Сохранять theme, locale и простые настройки в SharedPreferences.
-- [ ] Использовать Hive для GitHub cache и local portfolio draft; альтернативу
+- [x] Сохранять theme, locale и простые настройки в SharedPreferences.
+- [x] Использовать Hive для GitHub cache и local portfolio draft; альтернативу
   обосновать в ADR до реализации.
-- [ ] Определить cache lifetime, хранение несинхронизированных изменений и версию
+- [x] Определить cache lifetime, хранение несинхронизированных изменений и версию
   локальной модели; показывать доступные сохранённые данные без сети.
-- [ ] Проверить перезапуск, отсутствие сети, пустой/повреждённый кэш и восстановление
+- [x] Проверить перезапуск, отсутствие сети, пустой/повреждённый кэш и восстановление
   соединения без потери draft.
 
 **Проверки и приёмка**
 
-- [ ] Theme, locale и простые настройки сохраняются после перезапуска.
-- [ ] Ранее загруженные repositories и local draft доступны без сети;
+- [x] Theme, locale и простые настройки сохраняются после перезапуска.
+- [x] Ранее загруженные repositories и local draft доступны без сети;
   несинхронизированные изменения не теряются.
-- [ ] Пустой/повреждённый кэш и reconnect проверены; cache lifetime,
+- [x] Пустой/повреждённый кэш и reconnect проверены; cache lifetime,
   версия модели и решение о локальном хранилище зафиксированы.
+
+**Реализовано и проверено в Phase 5 — 3 октября 2026**
+
+- `StackCardBootstrap` восстанавливает настройки и открывает отдельные Hive boxes
+  в Application Support до первого экрана. SharedPreferencesAsync хранит цельный
+  snapshot v1: dark/light/system, ru/en и показ описаний GitHub cards. UI имеет
+  реальные переводы; source/user content сохраняет исходный язык. Ошибка записи
+  оставляет выбор в session с явным retry, повреждённые preferences дают defaults.
+- GitHub cache использует envelope v1 с JSON body, ETag, Link и UTC validatedAt.
+  Network-first GET/304 обновляет дату; hard TTL — **7 дней**. Только network,
+  timeout и server failures допускают сохранённую копию. UI показывает её источник
+  и дату, storage failures не скрывают успешный HTTP. Expired/corrupt/unknown cache
+  исключается из fallback; отмена проверяется после storage awaits.
+- Из Portfolio открываются локальные заметки: явный Save сохраняет notes,
+  revision, UTC updatedAt и pendingSync в draft envelope v1. Это предварительный
+  notes draft; полный portfolio domain и Builder остаются Phase 6. Несохранённый
+  ввод живёт в session; ошибка Save его не теряет и не выдаёт результат за saved.
+  Remote sync пока отсутствует.
+- Cache recovery/очистка не затрагивают draft. Повреждённый cache file сохраняется
+  как backup и пересоздаётся; повреждённый draft или неизвестная schema сохраняются
+  с блокировкой перезаписи. Реальные Hive tests проверяют reopen и файлы, включая
+  закрытие draft при ошибке закрытия cache. Первая persistent версия не требует
+  миграции старой модели; решения записаны в [ADR](../decisions/README.md#принято-для-phase-5).
+- Добавлены **109 tests** для persistence, localization, draft и bootstrap.
+  Полный `flutter test --no-pub --dart-define=UPDATE_UI_PREVIEWS=true` прошёл:
+  **323 tests**, включая **40 golden-сравнений**. Обновлены 16 Portfolio/Settings
+  previews для новых controls; остальные 24 сохранены. Проверены responsive,
+  увеличенный текст, контраст и tap targets. Format — 98 Dart-файлов без изменений;
+  `flutter analyze --no-pub` — без замечаний.
+- Финальный debug APK собран и установлен на `main_phone` (Android 17/API 37).
+  Force-stop/relaunch восстановил Light, English и выключенные source descriptions.
+  После запрета сети только тестовому приложению профиль `google` и **30 ранее
+  загруженных repositories** доступны с cached-copy notice/date; username без
+  cache показывает «No connection» с retry. Notes доступны offline, новая правка
+  увеличила revision до 2. Возврат сети и явный refresh убрали cache notice;
+  повторный cold start сохранил правку, revision 2 и pendingSync. Native UI и
+  снимки просмотрены; сетевые настройки эмулятора восстановлены.
+- Оба учебных theme patches применяются независимо к свежим копиям проекта;
+  каждый прошёл 5 widget и 9 localization/settings tests и targeted analyze.
+  Bootstrap, Hive и feature DI сохранены. Architecture, ADR, design, mobile guide
+  и AI context синхронизированы; документы/ссылки и project context проверены.
+- `flutter doctor -v` по-прежнему отмечает отсутствие Android cmdline-tools и
+  неизвестный статус licenses при успешной debug сборке. iOS не проверен:
+  Xcode неполный, CocoaPods отсутствует. Commit/push не выполнялись;
+  Phase 6 не начата.
 
 **Готово, когда:** настройки переживают перезапуск, ранее загруженные repositories
 доступны offline, локальные изменения сохраняются. Remote sync появится на Phase 8.
@@ -1116,7 +1169,7 @@ browser push автоматически в scope не добавляется.
 App Distribution или deploy web требует запроса пользователя; iOS-публикация
 не заявляется выполненной по одному Android release.
 
-**Phase 0–4 завершены. Переход к Phase 5 требует поручения пользователя.**
+**Phase 0–4 завершены. Phase 5 в работе по прямому поручению пользователя.**
 
 ---
 

@@ -1,3 +1,5 @@
+import 'github_read_metadata.dart';
+
 /// Публичный профиль источника; не изменяет профиль портфолио.
 final class GitHubProfile {
   const GitHubProfile({
@@ -9,6 +11,7 @@ final class GitHubProfile {
     this.bio,
     this.location,
     this.avatarUrl,
+    this.readMetadata = const GitHubReadMetadata(),
   });
 
   final int id;
@@ -19,4 +22,5 @@ final class GitHubProfile {
   final String? bio;
   final String? location;
   final String? avatarUrl;
+  final GitHubReadMetadata readMetadata;
 }

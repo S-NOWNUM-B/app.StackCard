@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/localization/app_strings.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -79,12 +82,12 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Сделано тобой',
+                    context.strings.tr('projects.title'),
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: StackCardSpacing.sm),
                   Text(
-                    'От pet project до большого продукта — каждой работе есть место.',
+                    context.strings.tr('projects.subtitle'),
                     style: Theme.of(context).textTheme.bodyLarge
                         ?.copyWith(color: pageTextColor),
                   ),
@@ -101,8 +104,8 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                       children: [
                         StackCardInput(
                           key: const ValueKey('project_search'),
-                          label: 'Поиск проектов',
-                          hint: 'Название или технология',
+                          label: context.strings.tr('projects.search'),
+                          hint: context.strings.tr('projects.searchHint'),
                           controller: _searchController,
                           prefixIcon: Icons.search_rounded,
                           textInputAction: TextInputAction.search,
@@ -117,7 +120,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                           children: [
                             for (final filter in ProjectFilter.values)
                               ChoiceChip(
-                                label: Text(filter.label),
+                                label: Text(filter.labelFor(context)),
                                 selected: filters.filter == filter,
                                 onSelected: (_) => ref
                                     .read(projectFiltersProvider.notifier)
@@ -146,7 +149,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                   Semantics(
                     liveRegion: true,
                     child: Text(
-                      'Проекты: ${projects.length}',
+                      context.strings.tr('projects.count', {
+                        'count': projects.length,
+                      }),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
@@ -155,13 +160,15 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                     StackCardCard(
                       child: Column(
                         children: [
-                          const StackCardStateView(
+                          StackCardStateView(
                             kind: StackCardViewState.empty,
-                            title: 'Ничего не найдено',
-                            message: 'Попробуй другое название, технологию или сбрось фильтры.',
+                            title: context.strings.tr('projects.emptyTitle'),
+                            message: context.strings.tr(
+                              'projects.emptyMessage',
+                            ),
                           ),
                           StackCardButton(
-                            label: 'Сбросить фильтры',
+                            label: context.strings.tr('projects.reset'),
                             icon: Icons.refresh_rounded,
                             onPressed: _resetFilters,
                           ),
@@ -193,10 +200,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                     ),
                   const SizedBox(height: StackCardSpacing.xl),
                   Text(
-                    'Все карточки — демонстрационные. Поиск и фильтры работают '
-                    'с примерами. GitHub Import показывает публичные репозитории '
-                    'отдельно; добавление в портфолио и редактирование '
-                    'появятся на следующих этапах.',
+                    context.strings.tr('projects.demoNote'),
                     style: Theme.of(context).textTheme.bodyMedium
                         ?.copyWith(color: pageTextColor),
                   ),
@@ -229,7 +233,7 @@ class _ProjectCard extends StatelessWidget {
             runSpacing: StackCardSpacing.sm,
             children: [
               Text(
-                project.source.label,
+                project.source.labelFor(context),
                 style: Theme.of(context).textTheme.labelLarge
                     ?.copyWith(color: context.colors.textSecondary),
               ),
@@ -244,7 +248,7 @@ class _ProjectCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(StackCardRadius.small),
                   ),
                   child: Text(
-                    'Featured',
+                    context.strings.tr('filter.featured'),
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 ),
@@ -269,7 +273,9 @@ class _ProjectCard extends StatelessWidget {
           ),
           const SizedBox(height: StackCardSpacing.xl),
           StackCardButton(
-            label: 'Посмотреть ${project.title}',
+            label: context.strings.tr('projects.view', {
+              'title': project.title,
+            }),
             icon: Icons.arrow_outward_rounded,
             onPressed: () => _showProjectDetails(context, project),
           ),
@@ -356,7 +362,7 @@ class _ProjectCover extends StatelessWidget {
           ),
           const SizedBox(height: StackCardSpacing.lg),
           Text(
-            'Демонстрационный кейс',
+            context.strings.tr('projects.demoCase'),
             style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: context.colors.textSecondary),
           ),
@@ -414,7 +420,9 @@ void _showProjectDetails(BuildContext context, Project project) {
             ),
             const SizedBox(height: StackCardSpacing.sm),
             Text(
-              '${project.source.label} · демонстрационные данные',
+              context.strings.tr('projects.sourceNote', {
+                'source': project.source.labelFor(context),
+              }),
               style: Theme.of(context).textTheme.bodyMedium
                   ?.copyWith(color: context.colors.textSecondary),
             ),
@@ -431,7 +439,7 @@ void _showProjectDetails(BuildContext context, Project project) {
             ),
             const SizedBox(height: StackCardSpacing.xl),
             StackCardButton(
-              label: 'Закрыть проект',
+              label: context.strings.tr('projects.close'),
               icon: Icons.close_rounded,
               onPressed: () => Navigator.of(context).pop(),
             ),

@@ -1,11 +1,15 @@
 import '../domain/github_filters.dart';
 import '../domain/github_profile.dart';
+import '../domain/github_read_metadata.dart';
 import 'github_json.dart';
 
 final class GitHubProfileDto {
   const GitHubProfileDto(this.profile);
 
-  factory GitHubProfileDto.fromJson(Object? value) {
+  factory GitHubProfileDto.fromJson(
+    Object? value, {
+    GitHubReadMetadata readMetadata = const GitHubReadMetadata(),
+  }) {
     final json = githubObject(value);
     final login = githubString(json, 'login');
     if (login != login.trim() || validateGitHubUsername(login) != null) {
@@ -23,6 +27,7 @@ final class GitHubProfileDto {
         htmlUrl: githubUrl(json, 'html_url'),
         avatarUrl: avatar,
         publicRepositories: githubInteger(json, 'public_repos'),
+        readMetadata: readMetadata,
       ),
     );
   }

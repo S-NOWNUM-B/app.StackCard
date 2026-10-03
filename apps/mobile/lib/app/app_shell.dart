@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/theme/stackcard_colors.dart';
+import '../core/localization/app_strings.dart';
 import '../shared/widgets/stackcard_brand.dart';
 
 const _destinations = [
-  (path: '/home', label: 'Главная', icon: Icons.space_dashboard_outlined),
-  (path: '/portfolio', label: 'Портфолио', icon: Icons.badge_outlined),
-  (path: '/projects', label: 'Проекты', icon: Icons.layers_outlined),
-  (path: '/settings', label: 'Настройки', icon: Icons.tune_rounded),
+  (path: '/home', label: 'nav.home', icon: Icons.space_dashboard_outlined),
+  (path: '/portfolio', label: 'nav.portfolio', icon: Icons.badge_outlined),
+  (path: '/projects', label: 'nav.projects', icon: Icons.layers_outlined),
+  (path: '/settings', label: 'nav.settings', icon: Icons.tune_rounded),
 ];
 
 class AppShell extends StatelessWidget {
@@ -55,7 +56,9 @@ class AppShell extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: IconButton(
-                              tooltip: _destinations[i].label,
+                              tooltip: context.strings.tr(
+                                _destinations[i].label,
+                              ),
                               isSelected: index == i,
                               onPressed: () => navigate(i),
                               style: IconButton.styleFrom(
@@ -97,7 +100,7 @@ class AppShell extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                _destinations[index].label,
+                                context.strings.tr(_destinations[index].label),
                                 style: Theme.of(context)
                                     .textTheme
                                     .headlineSmall,
@@ -107,7 +110,7 @@ class AppShell extends StatelessWidget {
                         ),
                         if (location != '/home' || context.canPop())
                           IconButton(
-                            tooltip: 'Назад',
+                            tooltip: context.strings.tr('common.back'),
                             onPressed: () {
                               if (context.canPop()) {
                                 context.pop();
@@ -118,7 +121,7 @@ class AppShell extends StatelessWidget {
                             icon: const Icon(Icons.arrow_back_rounded),
                           ),
                         IconButton(
-                          tooltip: 'Экран входа',
+                          tooltip: context.strings.tr('nav.signIn'),
                           onPressed: () => context.go('/sign-in'),
                           icon: const Icon(Icons.logout_rounded),
                         ),
@@ -144,8 +147,8 @@ class AppShell extends StatelessWidget {
                 for (final item in _destinations)
                   NavigationDestination(
                     icon: Icon(item.icon),
-                    label: item.label,
-                    tooltip: item.label,
+                    label: context.strings.tr(item.label),
+                    tooltip: context.strings.tr(item.label),
                   ),
               ],
             ),

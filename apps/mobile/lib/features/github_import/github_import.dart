@@ -2,6 +2,7 @@ export 'domain/github_failure.dart';
 export 'domain/github_filters.dart';
 export 'domain/github_import_repository.dart';
 export 'domain/github_profile.dart';
+export 'domain/github_read_metadata.dart';
 export 'domain/github_repository.dart';
 export 'github_import_providers.dart';
 export 'presentation/github_import_controller.dart';

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/localization/app_strings.dart';
 import '../features/auth/auth.dart';
 import '../features/github_import/github_import.dart';
 import '../features/home/home_screen.dart';
 import '../features/portfolio/portfolio.dart';
+import '../features/portfolio_draft/portfolio_draft.dart';
 import '../features/projects/projects.dart';
 import '../features/settings/settings_screen.dart';
 import '../shared/widgets/stackcard_states.dart';
@@ -17,6 +19,10 @@ GoRouter createAppRouter({required String initialLocation}) => GoRouter(
     GoRoute(
       path: '/github-import',
       builder: (_, _) => const GitHubImportScreen(),
+    ),
+    GoRoute(
+      path: '/portfolio-draft',
+      builder: (_, _) => const PortfolioDraftScreen(),
     ),
     GoRoute(path: '/', redirect: (_, _) => '/home'),
     ShellRoute(
@@ -35,8 +41,8 @@ GoRouter createAppRouter({required String initialLocation}) => GoRouter(
       child: Center(
         child: StackCardStateView(
           kind: StackCardViewState.error,
-          title: 'Экран не найден',
-          message: 'Вернитесь на главную страницу демо.',
+          title: context.strings.tr('router.notFound'),
+          message: context.strings.tr('router.notFoundHint'),
           onRetry: () => context.go('/home'),
         ),
       ),

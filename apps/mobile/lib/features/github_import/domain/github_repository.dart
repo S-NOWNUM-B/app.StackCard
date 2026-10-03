@@ -1,3 +1,5 @@
+import 'github_read_metadata.dart';
+
 /// Metadata публичного репозитория GitHub, отдельно от curated Project.
 final class GitHubRepository {
   const GitHubRepository({
@@ -31,8 +33,10 @@ final class GitHubRepositoriesPage {
   GitHubRepositoriesPage({
     required Iterable<GitHubRepository> repositories,
     this.nextPage,
+    this.readMetadata = const GitHubReadMetadata(),
   }) : repositories = List.unmodifiable(repositories);
 
   final List<GitHubRepository> repositories;
   final Uri? nextPage;
+  final GitHubReadMetadata readMetadata;
 }
