@@ -1,63 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'app/app_router.dart';
+import 'core/theme/stackcard_theme.dart';
 
 void main() {
   runApp(const StackCardApp());
 }
 
-class StackCardApp extends StatelessWidget {
-  const StackCardApp({super.key});
+class StackCardApp extends StatefulWidget {
+  const StackCardApp({
+    super.key,
+    this.initialLocation = '/sign-in',
+    this.initialThemeMode = ThemeMode.dark,
+  });
+
+  final String initialLocation;
+  final ThemeMode initialThemeMode;
+
+  @override
+  State<StackCardApp> createState() => _StackCardAppState();
+}
+
+class _StackCardAppState extends State<StackCardApp> {
+  late ThemeMode _themeMode = widget.initialThemeMode;
+  late final GoRouter _router = createAppRouter(
+    initialLocation: widget.initialLocation,
+    themeMode: () => _themeMode,
+    onThemeChanged: (mode) => setState(() => _themeMode = mode),
+  );
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'StackCard',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const BootstrapPage(),
-    );
-  }
-}
-
-// Счётчик проверяет запуск и обновление UI; продуктовые экраны появятся в Phase 1.
-class BootstrapPage extends StatefulWidget {
-  const BootstrapPage({super.key});
-
-  @override
-  State<BootstrapPage> createState() => _BootstrapPageState();
-}
-
-class _BootstrapPageState extends State<BootstrapPage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() => _counter++);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('StackCard'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Нажатий на кнопку:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Увеличить счётчик',
-        child: const Icon(Icons.add),
-      ),
+      debugShowCheckedModeBanner: false,
+      theme: StackCardTheme.light,
+      darkTheme: StackCardTheme.dark,
+      themeMode: _themeMode,
+      themeAnimationDuration: Duration.zero,
+      routerConfig: _router,
     );
   }
 }

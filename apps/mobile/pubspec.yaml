@@ -28,6 +28,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  go_router: ^18.0.2
 
 dev_dependencies:
   flutter_test:
@@ -50,6 +51,18 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  fonts:
+    - family: DM Sans
+      fonts:
+        - asset: assets/fonts/DM_Sans.ttf
+    - family: Noto Sans
+      fonts:
+        - asset: assets/fonts/Noto_Sans.ttf
+
+  assets:
+    - assets/fonts/DM_Sans_OFL.txt
+    - assets/fonts/Noto_Sans_OFL.txt
 
   # To add assets to your application, add an assets section, like this:
   # assets:

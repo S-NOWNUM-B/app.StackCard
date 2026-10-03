@@ -5,7 +5,7 @@
 **Процесс работы, проверки и правила внесения согласованных изменений**
 
 ![Contributing guide](https://raster.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
-![Scope Phase 0](https://raster.shields.io/badge/Scope-Phase_0-FF0012?style=for-the-badge)
+![Scope Phase 1](https://raster.shields.io/badge/Scope-Phase_1-FF0012?style=for-the-badge)
 
 </div>
 
@@ -26,8 +26,9 @@
 
 ## Что вносить
 
-Сейчас выполняется Phase 0: локальная основа проекта. Продуктовые функции
-вводятся последовательно по [roadmap](docs/product/product-spec.md#roadmap),
+Phase 0 завершена; по поручению пользователя реализована UI foundation Phase 1.
+Продуктовые функции вводятся последовательно по
+[roadmap](docs/product/product-spec.md#roadmap),
 переход к следующей фазе требует подтверждения пользователя.
 
 [План разработки](docs/product/product-spec.md#план-разработки) обязателен
@@ -41,13 +42,13 @@
 | **Направление** | **Допустимые изменения сейчас** |
 |:---|:---|
 | Документация | Уточнение сценариев, границ, источников и способов работы |
-| Mobile bootstrap | Исправление запуска и существующего счётчика с widget test |
+| Mobile UI foundation | Пять экранов на mock data, app shell, темы и общие компоненты |
 | Структура | Согласование путей, ignore rules и общего AI-контекста |
 | Brand assets | Сохранение оригиналов и описания их применения |
 
 </div>
 
-В `apps/mobile` реализован только Flutter scaffold для Android и iOS.
+В `apps/mobile` реализована UI foundation для Android и iOS с GoRouter и mock data.
 В `apps/web` подготовлен README; Next.js-приложение появится на Phase 13.
 Firebase, web dependencies и packages будущих фаз заранее не подключаются.
 
@@ -125,8 +126,10 @@ flutter run -d <device-id>
 из `flutter devices`. Android — первый release target; iOS также входит в scope.
 Открывай `apps/mobile`, если IDE не обнаруживает Flutter-проект в корне monorepo.
 
-После запуска должен появиться стартовый счётчик StackCard. Это проверка
-Flutter scaffold; продуктовые экраны и web-редактор вводятся на своих фазах.
+После запуска появляется экран знакомства со StackCard. «Открыть демо» ведёт
+на главную; в навигации доступны Портфолио, Проекты и Настройки. Все данные
+демонстрационные. Тема переключается в Настройках и пока не сохраняется
+после закрытия приложения; авторизация и web-редактор вводятся на своих фазах.
 
 ---
 
@@ -143,7 +146,7 @@ macOS — zsh/bash, команды выполняются из `apps/mobile`:
 | `flutter devices` | Получить доступные target IDs |
 | `dart format --output=none --set-exit-if-changed lib test` | Проверить форматирование |
 | `flutter analyze` | Статический анализ Dart |
-| `flutter test` | Запустить существующий widget test |
+| `flutter test` | Проверить UI-сценарии, адаптивность, контраст и touch targets |
 
 </div>
 
@@ -157,7 +160,7 @@ Firebase/env setup пока отсутствует и будет спроект�
 
 ## Проверки
 
-Для изменения Flutter bootstrap сначала разреши зависимости, затем проверь
+Для изменения Flutter UI сначала разреши зависимости, затем проверь
 формат, анализ и значимое поведение. macOS — zsh/bash; Windows — WSL/Ubuntu.
 Рабочая директория — `apps/mobile`:
 
@@ -168,10 +171,25 @@ flutter analyze
 flutter test
 ```
 
-Ожидаются успешный exit code, отсутствие ошибок анализа и прошедший widget test.
-Стартовый тест проверяет запуск StackCard и обновление счётчика. Продуктовые
-tests добавляются вместе с функциями; цель coverage из roadmap относится к
-Phase 17, а не к готовности Phase 0.
+Ожидаются успешный exit code, отсутствие ошибок анализа и прошедшие tests.
+`test/widget_test.dart` проверяет вход в демо, переходы и возврат, поиск проектов,
+предпросмотр, смену темы, UI states и клавиатуру. `test/responsive_test.dart`
+проверяет пять экранов в двух темах на размерах телефона и планшета, portrait/landscape,
+включая узкий экран и удвоенный текст. При обычном масштабе проверяются контраст
+текста и touch targets; это автоматические проверки, не полный accessibility audit.
+Цель coverage из roadmap относится к Phase 17.
+
+Снимки для визуальной сверки сохраняются в `docs/design/previews`; это результаты
+рендеринга Flutter. Чтобы обновить их после согласованного изменения UI,
+из той же директории в zsh/bash:
+
+```sh
+flutter test test/responsive_test.dart --dart-define=UPDATE_UI_PREVIEWS=true --update-goldens
+```
+
+Перед приёмкой просмотреть снимки всех пяти экранов в обеих темах и ориентациях;
+обновление PNG само по себе не подтверждает качество дизайна. Нативный запуск
+проверяется отдельно на доступном Android/iOS target.
 
 Для применения форматирования, тот же терминал и директория:
 

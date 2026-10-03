@@ -5,7 +5,7 @@
 **Отдельный сайт с информацией о проекте, web-редактором и публичными портфолио**
 
 ![Web Next.js planned](https://raster.shields.io/badge/Web-Next.js_planned-09090B?style=for-the-badge)
-![Stage Phase 0](https://raster.shields.io/badge/Stage-Phase_0-FF0012?style=for-the-badge)
+![Stage Phase 13 planned](https://raster.shields.io/badge/Stage-Phase_13_planned-FF0012?style=for-the-badge)
 
 </div>
 
@@ -26,7 +26,7 @@
 о проекте, страницы скачивания mobile, защищённого web-редактора и публичных
 портфолио. Это второй редактор общего портфолио и публичный вход в продукт.
 
-Статус — Phase 0: сейчас здесь только README. Приложение, dependencies,
+Сейчас здесь только README. Приложение, dependencies,
 конфигурация и команды запуска появятся на Phase 13 по
 [roadmap](../../docs/product/product-spec.md#roadmap).
 

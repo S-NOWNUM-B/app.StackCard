@@ -5,7 +5,7 @@
 **Текущая Flutter-основа и целевые границы mobile, web и общего backend**
 
 ![Architecture guide](https://raster.shields.io/badge/Architecture-guide-09090B?style=for-the-badge)
-![Stage Phase 0](https://raster.shields.io/badge/Stage-Phase_0-FF0012?style=for-the-badge)
+![Stage Phase 1 UI](https://raster.shields.io/badge/Stage-Phase_1_UI-FF0012?style=for-the-badge)
 
 </div>
 
@@ -13,7 +13,7 @@
 
 ## Содержание
 
-- [Текущее состояние — Phase 0](#текущее-состояние--phase-0)
+- [Текущее состояние — Phase 1](#текущее-состояние--phase-1)
 - [Схема системы](#схема-системы)
 - [Зоны ответственности](#зоны-ответственности)
 - [Целевые границы — ещё не реализованы](#целевые-границы--ещё-не-реализованы)
@@ -27,13 +27,40 @@
 
 ---
 
-## Текущее состояние — Phase 0
+## Текущее состояние — Phase 1
 
-В monorepo есть одно Flutter-приложение в `apps/mobile`. Оно перенесено из корня
-без повторной генерации platform scaffolds. Entry point —
-[`lib/main.dart`](../../apps/mobile/lib/main.dart): `StackCardApp` и стартовый счётчик.
-[`widget_test.dart`](../../apps/mobile/test/widget_test.dart) проверяет запуск и
-обновление состояния. Продуктовых моделей, маршрутов, backend и хранилищ пока нет.
+В monorepo есть одно Flutter-приложение в `apps/mobile`. UI foundation
+реализована: entry point
+[`lib/main.dart`](../../apps/mobile/lib/main.dart) создаёт `MaterialApp.router`,
+Material 3 light/dark и GoRouter. Sign In, Home, Portfolio, Projects и Settings
+работают с [общими mock data](../../apps/mobile/lib/shared/mock_portfolio.dart).
+Поиск/фильтры и preview состояний локальны; authentication, backend, хранилища,
+редактирование и публикация подключаются по roadmap.
+
+Текущие используемые области:
+
+```text
+apps/mobile/
+├── assets/fonts/             # локальные шрифты и лицензии
+├── lib/
+│   ├── main.dart             # composition, ThemeMode через setState
+│   ├── app/                  # app_router.dart, app_shell.dart
+│   ├── core/theme/           # цвета, Material 3, spacing/radius
+│   ├── shared/
+│   │   ├── mock_portfolio.dart
+│   │   └── widgets/          # card, button, input, states, brand
+│   └── features/             # auth, home, portfolio, projects, settings
+└── test/                     # навигация, темы, формы и responsive UI
+```
+
+Маршруты заданы в
+[`app_router.dart`](../../apps/mobile/lib/app/app_router.dart): `/sign-in`,
+`/home`, `/portfolio`, `/projects`, `/settings`; `/` перенаправляет на `/home`.
+Sign In расположен вне shell, четыре остальных экрана используют общую
+навигацию. Auth guards пока отсутствуют, demo-вход не авторизует аккаунт.
+Dark — режим по умолчанию; выбор dark/light/system хранится в `StackCardApp`
+через `setState` до закрытия приложения. Persistence и дальнейшая эволюция
+state management относятся к своим фазам.
 
 Canonical sources: [`pubspec.yaml`](../../apps/mobile/pubspec.yaml),
 [`pubspec.lock`](../../apps/mobile/pubspec.lock),
@@ -49,16 +76,19 @@ release target. Desktop и Flutter web targets в `apps/mobile` отсутств
 В [apps/web](../../apps/web/README.md) сейчас только README с назначением каталога;
 web-приложение, его зависимости и команды запуска ещё не созданы.
 
-Logo originals в `assets/branding` пока не подключены к Flutter. Цветовая система
-описана в [design guide](../design/design-system.md). Seed-тема счётчика временная;
-UI foundation начнётся на Phase 1.
+Цветовая система и эскизы описаны в [design guide](../design/design-system.md).
+Local DM Sans и Noto Sans fallback зарегистрированы в pubspec. Знак в
+`StackCardBrand` повторяет paths оригинальных SVG через `CustomPainter`;
+logo originals в `assets/branding` сохранены без изменения.
+Результаты проверок и приёмки находятся в
+[product spec](../product/product-spec.md#phase-1--ui-foundation).
 
 ---
 
 ## Схема системы
 
-**Целевая архитектура, ещё не реализованная целиком.** Существующий Flutter
-scaffold — основа mobile. Остальные узлы и связи вводятся на своих фазах.
+**Целевая архитектура, ещё не реализованная целиком.** UI foundation —
+текущая основа mobile. Остальные узлы и связи вводятся на своих фазах.
 Схема описывает ответственность компонентов; точная Firestore schema и
 механизм публикации определяются перед интеграцией backend.
 
@@ -86,8 +116,9 @@ scaffold — основа mobile. Остальные узлы и связи вв
 
 ### apps/mobile
 
-Исполняемый Flutter-клиент для Android и iOS. Сейчас владеет bootstrap и его
-widget test; UI, offline draft/cache и native integrations вводятся по фазам.
+Исполняемый Flutter-клиент для Android и iOS. Сейчас владеет app shell,
+пятью demo-экранами, общей темой/widgets и UI tests. Offline draft/cache
+и native integrations вводятся по фазам.
 Mobile не владеет реализацией сайта или доверенными серверными операциями.
 
 ### apps/web
@@ -98,8 +129,9 @@ public portfolio. Пока содержит только README. Общие data
 
 ### assets/branding
 
-Оригинальные SVG и brand kit. Runtime integration и launcher icons создаются
-на своих фазах; сохранённый оригинал не заменяется промежуточным экспортом.
+Оригинальные SVG и brand kit. Mobile mark уже отрисовывается в shared widget;
+launcher icons вводятся на Phase 19. Сохранённый оригинал не заменяется
+промежуточным экспортом.
 
 ### docs и docs/AI
 
@@ -167,7 +199,7 @@ web-редактора с этой моделью; не создавать вт�
 Phase 13 развивается по шагам: **13a** — public shell, главная и скачивание mobile;
 **13b** — auth/защищённый кабинет и редактор общего draft; **13c** — published
 портфолио, preview и publish/unpublish. Детали — в [roadmap](../product/product-spec.md#roadmap).
-Это план после мобильных фундаментальных фаз; реализация в Phase 0 не начинается.
+Это план после мобильных фундаментальных фаз; Phase 1 реализует только mobile UI.
 
 ---
 
@@ -185,8 +217,8 @@ lib/
 │   ├── theme/
 │   ├── network/
 │   ├── storage/
-│   ├── errors/
-│   └── widgets/
+│   └── errors/
+├── shared/widgets/           # существующие общие UI-компоненты
 └── features/
     └── <feature>/
         ├── presentation/    # widgets, controllers, UI states
@@ -194,9 +226,9 @@ lib/
         └── data/            # DTO, mapping, реализации sources/repositories
 ```
 
-Auth и profile/projects — первые модули; github, portfolio, home, inbox, location
-и settings добавляются вместе с соответствующими функциями. Пустые директории,
-универсальный framework и интерфейсы «на будущее» не нужны.
+На Phase 1 уже есть экранные области auth, home, portfolio, projects и settings.
+Доменные/data слои и новые модули добавляются вместе с реальными функциями.
+Пустые директории, универсальный framework и интерфейсы «на будущее» не нужны.
 
 Зависимости: presentation → domain, data → domain. `app`/providers связывают
 реализации. Domain не зависит от widgets, Firebase, Dio или Hive. Widget обращается
@@ -243,12 +275,15 @@ ProjectScore необязательно показывать; UI объясня�
 
 ## Ключевые потоки
 
-### Запуск текущего scaffold
+### Запуск и навигация текущего UI
 
 1. Flutter вызывает `main` в `apps/mobile/lib/main.dart`.
-2. `StackCardApp` создаёт `MaterialApp` и стартовый `BootstrapPage`.
-3. Нажатие на кнопку обновляет локальный счётчик через `setState`.
-4. Widget test проверяет название приложения и изменение счётчика.
+2. `StackCardApp` создаёт `MaterialApp.router`, обе темы и GoRouter.
+3. Sign In проверяет формат demo-email и открывает Home. App shell позволяет
+   переходить на Portfolio, Projects и Settings, возвращаться назад.
+4. Projects фильтрует mock data; Settings меняет тему и показывает
+   loading/empty/error с retry. Эти действия обновляют локальное состояние.
+5. UI tests проверяют эти сценарии и layouts на разных размерах.
 
 Этот поток не обращается к сети, Firebase или хранилищу.
 
@@ -329,10 +364,12 @@ Package, UseCase или DataSource выделяется под существу�
 
 ## Завершение Phase 0
 
-Основа Phase 0 включает структуру, документы, ignore rules и logo originals.
-Для её проверки зависимости должны разрешаться, format/analyze/widget test —
-проходить, а scaffold — запускаться на доступном mobile target.
-Ограничения окружения и реально выполненные проверки фиксируются по факту.
-Commit и синхронизация с remote — отдельно по
-запросу; они не запускают Phase 1 автоматически. Полный [roadmap](../product/product-spec.md)
-и [решения](../decisions/README.md) дополняют этот guide.
+Phase 0 подготовила структуру, документы, ignore rules и logo originals.
+Её проверка включала разрешение зависимостей, format/analyze/widget test
+и запуск scaffold на Android. Исторические результаты сохранены в
+[product spec](../product/product-spec.md#phase-0--product-foundation).
+
+Дальнейшие проверки, ограничения среды и переходы фиксируются там же.
+Commit и синхронизация с remote выполняются по отдельному запросу.
+Полный [roadmap](../product/product-spec.md) и
+[решения](../decisions/README.md) дополняют этот guide.

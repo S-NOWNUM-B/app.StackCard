@@ -5,7 +5,7 @@
 **Flutter-клиент для Android и iOS с мобильным редактором общего портфолио**
 
 ![Mobile Android + iOS](https://raster.shields.io/badge/Mobile-Android_%2B_iOS-09090B?style=for-the-badge)
-![Stage Phase 0](https://raster.shields.io/badge/Stage-Phase_0-FF0012?style=for-the-badge)
+![Stage Phase 1 UI](https://raster.shields.io/badge/Stage-Phase_1_UI-FF0012?style=for-the-badge)
 
 </div>
 
@@ -27,8 +27,12 @@
 будет использовать тот же аккаунт, draft и правила публикации, что и web.
 Offline draft/cache и нативные функции относятся к мобильному клиенту.
 
-Сейчас здесь только стартовый счётчик Phase 0, без backend, навигации и
-продуктовых экранов. Сайт развивается отдельно в [apps/web](../web/README.md)
+Сейчас реализована UI foundation: Sign In, Home, Portfolio, Projects и Settings
+на mock data, общий app shell и Material 3 light/dark. Demo-вход, локальные
+поиск/фильтры и переключение темы позволяют проверить интерфейс; backend,
+редактирование и публикация вводятся по roadmap. Результаты проверок — в
+[product spec](../../docs/product/product-spec.md#phase-1--ui-foundation).
+Сайт развивается отдельно в [apps/web](../web/README.md)
 на Next.js; desktop и Flutter web targets в mobile не входят.
 
 ---
@@ -39,26 +43,37 @@ Offline draft/cache и нативные функции относятся к м�
 
 | **Материал** | **Назначение** |
 |:---|:---|
-| [lib/main.dart](lib/main.dart) | `StackCardApp`, временная seed-тема и стартовый счётчик |
-| [test/widget_test.dart](test/widget_test.dart) | Проверка запуска и увеличения счётчика |
+| [lib/main.dart](lib/main.dart) | `StackCardApp`, composition и `ThemeMode` через `setState` |
+| [lib/app](lib/app/) | GoRouter и адаптивный app shell |
+| [lib/core/theme](lib/core/theme/) | Утверждённая палитра, Material 3, typography, spacing/radius |
+| [lib/shared](lib/shared/) | Mock data и используемые общие widgets |
+| [lib/features](lib/features/) | Пять экранов demo UI |
+| [assets/fonts](assets/fonts/) | Локальные DM Sans, Noto Sans fallback и SIL OFL лицензии |
+| [test/widget_test.dart](test/widget_test.dart), [test/responsive_test.dart](test/responsive_test.dart) | UI-сценарии, навигация, темы и адаптивность |
 | [pubspec.yaml](pubspec.yaml), [pubspec.lock](pubspec.lock) | SDK constraint, dependencies и разрешённые версии |
 | [analysis_options.yaml](analysis_options.yaml) | Dart analyzer и lint rules |
 | `android/`, `ios/` | Native scaffolds и платформенные настройки |
 
 </div>
 
-Feature modules, theme tokens, маршруты и data sources добавляются по мере
-реальных сценариев; сейчас их нет. Brand originals находятся в
-[assets/branding](../../assets/branding/) и пока не подключены к Flutter assets.
+Экраны используют общие tokens/widgets. Data sources и domain/data layers
+появляются вместе с реальными сценариями. Brand originals находятся в
+[assets/branding](../../assets/branding/); `StackCardBrand` отрисовывает
+оригинальные mark paths через `CustomPainter` без SVG package.
 
 ---
 
 ## Типовые сценарии
 
-### Проверить Flutter-основу
+### Проверить UI foundation
 
 Запусти приложение на Android-устройстве/эмуляторе или iOS-устройстве/симуляторе.
-Стартовый экран StackCard и изменяющийся счётчик проверяют bootstrap и состояние.
+Sign In проверяет формат email для примера и открывает Home.
+Через app shell доступны Portfolio, Projects и Settings; переходы поддерживают
+возврат назад. Projects позволяет искать и фильтровать mock data, открывать
+карточку с подробностями. Settings переключает dark/light/system и показывает
+loading/empty/error с retry. Dark — тема по умолчанию; выбор темы действует
+до закрытия приложения.
 
 ### Редактировать портфолио
 
