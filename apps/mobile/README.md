@@ -5,7 +5,7 @@
 **Flutter-клиент для Android и iOS с мобильным редактором общего портфолио**
 
 ![Mobile Android + iOS](https://raster.shields.io/badge/Mobile-Android_%2B_iOS-09090B?style=for-the-badge)
-![Stage Phase 1 UI](https://raster.shields.io/badge/Stage-Phase_1_UI-FF0012?style=for-the-badge)
+![Stage Phase 2 state](https://raster.shields.io/badge/Stage-Phase_2_state-FF0012?style=for-the-badge)
 
 </div>
 
@@ -31,7 +31,10 @@ Offline draft/cache и нативные функции относятся к м�
 на mock data, общий app shell и Material 3 light/dark. Demo-вход, локальные
 поиск/фильтры и переключение темы позволяют проверить интерфейс; backend,
 редактирование и публикация вводятся по roadmap. Результаты проверок — в
-[product spec](../../docs/product/product-spec.md#phase-1--ui-foundation).
+[product spec](../../docs/product/product-spec.md#phase-2--basic-state-management).
+ThemeMode управляется Provider, поиск/фильтры Projects — Riverpod. Их границы и
+учебная эволюция описаны в
+[state management guide](../../docs/learning/state-management.md).
 Сайт развивается отдельно в [apps/web](../web/README.md)
 на Next.js; desktop и Flutter web targets в mobile не входят.
 
@@ -43,13 +46,15 @@ Offline draft/cache и нативные функции относятся к м�
 
 | **Материал** | **Назначение** |
 |:---|:---|
-| [lib/main.dart](lib/main.dart) | `StackCardApp`, composition и `ThemeMode` через `setState` |
+| [lib/main.dart](lib/main.dart) | `StackCardApp`, composition, ProviderScope и lifecycle GoRouter |
 | [lib/app](lib/app/) | GoRouter и адаптивный app shell |
+| [lib/core/state](lib/core/state/) | AppearanceController для ThemeMode через Provider |
 | [lib/core/theme](lib/core/theme/) | Утверждённая палитра, Material 3, typography, spacing/radius |
 | [lib/shared](lib/shared/) | Mock data и используемые общие widgets |
-| [lib/features](lib/features/) | Пять экранов demo UI |
+| [lib/features](lib/features/) | Пять экранов; Projects query/filter state через Riverpod |
 | [assets/fonts](assets/fonts/) | Локальные DM Sans, Noto Sans fallback и SIL OFL лицензии |
 | [test/widget_test.dart](test/widget_test.dart), [test/responsive_test.dart](test/responsive_test.dart) | UI-сценарии, навигация, темы и адаптивность |
+| [test/appearance_controller_test.dart](test/appearance_controller_test.dart), [test/project_filters_test.dart](test/project_filters_test.dart), [test/state_management_test.dart](test/state_management_test.dart) | Владельцы состояния, действия, навигация и новая session |
 | [pubspec.yaml](pubspec.yaml), [pubspec.lock](pubspec.lock) | SDK constraint, dependencies и разрешённые версии |
 | [analysis_options.yaml](analysis_options.yaml) | Dart analyzer и lint rules |
 | `android/`, `ios/` | Native scaffolds и платформенные настройки |
@@ -72,8 +77,8 @@ Sign In проверяет формат email для примера и откр�
 Через app shell доступны Portfolio, Projects и Settings; переходы поддерживают
 возврат назад. Projects позволяет искать и фильтровать mock data, открывать
 карточку с подробностями. Settings переключает dark/light/system и показывает
-loading/empty/error с retry. Dark — тема по умолчанию; выбор темы действует
-до закрытия приложения.
+loading/empty/error с retry. Dark — тема по умолчанию; выбор темы и фильтры
+сохраняются между экранами в app session и сбрасываются при новом запуске.
 
 ### Редактировать портфолио
 

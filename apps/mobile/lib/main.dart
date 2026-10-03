@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import 'app/app_router.dart';
+import 'core/state/appearance_controller.dart';
 import 'core/theme/stackcard_theme.dart';
 
 void main() {
@@ -23,11 +26,8 @@ class StackCardApp extends StatefulWidget {
 }
 
 class _StackCardAppState extends State<StackCardApp> {
-  late ThemeMode _themeMode = widget.initialThemeMode;
   late final GoRouter _router = createAppRouter(
     initialLocation: widget.initialLocation,
-    themeMode: () => _themeMode,
-    onThemeChanged: (mode) => setState(() => _themeMode = mode),
   );
 
   @override
@@ -38,14 +38,22 @@ class _StackCardAppState extends State<StackCardApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'StackCard',
-      debugShowCheckedModeBanner: false,
-      theme: StackCardTheme.light,
-      darkTheme: StackCardTheme.dark,
-      themeMode: _themeMode,
-      themeAnimationDuration: Duration.zero,
-      routerConfig: _router,
+    return riverpod.ProviderScope(
+      child: ChangeNotifierProvider(
+        create: (_) => AppearanceController(themeMode: widget.initialThemeMode),
+        child: Selector<AppearanceController, ThemeMode>(
+          selector: (_, controller) => controller.themeMode,
+          builder: (context, themeMode, _) => MaterialApp.router(
+            title: 'StackCard',
+            debugShowCheckedModeBanner: false,
+            theme: StackCardTheme.light,
+            darkTheme: StackCardTheme.dark,
+            themeMode: themeMode,
+            themeAnimationDuration: Duration.zero,
+            routerConfig: _router,
+          ),
+        ),
+      ),
     );
   }
 }

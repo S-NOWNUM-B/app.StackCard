@@ -9,11 +9,7 @@ import '../features/settings/settings_screen.dart';
 import '../shared/widgets/stackcard_states.dart';
 import 'app_shell.dart';
 
-GoRouter createAppRouter({
-  required String initialLocation,
-  required ThemeMode Function() themeMode,
-  required ValueChanged<ThemeMode> onThemeChanged,
-}) => GoRouter(
+GoRouter createAppRouter({required String initialLocation}) => GoRouter(
   initialLocation: initialLocation,
   routes: [
     GoRoute(path: '/sign-in', builder: (_, _) => const SignInScreen()),
@@ -25,13 +21,7 @@ GoRouter createAppRouter({
         GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
         GoRoute(path: '/portfolio', builder: (_, _) => const PortfolioScreen()),
         GoRoute(path: '/projects', builder: (_, _) => const ProjectsScreen()),
-        GoRoute(
-          path: '/settings',
-          builder: (_, _) => SettingsScreen(
-            themeMode: themeMode,
-            onThemeChanged: onThemeChanged,
-          ),
-        ),
+        GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       ],
     ),
   ],

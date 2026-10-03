@@ -17,10 +17,21 @@ guides. Этот файл дополняет их только для Flutter-п
 - Цвета, typography и tokens: [core/theme](../../../apps/mobile/lib/core/theme/);
   общие UI-компоненты: [shared/widgets](../../../apps/mobile/lib/shared/widgets/).
   Перед новым widget искать существующий аналог и использовать `context.colors`.
+- ThemeMode: [AppearanceController](../../../apps/mobile/lib/core/state/appearance_controller.dart)
+  через Provider. Query/filter state Projects:
+  [project_filters.dart](../../../apps/mobile/lib/features/projects/project_filters.dart)
+  через Riverpod. Не дублировать эти значения в widget state или router callbacks.
+  Provider ограничивается базовыми настройками ThemeMode/Locale; Locale вводится
+  только вместе с переводами. Сравнение и учебные patches — в
+  [state management guide](../../learning/state-management.md), вне runtime `lib`.
 - Демонстрационные данные: [mock_portfolio.dart](../../../apps/mobile/lib/shared/mock_portfolio.dart).
   Demo-вход и UI действия не обращаются к GitHub/backend и не сохраняют draft.
 - UI checks: [widget_test.dart](../../../apps/mobile/test/widget_test.dart),
   [responsive_test.dart](../../../apps/mobile/test/responsive_test.dart).
+- State checks: [appearance_controller_test.dart](../../../apps/mobile/test/appearance_controller_test.dart),
+  [project_filters_test.dart](../../../apps/mobile/test/project_filters_test.dart),
+  [state_management_test.dart](../../../apps/mobile/test/state_management_test.dart).
+  При смене владельца состояния проверять навигацию, reset и новую app session.
 - Локальные шрифты и лицензии: [assets/fonts](../../../apps/mobile/assets/fonts/);
   регистрация остаётся в pubspec. Logo paths повторяют оригиналы branding.
 - Native configs находятся в platform directories этого приложения.

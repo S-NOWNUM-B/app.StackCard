@@ -31,7 +31,10 @@
 **UI foundation Phase 1 реализована в mobile:** Material 3 light/dark,
 типографика, tokens, общие widgets и пять экранов с демонстрационными данными.
 Основная тема — dark; Settings переключает dark/light/system до закрытия
-приложения. Проверки и приёмка фазы фиксируются в
+приложения. С Phase 2 выбранный ThemeMode принадлежит
+[AppearanceController](../../apps/mobile/lib/core/state/appearance_controller.dart)
+и распространяется через Provider; палитра и Material 3 остаются в theme.
+Проверки и приёмка фазы фиксируются в
 [product spec](../product/product-spec.md#phase-1--ui-foundation).
 
 Палитра находится в

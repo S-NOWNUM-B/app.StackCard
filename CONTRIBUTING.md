@@ -5,7 +5,7 @@
 **Процесс работы, проверки и правила внесения согласованных изменений**
 
 ![Contributing guide](https://raster.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
-![Scope Phase 1](https://raster.shields.io/badge/Scope-Phase_1-FF0012?style=for-the-badge)
+![Scope Phase 2](https://raster.shields.io/badge/Scope-Phase_2-FF0012?style=for-the-badge)
 
 </div>
 
@@ -26,7 +26,8 @@
 
 ## Что вносить
 
-Phase 0 завершена; по поручению пользователя реализована UI foundation Phase 1.
+Phase 0 и UI foundation Phase 1 завершены; по поручению пользователя выполнен
+Basic state management Phase 2.
 Продуктовые функции вводятся последовательно по
 [roadmap](docs/product/product-spec.md#roadmap),
 переход к следующей фазе требует подтверждения пользователя.
@@ -43,6 +44,7 @@ Phase 0 завершена; по поручению пользователя р�
 |:---|:---|
 | Документация | Уточнение сценариев, границ, источников и способов работы |
 | Mobile UI foundation | Пять экранов на mock data, app shell, темы и общие компоненты |
+| Mobile state | Provider для ThemeMode, Riverpod для поиска/фильтров Projects, учебные patches вне runtime |
 | Структура | Согласование путей, ignore rules и общего AI-контекста |
 | Brand assets | Сохранение оригиналов и описания их применения |
 
@@ -146,7 +148,7 @@ macOS — zsh/bash, команды выполняются из `apps/mobile`:
 | `flutter devices` | Получить доступные target IDs |
 | `dart format --output=none --set-exit-if-changed lib test` | Проверить форматирование |
 | `flutter analyze` | Статический анализ Dart |
-| `flutter test` | Проверить UI-сценарии, адаптивность, контраст и touch targets |
+| `flutter test` | Проверить состояние, UI-сценарии, адаптивность, контраст и touch targets |
 
 </div>
 
@@ -177,6 +179,12 @@ flutter test
 проверяет пять экранов в двух темах на размерах телефона и планшета, portrait/landscape,
 включая узкий экран и удвоенный текст. При обычном масштабе проверяются контраст
 текста и touch targets; это автоматические проверки, не полный accessibility audit.
+`test/appearance_controller_test.dart` проверяет начальную тему и уведомления,
+`test/project_filters_test.dart` — правила поиска, сочетания фильтров и срок жизни.
+`test/state_management_test.dart` проверяет общую тему, system brightness,
+сохранение query/filter при навигации, синхронизацию поля и новую app session.
+Сравнение подходов и проверка сохранённых учебных вариантов — в
+[state management guide](docs/learning/state-management.md).
 Цель coverage из roadmap относится к Phase 17.
 
 Снимки для визуальной сверки сохраняются в `docs/design/previews`; это результаты
@@ -186,6 +194,8 @@ flutter test
 ```sh
 flutter test test/responsive_test.dart --dart-define=UPDATE_UI_PREVIEWS=true --update-goldens
 ```
+
+Для сравнения с существующими PNG без их обновления убери `--update-goldens`.
 
 Перед приёмкой просмотреть снимки всех пяти экранов в обеих темах и ориентациях;
 обновление PNG само по себе не подтверждает качество дизайна. Нативный запуск

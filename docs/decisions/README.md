@@ -19,10 +19,23 @@
 | Lockfile mobile отслеживается | Воспроизводимое разрешение зависимостей приложения |
 | Общий AI-контекст в `docs/AI/` | Router, общие и scope rules хранятся вместе; root/nested AGENTS остаются точками входа, runtime configs — рядом с кодом |
 
-Целевые решения описаны в [architecture](../architecture/architecture.md) и
-[design system](../design/design-system.md); фактически реализован только bootstrap.
-Palette/tokens и state management не считаются уже внедрёнными.
+Реализованная UI foundation и целевые решения описаны в
+[architecture](../architecture/architecture.md) и
+[design system](../design/design-system.md).
 Общий порядок работы и sources описаны в [AI router](../AI/README.md).
+
+## Принято для Phase 2
+
+| Решение | Причина и последствия |
+| --- | --- |
+| Provider для ThemeMode, Riverpod для Projects query/filter state | Выполняет учебную эволюцию простого app-level состояния; immutable состояние продукта и производный список проверяются независимо от widget tree |
+| Один runtime-владелец каждого состояния | AppearanceController владеет темой, ProjectFiltersNotifier — поиском/фильтрами; router не передаёт theme callbacks, TextEditingController остаётся UI-ресурсом |
+| Locale после появления переводов | Разрешённая граница Provider ThemeMode/Locale не требует пустой реализации Locale при русскоязычном UI |
+| State только в app session | Фильтры сохраняются при навигации, перезапуск сбрасывает выбор; persistence относится к Phase 5 |
+| Промежуточные учебные версии вне `lib` | Независимые patches восстанавливают варианты темы во временной копии; рабочий код содержит итоговый Provider |
+
+Сравнение подходов, переходы и воспроизведение находятся в
+[state management guide](../learning/state-management.md).
 
 ## Решить перед соответствующими фазами
 

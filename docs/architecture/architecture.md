@@ -5,7 +5,7 @@
 **Текущая Flutter-основа и целевые границы mobile, web и общего backend**
 
 ![Architecture guide](https://raster.shields.io/badge/Architecture-guide-09090B?style=for-the-badge)
-![Stage Phase 1 UI](https://raster.shields.io/badge/Stage-Phase_1_UI-FF0012?style=for-the-badge)
+![Stage Phase 2 state](https://raster.shields.io/badge/Stage-Phase_2_state-FF0012?style=for-the-badge)
 
 </div>
 
@@ -13,7 +13,7 @@
 
 ## Содержание
 
-- [Текущее состояние — Phase 1](#текущее-состояние--phase-1)
+- [Текущее состояние — Phase 2](#текущее-состояние--phase-2)
 - [Схема системы](#схема-системы)
 - [Зоны ответственности](#зоны-ответственности)
 - [Целевые границы — ещё не реализованы](#целевые-границы--ещё-не-реализованы)
@@ -27,7 +27,7 @@
 
 ---
 
-## Текущее состояние — Phase 1
+## Текущее состояние — Phase 2
 
 В monorepo есть одно Flutter-приложение в `apps/mobile`. UI foundation
 реализована: entry point
@@ -43,13 +43,14 @@ Material 3 light/dark и GoRouter. Sign In, Home, Portfolio, Projects и Setting
 apps/mobile/
 ├── assets/fonts/             # локальные шрифты и лицензии
 ├── lib/
-│   ├── main.dart             # composition, ThemeMode через setState
+│   ├── main.dart             # composition, ProviderScope и GoRouter lifecycle
 │   ├── app/                  # app_router.dart, app_shell.dart
+│   ├── core/state/           # AppearanceController для ThemeMode
 │   ├── core/theme/           # цвета, Material 3, spacing/radius
 │   ├── shared/
 │   │   ├── mock_portfolio.dart
 │   │   └── widgets/          # card, button, input, states, brand
-│   └── features/             # auth, home, portfolio, projects, settings
+│   └── features/             # экраны; Projects filters через Riverpod
 └── test/                     # навигация, темы, формы и responsive UI
 ```
 
@@ -58,9 +59,19 @@ apps/mobile/
 `/home`, `/portfolio`, `/projects`, `/settings`; `/` перенаправляет на `/home`.
 Sign In расположен вне shell, четыре остальных экрана используют общую
 навигацию. Auth guards пока отсутствуют, demo-вход не авторизует аккаунт.
-Dark — режим по умолчанию; выбор dark/light/system хранится в `StackCardApp`
-через `setState` до закрытия приложения. Persistence и дальнейшая эволюция
-state management относятся к своим фазам.
+Dark — режим по умолчанию. Выбор dark/light/system принадлежит
+[`AppearanceController`](../../apps/mobile/lib/core/state/appearance_controller.dart),
+созданному `ChangeNotifierProvider`. `Selector` подключает его к `MaterialApp`,
+Settings читает выбранный mode через `select` и меняет его через `read`.
+Router не передаёт theme callbacks и сохраняет экземпляр при смене темы.
+
+[`project_filters.dart`](../../apps/mobile/lib/features/projects/project_filters.dart)
+владеет immutable query/filter state через Riverpod `Notifier` и производным
+списком проектов. Обычный provider без `autoDispose` сохраняет выбор между
+экранами в пределах app session. Тема и фильтры сбрасываются при новом запуске;
+persistence относится к Phase 5. Locale пока не вводится: переводы UI отсутствуют.
+Учебная эволюция и границы двух механизмов объяснены в
+[state management guide](../learning/state-management.md).
 
 Canonical sources: [`pubspec.yaml`](../../apps/mobile/pubspec.yaml),
 [`pubspec.lock`](../../apps/mobile/pubspec.lock),
@@ -81,7 +92,7 @@ Local DM Sans и Noto Sans fallback зарегистрированы в pubspec.
 `StackCardBrand` повторяет paths оригинальных SVG через `CustomPainter`;
 logo originals в `assets/branding` сохранены без изменения.
 Результаты проверок и приёмки находятся в
-[product spec](../product/product-spec.md#phase-1--ui-foundation).
+[product spec](../product/product-spec.md#phase-2--basic-state-management).
 
 ---
 
@@ -235,9 +246,11 @@ lib/
 к controller/notifier, тот — к repository или UseCase с содержательной бизнес-логикой.
 DataSource выделяется при реальной необходимости источника данных/тестирования.
 
-Provider ограничивается учебными theme/locale; основное состояние продукта — Riverpod.
-При необходимости учебный пример проходит `setState → InheritedWidget → Provider`,
-не оставляя несколько реализаций одного сценария в production-коде. GoRouter —
+Provider ограничивается базовыми настройками: сейчас только ThemeMode,
+Locale допускается при появлении переводов. Riverpod управляет состоянием
+поиска/фильтров Projects. Эволюция `setState → InheritedWidget → Provider`
+сохранена в [учебном guide](../learning/state-management.md), в `lib` осталась
+одна итоговая реализация темы. GoRouter —
 routing/guards, Dio — GitHub. Serialization вводится вместе с реальными моделями.
 
 ---
@@ -281,8 +294,9 @@ ProjectScore необязательно показывать; UI объясня�
 2. `StackCardApp` создаёт `MaterialApp.router`, обе темы и GoRouter.
 3. Sign In проверяет формат demo-email и открывает Home. App shell позволяет
    переходить на Portfolio, Projects и Settings, возвращаться назад.
-4. Projects фильтрует mock data; Settings меняет тему и показывает
-   loading/empty/error с retry. Эти действия обновляют локальное состояние.
+4. Projects меняет Riverpod query/filter state; derived provider фильтрует mock
+   data. Settings меняет AppearanceController и локальный preview состояний
+   loading/empty/error с retry.
 5. UI tests проверяют эти сценарии и layouts на разных размерах.
 
 Этот поток не обращается к сети, Firebase или хранилищу.

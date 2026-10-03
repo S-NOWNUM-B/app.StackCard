@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
@@ -7,18 +8,25 @@ import '../../shared/widgets/stackcard_button.dart';
 import '../../shared/widgets/stackcard_card.dart';
 import '../../shared/widgets/stackcard_input.dart';
 import '../../shared/widgets/stackcard_states.dart';
+import 'project_filters.dart';
 
-class ProjectsScreen extends StatefulWidget {
+class ProjectsScreen extends ConsumerStatefulWidget {
   const ProjectsScreen({super.key});
 
   @override
-  State<ProjectsScreen> createState() => _ProjectsScreenState();
+  ConsumerState<ProjectsScreen> createState() => _ProjectsScreenState();
 }
 
-class _ProjectsScreenState extends State<ProjectsScreen> {
-  final _searchController = TextEditingController();
-  var _query = '';
-  var _filter = _ProjectFilter.all;
+class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController(
+      text: ref.read(projectFiltersProvider).query,
+    );
+  }
 
   @override
   void dispose() {
@@ -27,11 +35,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   void _resetFilters() {
-    _searchController.clear();
-    setState(() {
-      _query = '';
-      _filter = _ProjectFilter.all;
-    });
+    ref.read(projectFiltersProvider.notifier).reset();
   }
 
   @override
@@ -39,21 +43,19 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     final pageTextColor = Theme.of(context).brightness == Brightness.light
         ? context.colors.textPrimary
         : context.colors.textSecondary;
-    final query = _query.trim().toLowerCase();
-    final projects = DemoPortfolio.projects.where((project) {
-      final matchesQuery = [
-        project.title,
-        project.description,
-        ...project.technologies,
-      ].join(' ').toLowerCase().contains(query);
-      final matchesFilter = switch (_filter) {
-        _ProjectFilter.all => true,
-        _ProjectFilter.featured => project.featured,
-        _ProjectFilter.github => project.isFromGitHub,
-        _ProjectFilter.manual => !project.isFromGitHub,
-      };
-      return matchesQuery && matchesFilter;
-    }).toList();
+    final filters = ref.watch(projectFiltersProvider);
+    final projects = ref.watch(visibleDemoProjectsProvider);
+    ref.listen(projectFiltersProvider.select((filters) => filters.query), (
+      previous,
+      query,
+    ) {
+      if (_searchController.text != query) {
+        _searchController.value = TextEditingValue(
+          text: query,
+          selection: TextSelection.collapsed(offset: query.length),
+        );
+      }
+    });
 
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
@@ -91,24 +93,27 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                         controller: _searchController,
                         prefixIcon: Icons.search_rounded,
                         textInputAction: TextInputAction.search,
-                        onChanged: (value) => setState(() => _query = value),
+                        onChanged: (value) => ref
+                            .read(projectFiltersProvider.notifier)
+                            .setQuery(value),
                       ),
                       const SizedBox(height: StackCardSpacing.lg),
                       Wrap(
                         spacing: StackCardSpacing.sm,
                         runSpacing: StackCardSpacing.sm,
                         children: [
-                          for (final filter in _ProjectFilter.values)
+                          for (final filter in ProjectFilter.values)
                             ChoiceChip(
                               label: Text(filter.label),
-                              selected: _filter == filter,
-                              onSelected: (_) =>
-                                  setState(() => _filter = filter),
+                              selected: filters.filter == filter,
+                              onSelected: (_) => ref
+                                  .read(projectFiltersProvider.notifier)
+                                  .setFilter(filter),
                               selectedColor: context.colors.accentSoft,
                               backgroundColor: context.colors.surface,
                               checkmarkColor: context.colors.textPrimary,
                               side: BorderSide(
-                                color: _filter == filter
+                                color: filters.filter == filter
                                     ? context.colors.accent
                                     : context.colors.textSecondary,
                               ),
@@ -183,17 +188,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       ),
     );
   }
-}
-
-enum _ProjectFilter {
-  all('Все'),
-  featured('Featured'),
-  github('GitHub'),
-  manual('Вручную');
-
-  const _ProjectFilter(this.label);
-
-  final String label;
 }
 
 class _ProjectCard extends StatelessWidget {
