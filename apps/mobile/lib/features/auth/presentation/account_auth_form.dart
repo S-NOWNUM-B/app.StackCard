@@ -54,11 +54,17 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: Text(context.strings.tr('account.cancel')),
+                  child: Text(
+                    context.strings.tr('account.cancel'),
+                    textAlign: TextAlign.left,
+                  ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: Text(context.strings.tr('account.discard')),
+                  child: Text(
+                    context.strings.tr('account.discard'),
+                    textAlign: TextAlign.left,
+                  ),
                 ),
               ],
             ),
@@ -204,6 +210,8 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
             children: [
               Text(
                 strings.tr(titleKey),
+                key: const Key('account.title'),
+                textAlign: TextAlign.left,
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               if (widget.mode == AuthFormMode.resetPassword) ...[
@@ -295,6 +303,16 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                       : strings.tr('account.passwordMismatch'),
                 ),
               ],
+              if (widget.mode == AuthFormMode.signIn) ...[
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: busy ? null : () => _openMode('/reset-password'),
+                  child: Text(
+                    strings.tr('account.forgotPassword'),
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               StackCardButton(
                 key: const Key('account.submit'),
@@ -303,11 +321,19 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                       ? 'account.sendReset'
                       : titleKey,
                 ),
-                icon: Icons.arrow_forward_rounded,
                 primary: true,
                 loading: auth.isLoading || _confirming,
                 onPressed: busy ? null : _submit,
               ),
+              if (widget.mode != AuthFormMode.resetPassword) ...[
+                const SizedBox(height: 12),
+                StackCardButton(
+                  key: const Key('account.google'),
+                  label: strings.tr('account.google'),
+                  icon: Icons.account_circle_outlined,
+                  onPressed: busy ? null : _google,
+                ),
+              ],
               if (errorKey != null) ...[
                 const SizedBox(height: 12),
                 Semantics(
@@ -325,56 +351,44 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                   child: Text(strings.tr('account.resetSuccess')),
                 ),
               ],
-              if (widget.mode != AuthFormMode.resetPassword) ...[
-                const SizedBox(height: 12),
-                StackCardButton(
-                  key: const Key('account.google'),
-                  label: strings.tr('account.google'),
-                  icon: Icons.account_circle_outlined,
-                  onPressed: busy ? null : _google,
-                ),
-              ],
-              const SizedBox(height: 12),
-              if (widget.mode == AuthFormMode.signIn) ...[
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  children: [
-                    TextButton(
-                      onPressed: busy ? null : () => _openMode('/register'),
-                      child: Text(strings.tr('account.register')),
-                    ),
-                    TextButton(
-                      onPressed: busy
-                          ? null
-                          : () => _openMode('/reset-password'),
-                      child: Text(strings.tr('account.forgotPassword')),
-                    ),
-                  ],
-                ),
-              ] else
-                TextButton(
-                  onPressed: busy ? null : () => _openMode('/sign-in'),
-                  child: Text(
-                    strings.tr('account.backToSignIn'),
-                    textAlign: TextAlign.center,
+              const SizedBox(height: 24),
+              TextButton(
+                onPressed: busy
+                    ? null
+                    : () => _openMode(
+                        widget.mode == AuthFormMode.signIn
+                            ? '/register'
+                            : '/sign-in',
+                      ),
+                child: Text(
+                  strings.tr(
+                    widget.mode == AuthFormMode.signIn
+                        ? 'account.register'
+                        : 'account.backToSignIn',
                   ),
+                  textAlign: TextAlign.left,
                 ),
-              const SizedBox(height: 12),
-              StackCardButton(
+              ),
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 16),
+              TextButton(
                 key: const Key('account.guest'),
-                label: strings.tr('account.guest'),
                 onPressed: busy
                     ? null
                     : () {
                         ref.read(guestAccessProvider.notifier).enter();
                         context.go('/home');
                       },
+                child: Text(
+                  strings.tr('account.guest'),
+                  textAlign: TextAlign.left,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 strings.tr('account.guestNote'),
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.left,
                 style: Theme.of(context).textTheme.bodySmall
                     ?.copyWith(color: context.colors.textSecondary),
               ),

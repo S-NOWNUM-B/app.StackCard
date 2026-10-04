@@ -131,11 +131,33 @@ Obsidian/Signal Red расширена acid/cyan/pink; UI адаптирует �
 
 **Уточнение входа (2026-10-04):** по обратной связи пользователя удалён весь
 розовый декоративный poster со слоганом. Вход, регистрация и сброс пароля
-используют компактный brand и единую колонку формы шириной до 440 px.
-Прошли 46 existing auth/navigation/widget/localization tests и 20 responsive
-проверок входа, включая 320 px и text scale 2; обновлены 8 sign-in previews.
-`flutter analyze` — **No issues found**. Компактный account Sign In собран и
-просмотрен на `emulator-5554`; checksum локального draft до/после совпал.
+используют центрированный по обеим осям блок шириной до 400 px и отдельно
+центрированный brand; текст формы остаётся слева. По следующему уточнению
+введены нейтральные ссылки и матовые поля/кнопки с radius 12;
+recovery, submit/Google, переход режима и guest образуют последовательные группы.
+Прошли 52 auth/navigation/widget/localization tests, включая 6 новых проверок
+геометрии центрирования, контраста, targets и доступности submit с клавиатурой
+на phone/tablet для всех трёх режимов и обеих тем. Дополнительно прошли 20
+responsive checks демо-входа, включая 320 px и text scale 2; обновлены 8 demo
+previews и созданы 6 account previews. `flutter analyze` — **No issues found**.
+Все три account формы собраны и просмотрены на `emulator-5554`;
+checksum локального draft до/после совпал.
+
+**Единые основные кнопки (2026-10-04):** по последнему уточнению пользователя
+auth наследует красный CTA всего приложения с белыми текстом и иконками.
+`ColorScheme.primary/onPrimary` используют существующий `#E60010` и `#FFFFFF`
+с контрастом 4.80:1; исходный brand остаётся Signal Red `#FF0012`.
+Проверены все 10 primary-вызовов: auth/demo, Portfolio, Builder/редакторы/notes,
+GitHub import/review. Loading сохраняет красный фон и белый spinner,
+disabled без loading получает нейтральные фон и читаемый текст.
+Приёмка: `dart format` — **182 files, 0 changed**; `flutter analyze` —
+**No issues found**; полный `flutter test` — **832 passed** после восстановления
+отсутствовавшего RU `account.guestNote`. Четыре новых button regression cases
+проверяют реальные цвета текста/иконки/spinner, contrast, hover/press/focus,
+loading/disabled и secondary в обеих темах, включая auth.
+Перегенерированы все **62** previews; выборочно просмотрены auth, Portfolio
+и Builder в light/dark. На Android просмотрены Sign In и Portfolio с белыми
+надписями на красном; checksum сохранённого draft совпал.
 
 Редизайн не начинает Phase 11 или web implementation. Commit/push не выполнялись.
 

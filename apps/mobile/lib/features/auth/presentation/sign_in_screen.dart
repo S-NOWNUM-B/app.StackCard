@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/localization/app_strings.dart';
+import '../../../core/theme/stackcard_theme.dart';
 import '../../../shared/widgets/stackcard_brand.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_input.dart';
@@ -44,83 +45,124 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     final accountConfigured = ref.watch(accountAuthRepositoryProvider) != null;
+    final baseTheme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
-          builder: (context, constraints) => SingleChildScrollView(
-            padding: EdgeInsets.all(constraints.maxWidth >= 700 ? 32 : 16),
-            child: Align(
-              alignment: Alignment.topCenter,
+          builder: (context, constraints) {
+            final padding = EdgeInsets.all(
+              constraints.maxWidth >= 700 ? 32 : 24,
+            );
+            return SingleChildScrollView(
+              padding: padding,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 440),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const StackCardBrand(),
-                    const SizedBox(height: 32),
-                    accountConfigured
-                        ? AccountAuthForm(mode: widget.mode)
-                        : Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text(
-                                    context.strings.tr('auth.title'),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineMedium,
+                constraints: BoxConstraints(
+                  minHeight: (constraints.maxHeight - padding.vertical).clamp(
+                    0,
+                    double.infinity,
+                  ),
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Theme(
+                      data: StackCardTheme.authentication(baseTheme),
+                      child: Builder(
+                        builder: (context) => Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Center(
+                              child: Theme(
+                                data: baseTheme.copyWith(
+                                  textTheme: baseTheme.textTheme.copyWith(
+                                    titleLarge: baseTheme.textTheme.titleLarge
+                                        ?.copyWith(fontSize: 28),
                                   ),
-                                  const SizedBox(height: 24),
-                                  StackCardInput(
-                                    label: context.strings.tr('auth.email'),
-                                    hint: 'alex@example.dev',
-                                    controller: _email,
-                                    enabled: !auth.isLoading,
-                                    prefixIcon: Icons.alternate_email_rounded,
-                                    keyboardType: TextInputType.emailAddress,
-                                    textInputAction: TextInputAction.done,
-                                    onFieldSubmitted: (_) => _openDemo(),
-                                    validator: (value) =>
-                                        validateDemoEmail(value) == null
-                                        ? null
-                                        : context.strings.tr(
-                                            'auth.invalidEmail',
-                                          ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  StackCardButton(
-                                    label: context.strings.tr('auth.open'),
-                                    icon: Icons.arrow_forward_rounded,
-                                    primary: true,
-                                    loading: auth.isLoading,
-                                    onPressed: auth.isLoading
-                                        ? null
-                                        : _openDemo,
-                                  ),
-                                  if (auth.hasError) ...[
-                                    const SizedBox(height: 12),
-                                    Semantics(
-                                      liveRegion: true,
-                                      child: Text(
-                                        context.strings.tr('auth.error'),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium,
-                                      ),
-                                    ),
-                                  ],
-                                ],
+                                ),
+                                child: const StackCardBrand(),
                               ),
                             ),
-                          ),
-                  ],
+                            const SizedBox(height: 40),
+                            accountConfigured
+                                ? AccountAuthForm(mode: widget.mode)
+                                : Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    child: Form(
+                                      key: _formKey,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          Text(
+                                            context.strings.tr('auth.title'),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .headlineMedium,
+                                          ),
+                                          const SizedBox(height: 24),
+                                          StackCardInput(
+                                            label: context.strings.tr(
+                                              'auth.email',
+                                            ),
+                                            hint: 'alex@example.dev',
+                                            controller: _email,
+                                            enabled: !auth.isLoading,
+                                            prefixIcon:
+                                                Icons.alternate_email_rounded,
+                                            keyboardType:
+                                                TextInputType.emailAddress,
+                                            textInputAction:
+                                                TextInputAction.done,
+                                            onFieldSubmitted: (_) =>
+                                                _openDemo(),
+                                            validator: (value) =>
+                                                validateDemoEmail(value) == null
+                                                ? null
+                                                : context.strings.tr(
+                                                    'auth.invalidEmail',
+                                                  ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          StackCardButton(
+                                            label: context.strings.tr(
+                                              'auth.open',
+                                            ),
+                                            primary: true,
+                                            loading: auth.isLoading,
+                                            onPressed: auth.isLoading
+                                                ? null
+                                                : _openDemo,
+                                          ),
+                                          if (auth.hasError) ...[
+                                            const SizedBox(height: 12),
+                                            Semantics(
+                                              liveRegion: true,
+                                              child: Text(
+                                                context.strings.tr(
+                                                  'auth.error',
+                                                ),
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

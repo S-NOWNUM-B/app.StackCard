@@ -10,9 +10,12 @@ import 'package:app_stackcard/features/auth/presentation/account_auth_form.dart'
 import 'package:app_stackcard/features/auth/presentation/account_card.dart';
 import 'package:app_stackcard/features/auth/presentation/sign_in_screen.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_brand.dart';
 import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:app_stackcard/shared/widgets/stackcard_input.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_poster.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -118,6 +121,7 @@ Future<void> _pumpAuth(
     ProviderScope(
       overrides: [accountAuthRepositoryProvider.overrideWithValue(repository)],
       child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
         routerConfig: router,
         theme: theme ?? StackCardTheme.dark,
         locale: locale,
@@ -159,7 +163,55 @@ Future<void> _tap(WidgetTester tester, String key) async {
   await tester.pump();
 }
 
+bool _actionEnabled(WidgetTester tester, String key) {
+  final widget = tester.widget(find.byKey(Key(key)));
+  return switch (widget) {
+    StackCardButton(:final onPressed) => onPressed != null,
+    ButtonStyleButton(:final onPressed) => onPressed != null,
+    _ => throw StateError('Unexpected action widget for $key'),
+  };
+}
+
+Future<void> _checkAccountAccessibility(WidgetTester tester) async {
+  // Проверяем полные semantics при исходной ширине, без scroll clipping,
+  // как в существующих responsive/Builder проверках.
+  final size = tester.view.physicalSize;
+  final scroll = tester.state<ScrollableState>(
+    find
+        .descendant(
+          of: find.byType(SingleChildScrollView),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  tester.view.physicalSize = Size(
+    size.width,
+    size.height + scroll.position.maxScrollExtent.ceilToDouble() + 16,
+  );
+  await tester.pumpAndSettle();
+  final semantics = tester.ensureSemantics();
+  try {
+    await expectLater(tester, meetsGuideline(textContrastGuideline));
+    await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+  } finally {
+    semantics.dispose();
+    tester.view.physicalSize = size;
+    await tester.pumpAndSettle();
+  }
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    for (final entry in [
+      ('DM Sans', 'assets/fonts/DM_Sans.ttf'),
+      ('Noto Sans', 'assets/fonts/Noto_Sans.ttf'),
+      ('MaterialIcons', 'fonts/MaterialIcons-Regular.otf'),
+    ]) {
+      final loader = FontLoader(entry.$1)..addFont(rootBundle.load(entry.$2));
+      await loader.load();
+    }
+  });
   setUp(() {
     final view =
         TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
@@ -280,12 +332,7 @@ void main() {
             .onPressed,
         isNull,
       );
-      expect(
-        tester
-            .widget<StackCardButton>(find.byKey(const Key('account.guest')))
-            .onPressed,
-        isNull,
-      );
+      expect(_actionEnabled(tester, 'account.guest'), isFalse);
       repository.pending!.complete();
       await tester.pumpAndSettle();
       expect(
@@ -392,10 +439,7 @@ void main() {
           'account.google',
           'account.guest',
         ]) {
-          expect(
-            tester.widget<StackCardButton>(find.byKey(Key(key))).onPressed,
-            isNull,
-          );
+          expect(_actionEnabled(tester, key), isFalse);
         }
         expect(repository.requests, isEmpty);
         expect(repository.sessionRequests, 1);
@@ -403,12 +447,7 @@ void main() {
         repository.sessions.add(null);
         await tester.pumpAndSettle();
         expect(find.byType(CircularProgressIndicator), findsNothing);
-        expect(
-          tester
-              .widget<StackCardButton>(find.byKey(const Key('account.guest')))
-              .onPressed,
-          isNotNull,
-        );
+        expect(_actionEnabled(tester, 'account.guest'), isTrue);
         await _tap(tester, 'account.guest');
         await tester.pumpAndSettle();
         expect(find.text('Destination home'), findsOneWidget);
@@ -441,10 +480,7 @@ void main() {
           'account.google',
           'account.guest',
         ]) {
-          expect(
-            tester.widget<StackCardButton>(find.byKey(Key(key))).onPressed,
-            isNull,
-          );
+          expect(_actionEnabled(tester, key), isFalse);
         }
         expect(repository.requests, isEmpty);
         await _tap(tester, 'account.retrySession');
@@ -555,6 +591,101 @@ void main() {
           );
         },
       );
+    }
+  }
+
+  for (final theme in [
+    (name: 'dark', data: StackCardTheme.dark),
+    (name: 'light', data: StackCardTheme.light),
+  ]) {
+    for (final mode in ['/sign-in', '/register', '/reset-password']) {
+      testWidgets('Account $mode ${theme.name} centered with keyboard', (
+        tester,
+      ) async {
+        final repository = _AuthRepository();
+        await _pumpAuth(tester, repository, location: mode, theme: theme.data);
+        addTearDown(tester.view.resetViewInsets);
+        for (final viewport in [const Size(390, 844), const Size(768, 1024)]) {
+          tester.view.physicalSize = viewport;
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          expect(find.byType(StackCardPoster), findsNothing);
+          expect(
+            find.text(const AppStrings(Locale('ru')).tr('auth.hero')),
+            findsNothing,
+          );
+
+          final brand = find.byType(StackCardBrand);
+          final mark = find.descendant(
+            of: brand,
+            matching: find.byType(CustomPaint),
+          );
+          final wordmark = find.descendant(
+            of: brand,
+            matching: find.byType(Text),
+          );
+          final brandRect = tester
+              .getRect(mark)
+              .expandToInclude(tester.getRect(wordmark));
+          final content = brandRect.expandToInclude(
+            tester.getRect(find.byType(AccountAuthForm)),
+          );
+          expect(brandRect.center.dx, closeTo(viewport.width / 2, 1));
+          expect(content.center.dx, closeTo(viewport.width / 2, 1));
+          if (content.height <= viewport.height - 64) {
+            expect(content.center.dy, closeTo(viewport.height / 2, 1));
+          }
+
+          final title = find.byKey(const Key('account.title'));
+          final email = find.byKey(const Key('account.email'));
+          expect(tester.widget<Text>(title).textAlign, TextAlign.left);
+          expect(tester.getRect(title).left, tester.getRect(email).left);
+          await _checkAccountAccessibility(tester);
+          if (const bool.fromEnvironment('UPDATE_UI_PREVIEWS') &&
+              viewport.width == 390) {
+            await expectLater(
+              find.byType(MaterialApp),
+              matchesGoldenFile(
+                '../../../docs/design/previews/${mode.substring(1)}_account_'
+                '${theme.name}_phone_portrait.png',
+              ),
+            );
+          }
+
+          final emailField = find.descendant(
+            of: email,
+            matching: find.byType(TextFormField),
+          );
+          await tester.ensureVisible(emailField);
+          await tester.tap(emailField);
+          await tester.pump();
+          expect(tester.testTextInput.isVisible, isTrue);
+          tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+          await tester.pumpAndSettle();
+          if (content.height > viewport.height - 320) {
+            final scroll = tester.state<ScrollableState>(
+              find.byType(Scrollable).first,
+            );
+            expect(scroll.position.maxScrollExtent, greaterThan(0));
+          }
+          final submit = find.byKey(const Key('account.submit'));
+          await tester.ensureVisible(submit);
+          await tester.pumpAndSettle();
+          expect(tester.getRect(submit).top, greaterThanOrEqualTo(0));
+          expect(
+            tester.getRect(submit).bottom,
+            lessThanOrEqualTo(viewport.height - 320 + 1),
+          );
+          expect(_actionEnabled(tester, 'account.submit'), isTrue);
+          await _checkAccountAccessibility(tester);
+          expect(tester.takeException(), isNull);
+          FocusManager.instance.primaryFocus?.unfocus();
+          tester.testTextInput.hide();
+          tester.view.resetViewInsets();
+          await tester.pumpAndSettle();
+        }
+        expect(repository.requests, isEmpty);
+      });
     }
   }
 }
