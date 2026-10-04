@@ -12,6 +12,8 @@ import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/github_filters.dart';
+import '../github_portfolio_providers.dart';
+import '../../portfolio_draft/portfolio_draft.dart';
 import 'github_cache_notice.dart';
 import 'github_failure_view.dart';
 import 'github_import_controller.dart';
@@ -95,8 +97,14 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: StackCardSpacing.lg),
                     child: GitHubRepositoryCard(
+                      key: ValueKey(
+                        'github_repository_${repositories[index - 1].id}',
+                      ),
                       repository: repositories[index - 1],
                       showDescription: showDescriptions,
+                      validatedAt: state
+                          .repositoryReadMetadata[repositories[index - 1].id]
+                          ?.validatedAt,
                     ),
                   );
                 },
@@ -127,6 +135,8 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
               ?.copyWith(color: pageTextColor),
         ),
         const SizedBox(height: StackCardSpacing.xl),
+        const _GitHubDraftActions(),
+        const SizedBox(height: StackCardSpacing.lg),
         StackCardCard(
           child: Form(
             key: _formKey,
@@ -294,6 +304,76 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
           ),
         const SizedBox(height: StackCardSpacing.xl),
       ],
+    );
+  }
+}
+
+class _GitHubDraftActions extends ConsumerWidget {
+  const _GitHubDraftActions();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(githubPortfolioDraftStateProvider);
+    if (state == null) return const SizedBox.shrink();
+    final strings = context.strings;
+    final controller = ref.read(portfolioDraftControllerProvider.notifier);
+    final cloud = ref.watch(portfolioSyncRepositoryProvider) != null;
+    return StackCardCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(strings.tr('githubSync.draftNote')),
+          const SizedBox(height: StackCardSpacing.sm),
+          if (state.loading)
+            Text(strings.tr('draft.loading'))
+          else if (!state.loaded) ...[
+            Text(strings.tr('draft.readFailure')),
+            StackCardButton(
+              label: strings.tr('draft.retryRead'),
+              onPressed: controller.load,
+            ),
+          ] else ...[
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                strings.tr(
+                  state.saving
+                      ? 'githubSync.saving'
+                      : state.hasUnsavedChanges
+                      ? 'githubSync.unsaved'
+                      : state.draft == null
+                      ? 'githubSync.emptyDraft'
+                      : cloud && state.draft?.pendingSync == true
+                      ? 'githubSync.pending'
+                      : 'githubSync.saved',
+                ),
+                key: const ValueKey('github_draft_status'),
+              ),
+            ),
+            if (state.failure != null)
+              Text(strings.tr('builder.failure.title')),
+            const SizedBox(height: StackCardSpacing.sm),
+            StackCardButton(
+              key: const ValueKey('github_draft_save'),
+              label: strings.tr(
+                state.remoteUpdateAvailable
+                    ? 'sync.saveMine'
+                    : 'githubSync.save',
+              ),
+              icon: Icons.save_outlined,
+              primary: true,
+              loading: state.saving,
+              onPressed: state.canSave ? controller.save : null,
+            ),
+            if (state.remoteUpdateAvailable)
+              Text(strings.tr('sync.remoteUpdate')),
+            const SizedBox(height: StackCardSpacing.sm),
+            StackCardButton(
+              label: strings.tr('githubSync.openBuilder'),
+              onPressed: () => context.push('/portfolio/builder'),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

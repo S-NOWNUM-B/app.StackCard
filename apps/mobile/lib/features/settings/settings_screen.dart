@@ -13,6 +13,8 @@ import '../../shared/widgets/stackcard_states.dart';
 import '../../shared/widgets/stackcard_async_view.dart';
 import '../profile/profile.dart';
 import '../portfolio_draft/portfolio_draft.dart';
+import '../auth/auth.dart';
+import 'account_settings_section.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -90,62 +92,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 16),
               const _PreferencesCard(),
               const SizedBox(height: 16),
-              StackCardCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    riverpod.Consumer(
-                      builder: (context, ref, _) => Text(
-                        context.strings.tr(
-                          ref.watch(portfolioWorkingContentProvider) == null
-                              ? 'settings.demoAccount'
-                              : 'builderIntegration.localProfile',
+              riverpod.Consumer(
+                builder: (context, ref, _) =>
+                    ref.watch(accountAuthRepositoryProvider) != null
+                    ? const AccountSettingsSection()
+                    : StackCardCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            riverpod.Consumer(
+                              builder: (context, ref, _) => Text(
+                                context.strings.tr(
+                                  ref.watch(portfolioWorkingContentProvider) ==
+                                          null
+                                      ? 'settings.demoAccount'
+                                      : 'builderIntegration.localProfile',
+                                ),
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            riverpod.Consumer(
+                              builder: (context, ref, _) => StackCardAsyncView(
+                                state: ref.watch(profileProvider),
+                                onRetry: () {
+                                  ref
+                                      .read(
+                                        portfolioDraftControllerProvider
+                                            .notifier,
+                                      )
+                                      .load();
+                                  ref.invalidate(profileProvider);
+                                },
+                                data: (profile) => Text(
+                                  profile.name.isEmpty
+                                      ? context.strings.tr(
+                                          'builderIntegration.emptyProfile',
+                                        )
+                                      : [profile.name, profile.handle]
+                                            .where((value) => value.isNotEmpty)
+                                            .join(' · '),
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            riverpod.Consumer(
+                              builder: (context, ref, _) => Text(
+                                context.strings.tr(
+                                  ref.watch(portfolioWorkingContentProvider) ==
+                                          null
+                                      ? 'settings.demoNote'
+                                      : 'builderIntegration.localNote',
+                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: context.colors.textSecondary,
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            StackCardButton(
+                              label: context.strings.tr('settings.signOut'),
+                              icon: Icons.logout_rounded,
+                              onPressed: () => context.go('/sign-in'),
+                            ),
+                          ],
                         ),
-                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    riverpod.Consumer(
-                      builder: (context, ref, _) => StackCardAsyncView(
-                        state: ref.watch(profileProvider),
-                        onRetry: () {
-                          ref
-                              .read(portfolioDraftControllerProvider.notifier)
-                              .load();
-                          ref.invalidate(profileProvider);
-                        },
-                        data: (profile) => Text(
-                          profile.name.isEmpty
-                              ? context.strings.tr(
-                                  'builderIntegration.emptyProfile',
-                                )
-                              : [profile.name, profile.handle]
-                                    .where((value) => value.isNotEmpty)
-                                    .join(' · '),
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    riverpod.Consumer(
-                      builder: (context, ref, _) => Text(
-                        context.strings.tr(
-                          ref.watch(portfolioWorkingContentProvider) == null
-                              ? 'settings.demoNote'
-                              : 'builderIntegration.localNote',
-                        ),
-                        style: Theme.of(context).textTheme.bodyMedium
-                            ?.copyWith(color: context.colors.textSecondary),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    StackCardButton(
-                      label: context.strings.tr('settings.signOut'),
-                      icon: Icons.logout_rounded,
-                      onPressed: () => context.go('/sign-in'),
-                    ),
-                  ],
-                ),
               ),
               const SizedBox(height: 16),
               StackCardCard(

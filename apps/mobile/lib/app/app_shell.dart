@@ -23,7 +23,10 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final draft = ref.watch(portfolioDraftControllerProvider);
-    final initials = ref.watch(profileProvider).value?.initials ?? '?';
+    final profile = ref.watch(profileProvider);
+    final initials = !profile.isLoading && !profile.hasError
+        ? profile.value?.initials ?? '?'
+        : '?';
     final selected = _destinations.indexWhere((item) => item.path == location);
     final index = selected < 0 ? 0 : selected;
     final wide = MediaQuery.sizeOf(context).width >= 700;

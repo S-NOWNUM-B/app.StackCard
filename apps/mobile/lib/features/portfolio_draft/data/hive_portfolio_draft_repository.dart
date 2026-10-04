@@ -7,19 +7,27 @@ import '../domain/portfolio_draft.dart';
 import '../domain/portfolio_draft_repository.dart';
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_validation.dart';
+import '../domain/portfolio_sync.dart';
 import 'portfolio_content_codec.dart';
 
 final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
-  HivePortfolioDraftRepository(this._box, {DateTime Function()? clock})
-    : _clock = clock ?? DateTime.now;
+  HivePortfolioDraftRepository(
+    this._box, {
+    DateTime Function()? clock,
+    this._storageKey = HivePortfolioDraftRepository.storageKey,
+    this._backupKey = legacyBackupKey,
+    this._beforeAccess,
+  }) : _clock = clock ?? DateTime.now;
 
   static const storageKey = 'draft';
-  static const schemaVersion = 2;
+  static const schemaVersion = 3;
   static const legacyBackupKey = 'draft.v1.backup';
 
   final Box<dynamic> _box;
   final DateTime Function() _clock;
-  Future<void> _operations = Future.value();
+  final String _storageKey;
+  final String _backupKey;
+  final void Function()? _beforeAccess;
 
   @override
   Future<PortfolioDraft?> read() => _serial(() => _readRecord().draft);
@@ -48,6 +56,49 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
     return _write(previous, notes: notes, content: content);
   });
 
+  /// An older server ACK cannot acknowledge a newer local save.
+  Future<PortfolioDraft?> acknowledgeRevision(int expectedRevision) =>
+      _serial(() async {
+        final previous = _readRecord();
+        final draft = previous.draft;
+        if (draft == null || draft.revision != expectedRevision) return null;
+        final acknowledged = PortfolioDraft(
+          notes: draft.notes,
+          revision: draft.revision,
+          updatedAt: draft.updatedAt,
+          pendingSync: false,
+          content: draft.content,
+        );
+        await _persistSnapshot(previous, acknowledged);
+        return acknowledged;
+      });
+
+  /// Remote revisions are never compared with the device's revision counter.
+  Future<PortfolioDraft> hydrateRemote(
+    CloudPortfolioDraft remote, {
+    required int expectedRevision,
+  }) => _serial(() async {
+    final previous = _readRecord();
+    if ((previous.draft?.revision ?? 0) != expectedRevision) {
+      throw const PortfolioDraftFailure(PortfolioDraftFailureKind.conflict);
+    }
+    final content = remote.content;
+    if (content != null && validatePortfolioContent(content).isNotEmpty) {
+      throw const PortfolioDraftFailure(
+        PortfolioDraftFailureKind.invalidContent,
+      );
+    }
+    final hydrated = PortfolioDraft(
+      notes: remote.notes,
+      revision: expectedRevision + 1,
+      updatedAt: remote.updatedAt,
+      pendingSync: false,
+      content: content,
+    );
+    await _persistSnapshot(previous, hydrated);
+    return hydrated;
+  });
+
   Future<PortfolioDraft> _write(
     _DraftRecord previous, {
     required String notes,
@@ -60,30 +111,45 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
       pendingSync: true,
       content: content,
     );
+    await _persistSnapshot(previous, draft);
+    return draft;
+  }
+
+  Future<void> _persistSnapshot(
+    _DraftRecord previous,
+    PortfolioDraft draft,
+  ) async {
+    final content = draft.content;
     final envelope = jsonEncode({
       'schemaVersion': schemaVersion,
       'notes': draft.notes,
       'revision': draft.revision,
-      'updatedAt': draft.updatedAt!.toIso8601String(),
+      'updatedAt': draft.updatedAt?.toIso8601String(),
       'pendingSync': draft.pendingSync,
       'content': content == null ? null : encodePortfolioContent(content),
     });
     if (previous.version == 1) {
-      if (_box.containsKey(legacyBackupKey)) {
-        if (_box.get(legacyBackupKey) != previous.raw) throw _corrupted;
+      if (_box.containsKey(_backupKey)) {
+        if (_box.get(_backupKey) != previous.raw) throw _corrupted;
       } else {
         // Backup завершается до замены: сбой оставляет исходный v1 нетронутым.
-        await _box.put(legacyBackupKey, previous.raw);
+        await _box.put(_backupKey, previous.raw);
       }
     }
     // Future put завершается после записи backend; при сбое Hive откатывает её.
-    await _box.put(storageKey, envelope);
-    return draft;
+    await _box.put(_storageKey, envelope);
   }
 
   _DraftRecord _readRecord() {
-    if (!_box.containsKey(storageKey)) return const _DraftRecord();
-    final raw = _box.get(storageKey);
+    if (!_box.containsKey(_storageKey)) return const _DraftRecord();
+    return _decodeRecord(_box.get(_storageKey));
+  }
+
+  // Transfer проверяет envelope, сохраняя исходные bytes и metadata.
+  static PortfolioDraft validateStoredEnvelope(Object? raw) =>
+      _decodeRecord(raw).draft!;
+
+  static _DraftRecord _decodeRecord(Object? raw) {
     if (raw is! String) throw _corrupted;
     final dynamic decoded;
     try {
@@ -94,7 +160,7 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
     if (decoded is! Map<String, dynamic>) throw _corrupted;
     final version = decoded['schemaVersion'];
     if (version is! int) throw _corrupted;
-    if (version != 1 && version != schemaVersion) {
+    if (version != 1 && version != 2 && version != schemaVersion) {
       throw const PortfolioDraftFailure(
         PortfolioDraftFailureKind.unsupportedVersion,
       );
@@ -119,7 +185,7 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
       }
     }
     PortfolioContent? content;
-    if (version == schemaVersion) {
+    if (version >= 2) {
       if (!decoded.containsKey('content')) throw _corrupted;
       if (decoded['content'] != null) {
         try {
@@ -142,9 +208,25 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
     );
   }
 
-  Future<T> _serial<T>(FutureOr<T> Function() operation) {
+  Future<T> _serial<T>(FutureOr<T> Function() operation) =>
+      HiveDraftOperations.run(_box, () {
+        _beforeAccess?.call();
+        return operation();
+      });
+
+  static const _corrupted = PortfolioDraftFailure(
+    PortfolioDraftFailureKind.corrupted,
+  );
+}
+
+// Общая очередь box исключает гонки между разными adapters и transfer.
+final class HiveDraftOperations {
+  static final _queues = Expando<_HiveDraftQueue>();
+
+  static Future<T> run<T>(Box<dynamic> box, FutureOr<T> Function() operation) {
+    final queue = _queues[box] ??= _HiveDraftQueue();
     final result = Completer<T>();
-    _operations = _operations.then((_) async {
+    queue.operations = queue.operations.then((_) async {
       try {
         result.complete(await operation());
       } on PortfolioDraftFailure catch (failure) {
@@ -157,10 +239,10 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
     });
     return result.future;
   }
+}
 
-  static const _corrupted = PortfolioDraftFailure(
-    PortfolioDraftFailureKind.corrupted,
-  );
+final class _HiveDraftQueue {
+  Future<void> operations = Future.value();
 }
 
 final class _DraftRecord {

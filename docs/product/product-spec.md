@@ -4,7 +4,7 @@
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage Phase 6](https://raster.shields.io/badge/Stage-Phase_6-111111?style=for-the-badge)
+![Stage Phase 9 complete](https://raster.shields.io/badge/Stage-Phase_9_complete-111111?style=for-the-badge)
 ![Mobile + Web planned](https://raster.shields.io/badge/Mobile_%2B_Web-planned-FF0012?style=for-the-badge)
 
 </div>
@@ -50,9 +50,17 @@ theme, ru/en locale и настройка описаний источника с
 Hive хранит GitHub cache и отдельные локальные заметки с revision/pendingSync.
 Перезапуск, offline и reconnect проверены на Android;
 подробности — в [приёмке Phase 5](#phase-5--local-persistence--offline).
-По текущему поручению завершена **Phase 6: Portfolio domain и локальный Builder**:
+По предыдущему поручению завершена **Phase 6: Portfolio domain и локальный Builder**:
 единый draft, ручные формы и preview без публикации. Resume выбран обычным
 текстом с сохранением переносов строк; файловые вложения в этой фазе не вводятся.
+По предыдущему поручению реализована **Phase 7: Firebase authentication**: account
+session, защищённые routes и UID isolation. Обязательная Google/reset/iOS приёмка
+остаётся открытой в [Phase 7](#phase-7--firebase-authentication). По явному следующему
+поручению пользователя завершена **Phase 8: Firestore synchronization**: private draft,
+состояния синхронизации и правила доступа; схема зафиксирована в
+[ADR](../decisions/0001-firestore-sync-and-publication.md).
+По следующему прямому поручению завершена **Phase 9: Living Portfolio / Smart GitHub Sync**:
+явный импорт repositories, review изменений и сохранение ручных overrides.
 Этот документ отделяет реализованный интерфейс от целевых функций.
 Flutter-приложение находится в `apps/mobile`; в `apps/web`
 сейчас только README. Remote `origin` уже подключён; `main` отслеживает `origin/main`.
@@ -68,12 +76,18 @@ Commit и push выполняются только по запросу поль�
 читают проекции этого content; Portfolio и preview отображают видимые блоки
 в заданном порядке и теме. Ошибка чтения draft показывает failure/retry, без demo fallback.
 GitHub Import отдельно читает публичный GitHub API с persistent cache и offline fallback.
-Firebase, web и публикация ещё не подключены. App settings принадлежат
-AppearanceController через Provider; Builder, demo-вход и filters — Riverpod.
+Firebase Auth и Firestore sync подключены в native bootstrap.
+Web и пользовательская публикация остаются следующими фазами. App settings принадлежат AppearanceController через
+Provider; account session/actions, Builder и filters — Riverpod.
 Settings, GitHub response cache, явно сохранённые content и notes переживают перезапуск;
-demo-session, query/filter и ещё не сохранённый ввод остаются в app session.
-GitHub Import не изменяет curated portfolio и не публикует данные.
-Phase 6 принята; Phase 7 и последующие этапы требуют отдельного поручения.
+Firebase session восстанавливается SDK; явный guest access, query/filter и ещё
+не сохранённый ввод остаются в app session. Account draft хранится отдельно по UID;
+guest draft переносится только явно из Settings в пустой account namespace.
+Чтение и refresh GitHub не меняют curated portfolio. Явные Add/Accept/Ignore
+меняют working draft; Save сохраняет его отдельно, публикация остаётся отдельным действием.
+Пользователь явно разрешил переход к Phase 8 при открытой приёмке Phase 7;
+это не означает завершения оставшихся auth сценариев. Phase 9 завершена;
+Phase 10 и последующие этапы требуют отдельного поручения.
 
 ---
 
@@ -127,7 +141,8 @@ Firestore schema:
 технологии, добавить screenshot и live/demo URL, назначить featured, скрыть проект
 или удалить его из портфолио. Проект имеет происхождение `manual | github`;
 для импортированного проекта нужны связь с GitHub repository и сведения о sync.
-Конкретную модель и правила сопоставления полей предстоит спроектировать.
+Модель и правила сопоставления Phase 9 зафиксированы в
+[ADR 0002](../decisions/0002-github-import-and-review.md).
 
 Smart Sync обнаруживает новый репозиторий или изменения существующего и предлагает
 действия: **Ignore**, **Preview / Review changes**, **Add to portfolio**.
@@ -357,8 +372,10 @@ web-редактор и публичные портфолио. Этот разд
 
 **Phase 0–6 завершены:** основа, UI, состояние, архитектура, GitHub Import, offline и Builder проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
-Последнее поручение — Phase 6: Portfolio domain и локальный Builder. Фазы 7–20 остаются
-планом и требуют отдельного поручения пользователя.
+Последнее поручение — перейти к Phase 9: Living Portfolio / Smart GitHub Sync.
+Открытые
+Google/reset/iOS проверки Phase 7 сохранены; Phase 10–20 остаются планом и
+требуют отдельного поручения пользователя.
 
 Чекбокс `- [x]` означает подтверждённый результат, `- [ ]` — оставшуюся задачу
 или непроверенный сценарий. При отметке проверки рядом фиксируются результат
@@ -375,9 +392,9 @@ web-редактор и публичные портфолио. Этот разд
 | Phase 4 — GitHub API | Завершена; HTTP, pagination, refresh, состояния и Android-запуск проверены |
 | Phase 5 — Local persistence / offline | Завершена; settings, Hive cache/draft, offline/reconnect и Android restart проверены |
 | Phase 6 — Portfolio domain и локальный Builder | Завершена; CRUD, validation/completion, preview, migration и Android offline restart проверены |
-| Phase 7 — Firebase authentication | Запланирована |
-| Phase 8 — Firestore synchronization | Запланирована |
-| Phase 9 — Living Portfolio / Smart GitHub Sync | Запланирована |
+| Phase 7 — Firebase authentication | В работе; Android email flow проверен, Google/iOS приёмка открыта |
+| Phase 8 — Firestore synchronization | Завершена; offline/reconnect, Android restart, LWW и Rules проверены |
+| Phase 9 — Living Portfolio / Smart GitHub Sync | Завершена; импорт/review/ignore, overrides, совместимость draft и Android restart проверены |
 | Phase 10 — Portfolio Suggestions | Запланирована |
 | Phase 11 — Media | Запланирована |
 | Phase 12 — Location | Запланирована |
@@ -846,75 +863,212 @@ web-редактор и публичные портфолио. Этот разд
 
 **Задачи**
 
-- [ ] Подключить Firebase для Android/iOS; описать configuration и environment handling.
-- [ ] Реализовать email/password и Google sign-in, регистрацию, восстановление пароля,
-  auth state и sign out.
-- [ ] Добавить именованные routes, параметры, вложенную навигацию и auth redirects
-  в GoRouter; проверить переходы, восстановление сессии и выход.
-- [ ] Привязать local draft к Firebase uid, определить перенос гостевого draft
+- [x] Подключить Firebase configuration для Android/iOS; описать generation,
+  dev environment и необязательный Auth Emulator в CONTRIBUTING.
+- [ ] Завершить email/password и Google sign-in, регистрацию, восстановление пароля,
+  auth state и sign out: реализация готова; Google provider/OAuth configuration
+  и native Google приёмка остаются открытыми.
+- [x] Добавить именованные routes, параметры, вложенную навигацию и auth redirects
+  в GoRouter; unit/widget проверки transitions и session restore проходят.
+- [x] Привязать local draft к Firebase UID; реализовать явный guest transfer
   и изоляцию данных при смене аккаунта.
 
 **Проверки и приёмка**
 
-- [ ] Email/password, Google sign-in, регистрация, восстановление пароля,
-  восстановление сессии и sign out проверены.
-- [ ] Auth redirects, именованные routes, параметры и вложенная навигация
-  корректно открывают защищённые экраны владельцу.
-- [ ] Гостевой draft переносится по выбранному правилу; sign out и смена
-  аккаунта не раскрывают чужие локальные данные.
+- [ ] Все обязательные auth сценарии проверены на native targets. Android live
+  registration/email sign-in/sign out и reset API acceptance подтверждены;
+  Google flow, фактическое письмо/reset пароля и iOS ещё не приняты.
+- [x] Auth redirects, именованные routes, параметры и вложенная навигация
+  проверены для owner/guest/restoring/error/signedOut в Flutter tests.
+- [x] Гостевой draft переносится явно только в пустой target; sign out, UID switch,
+  late save, сбой transfer/reopen и private form state проверены без чужих данных.
+
+**Реализовано и проверено в Phase 7 — 4 октября 2026**
+
+- Firebase CLI доступен, Google login выполнен; FlutterFire CLI и Ruby `xcodeproj`
+  установлены для generation. Создан отдельный development project;
+  canonical project/app IDs находятся в [Firebase options](../../apps/mobile/lib/firebase_options.dart)
+  и [native configuration](../../apps/mobile/firebase.json). Android/iOS apps
+  зарегистрированы с существующими package/bundle IDs, debug SHA-1 добавлен.
+  Billing upgrade, Firestore, deploy и публикация не выполнялись.
+- Email/Password включён в Firebase Console. Google provider требует support
+  email, видимого на OAuth-экране: ждём подтверждения адреса пользователя перед
+  сохранением. После включения требуется regeneration native configs, iOS client
+  ID/URL scheme и отдельная live Google проверка.
+- Pure Dart account repository/user/failures, Firebase adapter и Riverpod session
+  отделены от legacy demo preview. Password/token не сохраняются приложением.
+  SDK restoring/error блокируют private routes и repository; ошибка не открывает
+  guest/старый UID fallback. Sign out подтверждает отбрасывание unsaved changes.
+- GoRouter использует именованные routes, безопасный локальный `from`, auth forms,
+  вложенные Builder routes и project parameters. UID/access boundary очищает
+  controller/projections, filters, editor/dialog state. Profile loading/error
+  не показывает cached initials предыдущего пользователя.
+- Hive сохраняет старый guest namespace и отдельные UID namespaces. Явный transfer
+  сохраняет envelope/revision/legacy backup; durable owner journal и generation
+  защищают retry/reopen и запрещают старому guest adapter воскресить draft.
+  Чужой UID не получает retry reserved transfer. Новые working edits во время
+  transfer сохраняются; при отсутствии новых правок controller перечитывает target.
+- Native Android [acceptance test](../../apps/mobile/integration_test/account_runtime_test.dart)
+  прошёл на `emulator-5554`: создание disposable аккаунта → sign out → отказ при
+  неверном пароле → email sign-in с тем же UID → reset API → sign out → удаление
+  только созданного тестового аккаунта. Reset подтверждает SDK/backend acceptance;
+  адрес `example.invalid` исключает доставку письма и не доказывает реальный reset.
+- Итоговый format check прошёл, `flutter analyze` без замечаний,
+  `flutter test` — **621 tests passed**, включая прежние visual checks и новые
+  auth/navigation/UID/transfer/recovery regressions. Docs links и diff проверены.
+  Native SDK session restore между процессами прошёл: `seed` создаёт account,
+  `check` после перезапуска восстанавливает тестового пользователя до любого
+  sign-in и удаляет account. Seed даёт SDK время на асинхронную persistence
+  перед принудительной остановкой test runner; runtime persistence не изменялась.
+  Native lifecycle/bootstrap suite — **2 passed, 1 skipped** (restore запускается
+  отдельной парой): реальная account форма и явный guest переход в app shell
+  подтверждены. Screenshot Android auth формы сохранён отдельно от suite.
+- Первый native runner без `--no-uninstall` удалил приложение эмулятора после
+  проверки. Прежние draft/cache/settings восстановлены из существующего
+  `default_boot` snapshot; отдельная локальная копия сохранена перед повтором.
+  Повторные запуски используют `--no-uninstall`; контрольная сумма draft после
+  тестов совпала. Команды исправлены в CONTRIBUTING.
+- Android debug APK собран; обычный `main.dart` снова запущен после native tests.
+  Контрольная сумма восстановленного draft после запуска совпала.
+  iOS config сгенерирован, но сборка/запуск недоступны:
+  Xcode установлен неполностью, CocoaPods отсутствует. Doctor также отмечает
+  отсутствие Android cmdline-tools и неизвестный статус лицензий; Android
+  debug build и native auth test при этом прошли. Commit/push не выполнялись.
 
 **Готово, когда:** оба способа входа работают, защищённые экраны доступны владельцу,
-sign out и смена пользователя не раскрывают чужой локальный draft.
+sign out и смена пользователя не раскрывают чужой локальный draft. Phase 7 остаётся
+в работе до приёмки открытых native auth сценариев. По отдельному поручению
+пользователя завершена Phase 8; незавершённые проверки Phase 7 сохранены.
 
 ### Phase 8 — Firestore synchronization
 
 **Задачи**
 
-- [ ] До remote writes спроектировать private account/draft, public snapshot,
-  username uniqueness и проверяемую атомарность publish/unpublish. Зафиксировать ADR.
-- [ ] Ввести remote repository поверх local cache; выбрать conflict strategy для
+- [x] До remote writes спроектировать private account/draft, public snapshot,
+  username uniqueness и проверяемую атомарность publish/unpublish. Зафиксирован
+  [ADR 0001](../decisions/0001-firestore-sync-and-publication.md) до remote writes.
+- [x] Ввести remote repository поверх local cache; выбрать conflict strategy для
   нескольких устройств и будущего web-клиента, описать последствия.
-- [ ] Реализовать `pending/synced/error`, повтор синхронизации и обработку потери сети.
-- [ ] Создать Firestore Rules и проверки owner access, отказа чужому пользователю
+- [x] Реализовать `pending/synced/error`, повтор синхронизации и обработку потери сети.
+- [x] Создать Firestore Rules и проверки owner access, отказа чужому пользователю
   и анонимного доступа только к опубликованным данным.
 
 **Проверки и приёмка**
 
-- [ ] Offline-правки синхронизируются после reconnect; pending/synced/error
+- [x] Offline-правки синхронизируются после reconnect; pending/synced/error
   и повтор после сбоя отражают фактическое состояние.
-- [ ] Конфликт нескольких клиентов обработан по выбранной стратегии;
+- [x] Конфликт нескольких клиентов обработан по выбранной стратегии;
   private/public schema, username uniqueness и атомарность публикации описаны в ADR.
-- [ ] Firestore Rules tests подтверждают owner access, отказ чужому пользователю
+- [x] Firestore Rules tests подтверждают owner access, отказ чужому пользователю
   и анонимное чтение только published данных; private draft остаётся private.
 
 **Готово, когда:** offline-правки доходят до облака после восстановления сети,
 конфликт обрабатывается по выбранной стратегии, private данные остаются private.
 Механизм явной публикации подготовлен; public web появится на Phase 13.
 
+**Результат проверки (2026-10-04): Phase 8 завершена.**
+
+- Dev-база `(default)` проекта `stackcard-dev-snownumb` создана в согласованном
+  `europe-west3`; CLI подтвердил `freeTier: true`. Rules и indexes успешно
+  развёрнуты; billing upgrade не выполнялся.
+- Account draft синхронизируется поверх Hive с durable outbox, server ACK,
+  восстановлением очереди и состояниями `pending/synced/error/retry` в Builder
+  и private notes. Whole-draft LWW определяется порядком server commits;
+  локальные revisions разных устройств не сравниваются. Несохранённый ввод
+  сохраняется при remote update; повторный Save явно отправляет свою версию.
+- Guest transfer проверяет облачный destination и атомарно занимает только
+  пустой draft. Occupied account сохраняет свой draft и исходный guest;
+  owner journal, потерянный ACK и незавершённый Phase 7 transfer восстанавливаются
+  без переноса чужому UID и без блокировки shared Hive queue.
+- `flutter analyze` — **No issues found**; `flutter test` — **688 tests passed**;
+  format check — **165 files, 0 changed**. Проверены adapter/schema/public
+  projection, outbox/retry/ACK, UID lifecycle, transfer recovery и UI states.
+- `npm run test:rules` — **24 passed, 0 failed**. Emulator tests подтверждают
+  owner access, отказ foreign/anonymous к private draft, anonymous `get` только
+  published snapshot, запрет listing, username uniqueness и атомарность
+  publish/rename/unpublish. Publication repository подготовлен; public UI ещё
+  не вводится. Hidden fields и private notes не входят в public projection.
+- Android native lifecycle suite — **1 passed, 1 skipped**: настоящий SDK
+  проверил offline Save, Hive reopen, reconnect/server ACK, LWW двух клиентов,
+  foreign/anonymous denial и cloud-aware guest transfer. Отдельные процессы
+  `seed` и `check` — **по 1 passed, 1 skipped**: SDK восстановил account до sign-in,
+  Hive сохранил pending outbox, новая session отправила его после reconnect.
+  Skipped test в каждом запуске относится к другому режиму этой же suite.
+  Тестовые accounts/drafts и изолированное restore-хранилище удалены.
+- Обычный `main.dart` собран и запущен на `emulator-5554` после native tests.
+  Native tests использовали `--no-uninstall`; checksum исходного guest draft совпал.
+  Docs links и diff проверены; Markdown render отдельно не проверялся.
+  iOS native sync не проверен из-за незавершённого Xcode/CocoaPods toolchain;
+  Google/reset/iOS приёмка Phase 7 остаётся открытой. Commit/push не выполнялись.
+
+По отдельному следующему поручению завершена Phase 9; дальнейшие этапы требуют
+отдельного поручения пользователя.
+
 ### Phase 9 — Living Portfolio / Smart GitHub Sync
 
 **Задачи**
 
-- [ ] Добавить импорт repository → Project с `source = manual | github`,
+- [x] Добавить импорт repository → Project с `source = manual | github`,
   `githubRepositoryId`, `lastGitHubSyncAt` и sync status.
-- [ ] Разделить source metadata и пользовательские overrides; повторный импорт
+- [x] Разделить source metadata и пользовательские overrides; повторный импорт
   одного repository не должен создавать дубликаты.
-- [ ] Обнаруживать новые/изменённые repositories и показывать Ignore, Preview,
+- [x] Обнаруживать новые/изменённые repositories и показывать Ignore, Preview,
   Add to portfolio и Review changes.
-- [ ] Проверить повторную синхронизацию, сохранение ручных правок и отсутствие
+- [x] Проверить повторную синхронизацию, сохранение ручных правок и отсутствие
   автоматического изменения published snapshot.
 
 **Проверки и приёмка**
 
-- [ ] Выбранный repository импортируется в Project; повторный импорт
+- [x] Выбранный repository импортируется в Project; повторный импорт
   не создаёт дубликат, source metadata и overrides сохраняются раздельно.
-- [ ] Новые и изменённые repositories предлагают Ignore, Preview,
+- [x] Новые и изменённые repositories предлагают Ignore, Preview,
   Add to portfolio и Review changes; владелец выбирает действие.
-- [ ] Повторный sync сохраняет ручные правки и не меняет published snapshot
+- [x] Повторный sync сохраняет ручные правки и не меняет published snapshot
   без явной публикации; сценарии проверены.
 
 **Готово, когда:** владелец импортирует и принимает выбранные изменения,
 а обновление GitHub не перезаписывает curated данные и публичную версию молча.
+
+**Текущий результат (2026-10-04):** Phase 9 завершена. Контракт импорта и review
+зафиксирован в [ADR 0002](../decisions/0002-github-import-and-review.md).
+
+- Добавлены явные Add, Preview, Ignore и Review changes. GitHub source и ручные
+  overrides хранятся раздельно; повторный импорт и rename repository используют
+  стабильный GitHub ID и не создают дубликат. Accept обновляет только поля без
+  ручного override; live URL, featured и visibility остаются под контролем владельца.
+  Source refresh не меняет draft; выбранные изменения требуют отдельного Save.
+- Ignore сохраняет fingerprint конкретной версии source в private draft;
+  следующая версия снова предлагает review. `lastGitHubSyncAt` использует дату
+  проверки конкретного repository, включая pagination/cache; неизвестная дата
+  остаётся `null`. Изменения статистики и активности тоже видны в review.
+- Hive пишет envelope v3 и читает v1/v2/v3; Firestore пишет private schema 2
+  и читает 1/2. Legacy проекты остаются manual, новые поля не требуют eager
+  rewrite. Public projection исключает source metadata, overrides и ignore;
+  импорт/review не вызывает publication repository и не меняет published snapshot.
+- `dart format --output=none --set-exit-if-changed lib test integration_test` —
+  **174 files, 0 changed**; `flutter analyze` — **No issues found**;
+  `flutter test` — **772 passed**. Проверены domain/codec, legacy migration,
+  controller/UID guards, provenance отдельных repositories, public boundary и UI.
+  Stale review/editor и некорректный source не перезаписывают свежий draft.
+- `npm run test:rules` — **27 passed, 0 failed**. Проверены owner isolation,
+  schema 2 и запрет downgrade, public projection и publication transactions.
+  Firestore Rules и indexes успешно развёрнуты в существующий dev-проект
+  `stackcard-dev-snownumb`; регион `(default)` остаётся `europe-west3`.
+- Android native lifecycle suite — **1 passed, 1 skipped**: offline Save,
+  Hive reopen, cloud ACK и повторный GitHub review сохраняют source metadata
+  и ручные правки; LWW и private access проверены настоящим SDK.
+  Отдельные процессы `seed` и `check` — **по 1 passed, 1 skipped**: pending
+  GitHub draft пережил завершение процесса и синхронизировался после reconnect.
+  Skipped test относится к другому режиму той же suite; тестовые accounts/drafts
+  и изолированное restore-хранилище удалены.
+- Карточки и review визуально проверены в light/dark при 390×844; обычный
+  `main.dart` собран и запущен на `emulator-5554`. Native tests использовали
+  `--no-uninstall`; checksum исходного guest draft совпал после проверок.
+  Docs links и diff проверены; Markdown render отдельно не проверялся.
+  iOS native sync не проверен из-за незавершённого Xcode/CocoaPods toolchain;
+  Google/reset/iOS приёмка Phase 7 остаётся открытой. Commit/push не выполнялись.
+
+Phase 10 и последующие этапы требуют отдельного поручения пользователя.
 
 ### Phase 10 — Portfolio Suggestions
 
@@ -1219,7 +1373,7 @@ browser push автоматически в scope не добавляется.
 App Distribution или deploy web требует запроса пользователя; iOS-публикация
 не заявляется выполненной по одному Android release.
 
-**Phase 0–6 завершены. Phase 7 требует отдельного поручения пользователя.**
+**Phase 0–6 и Phase 8–9 завершены. Google/reset/iOS приёмка Phase 7 остаётся открытой. Phase 10 и последующие этапы требуют отдельного поручения.**
 
 ---
 

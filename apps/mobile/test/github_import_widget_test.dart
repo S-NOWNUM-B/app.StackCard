@@ -96,7 +96,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('GitHub не ответил вовремя'), findsOneWidget);
       source.readProfile = () async => _profile;
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Повторить'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Повторить'));
       await tester.pumpAndSettle();
       expect(find.text('@octocat'), findsOneWidget);
@@ -141,6 +143,9 @@ void main() {
         250,
         scrollable: find.byType(Scrollable).first,
       );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Загрузить ещё'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Загрузить ещё'));
       await tester.pumpAndSettle();
       expect(

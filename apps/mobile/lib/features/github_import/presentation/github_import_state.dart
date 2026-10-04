@@ -20,7 +20,9 @@ final class GitHubImportState {
     this.query = '',
     this.filter = GitHubRepositoryFilter.all,
     this.readMetadata = const GitHubReadMetadata(),
-  }) : repositories = List.unmodifiable(repositories);
+    Map<int, GitHubReadMetadata> repositoryReadMetadata = const {},
+  }) : repositories = List.unmodifiable(repositories),
+       repositoryReadMetadata = Map.unmodifiable(repositoryReadMetadata);
 
   final String username;
   final GitHubProfile? profile;
@@ -34,6 +36,7 @@ final class GitHubImportState {
   final String query;
   final GitHubRepositoryFilter filter;
   final GitHubReadMetadata readMetadata;
+  final Map<int, GitHubReadMetadata> repositoryReadMetadata;
 
   List<GitHubRepository> get visibleRepositories =>
       filterGitHubRepositories(repositories, query: query, filter: filter);
@@ -51,6 +54,7 @@ final class GitHubImportState {
     String? query,
     GitHubRepositoryFilter? filter,
     GitHubReadMetadata? readMetadata,
+    Map<int, GitHubReadMetadata>? repositoryReadMetadata,
   }) => GitHubImportState(
     username: username ?? this.username,
     profile: identical(profile, _unchanged)
@@ -72,5 +76,7 @@ final class GitHubImportState {
     query: query ?? this.query,
     filter: filter ?? this.filter,
     readMetadata: readMetadata ?? this.readMetadata,
+    repositoryReadMetadata:
+        repositoryReadMetadata ?? this.repositoryReadMetadata,
   );
 }

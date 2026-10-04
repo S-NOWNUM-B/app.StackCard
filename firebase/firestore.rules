@@ -1,0 +1,228 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function validUsername(username) {
+      return username is string
+        && username.matches('^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$');
+    }
+
+    function accountPath(uid) {
+      return /databases/$(database)/documents/accounts/$(uid);
+    }
+
+    function claimPath(username) {
+      return /databases/$(database)/documents/usernames/$(username);
+    }
+
+    function publicPath(username) {
+      return /databases/$(database)/documents/publicPortfolios/$(username);
+    }
+
+    function validProfile(profile) {
+      return profile is map
+        && profile.keys().hasAll([
+          'name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl'
+        ])
+        && profile.keys().hasOnly([
+          'name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl'
+        ])
+        && profile.name is string && profile.username is string
+        && profile.headline is string && profile.bio is string
+        && profile.locationText is string && profile.avatarUrl is string;
+    }
+
+    function validContentFields(content) {
+      // Rules have no loops: list element validation belongs to the shared codec.
+      return content is map
+        && content.keys().hasAll([
+          'profile', 'skills', 'projects', 'experience', 'education', 'links',
+          'blocks', 'resumeText', 'theme'
+        ])
+        && validProfile(content.profile)
+        && content.skills is list && content.projects is list
+        && content.experience is list && content.education is list
+        && content.links is list && content.blocks is list
+        && content.resumeText is string && content.theme in ['dark', 'light'];
+    }
+
+    function validPublicContent(content) {
+      return validContentFields(content)
+        && content.keys().hasOnly([
+          'profile', 'skills', 'projects', 'experience', 'education', 'links',
+          'blocks', 'resumeText', 'theme'
+        ]);
+    }
+
+    function validPrivateContent(content, version) {
+      return version == 1 ? validPublicContent(content)
+        : validContentFields(content)
+          && content.keys().hasOnly([
+            'profile', 'skills', 'projects', 'experience', 'education', 'links',
+            'blocks', 'resumeText', 'theme', 'ignoredGitHubRepositories'
+          ])
+          && content.get('ignoredGitHubRepositories', []) is list;
+    }
+
+    function accountAdvanced(uid) {
+      let path = accountPath(uid);
+      return existsAfter(path)
+        && getAfter(path).data.ownerUid == uid
+        && getAfter(path).data.updatedAt == request.time
+        && getAfter(path).data.publicationVersion == (
+          exists(path) ? get(path).data.publicationVersion + 1 : 1
+        );
+    }
+
+    function linkedPublication(uid, username, version) {
+      return existsAfter(claimPath(username))
+        && getAfter(claimPath(username)).data.ownerUid == uid
+        && getAfter(claimPath(username)).data.username == username
+        && existsAfter(publicPath(username))
+        && getAfter(publicPath(username)).data.ownerUid == uid
+        && getAfter(publicPath(username)).data.username == username
+        && getAfter(publicPath(username)).data.publicationVersion == version
+        && getAfter(publicPath(username)).data.publishedAt == request.time;
+    }
+
+    function previousPublicationRemoved(previous, next) {
+      return previous == null || previous == next
+        || (!existsAfter(claimPath(previous))
+          && !existsAfter(publicPath(previous)));
+    }
+
+    function validAccount(data, uid) {
+      return data.keys().hasAll([
+          'ownerUid', 'username', 'updatedAt', 'publicationVersion'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid', 'username', 'updatedAt', 'publicationVersion'
+        ])
+        && data.ownerUid == uid
+        && (data.username == null || validUsername(data.username))
+        && data.updatedAt == request.time
+        && data.publicationVersion is int && data.publicationVersion >= 1;
+    }
+
+    function removedPublication(uid, username) {
+      return accountAdvanced(uid)
+        && exists(accountPath(uid))
+        && get(accountPath(uid)).data.username == username
+        && getAfter(accountPath(uid)).data.username != username
+        && !existsAfter(claimPath(username))
+        && !existsAfter(publicPath(username));
+    }
+
+    match /accounts/{uid} {
+      allow get: if owner(uid);
+      allow list, delete: if false;
+      allow create: if owner(uid)
+        && validAccount(request.resource.data, uid)
+        && request.resource.data.publicationVersion == 1
+        && validUsername(request.resource.data.username)
+        && linkedPublication(uid, request.resource.data.username, 1);
+      allow update: if owner(uid) && resource.data.ownerUid == uid
+        && validAccount(request.resource.data, uid)
+        && request.resource.data.publicationVersion
+          == resource.data.publicationVersion + 1
+        && previousPublicationRemoved(
+          resource.data.username, request.resource.data.username
+        )
+        && (request.resource.data.username == null
+          ? resource.data.username != null
+          : linkedPublication(uid, request.resource.data.username,
+            request.resource.data.publicationVersion));
+
+      match /drafts/{draftId} {
+        allow get: if draftId == 'current' && owner(uid);
+        allow delete: if draftId == 'current' && owner(uid);
+        allow list: if false;
+        allow create, update: if draftId == 'current' && owner(uid)
+          && (!exists(/databases/$(database)/documents/accounts/$(uid)/drafts/$(draftId))
+            || (resource.data.schemaVersion is int
+              && resource.data.schemaVersion in [1, 2]
+              && resource.data.ownerUid == uid
+              && resource.data.schemaVersion <= request.resource.data.schemaVersion))
+          && request.resource.data.keys().hasAll([
+            'schemaVersion', 'ownerUid', 'mutationId', 'localRevision',
+            'notes', 'content', 'updatedAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'schemaVersion', 'ownerUid', 'mutationId', 'localRevision',
+            'notes', 'content', 'updatedAt'
+          ])
+          && request.resource.data.schemaVersion is int
+          && request.resource.data.schemaVersion in [1, 2]
+          && request.resource.data.ownerUid == uid
+          && request.resource.data.mutationId is string
+          && request.resource.data.mutationId.size() > 0
+          && request.resource.data.localRevision is int
+          && request.resource.data.localRevision >= 1
+          && request.resource.data.notes is string
+          && (request.resource.data.content == null
+            || validPrivateContent(request.resource.data.content,
+              request.resource.data.schemaVersion))
+          && request.resource.data.updatedAt == request.time;
+      }
+    }
+
+    match /usernames/{username} {
+      allow get: if request.auth != null;
+      allow list: if false;
+      allow create, update: if request.auth != null && validUsername(username)
+        && request.resource.data.keys().hasAll(['ownerUid', 'username'])
+        && request.resource.data.keys().hasOnly(['ownerUid', 'username'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.username == username
+        && (!exists(claimPath(username))
+          || resource.data == request.resource.data)
+        && accountAdvanced(request.auth.uid)
+        && getAfter(accountPath(request.auth.uid)).data.username == username
+        && linkedPublication(request.auth.uid, username,
+          getAfter(accountPath(request.auth.uid)).data.publicationVersion);
+      allow delete: if owner(resource.data.ownerUid)
+        && removedPublication(resource.data.ownerUid, username);
+    }
+
+    match /publicPortfolios/{username} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if request.auth != null && validUsername(username)
+        && request.resource.data.keys().hasAll([
+          'schemaVersion', 'ownerUid', 'username', 'content', 'publishedAt',
+          'publicationVersion', 'sourceMutationId'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'schemaVersion', 'ownerUid', 'username', 'content', 'publishedAt',
+          'publicationVersion', 'sourceMutationId'
+        ])
+        && request.resource.data.schemaVersion is int
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.username == username
+        && validPublicContent(request.resource.data.content)
+        && request.resource.data.publishedAt == request.time
+        && request.resource.data.sourceMutationId is string
+        && request.resource.data.sourceMutationId == getAfter(
+          /databases/$(database)/documents/accounts/$(request.auth.uid)/drafts/current
+        ).data.mutationId
+        && (!exists(publicPath(username))
+          || resource.data.ownerUid == request.auth.uid)
+        && accountAdvanced(request.auth.uid)
+        && getAfter(accountPath(request.auth.uid)).data.username == username
+        && request.resource.data.publicationVersion
+          == getAfter(accountPath(request.auth.uid)).data.publicationVersion
+        && linkedPublication(request.auth.uid, username,
+          request.resource.data.publicationVersion);
+      allow delete: if owner(resource.data.ownerUid)
+        && removedPublication(resource.data.ownerUid, username);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

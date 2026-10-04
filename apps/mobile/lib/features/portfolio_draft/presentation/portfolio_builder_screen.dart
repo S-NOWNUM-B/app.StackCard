@@ -8,10 +8,12 @@ import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/portfolio_draft_repository.dart';
+import '../portfolio_draft_providers.dart';
 import 'portfolio_builder_actions.dart';
 import 'portfolio_builder_panels.dart';
 import 'portfolio_draft_controller.dart';
 import 'portfolio_draft_state.dart';
+import 'portfolio_sync_status.dart';
 
 class PortfolioBuilderScreen extends ConsumerWidget {
   const PortfolioBuilderScreen({super.key});
@@ -21,6 +23,8 @@ class PortfolioBuilderScreen extends ConsumerWidget {
     final state = ref.watch(portfolioDraftControllerProvider);
     final controller = ref.read(portfolioDraftControllerProvider.notifier);
     final strings = context.strings;
+    final cloudDraft = ref.watch(portfolioSyncRepositoryProvider) != null;
+    final showSync = ref.watch(portfolioSyncVisibleProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(strings.tr('builder.title')),
@@ -41,7 +45,11 @@ class PortfolioBuilderScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(strings.tr('builder.subtitle')),
+                  Text(
+                    strings.tr(
+                      cloudDraft ? 'sync.builderSubtitle' : 'builder.subtitle',
+                    ),
+                  ),
                   const SizedBox(height: StackCardSpacing.lg),
                   if (state.loading)
                     StackCardStateView(
@@ -73,6 +81,10 @@ class PortfolioBuilderScreen extends ConsumerWidget {
                     ),
                   ],
                   if (state.loaded && state.content == null) ...[
+                    if (showSync) ...[
+                      const PortfolioSyncStatusView(),
+                      const SizedBox(height: StackCardSpacing.lg),
+                    ],
                     StackCardStateView(
                       kind: StackCardViewState.empty,
                       title: strings.tr('builder.emptyTitle'),
@@ -90,7 +102,11 @@ class PortfolioBuilderScreen extends ConsumerWidget {
                     const SizedBox(height: StackCardSpacing.lg),
                     StackCardButton(
                       key: const ValueKey('builder_save'),
-                      label: strings.tr('builder.save'),
+                      label: strings.tr(
+                        state.remoteUpdateAvailable
+                            ? 'sync.saveMine'
+                            : 'builder.save',
+                      ),
                       icon: Icons.save_outlined,
                       primary: true,
                       loading: state.saving,
@@ -145,14 +161,15 @@ class PortfolioBuilderScreen extends ConsumerWidget {
   }
 }
 
-class _DraftStatus extends StatelessWidget {
+class _DraftStatus extends ConsumerWidget {
   const _DraftStatus({required this.state});
   final PortfolioDraftState state;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final strings = context.strings;
     final completion = state.completion!;
+    final showSync = ref.watch(portfolioSyncVisibleProvider);
     return StackCardCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -174,7 +191,19 @@ class _DraftStatus extends StatelessWidget {
           if (state.draft case final draft?) ...[
             const SizedBox(height: StackCardSpacing.sm),
             Text(strings.tr('builder.revision', {'revision': draft.revision})),
-            if (draft.pendingSync) Text(strings.tr('builder.pending')),
+            if (draft.pendingSync && !showSync)
+              Text(strings.tr('builder.pending')),
+          ],
+          if (showSync) ...[
+            const SizedBox(height: StackCardSpacing.sm),
+            const PortfolioSyncStatusView(),
+          ],
+          if (state.remoteUpdateAvailable) ...[
+            const SizedBox(height: StackCardSpacing.sm),
+            Text(
+              strings.tr('sync.remoteUpdate'),
+              key: const ValueKey('portfolio_remote_update'),
+            ),
           ],
           const SizedBox(height: StackCardSpacing.lg),
           Text(

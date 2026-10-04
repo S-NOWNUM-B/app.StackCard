@@ -35,7 +35,7 @@ void main() {
       expect(saved.pendingSync, isTrue);
       expect(box.keys.toList(), ['draft']);
       expect(jsonDecode(box.get('draft') as String), {
-        'schemaVersion': 2,
+        'schemaVersion': HivePortfolioDraftRepository.schemaVersion,
         'notes': saved.notes,
         'revision': 1,
         'updatedAt': now.toIso8601String(),
@@ -142,7 +142,11 @@ void main() {
     );
   }
 
-  for (final version in [0, 3, 999]) {
+  for (final version in [
+    0,
+    HivePortfolioDraftRepository.schemaVersion + 1,
+    999,
+  ]) {
     test(
       'Unknown schema version $version is preserved for explicit migration',
       () async {

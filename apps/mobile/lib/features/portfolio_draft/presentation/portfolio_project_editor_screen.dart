@@ -6,6 +6,8 @@ import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/portfolio_content.dart';
+import '../domain/portfolio_draft_repository.dart';
+import '../portfolio_draft_providers.dart';
 import 'builder_editor_widgets.dart';
 import 'portfolio_draft_controller.dart';
 
@@ -26,6 +28,9 @@ class _PortfolioProjectEditorScreenState
   Map<String, TextEditingController>? _controllers;
   bool _featured = false;
   bool _visible = true;
+  PortfolioProject? _initialProject;
+  PortfolioDraftRepository? _initialRepository;
+  bool _stale = false;
 
   @override
   void didUpdateWidget(PortfolioProjectEditorScreen oldWidget) {
@@ -34,6 +39,9 @@ class _PortfolioProjectEditorScreenState
       disposeBuilderFieldControllers(_controllers);
       _controllers = null;
       _fields = null;
+      _initialProject = null;
+      _initialRepository = null;
+      _stale = false;
     }
   }
 
@@ -52,6 +60,8 @@ class _PortfolioProjectEditorScreenState
 
   void _initialize(PortfolioProject? project) {
     if (_fields != null) return;
+    _initialProject = project;
+    _initialRepository = ref.read(portfolioDraftRepositoryProvider);
     _featured = project?.featured ?? false;
     _visible = project?.visible ?? true;
     _fields = [
@@ -118,10 +128,22 @@ class _PortfolioProjectEditorScreenState
     final state = ref.read(portfolioDraftControllerProvider);
     final current = state.content;
     if (!state.canEdit || current == null) return;
-    if (widget.projectId != null && _findProject(current) == null) return;
+    final existingProject = _findProject(current);
+    if (!identical(
+          _initialRepository,
+          ref.read(portfolioDraftRepositoryProvider),
+        ) ||
+        (widget.projectId != null && existingProject != _initialProject)) {
+      setState(() => _stale = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.strings.tr('githubSync.editorStale'))),
+      );
+      return;
+    }
+    if (widget.projectId != null && existingProject == null) return;
     final values = builderFieldValues(_controllers!);
     final controller = ref.read(portfolioDraftControllerProvider.notifier);
-    final project = PortfolioProject(
+    final edited = PortfolioProject(
       id: widget.projectId ?? controller.createId(),
       title: values['title']!,
       description: values['description']!,
@@ -131,6 +153,7 @@ class _PortfolioProjectEditorScreenState
       featured: _featured,
       visible: _visible,
     );
+    final project = existingProject?.withUserEdits(edited) ?? edited;
     controller.updateContent(
       current.copyWith(
         projects: [
@@ -172,6 +195,20 @@ class _PortfolioProjectEditorScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (_stale) ...[
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        context.strings.tr('githubSync.editorStale'),
+                        key: const ValueKey('builder_project_stale'),
+                      ),
+                    ),
+                    const SizedBox(height: StackCardSpacing.lg),
+                  ],
+                  if (project?.source == PortfolioProjectSource.github) ...[
+                    Text(context.strings.tr('githubSync.editorNote')),
+                    const SizedBox(height: StackCardSpacing.lg),
+                  ],
                   BuilderFields(
                     fields: _fields!,
                     controllers: _controllers!,

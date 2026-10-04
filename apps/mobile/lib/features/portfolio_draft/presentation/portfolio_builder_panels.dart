@@ -55,7 +55,13 @@ class PortfolioBuilderProjects extends ConsumerWidget {
     final content = state.content!;
     final controller = ref.read(portfolioDraftControllerProvider.notifier);
     return _Panel(
-      title: context.strings.tr('builder.projects'),
+      title: context.strings.tr(
+        content.projects.any(
+              (project) => project.source == PortfolioProjectSource.github,
+            )
+            ? 'githubSync.projects'
+            : 'builder.projects',
+      ),
       children: [
         StackCardButton(
           key: const ValueKey('builder_add_project'),

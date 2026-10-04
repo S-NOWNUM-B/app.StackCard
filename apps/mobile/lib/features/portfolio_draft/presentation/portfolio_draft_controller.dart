@@ -3,7 +3,11 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/portfolio_draft_repository.dart';
+import '../domain/portfolio_draft.dart';
+import '../domain/portfolio_sync.dart';
 import '../domain/portfolio_content.dart';
+import '../domain/portfolio_github_sync.dart' as github;
+import '../../auth/auth.dart';
 import '../portfolio_draft_providers.dart';
 import 'portfolio_draft_state.dart';
 
@@ -20,16 +24,36 @@ final portfolioWorkingContentProvider = Provider<PortfolioContent?>(
 class PortfolioDraftController extends Notifier<PortfolioDraftState> {
   int _generation = 0;
   int _idCounter = 0;
+  int _sourceGeneration = 0;
+  Object? _queuedDraft = _noDraftEvent;
   Future<void>? _loadOperation;
 
   PortfolioContent? get workingContent => state.content;
 
   @override
   PortfolioDraftState build() {
-    ref.watch(portfolioDraftRepositoryProvider);
+    final repository = ref.watch(portfolioDraftRepositoryProvider);
     _loadOperation = null;
+    _queuedDraft = _noDraftEvent;
     final initialRef = ref;
     final generation = ++_generation;
+    final sourceGeneration = ++_sourceGeneration;
+    if (repository is SyncPortfolioDraftRepository) {
+      final subscription = repository.watchDraft().listen((draft) {
+        if (!initialRef.mounted || sourceGeneration != _sourceGeneration) {
+          return;
+        }
+        if (!state.loaded || state.loading || state.saving) {
+          _queuedDraft = draft;
+        } else {
+          _acceptDurableDraft(draft);
+        }
+      });
+      ref.onDispose(() {
+        ++_sourceGeneration;
+        unawaited(subscription.cancel());
+      });
+    }
     Future<void>.microtask(() async {
       if (initialRef.mounted && generation == _generation) await load();
     });
@@ -71,8 +95,12 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
     final repository = ref.read(portfolioDraftRepositoryProvider);
     state = state.copyWith(loading: true, failure: null);
     try {
-      final draft = await repository.read();
+      final readDraft = await repository.read();
       if (!operationRef.mounted || generation != _generation) return;
+      final draft = identical(_queuedDraft, _noDraftEvent)
+          ? readDraft
+          : _queuedDraft as PortfolioDraft?;
+      _queuedDraft = _noDraftEvent;
       state = PortfolioDraftState(
         notes: draft?.notes ?? '',
         draft: draft,
@@ -109,6 +137,74 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
   String createId() =>
       '${DateTime.now().toUtc().microsecondsSinceEpoch}-${++_idCounter}';
 
+  bool addGitHubProject(
+    github.GitHubProjectSource source, {
+    DateTime? validatedAt,
+    required PortfolioDraftRepository expectedRepository,
+  }) => _applyGitHubAction(
+    expectedRepository,
+    (content) =>
+        github.addGitHubProject(content, source, validatedAt: validatedAt),
+  );
+
+  bool acceptGitHubChanges(
+    github.PortfolioGitHubReview review, {
+    DateTime? validatedAt,
+    required PortfolioDraftRepository expectedRepository,
+  }) => _applyGitHubAction(
+    expectedRepository,
+    (content) => github.acceptGitHubProjectChanges(
+      content,
+      review,
+      validatedAt: validatedAt,
+    ),
+  );
+
+  bool ignoreGitHubRepository(
+    github.GitHubProjectSource source, {
+    required PortfolioDraftRepository expectedRepository,
+  }) => _applyGitHubAction(
+    expectedRepository,
+    (content) => github.ignoreGitHubProject(content, source),
+  );
+
+  bool _applyGitHubAction(
+    PortfolioDraftRepository expectedRepository,
+    PortfolioContent Function(PortfolioContent content) action,
+  ) {
+    if (!state.canEdit ||
+        state.saving ||
+        !identical(
+          ref.read(portfolioDraftRepositoryProvider),
+          expectedRepository,
+        )) {
+      return false;
+    }
+    if (ref.read(accountAuthRepositoryProvider) != null) {
+      final session = ref.read(accountSessionProvider);
+      if (session.isLoading ||
+          session.hasError ||
+          !session.hasValue ||
+          (session.value == null && !ref.read(guestAccessProvider))) {
+        return false;
+      }
+    }
+    try {
+      final content = action(state.content ?? PortfolioContent());
+      updateContent(content);
+      return true;
+    } on github.PortfolioGitHubFailure catch (failure) {
+      state = state.copyWith(
+        failure: PortfolioDraftFailure(
+          failure.kind == github.PortfolioGitHubFailureKind.conflict
+              ? PortfolioDraftFailureKind.conflict
+              : PortfolioDraftFailureKind.invalidContent,
+        ),
+      );
+      return false;
+    }
+  }
+
   /// Явное чтение заново отбрасывает только текущие несохранённые правки.
   Future<void> reload() async {
     if (state.saving) return;
@@ -139,7 +235,9 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
         draft: draft,
         content: state.content == content ? draft.content : state.content,
         saving: false,
+        remoteUpdateAvailable: false,
       );
+      _acceptQueuedDraft();
     } on PortfolioDraftFailure catch (failure) {
       _saveFailure(operationRef, generation, failure);
     } catch (_) {
@@ -163,7 +261,38 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
   ) {
     if (!operationRef.mounted || generation != _generation) return;
     state = state.copyWith(saving: false, failure: failure);
+    _acceptQueuedDraft();
   }
+
+  void _acceptQueuedDraft() {
+    if (identical(_queuedDraft, _noDraftEvent)) return;
+    final draft = _queuedDraft as PortfolioDraft?;
+    _queuedDraft = _noDraftEvent;
+    _acceptDurableDraft(draft);
+  }
+
+  void _acceptDurableDraft(PortfolioDraft? draft) {
+    final previous = state.draft;
+    final contentChanged =
+        (previous?.notes ?? '') != (draft?.notes ?? '') ||
+        previous?.content != draft?.content;
+    if (state.hasUnsavedChanges) {
+      // Advance the baseline while retaining input; Save is an explicit LWW choice.
+      state = state.copyWith(
+        draft: draft,
+        remoteUpdateAvailable: state.remoteUpdateAvailable || contentChanged,
+      );
+      return;
+    }
+    state = state.copyWith(
+      draft: draft,
+      notes: draft?.notes ?? '',
+      content: draft?.content,
+      remoteUpdateAvailable: false,
+    );
+  }
+
+  static const _noDraftEvent = Object();
 
   static const _unavailable = PortfolioDraftFailure(
     PortfolioDraftFailureKind.unavailable,

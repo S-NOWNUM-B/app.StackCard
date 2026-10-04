@@ -14,6 +14,7 @@ final class PortfolioDraftState {
     this.loading = true,
     this.loaded = false,
     this.saving = false,
+    this.remoteUpdateAvailable = false,
     this.failure,
   });
 
@@ -23,6 +24,7 @@ final class PortfolioDraftState {
   final bool loading;
   final bool loaded;
   final bool saving;
+  final bool remoteUpdateAvailable;
   final PortfolioDraftFailure? failure;
 
   bool get hasUnsavedChanges =>
@@ -46,6 +48,7 @@ final class PortfolioDraftState {
     bool? loading,
     bool? loaded,
     bool? saving,
+    bool? remoteUpdateAvailable,
     Object? failure = _unchanged,
   }) => PortfolioDraftState(
     notes: notes ?? this.notes,
@@ -56,6 +59,7 @@ final class PortfolioDraftState {
     loading: loading ?? this.loading,
     loaded: loaded ?? this.loaded,
     saving: saving ?? this.saving,
+    remoteUpdateAvailable: remoteUpdateAvailable ?? this.remoteUpdateAvailable,
     failure: identical(failure, _unchanged)
         ? this.failure
         : failure as PortfolioDraftFailure?,

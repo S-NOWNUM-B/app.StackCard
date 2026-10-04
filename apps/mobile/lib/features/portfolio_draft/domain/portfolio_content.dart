@@ -2,6 +2,7 @@ import 'portfolio_collection_equality.dart';
 import 'portfolio_profile.dart';
 import 'portfolio_project.dart';
 import 'portfolio_sections.dart';
+import 'portfolio_github_sync.dart';
 
 export 'portfolio_profile.dart';
 export 'portfolio_project.dart';
@@ -18,12 +19,14 @@ final class PortfolioContent {
     List<SocialLink> links = const [],
     this.resumeText = '',
     List<PortfolioBlock>? blocks,
+    List<GitHubIgnoredRepository> ignoredGitHubRepositories = const [],
     this.theme = PortfolioTheme.dark,
   }) : skills = List.unmodifiable(skills),
        projects = List.unmodifiable(projects),
        experience = List.unmodifiable(experience),
        education = List.unmodifiable(education),
        links = List.unmodifiable(links),
+       ignoredGitHubRepositories = List.unmodifiable(ignoredGitHubRepositories),
        blocks = List.unmodifiable(
          blocks ??
              PortfolioBlockKind.values.map(
@@ -40,6 +43,7 @@ final class PortfolioContent {
   final List<PortfolioBlock> blocks;
   final String resumeText;
   final PortfolioTheme theme;
+  final List<GitHubIgnoredRepository> ignoredGitHubRepositories;
 
   PortfolioContent copyWith({
     PortfolioProfile? profile,
@@ -51,6 +55,7 @@ final class PortfolioContent {
     List<PortfolioBlock>? blocks,
     String? resumeText,
     PortfolioTheme? theme,
+    List<GitHubIgnoredRepository>? ignoredGitHubRepositories,
   }) => PortfolioContent(
     profile: profile ?? this.profile,
     skills: skills ?? this.skills,
@@ -61,6 +66,8 @@ final class PortfolioContent {
     blocks: blocks ?? this.blocks,
     resumeText: resumeText ?? this.resumeText,
     theme: theme ?? this.theme,
+    ignoredGitHubRepositories:
+        ignoredGitHubRepositories ?? this.ignoredGitHubRepositories,
   );
 
   @override
@@ -74,6 +81,10 @@ final class PortfolioContent {
       portfolioListEquals(other.experience, experience) &&
       portfolioListEquals(other.education, education) &&
       portfolioListEquals(other.links, links) &&
+      portfolioListEquals(
+        other.ignoredGitHubRepositories,
+        ignoredGitHubRepositories,
+      ) &&
       portfolioListEquals(other.blocks, blocks);
 
   @override
@@ -86,6 +97,7 @@ final class PortfolioContent {
     Object.hashAll(experience),
     Object.hashAll(education),
     Object.hashAll(links),
+    Object.hashAll(ignoredGitHubRepositories),
     Object.hashAll(blocks),
   );
 }

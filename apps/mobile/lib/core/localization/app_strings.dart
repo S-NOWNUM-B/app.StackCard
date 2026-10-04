@@ -6,6 +6,9 @@ import 'builder_strings.dart';
 import 'builder_form_strings.dart';
 import 'builder_integration_strings.dart';
 import 'github_strings.dart';
+import 'github_sync_strings.dart';
+import 'auth_strings.dart';
+import 'sync_strings.dart';
 
 class AppStrings {
   const AppStrings(this.locale);
@@ -213,6 +216,9 @@ const russianAppStrings = <String, String>{
       "Добавьте первый проект, когда будет доступен редактор.",
   "settings.errorMessage": "Пример ошибки. Повтор открывает пустое состояние.",
   ...russianGitHubStrings,
+  ...russianGitHubSyncStrings,
+  ...russianAuthStrings,
+  ...russianSyncStrings,
   ...russianDraftStrings,
   ...builderRussianStrings,
   ...builderFormRussianStrings,
@@ -355,6 +361,9 @@ const englishAppStrings = <String, String>{
       "Add your first project when the editor is available.",
   "settings.errorMessage": "An example error. Retry opens the empty state.",
   ...englishGitHubStrings,
+  ...englishGitHubSyncStrings,
+  ...englishAuthStrings,
+  ...englishSyncStrings,
   ...englishDraftStrings,
   ...builderEnglishStrings,
   ...builderFormEnglishStrings,

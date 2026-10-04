@@ -10,7 +10,7 @@
 | Один monorepo, Flutter в `apps/mobile`, будущий сайт в `apps/web` | Mobile и web-редактор/публичные страницы — один продукт; каталог `apps/web` подготовлен с README, приложение ещё не создано |
 | Перенос существующего scaffold, mobile только Android/iOS | Сохраняет Android/iOS native configs и настройки; desktop и Flutter web targets удалены, повторный `flutter create` не нужен |
 | Минимальный запуск без будущих packages | Счётчик и widget test проверяют фундамент без premature architecture |
-| Firebase вместо своего backend в v1 | Единый аккаунт и данные для mobile/web, меньше компонентов; сервисы пока не настроены |
+| Firebase вместо своего backend в v1 | Единый аккаунт и данные для mobile/web, меньше компонентов; Auth подключается на Phase 7, Firestore/Storage и sync — по roadmap |
 | Next.js для сайта и web-редактора на Phase 13 | Главная, скачивание mobile, защищённый кабинет и public portfolio с SEO/metadata/OpenGraph; отдельное приложение `apps/web` |
 | Два редактора одного портфолио | Mobile и web работают с общим private draft и правилами публикации; согласованные data contracts реализуются отдельно в Dart/TypeScript |
 | Mobile offline, web v1 online-first | Mobile хранит локальный draft/cache; web показывает статус сохранения/sync и требует сети для удалённых действий |
@@ -120,7 +120,7 @@ Runtime composition — [LocalRuntime](../../apps/mobile/lib/app/local_runtime.d
 | Nullable content для legacy draft и пустой content при начале Builder | Скопировать demo/GitHub data в пользовательский draft | Notes-only v1 не выдаётся за заполненное портфолио; null отличается от начатого пустого Builder. GitHub Import остаётся отдельным source и не меняет curated content |
 | Private notes вне `PortfolioContent` | Включить notes в рендеримый content | `/portfolio-draft` использует тот же controller/repository, но preview получает только content; заметки не становятся частью портфолио |
 | Envelope v2 с raw v1 backup перед явной записью | Переписать v1 при чтении или обнулить неподдерживаемый draft | Чтение сохраняет точные notes/metadata без write. Backup/write failure оставляет прежний durable draft; corrupted/unknown schema блокирует перезапись, cache eviction не затрагивает draft |
-| Последовательный Save с `expectedRevision` | Перезаписывать без проверки durable revision | Stale revision даёт conflict без потери более свежей записи. UI сохраняет рабочий ввод; явный reload требует решения отбросить несохранённые изменения. Это локальная защита, remote multi-device strategy ещё не выбрана |
+| Последовательный Save с `expectedRevision` | Перезаписывать без проверки durable revision | Stale revision даёт conflict без потери более свежей записи. UI сохраняет рабочий ввод; явный reload требует решения отбросить несохранённые изменения. Это локальная защита; remote LWW определяется отдельно на Phase 8 |
 | Рабочий content и durable snapshot в одном session controller | Preview только последней записи или второй mutable preview store | Preview показывает applied изменения до Save с честным unsaved status. Save захватывает snapshot, более новые правки остаются unsaved; failure сохраняет ввод, duplicate Save блокируется |
 | Pure validation и пять шагов полноты | Сохранять процент либо считать только видимые блоки | Профиль, About, навыки, видимый проект и ссылки дают полноту; optional разделы не обязательны, скрытие блока не повышает процент. Неполный draft допустим, некорректные значения не сохраняются |
 | `PortfolioTheme` отдельно от app ThemeMode | Менять тему приложения при выборе оформления портфолио | Dark/light хранится в content и использует существующую StackCardTheme для отображения Portfolio/preview; AppearanceController продолжает владеть настройками приложения |
@@ -135,12 +135,68 @@ Sources: публичный [portfolio draft API](../../apps/mobile/lib/features
 Подробный contract — в [architecture](../architecture/architecture.md#portfolio-domain-и-локальный-builder),
 приёмка и ограничения — в [Phase 6](../product/product-spec.md#phase-6--portfolio-domain-и-локальный-builder).
 
+## Принято для Phase 7
+
+| Решение | Рассмотренная альтернатива | Причина и последствия |
+| --- | --- | --- |
+| Additive `AccountAuthRepository` с pure Dart `AuthUser` и typed failure | Заменить `DemoSession` Firebase SDK user во всех слоях | Firebase adapter изолирует SDK; legacy demo остаётся preview/test API без native account configuration и не авторизует аккаунт |
+| Firebase session stream отдельно от async actions и explicit guest access | Считать успех формы источником auth state или автоматически открывать guest при ошибке | SDK определяет восстановление/выход; restoring/error/signedOut блокируют private access. Guest выбирается явно; configuration failure не включает demo fallback |
+| Именованные routes, nested Builder forms и whitelist `from` | Незащищённые private paths или произвольный return URL | Auth redirects допускают account/explicit local guest; публичны auth forms и GitHub Import. Router читает access gate, не владеет session/draft |
+| Guest keys сохранены, account draft хранится по encoded UID | Общий draft на устройстве либо raw UID в storage paths | Base64url UTF-8 даёт раздельные стабильные namespaces с прежним envelope/revisions/v1 backup. Settings и публичный GitHub cache не зависят от account |
+| Явный guest transfer только в пустой target с durable journal | Автоматически копировать/сливать draft при входе | Source и backup сохраняются без скрытой migration; owner reservation не позволяет второму UID забрать source после сбоя. Retry transfer того же owner завершает запись/cleanup, corrupt/unsupported/occupied records не перезаписываются |
+| Shared Box queue и persistent guest generation | Очередь только одного adapter или удалить guest без tombstone | Revision/transfer сериализованы между instances; in-flight save остаётся в исходном namespace. Старый guest repository не может воскресить переданный account draft |
+| UID/access boundary очищает private session state | Сохранить controller/forms последнего account при переключении | Меняются draft controller и projections, сбрасываются query/filter и private widgets; sign out подтверждает discard несохранённых правок, durable data остаётся у владельца |
+| Session persistence принадлежит Firebase SDK | Хранить password/token в Hive/preferences | App persistence содержит portfolio/settings/cache, но не auth credentials; runtime configuration и generated Firebase sources остаются у mobile приложения |
+
+Sources: [account API](../../apps/mobile/lib/features/auth/auth.dart),
+[Firebase adapter](../../apps/mobile/lib/features/auth/data/firebase_account_auth_repository.dart),
+[router](../../apps/mobile/lib/app/app_router.dart),
+[draft DI](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft_providers.dart),
+[LocalDraftAccounts](../../apps/mobile/lib/features/portfolio_draft/data/local_draft_accounts.dart) и
+[LocalRuntime](../../apps/mobile/lib/app/local_runtime.dart).
+Подробный contract — в [architecture](../architecture/architecture.md#authentication-и-изоляция-локального-draft).
+Это решения текущей реализации, не отчёт о завершённой приёмке: Google flow,
+полный password reset и iOS проверены не полностью;
+результаты и оставшаяся работа — в [Phase 7](../product/product-spec.md#phase-7--firebase-authentication).
+
+## Принято для Phase 8
+
+Пользователь отдельно разрешил переход к Phase 8; незакрытая приёмка Phase 7
+сохраняется в product spec. Schema и последствия согласованы до remote writes в
+[ADR 0001 — Firestore sync и явная публикация](0001-firestore-sync-and-publication.md).
+
+| Решение | Рассмотренная альтернатива | Причина и последствия |
+| --- | --- | --- |
+| Hive cache и durable UID outbox поверх Firestore adapter | Полагаться только на SDK cache | Awaited local Save остаётся доступен offline; captured mutation связывает ACK с конкретной revision, новый Save не теряет pending |
+| Whole-document LWW по server commit order | CAS transactions, field merge или CRDT | Минимальная совместимая модель для mobile/web; поздний offline commit или retry может заменить более свежий draft другого клиента, конкурирующие правки не сливаются |
+| Working state отдельно от remote durable snapshot | Перезаписать форму при любом server event | Controller сохраняет unsaved ввод; remote update меняет durable cache, local revision не сравнивается между устройствами |
+| Online guest transfer только в пустой local/cloud target | Принять local cache miss за отсутствие remote draft | Durable owner journal предшествует create-if-absent transaction; ACK metadata сохраняется до cleanup, recovery не повторяет завершённый claim. Existing cloud data не заменяются обычным LWW |
+| Раздельные private draft/account и public snapshot/reservation | Один published-флаг в private draft | Private notes/account data не доступны anonymous; publication transaction и Rules связывают account pointer, username и snapshot |
+| Public projection и явный publish/unpublish | Публиковать whole draft при sync | Hidden blocks/projects не раскрываются payload; sync не меняет public snapshot. Unpublish сохраняет draft и освобождает username |
+| Emulator Rules tests и отдельная opt-in native acceptance | Считать mock tests доказательством live Firebase | Проверяются ownership/atomicity отдельно от SDK offline/reconnect/restart; результаты и ограничения фиксируются по фактическим запускам |
+
+Sources: [sync contracts](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_sync.dart),
+[local-first repository](../../apps/mobile/lib/features/portfolio_draft/data/synced_portfolio_draft_repository.dart),
+[Firestore adapter](../../apps/mobile/lib/features/portfolio_draft/data/firestore_portfolio_draft_repository.dart),
+[publication repository](../../apps/mobile/lib/features/portfolio_draft/data/firestore_portfolio_publication_repository.dart)
+и [Rules](../../firebase/firestore.rules). Подробный contract — в
+[architecture](../architecture/architecture.md#source-draft-и-публикация), приёмка — в
+[Phase 8](../product/product-spec.md#phase-8--firestore-synchronization).
+
+## Принято для Phase 9
+
+[ADR 0002](0002-github-import-and-review.md) фиксирует source/curated границу,
+явные Add/Review/Ignore, overrides и совместимость сохранённых draft.
+Стабильный repository ID предотвращает дубликаты; refresh не пишет curated content.
+Ручные правки сохраняются при Accept; Ignore относится к конкретной source версии.
+Hive v3/private Firestore schema 2 защищают metadata от старых writers;
+public schema 1 исключает source/override/ignore state.
+Приёмка — в [Phase 9](../product/product-spec.md#phase-9--living-portfolio--smart-github-sync).
+
 ## Решить перед соответствующими фазами
 
-- Sync conflict strategy и поведение при нескольких устройствах, включая правки
-  из mobile и web; согласование и проверка совместимости data contracts.
-- Firestore schema, private draft/public snapshot, username uniqueness,
-  атомарность publish/unpublish.
+- Перед Phase 13 проверить совместимость web с принятыми Firestore envelope,
+  ownership, LWW и publication contracts; пересмотр strategy требует нового ADR.
 - Перед изменением storage schema определить явную migration пользовательского
   draft и совместимость revisions; cache можно воспроизвести из source API.
 - Contact spam/rate limiting и доверенная отправка notifications.

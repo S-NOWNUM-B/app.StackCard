@@ -1,0 +1,20 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "drafts",
+      "fieldPath": "content",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "drafts",
+      "fieldPath": "notes",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "publicPortfolios",
+      "fieldPath": "content",
+      "indexes": []
+    }
+  ]
+}

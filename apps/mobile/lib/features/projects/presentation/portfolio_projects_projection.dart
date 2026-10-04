@@ -12,7 +12,9 @@ List<Project> projectPortfolioProjects(PortfolioContent content) =>
           technologies: project.technologies,
           symbol: '${index + 1}'.padLeft(2, '0'),
           category: 'Portfolio',
-          source: ProjectSource.manual,
+          source: project.source == PortfolioProjectSource.github
+              ? ProjectSource.github
+              : ProjectSource.manual,
           featured: project.featured,
           visible: project.visible,
           details: [
