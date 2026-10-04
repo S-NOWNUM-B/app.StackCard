@@ -5,7 +5,7 @@
 **Процесс работы, проверки и правила внесения согласованных изменений**
 
 ![Contributing guide](https://raster.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
-![Scope Phase 6](https://raster.shields.io/badge/Scope-Phase_6-FF0012?style=for-the-badge)
+![Scope Phase 9 complete](https://raster.shields.io/badge/Scope-Phase_9_complete-FF0012?style=for-the-badge)
 
 </div>
 
@@ -17,6 +17,7 @@
 - [Процесс работы](#процесс-работы)
 - [Требования к изменениям](#требования-к-изменениям)
 - [Быстрый старт](#быстрый-старт)
+- [Firebase configuration и окружение](#firebase-configuration-и-окружение)
 - [Основные команды](#основные-команды)
 - [Проверки](#проверки)
 - [Коммиты](#коммиты)
@@ -26,10 +27,13 @@
 
 ## Что вносить
 
-Phase 0–6 завершены; последнее поручение — локальный Builder на Phase 6.
-Реализованы формы, portfolio domain и preview поверх persistent local draft;
+Phase 0–6 завершены; отдельно разрешённая Phase 8 — Firestore sync — завершена.
+Account session/actions, auth guards и UID isolation введены на Phase 7;
+Google flow, полный password reset и iOS приёмка остаются открытыми.
+Phase 8 добавила local-first sync и подготовила atomic publication repository;
+Phase 9 завершена: явный GitHub import/review/ignore сохраняет ручные overrides;
 статус и результаты проверок находятся в
-[product spec](docs/product/product-spec.md#phase-6--portfolio-domain-и-локальный-builder).
+[product spec](docs/product/product-spec.md#phase-9--living-portfolio--smart-github-sync).
 Продуктовые функции вводятся последовательно по
 [roadmap](docs/product/product-spec.md#roadmap),
 переход к следующей фазе требует подтверждения пользователя.
@@ -45,7 +49,9 @@ Phase 0–6 завершены; последнее поручение — лок
 | **Направление** | **Допустимые изменения сейчас** |
 |:---|:---|
 | Документация | Уточнение сценариев, границ, источников и способов работы |
-| Mobile UI и storage | Локальный Builder/preview, ручные проекты, private notes, GitHub Import с offline copy и app settings |
+| Mobile UI и storage | Builder/preview, ручные и импортированные проекты, private notes, GitHub Import/review/ignore с offline copy и app settings |
+| Mobile authentication | Firebase email/password, registration/reset, Google sign-in, session restoration/sign out; именованные защищённые routes и явный guest/UID draft transfer |
+| Firestore synchronization | Account draft поверх Hive, durable outbox, pending/synced/error/retry, multi-device LWW; private/public Rules и подготовка atomic publication без public UI |
 | Mobile state и architecture | Provider для ThemeMode/Locale/preferences; Riverpod для repository loading/actions, DI и filters; pure Dart contracts и data adapters, учебные patches вне runtime |
 | Структура | Согласование путей, ignore rules и общего AI-контекста |
 | Brand assets | Сохранение оригиналов и описания их применения |
@@ -62,7 +68,9 @@ Cache имеет hard TTL 7 дней и проверяется сетью при
 Resume редактируется как plain text; ручные изменения сохраняются явным Save;
 прочитанные данные не добавляются автоматически в curated-портфолио.
 В `apps/web` подготовлен README; Next.js-приложение появится на Phase 13.
-Firebase, web dependencies и packages будущих фаз заранее не подключаются.
+Firebase Auth остаётся account boundary; Firestore sync относится к Phase 8.
+Publish/unpublish repository подготовлен для отдельного явного действия,
+public UI и web dependencies вводятся на своих фазах.
 
 ---
 
@@ -72,7 +80,8 @@ Firebase, web dependencies и packages будущих фаз заранее не
 
 Начни с [README](README.md), [общих правил](docs/AI/AGENTS.md) и
 [AI router](docs/AI/README.md). Для mobile прочитай
-[scope rules](docs/AI/scopes/mobile.md). Затем прочитай
+[scope rules](docs/AI/scopes/mobile.md), для Rules/emulators —
+[Firebase scope](docs/AI/scopes/firebase.md). Затем прочитай
 [план разработки](docs/product/product-spec.md#план-разработки) и раздел нужной
 фазы. Соотнеси задачу с её критериями готовности, установи текущий статус,
 владельца контракта и конкретный проверяемый результат.
@@ -92,8 +101,13 @@ presentation read model обзора. Чистый Builder domain принадл
 validators и versioned cache; controller — загрузкой, refresh, локальным debounce
 и обработкой typed failures. Settings contracts и app-level состояние находятся
 в нейтральном `core/state`; data adapter пишет один version 1 snapshot через
-SharedPreferencesAsync. Bootstrap восстанавливает настройки и открывает отдельные
-Hive boxes до создания `StackCardApp`. Storage, network failures и rate-limit
+SharedPreferencesAsync. Bootstrap восстанавливает настройки, открывает отдельные
+Hive boxes и настраивает Firebase Auth/Firestore до создания `StackCardApp`.
+Account SDK изолирован в data; guest/UID draft factory выбирается через DI.
+Account adapter сохраняет локально и отправляет durable outbox отдельно;
+whole-document LWW и private/public схема описаны в
+[ADR 0001](docs/decisions/0001-firestore-sync-and-publication.md).
+Storage, network failures и rate-limit
 deadline проверяются через подменяемые repositories, cache и clock.
 Подробное направление зависимостей — в
 [architecture](docs/architecture/architecture.md#mobile-modules--при-реальных-сценариях).
@@ -153,9 +167,13 @@ flutter run -d <device-id>
 из `flutter devices`. Android — первый release target; iOS также входит в scope.
 Открывай `apps/mobile`, если IDE не обнаруживает Flutter-проект в корне monorepo.
 
-После запуска появляется экран знакомства со StackCard. «Открыть демо» ведёт
-на главную; в навигации доступны Портфолио, Проекты и Настройки. Core-портфолио
-использует демонстрационные данные. Кнопка «GitHub Import» на Projects открывает
+Native запуск открывает auth screen: email/password, registration, reset,
+Google sign-in либо явно выбранный локальный guest-режим.
+Configuration и готовность способов входа описаны [ниже](#firebase-configuration-и-окружение).
+Private routes доступны account или local guest; до начала Builder core-портфолио
+использует демонстрационные данные. Legacy «Открыть демо» сохранён только в
+preview/tests `StackCardApp` без native account configuration.
+Кнопка «GitHub Import» на Projects открывает
 `/github-import`: отправка username загружает публичный профиль и repositories.
 Поиск работает по уже загруженным данным с debounce 300 ms; «Загрузить ещё»
 читает следующую страницу из Link. Ошибки повторяются только по действию
@@ -166,8 +184,113 @@ descriptions. Переведены UI и сообщения; пользоват�
 явное сохранение переживает перезапуск, несохранённый ввод — только навигацию
 текущей session. «Открыть Builder» позволяет заполнить профиль, списки и Resume,
 добавить ручной проект, изменить featured/видимость и порядок блоков. Preview читает
-рабочий ввод; Save сохраняет всё портфолио и notes. Авторизация и web-редактор
-вводятся на следующих фазах.
+рабочий ввод; Save сохраняет всё портфолио и notes в namespace текущего владельца.
+Settings позволяет явно перенести сохранённый guest draft в account при наличии
+сети и пустом local/cloud draft. Cloud claim проверяется transaction; при сбое
+source сохраняется для повтора тем же UID, существующие remote данные не заменяются.
+Sign out с несохранёнными правками требует подтверждения; durable draft остаётся
+у своего UID, settings/cache сохраняются. Account draft синхронизируется через
+Firestore с pending/synced/error и retry; guest остаётся local-only. Remote update
+не отбрасывает unsaved ввод. Поздний server commit может заменить draft другого
+устройства целиком; sync не публикует портфолио. Web-редактор вводится на своей фазе.
+
+---
+
+## Firebase configuration и окружение
+
+Native composition находится в
+[LocalRuntime](apps/mobile/lib/app/local_runtime.dart), запуск с account adapter —
+в [main.dart](apps/mobile/lib/main.dart). По умолчанию используется generated dev
+configuration: `projectId` и app identifiers берутся из
+[firebase_options.dart](apps/mobile/lib/firebase_options.dart) и
+[firebase.json](apps/mobile/firebase.json), Android — из
+[google-services.json](apps/mobile/android/app/google-services.json), iOS — из
+[GoogleService-Info.plist](apps/mobile/ios/Runner/GoogleService-Info.plist).
+Android/iOS apps зарегистрированы; эти файлы обновляются FlutterFire CLI,
+а runtime initialization остаётся обычным кодом. Generated identifiers не являются
+service-account secrets; credentials, signing keys и SDK paths в Git не добавляются.
+Порядок генерации описан в [официальном Flutter setup](https://firebase.google.com/docs/flutter/setup).
+
+Для обновления configuration нужны Firebase CLI с доступом к выбранному dev
+project и FlutterFire CLI. На macOS для iOS generation используется Ruby
+`xcodeproj`; установленный generator не заменяет Xcode/CocoaPods для сборки.
+Если FlutterFire CLI отсутствует, установи его через `dart pub global activate flutterfire_cli`.
+macOS — zsh/bash, из `apps/mobile`; `<project-id>` замени значением canonical
+`projectId` и выбирай существующие Android/iOS apps:
+
+```sh
+firebase login
+dart pub global run flutterfire_cli:flutterfire configure --project="<project-id>" --platforms=android,ios
+```
+
+Команда меняет generated/native configuration; после неё проверь diff и совпадение
+application ID/bundle ID с существующими приложениями. Packages Auth уже есть
+в pubspec; повторно добавлять зависимости ради генерации не нужно.
+
+В dev Firebase Console включён Email/Password. Для нового окружения включи его
+в Authentication → Sign-in method по
+[password-auth guide](https://firebase.google.com/docs/auth/flutter/password-auth).
+Google provider подготовлен, но сохранение provider в Console требует выбранного
+project support email; live Google flow пока не подтверждён.
+Для Android зарегистрирован debug SHA-1. На другой машине или для другого
+signing certificate получи fingerprint и добавь его к соответствующему Firebase
+app; Google provider должен быть включён, а config после этого обновлён.
+Требования — в [Google authentication guide](https://firebase.google.com/docs/auth/flutter/federated-auth#google).
+macOS — zsh/bash, из `apps/mobile`:
+
+```sh
+./android/gradlew -p android signingReport
+```
+
+Для отдельно запущенного Auth Emulator runtime принимает необязательные
+`FIREBASE_AUTH_EMULATOR_HOST` и `FIREBASE_AUTH_EMULATOR_PORT` через `--dart-define`.
+Host задаётся без протокола и port; port по умолчанию — 9099. Для Android
+emulator, обращающегося к сервису на host machine, используется `10.0.2.2`.
+Настройка самого сервиса — в [Auth Emulator guide](https://firebase.google.com/docs/emulator-suite/connect_auth).
+macOS — zsh/bash, из `apps/mobile`, после запуска emulator service:
+
+```sh
+flutter run -d "<android-id>" --dart-define=FIREBASE_AUTH_EMULATOR_HOST=10.0.2.2 --dart-define=FIREBASE_AUTH_EMULATOR_PORT=9099
+```
+
+Без host define app использует Firebase project из generated options. Emulator
+проверки не подтверждают настоящий Google consent/account picker.
+Приложение не сохраняет password/token в Hive или preferences; восстановление
+account session выполняет Firebase SDK. App settings/public GitHub cache
+не зависят от UID, а draft изолирован в guest/UID namespaces.
+
+Firestore Rules/indexes и Emulator Suite configuration находятся отдельно в
+[firebase](firebase/); [ADR 0001](docs/decisions/0001-firestore-sync-and-publication.md)
+задаёт private account/draft, public snapshot и LWW. Native runtime принимает
+`FIRESTORE_EMULATOR_HOST` и `FIRESTORE_EMULATOR_PORT` через `--dart-define`;
+host задаётся без протокола/port. Явно передавай port из
+[firebase/firebase.json](firebase/firebase.json): default SDK define может
+отличаться от project emulator port. Это отдельный сервис от Auth Emulator.
+
+Для отдельной local development session запусти сервис с generated project ID;
+это emulator namespace, не deployment. macOS — zsh/bash, из корня репозитория:
+
+```sh
+cd firebase
+firebase emulators:start --only firestore --project stackcard-dev-snownumb
+```
+
+macOS — zsh/bash, в другом терминале из `apps/mobile`, после запуска Firestore Emulator Suite;
+пример использует текущий port из canonical config:
+
+```sh
+flutter run -d "<android-id>" --dart-define=FIRESTORE_EMULATOR_HOST=10.0.2.2 --dart-define=FIRESTORE_EMULATOR_PORT=8085
+```
+
+Auth Emulator defines можно добавить к этой команде, если отдельно запущен и
+настроен Auth Emulator. Без Firestore host define SDK использует dev database
+generated project. Firebase billing upgrade не нужен для текущего dev setup
+и автоматически не выполняется. Rules и native команды — в
+[разделе проверок](#firestore-rules-и-native-sync-acceptance).
+
+Android — доступный target текущей среды. iOS configuration сгенерирована, но
+native iOS build/приёмка недоступны при неполном Xcode и отсутствии CocoaPods;
+проверяй фактический toolchain через `flutter doctor -v`.
 
 ---
 
@@ -182,7 +305,7 @@ macOS — zsh/bash, команды выполняются из `apps/mobile`:
 | `flutter pub get` | Разрешить зависимости приложения |
 | `flutter doctor -v` | Проверить Flutter и нативные toolchains |
 | `flutter devices` | Получить доступные target IDs |
-| `dart format --output=none --set-exit-if-changed lib test` | Проверить форматирование |
+| `dart format --output=none --set-exit-if-changed lib test integration_test` | Проверить форматирование |
 | `flutter analyze` | Статический анализ Dart |
 | `flutter test` | Проверить состояние, UI-сценарии, адаптивность, контраст и touch targets |
 
@@ -192,7 +315,7 @@ macOS — zsh/bash, команды выполняются из `apps/mobile`:
 [разделе проверок](#проверки).
 
 Секреты, service-account keys, signing keys и локальные SDK paths в Git не попадают.
-Firebase/env setup пока отсутствует и будет спроектирован при подключении сервисов.
+Firebase/env contract описан в [разделе configuration](#firebase-configuration-и-окружение).
 
 ---
 
@@ -204,13 +327,14 @@ Firebase/env setup пока отсутствует и будет спроект�
 
 ```sh
 flutter pub get
-dart format --output=none --set-exit-if-changed lib test
+dart format --output=none --set-exit-if-changed lib test integration_test
 flutter analyze
 flutter test
 ```
 
 Ожидаются успешный exit code, отсутствие ошибок анализа и прошедшие tests.
-`test/widget_test.dart` проверяет вход в демо, переходы и возврат, поиск проектов,
+`test/widget_test.dart` проверяет legacy preview-вход без native configuration,
+переходы и возврат, поиск проектов,
 предпросмотр, смену темы, UI states и клавиатуру. `test/responsive_test.dart`
 проверяет пять экранов в двух темах на размерах телефона и планшета, portrait/landscape,
 включая узкий экран и удвоенный текст. При обычном масштабе проверяются контраст
@@ -240,10 +364,130 @@ snapshot restore, очередь записей/retry, ru/en UI и увелич�
 `test/portfolio_draft_repository_test.dart`, `test/portfolio_draft_controller_test.dart`
 и `test/portfolio_draft_widget_test.dart` проверяют saved notes, revisions,
 сохранность ввода при ошибках, unknown schema и экран локального draft.
-Builder domain/repository tests проверяют validation/completion, schema v1→v2
+Builder domain/repository tests проверяют validation/completion, schema v1/v2→v3
 и сохранность private notes; controller/forms/preview/integration tests проверяют
 CRUD, рабочее состояние, сохранение и единые проекции. Визуальные проверки
 Builder находятся в `test/portfolio_builder_visual_test.dart`.
+Account tests находятся в `test/firebase_auth_repository_test.dart`,
+`test/firebase_auth_controller_test.dart`, `test/firebase_auth_google_test.dart`,
+`test/account_auth_ui_test.dart`, `test/account_navigation_test.dart`,
+`test/account_draft_transfer_widget_test.dart` и `test/local_draft_accounts_test.dart`.
+Они проверяют SDK mapping/typed failures, session/guest access, именованные
+guarded/nested routes, UID transitions, explicit transfer и real Hive recovery.
+Заменяемые SDK sources и widget tests не доказывают live auth или iOS readiness.
+
+### Native Firebase Auth acceptance
+
+[integration_test/account_runtime_test.dart](apps/mobile/integration_test/account_runtime_test.dart)
+запускается отдельно и только с opt-in define и `--no-uninstall`, чтобы runner
+не удалял приложение и локальные данные после проверки. Он обращается к generated dev
+Firebase project, требует уже signed-out development device, создаёт один
+synthetic `.invalid` account и удаляет его в cleanup. Password генерируется
+в памяти, credentials не пишутся в файлы и не выводятся. Проверяются registration,
+email sign-in, rejection неверного password, session stream и sign out;
+затем native bootstrap открывает реальную форму account auth, а явный guest
+переход открывает локальную app shell.
+Reset проверяет принятие запроса SDK/backend; `.invalid` address не позволяет
+проверить доставку письма. Это не Google flow; restart restoration запускается отдельно двумя шагами ниже.
+macOS — zsh/bash, из `apps/mobile`, после `flutter devices`:
+
+```sh
+flutter test integration_test/account_runtime_test.dart -d "<android-id>" --no-uninstall --dart-define=RUN_FIREBASE_AUTH_ACCEPTANCE=true
+```
+
+Ожидаются успешный результат и удаление disposable account. При аварийном
+прерывании проверь его cleanup в dev Console. Обычный `flutter test` запускает
+`test/`; opt-in native suite не включается автоматически. Результаты запуска,
+Google flow, фактического restart восстановления и iOS проверок фиксируются
+отдельно в product spec; наличие теста не считается пройденной приёмкой.
+
+Для native SDK session restore используй два последовательных запуска на том же
+signed-out dev device, без удаления app data между ними. `seed` создаёт disposable
+account и намеренно оставляет его session; `check` в новом процессе проверяет
+восстановленный user до любого sign-in и удаляет только account из тестового
+namespace. Обязательно завершай пару запусков; password/token не передаются между
+процессами. Seed даёт SDK две секунды на асинхронную запись до forced-stop
+тестового runner; это ожидание относится только к тесту. macOS — zsh/bash,
+из `apps/mobile`:
+
+```sh
+flutter test integration_test/account_runtime_test.dart -d "<android-id>" --no-uninstall --dart-define=RUN_FIREBASE_AUTH_ACCEPTANCE=true --dart-define=FIREBASE_AUTH_RESTORE_PHASE=seed
+flutter test integration_test/account_runtime_test.dart -d "<android-id>" --no-uninstall --dart-define=RUN_FIREBASE_AUTH_ACCEPTANCE=true --dart-define=FIREBASE_AUTH_RESTORE_PHASE=check
+```
+
+При прерывании пары disposable account остаётся в dev project; завершай `check`
+на том же устройстве. Проверка не читает и не очищает пользовательский Hive draft.
+
+### Firestore Rules и native sync acceptance
+
+Rules tests имеют отдельный npm manifest/lockfile в [firebase](firebase/).
+Нужны Node, удовлетворяющий `engines` в [package.json](firebase/package.json),
+Firebase CLI и Java для Firestore Emulator. Launcher использует demo project
+и canonical emulator config, не подключается к live database. macOS — zsh/bash,
+из корня репозитория:
+
+```sh
+cd firebase
+npm ci
+npm run test:rules
+```
+
+`test:rules` запускает Firestore Emulator, затем `npm test` с client SDK Rules
+contexts и завершает сервис. Отдельный `npm test` требует уже запущенный emulator
+и корректный `FIRESTORE_EMULATOR_HOST`. Проверяются owner access, foreign/anonymous
+denial, public snapshot, username uniqueness и atomic publish/rename/unpublish,
+включая отказ partial writes. Результаты запуска фиксируются в product spec;
+наличие tests не подтверждает успешную приёмку.
+
+Для разрешённого dev deployment сначала выполни Rules tests, проверь project
+и diff Rules/indexes. Команда ниже — процедура deployment, не часть обычных
+проверок документации; выполнять только при авторизованной настройке окружения.
+macOS — zsh/bash, из `firebase`, target указан явно:
+
+```sh
+firebase deploy --only firestore:rules,firestore:indexes --project stackcard-dev-snownumb
+```
+
+Opt-in [native sync suite](apps/mobile/integration_test/firestore_runtime_test.dart)
+проверяет настоящий Android Firebase SDK на dev database после deployment Rules.
+Unique named Firebase apps и отдельный временный Hive storage сохраняют ordinary
+app session/draft. Suite создаёт disposable `phase8.*@example.invalid` accounts;
+cleanup удаляет только их UID draft/auth records и test directory. Проверяются
+offline local Save/reopen, reconnect/server ACK, более поздний commit второго
+клиента и owner/foreign/anonymous private access. Public snapshot suite не создаёт.
+Phase 9 дополнительно проверяет stable GitHub ID, source metadata/overrides,
+повторный импорт и явный review после offline/reopen/server ACK.
+macOS — zsh/bash, из `apps/mobile`, на development emulator:
+
+```sh
+flutter test integration_test/firestore_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_FIRESTORE_SYNC_ACCEPTANCE=true
+```
+
+`--no-uninstall` обязателен: integration runner по умолчанию удаляет приложение
+и его локальные данные после tests. Для другого dev device замени ID после
+`flutter devices`. Guard допускает только dev project; credentials генерируются
+в памяти, не выводятся и не сохраняются приложением.
+
+Полный process restart проверяется двумя последовательными запусками.
+`seed` сохраняет pending draft без сети и disposable session; `check` в новом
+процессе восстанавливает SDK session/outbox до sign-in, подтверждает sync и
+выполняет cleanup. Pair использует отдельный persistent test storage; ordinary
+app storage не очищается. Заверши оба запуска на одном устройстве без удаления
+app data. macOS — zsh/bash, из `apps/mobile`:
+
+```sh
+flutter test integration_test/firestore_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_FIRESTORE_SYNC_ACCEPTANCE=true --dart-define=FIRESTORE_RESTORE_PHASE=seed
+flutter test integration_test/firestore_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_FIRESTORE_SYNC_ACCEPTANCE=true --dart-define=FIRESTORE_RESTORE_PHASE=check
+```
+
+Если пара прервана, disposable account/test storage остаются до завершения
+`check` на том же устройстве. Emulator Rules, mocked Dart SDK, live Android и
+iOS acceptance — разные проверки; результаты не заменяют друг друга.
+Prepared publication repository не означает наличия public UI или выполненной
+публикации портфолио пользователя.
+
+### Остальные focused и visual проверки
+
 Для сфокусированной проверки storage и настроек из той же директории:
 
 ```sh
@@ -273,7 +517,7 @@ flutter test test/responsive_test.dart --dart-define=UPDATE_UI_PREVIEWS=true --u
 Для применения форматирования, тот же терминал и директория:
 
 ```sh
-dart format lib test
+dart format lib test integration_test
 ```
 
 Для правки только документации проверь local links, anchors, соответствие TOC

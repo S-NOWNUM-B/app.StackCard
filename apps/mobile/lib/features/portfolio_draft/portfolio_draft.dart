@@ -3,6 +3,8 @@ export 'domain/portfolio_content.dart';
 export 'domain/portfolio_completion.dart';
 export 'domain/portfolio_validation.dart';
 export 'domain/portfolio_draft_repository.dart';
+export 'domain/portfolio_sync.dart';
+export 'domain/portfolio_github_sync.dart';
 export 'portfolio_draft_providers.dart';
 export 'presentation/portfolio_draft_screen.dart';
 export 'presentation/portfolio_draft_controller.dart';

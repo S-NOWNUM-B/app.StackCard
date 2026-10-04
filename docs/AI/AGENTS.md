@@ -10,8 +10,9 @@
   Разработка ведётся по [плану](../product/product-spec.md#план-разработки)
   и правилам выполнения фаз ниже.
 - Flutter-проект находится в `apps/mobile`; не создавать второе приложение в корне.
-  Git относится ко всему monorepo. В `apps/web` пока только README; Next.js-приложение,
-  Firebase и CI ещё не созданы.
+  Git относится ко всему monorepo. В `apps/web` пока только README;
+  Next.js-приложение и CI ещё не созданы; mobile Firebase Auth введён на Phase 7,
+  Firestore sync и Rules введены на Phase 8; явный GitHub import/review — Phase 9.
 - Mobile targets — только Android и iOS. Сайт развивается отдельно в `apps/web`
   на Next.js; desktop и Flutter web не входят в scope мобильного проекта.
 - Целевой продукт включает mobile и полноценный web: landing, download page,
@@ -38,12 +39,18 @@
   подключение функций будущих фаз.
 - GitHub Import — отдельный просмотр публичного источника. HTTP/DTO/response cache
   принадлежат `features/github_import/data`, контроллер — presentation;
-  domain и публичные metadata остаются pure Dart. Import не меняет
-  demo/curated/published данные. Hive cache проверяется сетью; hard TTL 7 дней
+  domain и публичные metadata остаются pure Dart. Чтение/refresh не меняют
+  curated/published данные; Add/Accept/Ignore явно меняют working draft через
+  публичный draft API, Save остаётся отдельным действием. Source snapshot и
+  override fields разделены; repository ID исключает повторный импорт.
+  Stale review и смена UID не применяют captured action к новому draft.
+  Контракт — в [ADR 0002](../decisions/0002-github-import-and-review.md).
+  Hive cache проверяется сетью; hard TTL 7 дней
   и fallback только для network/timeout/server определены в data contract.
   UI явно показывает сохранённую копию, дату и ошибки локального хранения.
 - Native bootstrap через `LocalRuntime` восстанавливает `AppSettings` и открывает
-  раздельные Hive boxes для GitHub cache и portfolio draft до `StackCardApp`.
+  раздельные Hive boxes для GitHub cache и portfolio draft, инициализирует
+  Firebase Auth/Firestore до `StackCardApp`. Configuration failure не включает demo fallback.
   ThemeMode/Locale и простые preferences принадлежат Provider AppearanceController;
   SharedPreferencesAsync сохраняет цельный settings snapshot, UI переведён на ru/en.
   `portfolio_draft` — публичный API единого локального Builder и приватных notes.
@@ -52,6 +59,25 @@
   Cache recovery/очистка не изменяют draft; неизвестный или повреждённый
   формат draft сохраняется с блокировкой перезаписи. Sources — в
   [mobile rules](scopes/mobile.md).
+- Account authentication принадлежит pure Dart `AccountAuthRepository`/`AuthUser`
+  и Firebase adapter через Riverpod. Session restoring/error/signedOut без явного
+  guest access блокируют private routes/repository. Legacy demo API остаётся
+  preview-механизмом без native account configuration. Local draft выбирается
+  по UID; configured guest transfer явный, online, только в пустой local/cloud
+  target: durable owner journal, create-if-absent claim и ACK до cleanup.
+  Recovery не повторяет completed claim; normal sync сохраняет LWW.
+  Guest generation защищает от stale saves. При смене UID очищать controller/projections, фильтры и
+  private widget state; unsaved discard при sign out требует подтверждения.
+  Settings/cache не зависят от UID; password/token не сохраняются приложением.
+  Firestore sync Phase 8 использует тот же UID boundary поверх Hive; guest
+  остаётся local-only. Save завершается локально, durable outbox хранит captured
+  mutation/revision до server ACK; новый Save не теряет pending при старом ACK.
+  Whole-document LWW определяется порядком server commits, не device clock.
+  Remote update не отбрасывает unsaved working input; private/public границы,
+  атомарность и последствия фиксирует [ADR 0001](../decisions/0001-firestore-sync-and-publication.md).
+  Sync не вызывает publication repository; public UI/web вводятся отдельно.
+  Rules/indexes/emulator config принадлежат `firebase`, их отдельные правила — в
+  [Firebase scope](scopes/firebase.md). Generated mobile configs остаются у приложения.
 - Имена кода/файлов — английские; комментарии и объяснения — русские.
 
 ## Разработка по плану

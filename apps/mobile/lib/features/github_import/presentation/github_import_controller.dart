@@ -73,6 +73,7 @@ class GitHubImportController extends Notifier<GitHubImportState> {
       state = state.copyWith(
         profile: profile,
         repositories: _mergeRepositories(const [], page.repositories),
+        repositoryReadMetadata: _pageRepositoryMetadata(page),
         nextPage: page.nextPage,
         loading: false,
         failure: null,
@@ -116,6 +117,7 @@ class GitHubImportController extends Notifier<GitHubImportState> {
       state = state.copyWith(
         profile: profile,
         repositories: _mergeRepositories(const [], page.repositories),
+        repositoryReadMetadata: _pageRepositoryMetadata(page),
         nextPage: page.nextPage,
         refreshing: false,
         failure: null,
@@ -155,6 +157,10 @@ class GitHubImportController extends Notifier<GitHubImportState> {
       if (!_isCurrent(generation, operationRef)) return;
       state = state.copyWith(
         repositories: _mergeRepositories(state.repositories, page.repositories),
+        repositoryReadMetadata: _pageRepositoryMetadata(
+          page,
+          previous: state.repositoryReadMetadata,
+        ),
         nextPage: page.nextPage,
         loadingMore: false,
         pageFailure: null,
@@ -243,3 +249,12 @@ List<GitHubRepository> _mergeRepositories(
   for (final repository in previous) repository.id: repository,
   for (final repository in incoming) repository.id: repository,
 }.values.toList(growable: false);
+
+// Incoming payloads win duplicate IDs, so their page provenance must win too.
+Map<int, GitHubReadMetadata> _pageRepositoryMetadata(
+  GitHubRepositoriesPage page, {
+  Map<int, GitHubReadMetadata> previous = const {},
+}) => {
+  ...previous,
+  for (final repository in page.repositories) repository.id: page.readMetadata,
+};

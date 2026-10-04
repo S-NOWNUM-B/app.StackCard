@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "713694392116",
+    "project_id": "stackcard-dev-snownumb",
+    "storage_bucket": "stackcard-dev-snownumb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:713694392116:android:b644fe3e141117a5233f61",
+        "android_client_info": {
+          "package_name": "com.example.app_stackcard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5Xb4O7D2tVC2vM0UQ--xjo4tZmeExYks"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

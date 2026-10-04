@@ -1,5 +1,6 @@
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_validation.dart';
+import '../domain/portfolio_github_sync.dart';
 
 Map<String, Object?> encodePortfolioContent(PortfolioContent content) => {
   'profile': {
@@ -24,6 +25,10 @@ Map<String, Object?> encodePortfolioContent(PortfolioContent content) => {
           'liveUrl': item.liveUrl,
           'featured': item.featured,
           'visible': item.visible,
+          'source': item.source.name,
+          'githubMetadata': item.githubMetadata == null
+              ? null
+              : encodeGitHubProjectMetadata(item.githubMetadata!),
         },
       )
       .toList(),
@@ -64,6 +69,14 @@ Map<String, Object?> encodePortfolioContent(PortfolioContent content) => {
       .toList(),
   'resumeText': content.resumeText,
   'theme': content.theme.name,
+  'ignoredGitHubRepositories': content.ignoredGitHubRepositories
+      .map(
+        (item) => {
+          'repositoryId': item.repositoryId,
+          'fingerprint': item.fingerprint,
+        },
+      )
+      .toList(),
 };
 
 PortfolioContent decodePortfolioContent(Object? raw) {
@@ -127,6 +140,12 @@ PortfolioContent decodePortfolioContent(Object? raw) {
         liveUrl: _string(item, 'liveUrl'),
         featured: _bool(item, 'featured'),
         visible: _bool(item, 'visible'),
+        source: item.containsKey('source')
+            ? _enum(item, 'source', PortfolioProjectSource.values)
+            : PortfolioProjectSource.manual,
+        githubMetadata: item['githubMetadata'] == null
+            ? null
+            : decodeGitHubProjectMetadata(item['githubMetadata']),
       );
     }).toList(),
     blocks: _list(json, 'blocks').map((raw) {
@@ -138,11 +157,132 @@ PortfolioContent decodePortfolioContent(Object? raw) {
     }).toList(),
     resumeText: _string(json, 'resumeText'),
     theme: _enum(json, 'theme', PortfolioTheme.values),
+    ignoredGitHubRepositories: !json.containsKey('ignoredGitHubRepositories')
+        ? const []
+        : _list(json, 'ignoredGitHubRepositories').map((raw) {
+            final item = _map(raw);
+            _fields(item, {'repositoryId', 'fingerprint'});
+            return GitHubIgnoredRepository(
+              repositoryId: _integer(item, 'repositoryId'),
+              fingerprint: _string(item, 'fingerprint'),
+            );
+          }).toList(),
   );
   if (validatePortfolioContent(content).isNotEmpty) {
     throw const FormatException('Некорректный Builder content');
   }
   return content;
+}
+
+Map<String, Object?> encodeGitHubProjectMetadata(
+  GitHubProjectMetadata metadata,
+) => {
+  'acceptedSource': encodeGitHubProjectSource(metadata.acceptedSource),
+  'lastGitHubSyncAt': metadata.lastGitHubSyncAt?.toIso8601String(),
+  'overrideFields': PortfolioGitHubField.values
+      .where(metadata.overrideFields.contains)
+      .map((field) => field.name)
+      .toList(),
+};
+
+Map<String, Object?> encodeGitHubProjectSource(GitHubProjectSource source) => {
+  'repositoryId': source.repositoryId,
+  'name': source.name,
+  'fullName': source.fullName,
+  'htmlUrl': source.htmlUrl,
+  'description': source.description,
+  'language': source.language,
+  'stars': source.stars,
+  'forks': source.forks,
+  'isFork': source.isFork,
+  'archived': source.archived,
+  'updatedAt': source.updatedAt.toIso8601String(),
+};
+
+GitHubProjectMetadata decodeGitHubProjectMetadata(Object? raw) {
+  final item = _map(raw);
+  _fields(item, {'acceptedSource', 'lastGitHubSyncAt', 'overrideFields'});
+  final overrides = <PortfolioGitHubField>{};
+  for (final rawField in _list(item, 'overrideFields')) {
+    final field = _enum(
+      {'field': rawField},
+      'field',
+      PortfolioGitHubField.values,
+    );
+    if (!overrides.add(field)) {
+      throw const FormatException('Duplicate override');
+    }
+  }
+  return GitHubProjectMetadata(
+    acceptedSource: decodeGitHubProjectSource(item['acceptedSource']),
+    lastGitHubSyncAt: item['lastGitHubSyncAt'] == null
+        ? null
+        : _utcDate(item['lastGitHubSyncAt']),
+    overrideFields: overrides,
+  );
+}
+
+GitHubProjectSource decodeGitHubProjectSource(Object? raw) {
+  final item = _map(raw);
+  _fields(item, {
+    'repositoryId',
+    'name',
+    'fullName',
+    'htmlUrl',
+    'description',
+    'language',
+    'stars',
+    'forks',
+    'isFork',
+    'archived',
+    'updatedAt',
+  });
+  final source = GitHubProjectSource(
+    repositoryId: _integer(item, 'repositoryId'),
+    name: _string(item, 'name'),
+    fullName: _string(item, 'fullName'),
+    htmlUrl: _string(item, 'htmlUrl'),
+    description: _nullableString(item, 'description'),
+    language: _nullableString(item, 'language'),
+    stars: _integer(item, 'stars'),
+    forks: _integer(item, 'forks'),
+    isFork: _bool(item, 'isFork'),
+    archived: _bool(item, 'archived'),
+    updatedAt: _utcDate(item['updatedAt']),
+  );
+  if (validatePortfolioGitHubSource(source).isNotEmpty) {
+    throw const FormatException('Invalid GitHub source');
+  }
+  return source;
+}
+
+void _fields(Map<String, dynamic> item, Set<String> expected) {
+  if (item.length != expected.length || !expected.containsAll(item.keys)) {
+    throw const FormatException('Invalid metadata fields');
+  }
+}
+
+int _integer(Map<String, dynamic> item, String key) {
+  final value = item[key];
+  if (value is! int) throw FormatException('Invalid $key');
+  return value;
+}
+
+String? _nullableString(Map<String, dynamic> item, String key) {
+  final value = item[key];
+  if (value != null && value is! String) throw FormatException('Invalid $key');
+  return value as String?;
+}
+
+DateTime _utcDate(Object? raw) {
+  if (raw is! String || !raw.endsWith('Z')) {
+    throw const FormatException('Invalid UTC date');
+  }
+  final parsed = DateTime.tryParse(raw);
+  if (parsed == null || parsed.toIso8601String() != raw) {
+    throw const FormatException('Invalid UTC date');
+  }
+  return parsed;
 }
 
 Map<String, dynamic> _map(Object? value) {

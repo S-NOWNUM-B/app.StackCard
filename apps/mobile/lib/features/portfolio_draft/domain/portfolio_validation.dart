@@ -1,4 +1,5 @@
 import 'portfolio_content.dart';
+import 'portfolio_github_sync.dart';
 
 enum PortfolioValidationCode {
   required,
@@ -79,6 +80,7 @@ List<PortfolioValidationCode> validatePortfolioContent(
     text(skill.name, 60, required: true);
   }
   ids(content.projects.map((project) => project.id));
+  final githubIds = <int>{};
   for (final project in content.projects) {
     text(project.title, 120, required: true);
     text(project.description, 4000);
@@ -90,6 +92,32 @@ List<PortfolioValidationCode> validatePortfolioContent(
     }
     add(validatePortfolioUrl(project.repositoryUrl));
     add(validatePortfolioUrl(project.liveUrl));
+    final metadata = project.githubMetadata;
+    if (project.source == PortfolioProjectSource.manual) {
+      if (metadata != null) {
+        issues.add(PortfolioValidationCode.invalidStructure);
+      }
+    } else if (metadata == null) {
+      issues.add(PortfolioValidationCode.invalidStructure);
+    } else {
+      issues.addAll(validatePortfolioGitHubSource(metadata.acceptedSource));
+      if (!githubIds.add(metadata.acceptedSource.repositoryId)) {
+        issues.add(PortfolioValidationCode.duplicateId);
+      }
+      if (metadata.lastGitHubSyncAt?.isUtc == false) {
+        issues.add(PortfolioValidationCode.invalidStructure);
+      }
+    }
+  }
+  final ignoredIds = <int>{};
+  for (final ignored in content.ignoredGitHubRepositories) {
+    if (ignored.repositoryId < 1) {
+      issues.add(PortfolioValidationCode.invalidStructure);
+    }
+    if (!ignoredIds.add(ignored.repositoryId)) {
+      issues.add(PortfolioValidationCode.duplicateId);
+    }
+    text(ignored.fingerprint, 200, required: true);
   }
   ids(content.experience.map((item) => item.id));
   for (final item in content.experience) {
@@ -117,5 +145,34 @@ List<PortfolioValidationCode> validatePortfolioContent(
           PortfolioBlockKind.values.length) {
     issues.add(PortfolioValidationCode.invalidStructure);
   }
+  return List.unmodifiable(issues);
+}
+
+List<PortfolioValidationCode> validatePortfolioGitHubSource(
+  GitHubProjectSource source,
+) {
+  final issues = <PortfolioValidationCode>{};
+  void text(String value, int limit, {bool required = false}) {
+    final issue = validatePortfolioText(
+      value,
+      maxLength: limit,
+      required: required,
+    );
+    if (issue != null) issues.add(issue);
+  }
+
+  if (source.repositoryId < 1 ||
+      source.stars < 0 ||
+      source.forks < 0 ||
+      !source.updatedAt.isUtc) {
+    issues.add(PortfolioValidationCode.invalidStructure);
+  }
+  text(source.name, 120, required: true);
+  text(source.fullName, 300, required: true);
+  text(source.htmlUrl, 2048, required: true);
+  final urlIssue = validatePortfolioUrl(source.htmlUrl);
+  if (urlIssue != null) issues.add(urlIssue);
+  if (source.description != null) text(source.description!, 4000);
+  if (source.language != null) text(source.language!, 60, required: true);
   return List.unmodifiable(issues);
 }

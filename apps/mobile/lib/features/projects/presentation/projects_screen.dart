@@ -54,6 +54,14 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     final filters = ref.watch(projectFiltersProvider);
     final projectsState = ref.watch(visibleProjectsProvider);
     final hasDraft = ref.watch(portfolioWorkingContentProvider) != null;
+    final hasGitHub =
+        ref
+            .watch(portfolioWorkingContentProvider)
+            ?.projects
+            .any(
+              (project) => project.source == PortfolioProjectSource.github,
+            ) ==
+        true;
     ref.listen(projectFiltersProvider.select((filters) => filters.query), (
       previous,
       query,
@@ -94,7 +102,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                   Text(
                     context.strings.tr(
                       hasDraft
-                          ? 'builderIntegration.projectsSubtitle'
+                          ? hasGitHub
+                                ? 'githubSync.projectsSubtitle'
+                                : 'builderIntegration.projectsSubtitle'
                           : 'projects.subtitle',
                     ),
                     style: Theme.of(context).textTheme.bodyLarge
@@ -412,6 +422,8 @@ class _ProjectCover extends StatelessWidget {
             context.strings.tr(
               project.id == null
                   ? 'projects.demoCase'
+                  : project.source == ProjectSource.github
+                  ? 'githubSync.githubCase'
                   : 'builderIntegration.manualCase',
             ),
             style: Theme.of(context).textTheme.bodySmall
@@ -471,9 +483,12 @@ void _showProjectDetails(BuildContext context, Project project) {
             ),
             const SizedBox(height: StackCardSpacing.sm),
             Text(
-              context.strings.tr('projects.sourceNote', {
-                'source': project.source.labelFor(context),
-              }),
+              context.strings.tr(
+                project.id == null
+                    ? 'projects.sourceNote'
+                    : 'githubSync.sourceNote',
+                {'source': project.source.labelFor(context)},
+              ),
               style: Theme.of(context).textTheme.bodyMedium
                   ?.copyWith(color: context.colors.textSecondary),
             ),

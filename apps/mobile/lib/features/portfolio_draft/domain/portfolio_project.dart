@@ -1,4 +1,7 @@
 import 'portfolio_collection_equality.dart';
+import 'portfolio_github_sync.dart';
+
+enum PortfolioProjectSource { manual, github }
 
 final class PortfolioProject {
   PortfolioProject({
@@ -10,6 +13,8 @@ final class PortfolioProject {
     this.liveUrl = '',
     this.featured = false,
     this.visible = true,
+    this.source = PortfolioProjectSource.manual,
+    this.githubMetadata,
   }) : technologies = List.unmodifiable(technologies);
 
   final String id;
@@ -20,6 +25,11 @@ final class PortfolioProject {
   final String liveUrl;
   final bool featured;
   final bool visible;
+  final PortfolioProjectSource source;
+  final GitHubProjectMetadata? githubMetadata;
+
+  int? get githubRepositoryId => githubMetadata?.acceptedSource.repositoryId;
+  DateTime? get lastGitHubSyncAt => githubMetadata?.lastGitHubSyncAt;
 
   PortfolioProject copyWith({
     String? id,
@@ -30,6 +40,8 @@ final class PortfolioProject {
     String? liveUrl,
     bool? featured,
     bool? visible,
+    PortfolioProjectSource? source,
+    GitHubProjectMetadata? githubMetadata,
   }) => PortfolioProject(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -39,10 +51,59 @@ final class PortfolioProject {
     liveUrl: liveUrl ?? this.liveUrl,
     featured: featured ?? this.featured,
     visible: visible ?? this.visible,
+    source: source ?? this.source,
+    githubMetadata: githubMetadata ?? this.githubMetadata,
   );
 
-  Object get _fields =>
-      (id, title, description, repositoryUrl, liveUrl, featured, visible);
+  /// Track changed source-backed fields, while retaining the accepted snapshot.
+  PortfolioProject withUserEdits(PortfolioProject edited) {
+    if (edited.id != id) {
+      throw const PortfolioGitHubFailure(PortfolioGitHubFailureKind.conflict);
+    }
+    final metadata = githubMetadata;
+    final overrides = {...?metadata?.overrideFields};
+    if (source == PortfolioProjectSource.github) {
+      if (metadata == null) {
+        throw const PortfolioGitHubFailure(
+          PortfolioGitHubFailureKind.invalidContent,
+        );
+      }
+      if (edited.title != title) overrides.add(PortfolioGitHubField.title);
+      if (edited.description != description) {
+        overrides.add(PortfolioGitHubField.description);
+      }
+      if (!portfolioListEquals(edited.technologies, technologies)) {
+        overrides.add(PortfolioGitHubField.technologies);
+      }
+      if (edited.repositoryUrl != repositoryUrl) {
+        overrides.add(PortfolioGitHubField.repositoryUrl);
+      }
+    }
+    return PortfolioProject(
+      id: id,
+      title: edited.title,
+      description: edited.description,
+      technologies: edited.technologies,
+      repositoryUrl: edited.repositoryUrl,
+      liveUrl: edited.liveUrl,
+      featured: edited.featured,
+      visible: edited.visible,
+      source: source,
+      githubMetadata: metadata?.copyWith(overrideFields: overrides),
+    );
+  }
+
+  Object get _fields => (
+    id,
+    title,
+    description,
+    repositoryUrl,
+    liveUrl,
+    featured,
+    visible,
+    source,
+    githubMetadata,
+  );
 
   @override
   bool operator ==(Object other) =>

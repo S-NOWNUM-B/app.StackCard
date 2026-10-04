@@ -59,7 +59,10 @@ void main() {
     expect(box.get(HivePortfolioDraftRepository.legacyBackupKey), raw);
     final envelope =
         jsonDecode(box.get('draft') as String) as Map<String, dynamic>;
-    expect(envelope['schemaVersion'], 2);
+    expect(
+      envelope['schemaVersion'],
+      HivePortfolioDraftRepository.schemaVersion,
+    );
     expect(
       (envelope['content'] as Map<String, dynamic>).containsKey('notes'),
       isFalse,

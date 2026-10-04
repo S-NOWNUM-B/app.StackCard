@@ -11,10 +11,14 @@ import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../domain/demo_session.dart';
+import '../auth_providers.dart';
+import 'account_auth_form.dart';
 import 'auth_controller.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
-  const SignInScreen({super.key});
+  const SignInScreen({super.key, this.mode = AuthFormMode.signIn});
+
+  final AuthFormMode mode;
   @override
   ConsumerState<SignInScreen> createState() => _SignInScreenState();
 }
@@ -43,6 +47,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
+    final accountConfigured = ref.watch(accountAuthRepositoryProvider) != null;
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
@@ -99,74 +104,85 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           ),
                         ],
                       );
-                      final form = StackCardCard(
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                context.strings.tr('auth.title'),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall,
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                context.strings.tr('auth.description'),
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                              const SizedBox(height: 24),
-                              StackCardInput(
-                                label: context.strings.tr('auth.email'),
-                                hint: 'alex@example.dev',
-                                controller: _email,
-                                enabled: !auth.isLoading,
-                                prefixIcon: Icons.alternate_email_rounded,
-                                keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.done,
-                                onFieldSubmitted: (_) => _openDemo(),
-                                validator: (value) =>
-                                    validateDemoEmail(value) == null
-                                    ? null
-                                    : context.strings.tr('auth.invalidEmail'),
-                              ),
-                              const SizedBox(height: 20),
-                              StackCardButton(
-                                label: context.strings.tr('auth.open'),
-                                icon: Icons.arrow_forward_rounded,
-                                primary: true,
-                                loading: auth.isLoading,
-                                onPressed: auth.isLoading ? null : _openDemo,
-                              ),
-                              if (auth.hasError) ...[
-                                const SizedBox(height: 12),
-                                Semantics(
-                                  liveRegion: true,
-                                  child: Text(
-                                    context.strings.tr('auth.error'),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium,
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(height: 20),
-                              Text(
-                                context.strings.tr('auth.note'),
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color:
-                                          Theme.of(context).brightness ==
-                                              Brightness.light
-                                          ? context.colors.textPrimary
-                                          : context.colors.textSecondary,
+                      final form = accountConfigured
+                          ? AccountAuthForm(mode: widget.mode)
+                          : StackCardCard(
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      context.strings.tr('auth.title'),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall,
                                     ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      context.strings.tr('auth.description'),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    StackCardInput(
+                                      label: context.strings.tr('auth.email'),
+                                      hint: 'alex@example.dev',
+                                      controller: _email,
+                                      enabled: !auth.isLoading,
+                                      prefixIcon: Icons.alternate_email_rounded,
+                                      keyboardType: TextInputType.emailAddress,
+                                      textInputAction: TextInputAction.done,
+                                      onFieldSubmitted: (_) => _openDemo(),
+                                      validator: (value) =>
+                                          validateDemoEmail(value) == null
+                                          ? null
+                                          : context.strings.tr(
+                                              'auth.invalidEmail',
+                                            ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    StackCardButton(
+                                      label: context.strings.tr('auth.open'),
+                                      icon: Icons.arrow_forward_rounded,
+                                      primary: true,
+                                      loading: auth.isLoading,
+                                      onPressed: auth.isLoading
+                                          ? null
+                                          : _openDemo,
+                                    ),
+                                    if (auth.hasError) ...[
+                                      const SizedBox(height: 12),
+                                      Semantics(
+                                        liveRegion: true,
+                                        child: Text(
+                                          context.strings.tr('auth.error'),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
+                                        ),
+                                      ),
+                                    ],
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      context.strings.tr('auth.note'),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                    Brightness.light
+                                                ? context.colors.textPrimary
+                                                : context.colors.textSecondary,
+                                          ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
-                        ),
-                      );
+                            );
                       return content.maxWidth >= 800 &&
                               MediaQuery.textScalerOf(context).scale(16) <= 24
                           ? Row(

@@ -5,6 +5,7 @@ import 'package:app_stackcard/features/github_import/domain/github_filters.dart'
 import 'package:app_stackcard/features/github_import/domain/github_import_repository.dart';
 import 'package:app_stackcard/features/github_import/domain/github_profile.dart';
 import 'package:app_stackcard/features/github_import/domain/github_repository.dart';
+import 'package:app_stackcard/features/github_import/domain/github_read_metadata.dart';
 import 'package:app_stackcard/features/github_import/github_import_providers.dart';
 import 'package:app_stackcard/features/github_import/presentation/github_import_controller.dart';
 import 'package:app_stackcard/features/github_import/presentation/github_import_state.dart';
@@ -12,6 +13,163 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'Known profile time cannot become an unknown repository validation time',
+    () async {
+      final profileDate = DateTime.utc(2026, 10, 4, 1);
+      final repository = _FakeRepository(
+        profile: (username) async => _profile(
+          username,
+          metadata: GitHubReadMetadata(validatedAt: profileDate),
+        ),
+        repositories: (_, _) async => _page([_repository(1)]),
+      );
+      final scope = _scope(repository);
+      await scope.controller.load('alice');
+      final state = scope.container.read(githubImportControllerProvider);
+      expect(state.readMetadata.validatedAt, profileDate);
+      expect(state.repositoryReadMetadata.containsKey(1), isTrue);
+      expect(state.repositoryReadMetadata[1]!.validatedAt, isNull);
+    },
+  );
+
+  test(
+    'Cached profile notice preserves the actual fresh repository timestamp',
+    () async {
+      final profileDate = DateTime.utc(2026, 10, 3);
+      final repositoryDate = DateTime.utc(2026, 10, 4);
+      final repository = _FakeRepository(
+        profile: (username) async => _profile(
+          username,
+          metadata: GitHubReadMetadata(
+            fromCache: true,
+            validatedAt: profileDate,
+          ),
+        ),
+        repositories: (_, _) async => _page([
+          _repository(1),
+        ], metadata: GitHubReadMetadata(validatedAt: repositoryDate)),
+      );
+      final scope = _scope(repository);
+      await scope.controller.load('alice');
+      final state = scope.container.read(githubImportControllerProvider);
+      expect(state.readMetadata.fromCache, isTrue);
+      expect(state.readMetadata.validatedAt, profileDate);
+      expect(state.repositoryReadMetadata[1]!.fromCache, isFalse);
+      expect(state.repositoryReadMetadata[1]!.validatedAt, repositoryDate);
+    },
+  );
+
+  test('Pagination retains provenance per ID and duplicate metadata follows the winning payload', () async {
+    final next = Uri.parse('https://api.github.com/users/alice/repos?page=2');
+    final firstDate = DateTime.utc(2026, 10, 3);
+    final nextDate = DateTime.utc(2026, 10, 4);
+    final repository = _FakeRepository(
+      repositories: (_, page) async => page == null
+          ? _page(
+              [_repository(1), _repository(2)],
+              next: next,
+              metadata: GitHubReadMetadata(
+                fromCache: true,
+                validatedAt: firstDate,
+              ),
+            )
+          : _page([
+              _repository(2, name: 'Incoming wins'),
+              _repository(3),
+            ], metadata: GitHubReadMetadata(validatedAt: nextDate)),
+    );
+    final scope = _scope(repository);
+    await scope.controller.load('alice');
+    await scope.controller.loadMore();
+    final state = scope.container.read(githubImportControllerProvider);
+    expect(state.repositories.map((item) => item.id), [1, 2, 3]);
+    expect(state.repositories[1].name, 'Incoming wins');
+    expect(state.repositoryReadMetadata[1]!.validatedAt, firstDate);
+    expect(state.repositoryReadMetadata[1]!.fromCache, isTrue);
+    expect(state.repositoryReadMetadata[2]!.validatedAt, nextDate);
+    expect(state.repositoryReadMetadata[2]!.fromCache, isFalse);
+    expect(state.repositoryReadMetadata[3]!.validatedAt, nextDate);
+    expect(state.readMetadata.validatedAt, firstDate);
+    expect(state.readMetadata.fromCache, isTrue);
+  });
+
+  test('An incoming duplicate with unknown date cannot inherit the previous page date', () async {
+    final next = Uri.parse('https://api.github.com/users/alice/repos?page=2');
+    final repository = _FakeRepository(
+      repositories: (_, page) async => page == null
+          ? _page(
+              [_repository(1)],
+              next: next,
+              metadata: GitHubReadMetadata(
+                validatedAt: DateTime.utc(2026, 10, 4),
+              ),
+            )
+          : _page([_repository(1, name: 'Unknown incoming provenance')]),
+    );
+    final scope = _scope(repository);
+    await scope.controller.load('alice');
+    await scope.controller.loadMore();
+    final state = scope.container.read(githubImportControllerProvider);
+    expect(state.repositories.single.name, 'Unknown incoming provenance');
+    expect(state.repositoryReadMetadata[1]!.validatedAt, isNull);
+  });
+
+  test('Full refresh replaces repository metadata only after the replacement page succeeds', () async {
+    var pages = 0;
+    final refreshingPage = Completer<GitHubRepositoriesPage>();
+    final oldDate = DateTime.utc(2026, 10, 3);
+    final repository = _FakeRepository(
+      repositories: (_, _) async => ++pages == 1
+          ? _page([
+              _repository(1),
+            ], metadata: GitHubReadMetadata(validatedAt: oldDate))
+          : refreshingPage.future,
+    );
+    final scope = _scope(repository);
+    await scope.controller.load('alice');
+    final refresh = scope.controller.refresh();
+    await Future<void>.value();
+    expect(
+      scope.container
+          .read(githubImportControllerProvider)
+          .repositoryReadMetadata[1]!
+          .validatedAt,
+      oldDate,
+    );
+    refreshingPage.complete(_page([_repository(2)]));
+    await refresh;
+    final state = scope.container.read(githubImportControllerProvider);
+    expect(state.repositoryReadMetadata.keys, [2]);
+    expect(state.repositoryReadMetadata[2]!.validatedAt, isNull);
+  });
+
+  test('Username replacement ignores late repository payload and its provenance together', () async {
+    final previousPage = Completer<GitHubRepositoriesPage>();
+    final newDate = DateTime.utc(2026, 10, 4);
+    final repository = _FakeRepository(
+      repositories: (profile, _) async => profile.login == 'alice'
+          ? previousPage.future
+          : _page([
+              _repository(2),
+            ], metadata: GitHubReadMetadata(validatedAt: newDate)),
+    );
+    final scope = _scope(repository);
+    final oldLoad = scope.controller.load('alice');
+    await Future<void>.value();
+    await scope.controller.load('bob');
+    previousPage.complete(
+      _page([
+        _repository(1),
+      ], metadata: GitHubReadMetadata(validatedAt: DateTime.utc(2020))),
+    );
+    await oldLoad;
+    final state = scope.container.read(githubImportControllerProvider);
+    expect(state.username, 'bob');
+    expect(state.repositoryReadMetadata.keys, [2]);
+    expect(state.repositoryReadMetadata[2]!.validatedAt, newDate);
+  });
+
   test(
     'Initial load normalizes username and commits the complete snapshot',
     () async {
@@ -201,6 +359,7 @@ void main() {
       final firstProfile = Completer<GitHubProfile>();
       final refreshedProfile = Completer<GitHubProfile>();
       final morePage = Completer<GitHubRepositoriesPage>();
+      final refreshedDate = DateTime.utc(2026, 10, 4);
       var firstPageReads = 0;
       final repository = _FakeRepository(
         profile: (_) => firstProfile.isCompleted
@@ -211,7 +370,9 @@ void main() {
           firstPageReads++;
           return firstPageReads == 1
               ? _page([_repository(1)], next: next)
-              : _page([_repository(7)]);
+              : _page([
+                  _repository(7),
+                ], metadata: GitHubReadMetadata(validatedAt: refreshedDate));
         },
       );
       final scope = _scope(repository);
@@ -230,13 +391,19 @@ void main() {
       expect(repository.cancellations, 1);
       refreshedProfile.complete(_profile('alice'));
       await refresh;
-      morePage.complete(_page([_repository(9)]));
+      morePage.complete(
+        _page([
+          _repository(9),
+        ], metadata: GitHubReadMetadata(validatedAt: DateTime.utc(2020))),
+      );
       await more;
 
       final state = scope.container.read(githubImportControllerProvider);
       expect(state.repositories.single.id, 7);
       expect(state.loadingMore, isFalse);
       expect(state.refreshing, isFalse);
+      expect(state.repositoryReadMetadata.keys, [7]);
+      expect(state.repositoryReadMetadata[7]!.validatedAt, refreshedDate);
     },
   );
 
@@ -452,14 +619,17 @@ void main() {
 
   test('State defends collections and copyWith can clear nullable fields', () {
     final repositories = [_repository(1)];
+    final metadata = <int, GitHubReadMetadata>{1: const GitHubReadMetadata()};
     final state = GitHubImportState(
       profile: _profile('alice'),
       repositories: repositories,
       nextPage: Uri.parse('https://api.github.com/users/alice/repos?page=2'),
       failure: const GitHubFailure(GitHubFailureKind.network),
       pageFailure: const GitHubFailure(GitHubFailureKind.timeout),
+      repositoryReadMetadata: metadata,
     );
     repositories.clear();
+    metadata.clear();
     final cleared = state.copyWith(
       profile: null,
       nextPage: null,
@@ -471,6 +641,13 @@ void main() {
     expect(cleared.nextPage, isNull);
     expect(cleared.failure, isNull);
     expect(cleared.pageFailure, isNull);
+    expect(state.repositoryReadMetadata.keys, [1]);
+    expect(cleared.repositoryReadMetadata.keys, [1]);
+    expect(() => state.repositoryReadMetadata.clear(), throwsUnsupportedError);
+    expect(
+      state.copyWith(repositoryReadMetadata: {}).repositoryReadMetadata,
+      isEmpty,
+    );
   });
 }
 
@@ -491,11 +668,15 @@ void main() {
   );
 }
 
-GitHubProfile _profile(String username) => GitHubProfile(
+GitHubProfile _profile(
+  String username, {
+  GitHubReadMetadata metadata = const GitHubReadMetadata(),
+}) => GitHubProfile(
   id: username == 'alice' ? 1 : 2,
   login: username,
   htmlUrl: 'https://github.com/$username',
   publicRepositories: 3,
+  readMetadata: metadata,
 );
 
 GitHubRepository _repository(int id, {String? name, bool fork = false}) =>
@@ -514,7 +695,12 @@ GitHubRepository _repository(int id, {String? name, bool fork = false}) =>
 GitHubRepositoriesPage _page(
   List<GitHubRepository> repositories, {
   Uri? next,
-}) => GitHubRepositoriesPage(repositories: repositories, nextPage: next);
+  GitHubReadMetadata metadata = const GitHubReadMetadata(),
+}) => GitHubRepositoriesPage(
+  repositories: repositories,
+  nextPage: next,
+  readMetadata: metadata,
+);
 
 final class _FakeRepository implements GitHubImportRepository {
   _FakeRepository({
