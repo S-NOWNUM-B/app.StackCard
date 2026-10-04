@@ -16,8 +16,10 @@
 - Mobile targets — только Android и iOS. Сайт развивается отдельно в `apps/web`
   на Next.js; desktop и Flutter web не входят в scope мобильного проекта.
 - Целевой продукт включает mobile и полноценный web: landing, download page,
-  личный кабинет/редактор и публичные портфолио. Оба редактора используют один
-  draft и правила явной публикации; их реализации вводятся по roadmap.
+  личный кабинет/редактор и публичные резюме/портфолио. Редакторы используют общие
+  owner data и правила явной публикации; новый target предусматривает multiple
+  outputs. Один draft — текущая mobile implementation, а не ограничение target;
+  migration и web вводятся по roadmap и согласованному scope.
 - Existing Pattern First: сначала изучить аналог и canonical source, затем менять.
   Минимальный scope, без лишних слоёв, зависимостей и unrelated изменений.
 - Архитектура в [guide](../architecture/architecture.md) помечена как текущая или
@@ -32,6 +34,13 @@
 - Сохранять стиль из [design guide](../design/design-system.md) и оригиналы
   `assets/branding`. Mobile использует `lib/core/theme` и `lib/shared/widgets`;
   расширять эти механизмы, не вводить параллельные tokens и компоненты.
+  Актуальная инициатива — [StackCard Design v2](../redesign/README.md): сначала
+  читать её README и [план](../redesign/plan.md), продолжать только согласованную
+  задачу активной R-фазы. Основная разработка функций приостановлена до приёмки
+  редизайна; прежний [Figma-first план](../design/redesign-plan.md) сохраняется
+  как история и не переопределяет последние требования. Lime, четыре root tabs и multiple
+  outputs пока относятся к Figma; текущие runtime/schema контракты не считать
+  автоматически мигрированными. При UI-переносе сверять target и реальный source.
   Экраны получают demo/mock и GitHub source data через Repository и Riverpod DI; widgets
   не импортируют concrete sources. Публичные feature APIs и направления
   зависимостей описаны в [architecture](../architecture/architecture.md#mobile-modules--при-реальных-сценариях).

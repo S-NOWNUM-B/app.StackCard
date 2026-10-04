@@ -8,6 +8,15 @@ guides. Этот файл дополняет их только для Flutter-п
 
 ## Источники
 
+Ниже описан действующий Flutter runtime. Новый
+[StackCard Design v2](../../redesign/README.md) и его [план](../../redesign/plan.md)
+задают актуальные требования и порядок редизайна. Прежний
+[Figma-first target](../../design/redesign-plan.md) сохраняется как история;
+Design v2 заменяет визуальное направление
+на neutral/lime и новую IA; код и singleton storage ещё не перенесены. Указания
+ниже о красном CTA, старом shell и plain Resume описывают текущую реализацию,
+а не требования к новым Figma-макетам. Перенос выполняется отдельным этапом.
+
 - SDK constraint и зависимости: [pubspec.yaml](../../../apps/mobile/pubspec.yaml); разрешённые версии:
   [pubspec.lock](../../../apps/mobile/pubspec.lock). Не добавлять неиспользуемые зависимости.
 - Анализ: [analysis_options.yaml](../../../apps/mobile/analysis_options.yaml).
