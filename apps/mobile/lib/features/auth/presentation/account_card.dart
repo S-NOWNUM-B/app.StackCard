@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/localization/app_strings.dart';
+import '../../../core/theme/stackcard_colors.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../auth_providers.dart';
@@ -50,9 +51,23 @@ class _AccountCardState extends ConsumerState<AccountCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            strings.tr(user == null ? 'account.guestTitle' : 'account.title'),
-            style: Theme.of(context).textTheme.titleLarge,
+          Row(
+            children: [
+              Icon(
+                user == null ? Icons.devices_rounded : Icons.person_outline,
+                color: context.colors.textSecondary,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  strings.tr(
+                    user == null ? 'account.guestTitle' : 'account.title',
+                  ),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           if (session.isLoading)
@@ -73,7 +88,7 @@ class _AccountCardState extends ConsumerState<AccountCard> {
                 user.email ??
                     user.displayName ??
                     strings.tr('account.signedIn'),
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 12),
             ],
@@ -81,6 +96,8 @@ class _AccountCardState extends ConsumerState<AccountCard> {
               strings.tr(
                 user == null ? 'account.guestNote' : 'account.localNote',
               ),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: context.colors.textSecondary),
             ),
             const SizedBox(height: 20),
             StackCardButton(
@@ -98,7 +115,13 @@ class _AccountCardState extends ConsumerState<AccountCard> {
             ),
             if (errorKey != null) ...[
               const SizedBox(height: 12),
-              Semantics(liveRegion: true, child: Text(strings.tr(errorKey))),
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  strings.tr(errorKey),
+                  style: TextStyle(color: context.colors.error),
+                ),
+              ),
             ],
           ],
         ],

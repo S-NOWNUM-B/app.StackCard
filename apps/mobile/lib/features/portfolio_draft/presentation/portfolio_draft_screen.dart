@@ -6,7 +6,7 @@ import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
-import '../../../shared/widgets/stackcard_card.dart';
+import '../../../shared/widgets/stackcard_poster.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/portfolio_draft_repository.dart';
@@ -45,7 +45,6 @@ class _PortfolioDraftScreenState extends ConsumerState<PortfolioDraftScreen> {
     final strings = context.strings;
     final draft = state.draft;
     final showSync = ref.watch(portfolioSyncVisibleProvider);
-    final cloudDraft = ref.watch(portfolioSyncRepositoryProvider) != null;
     ref.listen(
       portfolioDraftControllerProvider.select((state) => state.notes),
       (_, notes) {
@@ -72,14 +71,14 @@ class _PortfolioDraftScreenState extends ConsumerState<PortfolioDraftScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    strings.tr('draft.intro'),
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: StackCardSpacing.sm),
-                  Text(
-                    strings.tr(cloudDraft ? 'sync.notesScope' : 'draft.scope'),
-                    style: Theme.of(context).textTheme.bodyLarge,
+                  StackCardPoster(
+                    color: context.colors.pink,
+                    art: false,
+                    child: Text(
+                      strings.tr('builder.notesPrivate'),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(color: context.colors.ink),
+                    ),
                   ),
                   const SizedBox(height: StackCardSpacing.xl),
                   if (state.remoteUpdateAvailable) ...[
@@ -154,37 +153,35 @@ class _PortfolioDraftScreenState extends ConsumerState<PortfolioDraftScreen> {
                     ),
                     const SizedBox(height: StackCardSpacing.lg),
                   ],
-                  StackCardCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        StackCardInput(
-                          key: const ValueKey('portfolio_draft_notes'),
-                          label: strings.tr('draft.notes'),
-                          hint: strings.tr('draft.hint'),
-                          controller: _notesController,
-                          keyboardType: TextInputType.multiline,
-                          textInputAction: TextInputAction.newline,
-                          minLines: 6,
-                          maxLines: 12,
-                          enabled: state.canEdit,
-                          onChanged: controller.editNotes,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      StackCardInput(
+                        key: const ValueKey('portfolio_draft_notes'),
+                        label: strings.tr('draft.notes'),
+                        hint: strings.tr('draft.hint'),
+                        controller: _notesController,
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        minLines: 6,
+                        maxLines: 12,
+                        enabled: state.canEdit,
+                        onChanged: controller.editNotes,
+                      ),
+                      const SizedBox(height: StackCardSpacing.lg),
+                      StackCardButton(
+                        key: const ValueKey('portfolio_draft_save'),
+                        label: strings.tr(
+                          state.remoteUpdateAvailable
+                              ? 'sync.saveMine'
+                              : 'draft.save',
                         ),
-                        const SizedBox(height: StackCardSpacing.lg),
-                        StackCardButton(
-                          key: const ValueKey('portfolio_draft_save'),
-                          label: strings.tr(
-                            state.remoteUpdateAvailable
-                                ? 'sync.saveMine'
-                                : 'draft.save',
-                          ),
-                          icon: Icons.save_outlined,
-                          primary: true,
-                          loading: state.saving,
-                          onPressed: state.canSave ? controller.save : null,
-                        ),
-                      ],
-                    ),
+                        icon: Icons.save_outlined,
+                        primary: true,
+                        loading: state.saving,
+                        onPressed: state.canSave ? controller.save : null,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: StackCardSpacing.lg),
                   if (!state.loading && state.loaded)
@@ -204,31 +201,32 @@ class _PortfolioDraftScreenState extends ConsumerState<PortfolioDraftScreen> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
-                  if (draft != null) ...[
-                    const SizedBox(height: StackCardSpacing.sm),
-                    Text(
-                      strings.tr('draft.revision', {
-                        'revision': draft.revision,
-                      }),
+                  if (draft != null)
+                    ExpansionTile(
+                      key: const ValueKey('portfolio_draft_details'),
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: const EdgeInsets.only(
+                        bottom: StackCardSpacing.lg,
+                      ),
+                      expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+                      title: Text(strings.tr('common.details')),
+                      children: [
+                        Text(
+                          strings.tr('draft.revision', {
+                            'revision': draft.revision,
+                          }),
+                        ),
+                        if (draft.updatedAt case final updatedAt?)
+                          Text(
+                            strings.tr('draft.updatedAt', {
+                              'time':
+                                  '${MaterialLocalizations.of(context).formatShortDate(updatedAt.toLocal())} ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(updatedAt.toLocal()))}',
+                            }),
+                          ),
+                        if (draft.pendingSync && !showSync)
+                          Text(strings.tr('draft.pending')),
+                      ],
                     ),
-                    if (draft.updatedAt case final updatedAt?) ...[
-                      const SizedBox(height: StackCardSpacing.sm),
-                      Text(
-                        strings.tr('draft.updatedAt', {
-                          'time':
-                              '${MaterialLocalizations.of(context).formatShortDate(updatedAt.toLocal())} ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(updatedAt.toLocal()))}',
-                        }),
-                      ),
-                    ],
-                    if (draft.pendingSync && !showSync) ...[
-                      const SizedBox(height: StackCardSpacing.sm),
-                      Text(
-                        strings.tr('draft.pending'),
-                        style: Theme.of(context).textTheme.bodyMedium
-                            ?.copyWith(color: context.colors.textPrimary),
-                      ),
-                    ],
-                  ],
                   if (showSync && state.loaded) ...[
                     const SizedBox(height: StackCardSpacing.sm),
                     const PortfolioSyncStatusView(),

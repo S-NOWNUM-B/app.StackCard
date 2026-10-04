@@ -20,9 +20,8 @@ class StackCardCard extends StatelessWidget {
     final colors = context.colors;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: elevated ? colors.surfaceElevated : colors.surface,
-        borderRadius: BorderRadius.circular(StackCardRadius.xlarge),
-        border: Border.all(color: colors.border),
+        color: elevated ? colors.surfaceElevated : Colors.transparent,
+        border: Border(bottom: BorderSide(color: colors.border)),
       ),
       child: Padding(padding: padding, child: child),
     );

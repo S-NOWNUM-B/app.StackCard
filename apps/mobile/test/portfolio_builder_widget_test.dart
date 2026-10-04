@@ -34,7 +34,12 @@ void main() {
       expect(state.notes, 'PRIVATE_NOTES_NEVER_PUBLIC');
       expect(state.content!.profile.name, isEmpty);
       expect(state.content!.projects, isEmpty);
-      expect(find.text('Готовность: 0%'), findsOneWidget);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('builder_completion')))
+            .data,
+        '0%',
+      );
       expect(find.text('Есть несохранённые изменения'), findsOneWidget);
       expect((await repository.read())!.content, isNull);
       await _tap(tester, 'builder_save');
@@ -77,7 +82,12 @@ void main() {
     (tester) async {
       final repository = await _repository(_content());
       await _open(tester, repository);
-      expect(find.text('Готовность: 100%'), findsOneWidget);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('builder_completion')))
+            .data,
+        '100%',
+      );
       await _tap(tester, 'builder_block_up_about');
       await _tap(tester, 'builder_block_profile');
       expect(_state(tester).completion!.percent, 100);
@@ -176,7 +186,12 @@ void main() {
     );
     expect(find.text('Portfolio editor'), findsOneWidget);
     expect(find.text('Save portfolio'), findsOneWidget);
-    expect(find.text('Completion: 100%'), findsOneWidget);
+    expect(
+      tester
+          .widget<Text>(find.byKey(const ValueKey('builder_completion')))
+          .data,
+      '100%',
+    );
     await _tap(tester, 'builder_theme_light');
     expect(find.text('Light'), findsOneWidget);
     expect(find.text('Редактор портфолио'), findsNothing);

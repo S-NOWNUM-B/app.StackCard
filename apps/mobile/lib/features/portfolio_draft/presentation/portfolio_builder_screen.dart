@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
-import '../../../shared/widgets/stackcard_card.dart';
+import '../../../core/theme/stackcard_colors.dart';
+import '../../../shared/widgets/stackcard_poster.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/portfolio_draft_repository.dart';
 import '../portfolio_draft_providers.dart';
@@ -23,7 +24,6 @@ class PortfolioBuilderScreen extends ConsumerWidget {
     final state = ref.watch(portfolioDraftControllerProvider);
     final controller = ref.read(portfolioDraftControllerProvider.notifier);
     final strings = context.strings;
-    final cloudDraft = ref.watch(portfolioSyncRepositoryProvider) != null;
     final showSync = ref.watch(portfolioSyncVisibleProvider);
     return Scaffold(
       appBar: AppBar(
@@ -45,12 +45,6 @@ class PortfolioBuilderScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    strings.tr(
-                      cloudDraft ? 'sync.builderSubtitle' : 'builder.subtitle',
-                    ),
-                  ),
-                  const SizedBox(height: StackCardSpacing.lg),
                   if (state.loading)
                     StackCardStateView(
                       kind: StackCardViewState.loading,
@@ -85,39 +79,60 @@ class PortfolioBuilderScreen extends ConsumerWidget {
                       const PortfolioSyncStatusView(),
                       const SizedBox(height: StackCardSpacing.lg),
                     ],
-                    StackCardStateView(
-                      kind: StackCardViewState.empty,
-                      title: strings.tr('builder.emptyTitle'),
-                      message: strings.tr('builder.emptyMessage'),
-                    ),
-                    StackCardButton(
-                      key: const ValueKey('builder_start'),
-                      label: strings.tr('builder.start'),
-                      primary: true,
-                      onPressed: state.canEdit ? controller.startBuilder : null,
+                    StackCardPoster(
+                      color: context.colors.cyan,
+                      variant: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            strings.tr('builder.emptyTitle'),
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(color: context.colors.ink),
+                          ),
+                          StackCardArtwork(
+                            color: context.colors.ink,
+                            variant: 1,
+                            height: 144,
+                          ),
+                          StackCardButton(
+                            key: const ValueKey('builder_start'),
+                            label: strings.tr('builder.start'),
+                            primary: true,
+                            onPressed: state.canEdit
+                                ? controller.startBuilder
+                                : null,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                   if (state.content != null) ...[
                     _DraftStatus(state: state),
                     const SizedBox(height: StackCardSpacing.lg),
-                    StackCardButton(
-                      key: const ValueKey('builder_save'),
-                      label: strings.tr(
-                        state.remoteUpdateAvailable
-                            ? 'sync.saveMine'
-                            : 'builder.save',
-                      ),
-                      icon: Icons.save_outlined,
-                      primary: true,
-                      loading: state.saving,
-                      onPressed: state.canSave ? controller.save : null,
-                    ),
-                    const SizedBox(height: StackCardSpacing.sm),
-                    StackCardButton(
-                      key: const ValueKey('builder_preview'),
-                      label: strings.tr('builder.preview'),
-                      icon: Icons.visibility_outlined,
-                      onPressed: () => context.push('/portfolio/preview'),
+                    Wrap(
+                      spacing: StackCardSpacing.sm,
+                      runSpacing: StackCardSpacing.sm,
+                      children: [
+                        StackCardButton(
+                          key: const ValueKey('builder_save'),
+                          label: strings.tr(
+                            state.remoteUpdateAvailable
+                                ? 'sync.saveMine'
+                                : 'builder.save',
+                          ),
+                          icon: Icons.save_outlined,
+                          primary: true,
+                          loading: state.saving,
+                          onPressed: state.canSave ? controller.save : null,
+                        ),
+                        StackCardButton(
+                          key: const ValueKey('builder_preview'),
+                          label: strings.tr('builder.preview'),
+                          icon: Icons.north_east_rounded,
+                          onPressed: () => context.push('/portfolio/preview'),
+                        ),
+                      ],
                     ),
                     if (state.validationCodes.isNotEmpty) ...[
                       const SizedBox(height: StackCardSpacing.sm),
@@ -138,8 +153,6 @@ class PortfolioBuilderScreen extends ConsumerWidget {
                     icon: Icons.notes_rounded,
                     onPressed: () => context.push('/portfolio-draft'),
                   ),
-                  const SizedBox(height: StackCardSpacing.sm),
-                  Text(strings.tr('builder.notesPrivate')),
                   if (state.loaded) ...[
                     const SizedBox(height: StackCardSpacing.xl),
                     StackCardButton(
@@ -170,65 +183,90 @@ class _DraftStatus extends ConsumerWidget {
     final strings = context.strings;
     final completion = state.completion!;
     final showSync = ref.watch(portfolioSyncVisibleProvider);
-    return StackCardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Semantics(
-            liveRegion: true,
-            child: Text(
-              strings.tr(
-                state.saving
-                    ? 'builder.saving'
-                    : state.hasUnsavedChanges
-                    ? 'builder.unsaved'
-                    : 'builder.saved',
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        StackCardPoster(
+          color: context.colors.cyan,
+          variant: 1,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                '${completion.percent}%',
+                key: const ValueKey('builder_completion'),
+                style: text.displayLarge?.copyWith(color: context.colors.ink),
               ),
-              key: const ValueKey('builder_status'),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+              const SizedBox(height: StackCardSpacing.sm),
+              LinearProgressIndicator(
+                value: completion.fraction,
+                semanticsLabel: strings.tr('builder.completion', {
+                  'percent': completion.percent,
+                }),
+                backgroundColor: context.colors.ink.withValues(alpha: 0.12),
+                color: context.colors.ink,
+              ),
+              const SizedBox(height: StackCardSpacing.lg),
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  strings.tr(
+                    state.saving
+                        ? 'builder.saving'
+                        : state.hasUnsavedChanges
+                        ? 'builder.unsaved'
+                        : 'builder.saved',
+                  ),
+                  key: const ValueKey('builder_status'),
+                  style: text.titleMedium?.copyWith(color: context.colors.ink),
+                ),
+              ),
+            ],
           ),
-          if (state.draft case final draft?) ...[
-            const SizedBox(height: StackCardSpacing.sm),
-            Text(strings.tr('builder.revision', {'revision': draft.revision})),
-            if (draft.pendingSync && !showSync)
-              Text(strings.tr('builder.pending')),
-          ],
-          if (showSync) ...[
-            const SizedBox(height: StackCardSpacing.sm),
-            const PortfolioSyncStatusView(),
-          ],
-          if (state.remoteUpdateAvailable) ...[
-            const SizedBox(height: StackCardSpacing.sm),
-            Text(
-              strings.tr('sync.remoteUpdate'),
-              key: const ValueKey('portfolio_remote_update'),
-            ),
-          ],
-          const SizedBox(height: StackCardSpacing.lg),
+        ),
+        if (showSync) ...[
+          const SizedBox(height: StackCardSpacing.md),
+          const PortfolioSyncStatusView(),
+        ],
+        if (state.remoteUpdateAvailable) ...[
+          const SizedBox(height: StackCardSpacing.sm),
           Text(
-            strings.tr('builder.completion', {'percent': completion.percent}),
-            key: const ValueKey('builder_completion'),
+            strings.tr('sync.remoteUpdate'),
+            key: const ValueKey('portfolio_remote_update'),
           ),
-          const SizedBox(height: StackCardSpacing.sm),
-          LinearProgressIndicator(value: completion.fraction),
-          const SizedBox(height: StackCardSpacing.sm),
-          Text(
+        ],
+        ExpansionTile(
+          key: const ValueKey('builder_details'),
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(bottom: StackCardSpacing.lg),
+          expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+          title: Text(
             strings.tr('builder.completionCount', {
               'completed': completion.completedSteps,
               'total': completion.totalSteps,
             }),
           ),
-          if (completion.missingSteps.isNotEmpty)
-            Text(
-              strings.tr('builder.completionMissing', {
-                'steps': completion.missingSteps
-                    .map((step) => strings.tr('builder.step.${step.name}'))
-                    .join(', '),
-              }),
-            ),
-        ],
-      ),
+          children: [
+            if (completion.missingSteps.isNotEmpty)
+              Text(
+                strings.tr('builder.completionMissing', {
+                  'steps': completion.missingSteps
+                      .map((step) => strings.tr('builder.step.${step.name}'))
+                      .join(', '),
+                }),
+              ),
+            if (state.draft case final draft?) ...[
+              const SizedBox(height: StackCardSpacing.sm),
+              Text(
+                strings.tr('builder.revision', {'revision': draft.revision}),
+              ),
+              if (draft.pendingSync && !showSync)
+                Text(strings.tr('builder.pending')),
+            ],
+          ],
+        ),
+      ],
     );
   }
 }

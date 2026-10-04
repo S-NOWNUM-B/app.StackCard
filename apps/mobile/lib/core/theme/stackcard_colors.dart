@@ -16,6 +16,10 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
     required this.accent,
     required this.accentHover,
     required this.accentSoft,
+    this.acid = const Color(0xFFC8FF31),
+    this.cyan = const Color(0xFF79E8F2),
+    this.pink = const Color(0xFFFF79B7),
+    this.ink = const Color(0xFF09090B),
     required this.success,
     required this.warning,
     required this.error,
@@ -47,7 +51,7 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
     border: Color(0xFFDEDEE3),
     borderSubtle: Color(0xFFE8E8EC),
     textPrimary: Color(0xFF18181B),
-    textSecondary: Color(0xFF71717A),
+    textSecondary: Color(0xFF52525B),
     textMuted: Color(0xFFA1A1AA),
     accent: Color(0xFFFF0012),
     accentHover: Color(0xFFE60010),
@@ -69,6 +73,10 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
   final Color accent;
   final Color accentHover;
   final Color accentSoft;
+  final Color acid;
+  final Color cyan;
+  final Color pink;
+  final Color ink;
   final Color success;
   final Color warning;
   final Color error;
@@ -87,6 +95,10 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
     Color? accent,
     Color? accentHover,
     Color? accentSoft,
+    Color? acid,
+    Color? cyan,
+    Color? pink,
+    Color? ink,
     Color? success,
     Color? warning,
     Color? error,
@@ -104,6 +116,10 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
       accent: accent ?? this.accent,
       accentHover: accentHover ?? this.accentHover,
       accentSoft: accentSoft ?? this.accentSoft,
+      acid: acid ?? this.acid,
+      cyan: cyan ?? this.cyan,
+      pink: pink ?? this.pink,
+      ink: ink ?? this.ink,
       success: success ?? this.success,
       warning: warning ?? this.warning,
       error: error ?? this.error,
@@ -126,6 +142,10 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
       accent: Color.lerp(accent, other.accent, t)!,
       accentHover: Color.lerp(accentHover, other.accentHover, t)!,
       accentSoft: Color.lerp(accentSoft, other.accentSoft, t)!,
+      acid: Color.lerp(acid, other.acid, t)!,
+      cyan: Color.lerp(cyan, other.cyan, t)!,
+      pink: Color.lerp(pink, other.pink, t)!,
+      ink: Color.lerp(ink, other.ink, t)!,
       success: Color.lerp(success, other.success, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
       error: Color.lerp(error, other.error, t)!,

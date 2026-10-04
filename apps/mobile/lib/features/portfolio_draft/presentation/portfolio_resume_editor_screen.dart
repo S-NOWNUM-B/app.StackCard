@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
-import '../../../shared/widgets/stackcard_card.dart';
 import 'builder_editor_widgets.dart';
 import 'portfolio_draft_controller.dart';
 
@@ -58,7 +57,8 @@ class _PortfolioResumeEditorScreenState
           _controllers ??= {
             'resumeText': TextEditingController(text: content.resumeText),
           };
-          return StackCardCard(
+          return Padding(
+            padding: EdgeInsets.zero,
             child: Form(
               key: _formKey,
               child: Column(

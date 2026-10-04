@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/widgets/stackcard_card.dart';
 import '../domain/portfolio_content.dart';
 import 'builder_editor_widgets.dart';
 import 'portfolio_draft_controller.dart';
@@ -104,7 +103,8 @@ class _PortfolioProfileEditorScreenState
       child: BuilderContentGate(
         data: (content) {
           _initialize(content.profile);
-          return StackCardCard(
+          return Padding(
+            padding: EdgeInsets.zero,
             child: Form(
               key: _formKey,
               child: BuilderFields(

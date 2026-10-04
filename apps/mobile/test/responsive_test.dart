@@ -53,13 +53,7 @@ void main() {
               reason: 'Первый экран без overflow',
             );
             if (scale == 1) {
-              final semantics = tester.ensureSemantics();
-              await expectLater(tester, meetsGuideline(textContrastGuideline));
-              await expectLater(
-                tester,
-                meetsGuideline(androidTapTargetGuideline),
-              );
-              semantics.dispose();
+              await _checkAccessibility(tester);
             }
             if (const bool.fromEnvironment('UPDATE_UI_PREVIEWS') &&
                 scale == 1 &&
@@ -79,14 +73,36 @@ void main() {
               isNull,
               reason: 'Конец страницы без overflow',
             );
-            if (scale == 1) {
-              final semantics = tester.ensureSemantics();
-              await expectLater(tester, meetsGuideline(textContrastGuideline));
-              semantics.dispose();
-            }
           });
         }
       }
     }
+  }
+}
+
+Future<void> _checkAccessibility(WidgetTester tester) async {
+  // SDK guidelines считают обрезанные scroll-границей semantics полными
+  // элементами. Проверяем весь rendered content при исходной ширине экрана,
+  // как в portfolio_builder_visual_test; overflow и goldens остаются отдельно.
+  final size = tester.view.physicalSize;
+  final scroll = tester.state<ScrollableState>(
+    find
+        .descendant(
+          of: find.byType(SingleChildScrollView).last,
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  final extraHeight = scroll.position.maxScrollExtent.ceilToDouble();
+  tester.view.physicalSize = Size(size.width, size.height + extraHeight + 16);
+  await tester.pumpAndSettle();
+  final semantics = tester.ensureSemantics();
+  try {
+    await expectLater(tester, meetsGuideline(textContrastGuideline));
+    await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+  } finally {
+    semantics.dispose();
+    tester.view.physicalSize = size;
+    await tester.pumpAndSettle();
   }
 }

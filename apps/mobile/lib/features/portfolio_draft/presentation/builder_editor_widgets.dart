@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
-import '../../../shared/widgets/stackcard_card.dart';
+import '../../../core/theme/stackcard_colors.dart';
+import '../../../shared/widgets/stackcard_poster.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/portfolio_content.dart';
@@ -212,7 +213,6 @@ class BuilderEditorScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(context.strings.tr(titleKey)),
       leading: IconButton(
         tooltip: context.strings.tr('builderForm.cancel'),
         icon: const Icon(Icons.arrow_back_rounded),
@@ -223,15 +223,21 @@ class BuilderEditorScaffold extends StatelessWidget {
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
+          constraints: const BoxConstraints(maxWidth: 700),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(StackCardSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  context.strings.tr('builderForm.applyHint'),
-                  style: Theme.of(context).textTheme.bodyLarge,
+                StackCardPoster(
+                  color: context.colors.cyan,
+                  variant: 1,
+                  art: false,
+                  child: Text(
+                    context.strings.tr(titleKey),
+                    style: Theme.of(context).textTheme.headlineLarge
+                        ?.copyWith(color: context.colors.ink),
+                  ),
                 ),
                 const SizedBox(height: StackCardSpacing.xl),
                 child,
@@ -295,20 +301,18 @@ class BuilderContentGate extends ConsumerWidget {
     }
     final content = state.content;
     if (content == null) {
-      return StackCardCard(
-        child: Column(
-          children: [
-            StackCardStateView(
-              kind: StackCardViewState.empty,
-              title: context.strings.tr('builderForm.noContent'),
-              message: context.strings.tr('builderForm.noContentHint'),
-            ),
-            StackCardButton(
-              label: context.strings.tr('builderForm.openBuilder'),
-              onPressed: () => context.go('/portfolio/builder'),
-            ),
-          ],
-        ),
+      return Column(
+        children: [
+          StackCardStateView(
+            kind: StackCardViewState.empty,
+            title: context.strings.tr('builderForm.noContent'),
+            message: context.strings.tr('builderForm.noContentHint'),
+          ),
+          StackCardButton(
+            label: context.strings.tr('builderForm.openBuilder'),
+            onPressed: () => context.go('/portfolio/builder'),
+          ),
+        ],
       );
     }
     return data(content);

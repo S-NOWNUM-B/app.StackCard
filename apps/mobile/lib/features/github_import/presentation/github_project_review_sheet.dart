@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
+import '../../../core/theme/stackcard_colors.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../portfolio_draft/portfolio_draft.dart';
@@ -60,87 +61,46 @@ class GitHubProjectReviewSheet extends StatelessWidget {
       children: [
         Text(
           review.source.fullName,
-          style: Theme.of(context).textTheme.headlineSmall,
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: StackCardSpacing.sm),
         Text(
           strings.tr(
             reviewChanges ? 'githubSync.reviewNote' : 'githubSync.previewNote',
           ),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: context.colors.textSecondary),
         ),
         const SizedBox(height: StackCardSpacing.lg),
         if (reviewChanges && fields.isEmpty)
           Text(strings.tr('githubSync.metadataChanged')),
-        for (final field in fields) ...[
-          StackCardCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  strings.tr('githubSync.field.${field.name}'),
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: StackCardSpacing.sm),
-                if (reviewChanges && previous != null) ...[
-                  Text(
-                    strings.tr('githubSync.previous'),
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  Text(_display(context, _sourceValue(previous, field))),
-                  const SizedBox(height: StackCardSpacing.sm),
-                ],
-                Text(
-                  strings.tr('githubSync.incoming'),
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                Text(_display(context, _sourceValue(review.source, field))),
-                if (project != null &&
+        for (final field in fields)
+          _ReviewField(
+            title: strings.tr('githubSync.field.${field.name}'),
+            previous: reviewChanges && previous != null
+                ? _display(context, _sourceValue(previous, field))
+                : null,
+            incoming: _display(context, _sourceValue(review.source, field)),
+            overrideValue:
+                project != null &&
                     project.githubMetadata?.overrideFields.contains(field) ==
-                        true) ...[
-                  const SizedBox(height: StackCardSpacing.sm),
-                  Text(
-                    strings.tr('githubSync.override'),
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  Text(_display(context, _projectValue(project, field))),
-                ],
-              ],
-            ),
+                        true
+                ? _display(context, _projectValue(project, field))
+                : null,
           ),
-          const SizedBox(height: StackCardSpacing.lg),
-        ],
         if (reviewChanges && previous != null)
           for (final change in _metadataChanges(
             context,
             previous,
             review.source,
-          )) ...[
-            StackCardCard(
+          ))
+            _ReviewField(
               key: ValueKey('github_metadata_${change.$1}'),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    strings.tr('githubSync.metadata.${change.$1}'),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: StackCardSpacing.sm),
-                  Text(
-                    strings.tr('githubSync.previous'),
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  Text(change.$2),
-                  const SizedBox(height: StackCardSpacing.sm),
-                  Text(
-                    strings.tr('githubSync.incoming'),
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  Text(change.$3),
-                ],
-              ),
+              title: strings.tr('githubSync.metadata.${change.$1}'),
+              previous: change.$2,
+              incoming: change.$3,
             ),
-            const SizedBox(height: StackCardSpacing.lg),
-          ],
+        const SizedBox(height: StackCardSpacing.xl),
         if (reviewChanges && canAccept) ...[
           StackCardButton(
             key: const ValueKey('github_review_accept'),
@@ -160,6 +120,113 @@ class GitHubProjectReviewSheet extends StatelessWidget {
       ],
     );
   }
+}
+
+class _ReviewField extends StatelessWidget {
+  const _ReviewField({
+    super.key,
+    required this.title,
+    required this.incoming,
+    this.previous,
+    this.overrideValue,
+  });
+
+  final String title;
+  final String incoming;
+  final String? previous;
+  final String? overrideValue;
+
+  @override
+  Widget build(BuildContext context) => StackCardCard(
+    padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.lg),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: StackCardSpacing.md),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final before = previous == null
+                ? null
+                : _ReviewValue(
+                    label: context.strings.tr('githubSync.previous'),
+                    value: previous!,
+                    lineColor: context.colors.border,
+                  );
+            final after = _ReviewValue(
+              label: context.strings.tr('githubSync.incoming'),
+              value: incoming,
+              lineColor: context.colors.cyan,
+            );
+            if (before != null &&
+                constraints.maxWidth >= 500 &&
+                MediaQuery.textScalerOf(context).scale(1) < 1.7) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: before),
+                  const SizedBox(width: StackCardSpacing.xl),
+                  Expanded(child: after),
+                ],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (before != null) ...[
+                  before,
+                  const SizedBox(height: StackCardSpacing.md),
+                ],
+                after,
+              ],
+            );
+          },
+        ),
+        if (overrideValue != null) ...[
+          const SizedBox(height: StackCardSpacing.md),
+          _ReviewValue(
+            label: context.strings.tr('githubSync.override'),
+            value: overrideValue!,
+            lineColor: context.colors.pink,
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+class _ReviewValue extends StatelessWidget {
+  const _ReviewValue({
+    required this.label,
+    required this.value,
+    required this.lineColor,
+  });
+
+  final String label;
+  final String value;
+  final Color lineColor;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      border: Border(left: BorderSide(color: lineColor, width: 2)),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.only(left: StackCardSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(color: context.colors.textSecondary),
+          ),
+          const SizedBox(height: StackCardSpacing.xs),
+          Text(value, style: Theme.of(context).textTheme.bodyLarge),
+        ],
+      ),
+    ),
+  );
 }
 
 List<(String, String, String)> _metadataChanges(

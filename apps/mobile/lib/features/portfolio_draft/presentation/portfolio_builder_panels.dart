@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
-import '../../../shared/widgets/stackcard_card.dart';
+import '../../../core/theme/stackcard_colors.dart';
 import '../domain/portfolio_content.dart';
 import 'portfolio_draft_controller.dart';
 
@@ -17,6 +17,7 @@ class PortfolioBuilderSections extends ConsumerWidget {
     final state = ref.watch(portfolioDraftControllerProvider);
     final content = state.content!;
     return _Panel(
+      index: '01',
       title: context.strings.tr('builder.sections'),
       children: [
         for (final (section, count) in [
@@ -26,21 +27,28 @@ class PortfolioBuilderSections extends ConsumerWidget {
           ('education', content.education.length),
           ('links', content.links.length),
           ('resume', null),
-        ]) ...[
-          StackCardButton(
+        ])
+          ListTile(
             key: ValueKey('builder_section_$section'),
-            label: context.strings.tr('builder.section.$section'),
-            icon: Icons.edit_outlined,
-            onPressed: state.canEdit
+            contentPadding: EdgeInsets.zero,
+            minVerticalPadding: StackCardSpacing.md,
+            title: Text(
+              context.strings.tr('builder.section.$section'),
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (count != null)
+                  Text('$count', style: Theme.of(context).textTheme.labelLarge),
+                const SizedBox(width: StackCardSpacing.md),
+                const Icon(Icons.north_east_rounded),
+              ],
+            ),
+            onTap: state.canEdit
                 ? () => context.push('/portfolio/builder/$section')
                 : null,
           ),
-          if (count != null) ...[
-            const SizedBox(height: StackCardSpacing.xs),
-            Text(context.strings.tr('builder.count', {'count': count})),
-          ],
-          const SizedBox(height: StackCardSpacing.sm),
-        ],
       ],
     );
   }
@@ -55,6 +63,7 @@ class PortfolioBuilderProjects extends ConsumerWidget {
     final content = state.content!;
     final controller = ref.read(portfolioDraftControllerProvider.notifier);
     return _Panel(
+      index: '02',
       title: context.strings.tr(
         content.projects.any(
               (project) => project.source == PortfolioProjectSource.github,
@@ -62,83 +71,85 @@ class PortfolioBuilderProjects extends ConsumerWidget {
             ? 'githubSync.projects'
             : 'builder.projects',
       ),
+      action: IconButton(
+        key: const ValueKey('builder_add_project'),
+        tooltip: context.strings.tr('builder.addProject'),
+        icon: const Icon(Icons.add_rounded),
+        onPressed: state.canEdit ? () => context.push('/projects/new') : null,
+      ),
       children: [
-        StackCardButton(
-          key: const ValueKey('builder_add_project'),
-          label: context.strings.tr('builder.addProject'),
-          icon: Icons.add_rounded,
-          onPressed: state.canEdit ? () => context.push('/projects/new') : null,
-        ),
-        if (content.projects.isEmpty) ...[
-          const SizedBox(height: StackCardSpacing.sm),
-          Text(context.strings.tr('builder.noProjects')),
-        ],
-        for (final project in content.projects) ...[
-          const SizedBox(height: StackCardSpacing.lg),
-          StackCardCard(
+        if (content.projects.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.lg),
+            child: Text(context.strings.tr('builder.noProjects')),
+          ),
+        for (final project in content.projects)
+          Padding(
             key: ValueKey('builder_project_${project.id}'),
-            elevated: true,
-            child: Material(
-              type: MaterialType.transparency,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    project.title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  if (project.description.isNotEmpty) Text(project.description),
-                  const SizedBox(height: StackCardSpacing.sm),
-                  StackCardButton(
-                    label: context.strings.tr('builder.editProject'),
-                    icon: Icons.edit_outlined,
-                    onPressed: state.canEdit
-                        ? () => context.push(
-                            '/projects/${Uri.encodeComponent(project.id)}/edit',
-                          )
-                        : null,
-                  ),
-                  SwitchListTile(
-                    key: ValueKey('builder_featured_${project.id}'),
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(context.strings.tr('builder.featured')),
-                    value: project.featured,
-                    onChanged: state.canEdit
-                        ? (value) => _updateProject(
-                            controller,
-                            project.id,
-                            featured: value,
-                          )
-                        : null,
-                  ),
-                  SwitchListTile(
-                    key: ValueKey('builder_visible_${project.id}'),
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(context.strings.tr('builder.visibleProject')),
-                    value: project.visible,
-                    onChanged: state.canEdit
-                        ? (value) => _updateProject(
-                            controller,
-                            project.id,
-                            visible: value,
-                          )
-                        : null,
-                  ),
-                  StackCardButton(
-                    key: ValueKey('builder_delete_${project.id}'),
-                    label: context.strings.tr('builder.deleteProject', {
-                      'title': project.title,
-                    }),
-                    icon: Icons.delete_outline_rounded,
-                    onPressed: state.canEdit
-                        ? () => _deleteProject(context, controller, project.id)
-                        : null,
-                  ),
-                ],
-              ),
+            padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        project.title,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: context.strings.tr('builder.editProject'),
+                      onPressed: state.canEdit
+                          ? () => context.push(
+                              '/projects/${Uri.encodeComponent(project.id)}/edit',
+                            )
+                          : null,
+                      icon: const Icon(Icons.north_east_rounded),
+                    ),
+                    IconButton(
+                      key: ValueKey('builder_delete_${project.id}'),
+                      tooltip: context.strings.tr('builder.deleteProject', {
+                        'title': project.title,
+                      }),
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      onPressed: state.canEdit
+                          ? () =>
+                                _deleteProject(context, controller, project.id)
+                          : null,
+                    ),
+                  ],
+                ),
+                SwitchListTile(
+                  key: ValueKey('builder_featured_${project.id}'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.strings.tr('builder.featured')),
+                  value: project.featured,
+                  onChanged: state.canEdit
+                      ? (value) => _updateProject(
+                          controller,
+                          project.id,
+                          featured: value,
+                        )
+                      : null,
+                ),
+                SwitchListTile(
+                  key: ValueKey('builder_visible_${project.id}'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.strings.tr('builder.visibleProject')),
+                  value: project.visible,
+                  onChanged: state.canEdit
+                      ? (value) => _updateProject(
+                          controller,
+                          project.id,
+                          visible: value,
+                        )
+                      : null,
+                ),
+                Divider(color: context.colors.borderSubtle),
+              ],
             ),
           ),
-        ],
       ],
     );
   }
@@ -205,52 +216,80 @@ class PortfolioBuilderBlocks extends ConsumerWidget {
     final content = state.content!;
     final controller = ref.read(portfolioDraftControllerProvider.notifier);
     return _Panel(
+      index: '03',
       title: context.strings.tr('builder.blocks'),
       children: [
-        for (final block in content.blocks) ...[
-          SwitchListTile(
-            key: ValueKey('builder_block_${block.kind.name}'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(context.strings.tr('builder.block.${block.kind.name}')),
-            value: block.visible,
-            onChanged: state.canEdit
-                ? (value) => _setBlockVisible(controller, block.kind, value)
-                : null,
-          ),
-          Wrap(
-            spacing: StackCardSpacing.sm,
-            children: [
-              IconButton(
-                key: ValueKey('builder_block_up_${block.kind.name}'),
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                tooltip: context.strings.tr('builder.block.up', {
-                  'block': context.strings.tr(
-                    'builder.block.${block.kind.name}',
+        for (final (index, block) in content.blocks.indexed)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.sm),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      (index + 1).toString().padLeft(2, '0'),
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(width: StackCardSpacing.md),
+                    Expanded(
+                      child: SwitchListTile(
+                        key: ValueKey('builder_block_${block.kind.name}'),
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          context.strings.tr(
+                            'builder.block.${block.kind.name}',
+                          ),
+                        ),
+                        value: block.visible,
+                        onChanged: state.canEdit
+                            ? (value) => _setBlockVisible(
+                                controller,
+                                block.kind,
+                                value,
+                              )
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        key: ValueKey('builder_block_up_${block.kind.name}'),
+                        tooltip: context.strings.tr('builder.block.up', {
+                          'block': context.strings.tr(
+                            'builder.block.${block.kind.name}',
+                          ),
+                        }),
+                        onPressed: state.canEdit && index != 0
+                            ? () => _moveBlock(controller, block.kind, -1)
+                            : null,
+                        icon: const Icon(Icons.arrow_upward_rounded),
+                      ),
+                      IconButton(
+                        key: ValueKey('builder_block_down_${block.kind.name}'),
+                        tooltip: context.strings.tr('builder.block.down', {
+                          'block': context.strings.tr(
+                            'builder.block.${block.kind.name}',
+                          ),
+                        }),
+                        onPressed:
+                            state.canEdit && index != content.blocks.length - 1
+                            ? () => _moveBlock(controller, block.kind, 1)
+                            : null,
+                        icon: const Icon(Icons.arrow_downward_rounded),
+                      ),
+                    ],
                   ),
-                }),
-                onPressed:
-                    state.canEdit && content.blocks.first.kind != block.kind
-                    ? () => _moveBlock(controller, block.kind, -1)
-                    : null,
-                icon: const Icon(Icons.arrow_upward_rounded),
-              ),
-              IconButton(
-                key: ValueKey('builder_block_down_${block.kind.name}'),
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                tooltip: context.strings.tr('builder.block.down', {
-                  'block': context.strings.tr(
-                    'builder.block.${block.kind.name}',
-                  ),
-                }),
-                onPressed:
-                    state.canEdit && content.blocks.last.kind != block.kind
-                    ? () => _moveBlock(controller, block.kind, 1)
-                    : null,
-                icon: const Icon(Icons.arrow_downward_rounded),
-              ),
-            ],
+                ),
+                Divider(color: context.colors.borderSubtle, height: 1),
+              ],
+            ),
           ),
-        ],
       ],
     );
   }
@@ -305,6 +344,7 @@ class PortfolioBuilderTheme extends ConsumerWidget {
         }
       },
       child: _Panel(
+        index: '04',
         title: context.strings.tr('builder.theme'),
         children: [
           for (final theme in PortfolioTheme.values)
@@ -322,22 +362,39 @@ class PortfolioBuilderTheme extends ConsumerWidget {
 }
 
 class _Panel extends StatelessWidget {
-  const _Panel({required this.title, required this.children});
+  const _Panel({
+    required this.index,
+    required this.title,
+    required this.children,
+    this.action,
+  });
+  final String index;
   final String title;
   final List<Widget> children;
+  final Widget? action;
 
   @override
-  Widget build(BuildContext context) => StackCardCard(
-    child: Material(
-      type: MaterialType.transparency,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: StackCardSpacing.lg),
-          ...children,
-        ],
-      ),
+  Widget build(BuildContext context) => Material(
+    type: MaterialType.transparency,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$index / ${title.toUpperCase()}',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
+            ?action,
+          ],
+        ),
+        const SizedBox(height: StackCardSpacing.md),
+        ...children,
+        const SizedBox(height: StackCardSpacing.lg),
+        Divider(color: context.colors.border, height: 1),
+      ],
     ),
   );
 }

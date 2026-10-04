@@ -25,6 +25,11 @@ guides. Этот файл дополняет их только для Flutter-п
 - Цвета, typography и tokens: [core/theme](../../../apps/mobile/lib/core/theme/);
   общие UI-компоненты: [shared/widgets](../../../apps/mobile/lib/shared/widgets/).
   Перед новым widget искать существующий аналог и использовать `context.colors`.
+  Редизайн Electric следует [design guide](../../design/design-system.md):
+  `StackCardCard` — flat section с разделителем; цветовые hero и локальная
+  декоративная геометрия — [StackCardPoster](../../../apps/mobile/lib/shared/widgets/stackcard_poster.dart).
+  На acid/cyan/pink использовать ink; декоративная графика исключается из semantics.
+  Не возвращать nested cards и дублирующие helper paragraphs.
 - ThemeMode/Locale/preferences: [AppearanceController](../../../apps/mobile/lib/core/state/appearance_controller.dart)
   через Provider; pure Dart [AppSettings](../../../apps/mobile/lib/core/state/app_settings.dart)
   и [SettingsRepository](../../../apps/mobile/lib/core/state/settings_repository.dart)

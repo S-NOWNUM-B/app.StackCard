@@ -49,9 +49,9 @@ class AppShell extends ConsumerWidget {
                 child: Container(
                   width: 80,
                   decoration: BoxDecoration(
-                    color: context.colors.surface,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: context.colors.borderSubtle),
+                    border: Border(
+                      right: BorderSide(color: context.colors.border),
+                    ),
                   ),
                   child: SingleChildScrollView(
                     child: Column(
@@ -72,11 +72,11 @@ class AppShell extends ConsumerWidget {
                               style: IconButton.styleFrom(
                                 minimumSize: const Size(48, 48),
                                 foregroundColor: index == i
-                                    ? context.colors.accent
+                                    ? context.colors.ink
                                     : context.colors.textSecondary,
                                 backgroundColor: index == i
-                                    ? context.colors.accentSoft
-                                    : context.colors.surface,
+                                    ? context.colors.acid
+                                    : Colors.transparent,
                               ),
                               icon: Icon(_destinations[i].icon),
                             ),
@@ -95,31 +95,28 @@ class AppShell extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding: EdgeInsets.fromLTRB(wide ? 24 : 16, 16, 16, 8),
+                    padding: EdgeInsets.fromLTRB(wide ? 24 : 16, 8, 16, 0),
                     child: Row(
                       children: [
+                        if (!largeText &&
+                            MediaQuery.sizeOf(context).width >= 360) ...[
+                          const StackCardBrand(compact: true),
+                          const SizedBox(width: 12),
+                        ],
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                draft.content != null
-                                    ? context.strings.tr(
-                                        'builderIntegration.shellDraft',
-                                      )
-                                    : draft.loaded
-                                    ? 'STACKCARD / DEMO'
-                                    : 'STACKCARD',
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                context.strings.tr(_destinations[index].label),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall,
-                              ),
-                            ],
+                          child: Text(
+                            draft.content != null
+                                ? context.strings.tr(
+                                    'builderIntegration.shellDraft',
+                                  )
+                                : draft.loaded
+                                ? 'STACKCARD / DEMO'
+                                : 'STACKCARD',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: context.colors.textSecondary,
+                                  letterSpacing: 1.2,
+                                ),
                           ),
                         ),
                         if (location != '/home' || context.canPop())
@@ -152,11 +149,12 @@ class AppShell extends ConsumerWidget {
       bottomNavigationBar: wide
           ? null
           : NavigationBar(
+              height: 72,
               selectedIndex: index,
               onDestinationSelected: navigate,
               labelBehavior: largeText
                   ? NavigationDestinationLabelBehavior.alwaysHide
-                  : NavigationDestinationLabelBehavior.alwaysShow,
+                  : NavigationDestinationLabelBehavior.onlyShowSelected,
               destinations: [
                 for (final item in _destinations)
                   NavigationDestination(

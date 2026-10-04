@@ -27,7 +27,7 @@ class StackCardButton extends StatelessWidget {
     final enabled = onPressed != null && !loading;
     final foreground = primary && enabled
         ? StackCardColors.dark.background
-        : colors.textPrimary;
+        : Theme.of(context).colorScheme.onSurface;
     final button = FilledButton(
       onPressed: enabled ? onPressed : null,
       style: ButtonStyle(
@@ -52,7 +52,7 @@ class StackCardButton extends StatelessWidget {
               states.contains(WidgetState.pressed)) {
             return colors.surfaceHover;
           }
-          return colors.surfaceElevated;
+          return colors.surface;
         }),
         // Сохранение фона primary не ухудшает контраст при нажатии.
         overlayColor: const WidgetStatePropertyAll(Colors.transparent),
@@ -69,13 +69,11 @@ class StackCardButton extends StatelessWidget {
             return BorderSide(color: colors.accentHover, width: 2);
           }
           return BorderSide(
-            color: primary && enabled ? colors.accent : colors.textSecondary,
+            color: primary && enabled ? colors.accent : colors.border,
           );
         }),
         shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(StackCardRadius.medium),
-          ),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         ),
       ),
       child: Row(

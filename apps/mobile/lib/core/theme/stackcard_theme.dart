@@ -49,10 +49,10 @@ abstract final class StackCardTheme {
       surfaceTint: Colors.transparent,
     );
     final textTheme = TextTheme(
-      displayLarge: _text(48, FontWeight.w700, 1.1, -1.5),
-      displayMedium: _text(40, FontWeight.w700, 1.15, -1.2),
-      displaySmall: _text(36, FontWeight.w700, 1.15, -1),
-      headlineLarge: _text(32, FontWeight.w700, 1.2, -0.8),
+      displayLarge: _text(64, FontWeight.w500, 0.98, -3),
+      displayMedium: _text(52, FontWeight.w500, 1.0, -2.4),
+      displaySmall: _text(40, FontWeight.w500, 1.05, -1.8),
+      headlineLarge: _text(36, FontWeight.w500, 1.08, -1.4),
       headlineMedium: _text(28, FontWeight.w700, 1.2, -0.6),
       headlineSmall: _text(24, FontWeight.w700, 1.25, -0.4),
       titleLarge: _text(20, FontWeight.w700, 1.3, -0.3),
@@ -65,8 +65,8 @@ abstract final class StackCardTheme {
       labelMedium: _text(12, FontWeight.w600, 1.3, 0.1),
       labelSmall: _text(11, FontWeight.w600, 1.3, 0.2),
     ).apply(bodyColor: colors.textPrimary, displayColor: colors.textPrimary);
-    final controlBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(StackCardRadius.medium),
+    final controlBorder = UnderlineInputBorder(
+      borderRadius: BorderRadius.circular(StackCardRadius.small),
       borderSide: BorderSide(color: colors.textSecondary),
     );
 
@@ -126,22 +126,22 @@ abstract final class StackCardTheme {
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: colors.surface,
+        backgroundColor: colors.background,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: colors.surfaceHover,
-        labelTextStyle: WidgetStatePropertyAll(textTheme.labelMedium),
+        indicatorColor: colors.acid,
+        labelTextStyle: WidgetStatePropertyAll(textTheme.labelSmall),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           return IconThemeData(
             color: states.contains(WidgetState.selected)
-                ? colors.accent
-                : colors.textPrimary,
+                ? colors.ink
+                : colors.textSecondary,
           );
         }),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: colors.surface,
-        indicatorColor: colors.surfaceHover,
-        selectedIconTheme: IconThemeData(color: colors.accent),
+        indicatorColor: colors.acid,
+        selectedIconTheme: IconThemeData(color: colors.ink),
         unselectedIconTheme: IconThemeData(color: colors.textPrimary),
         selectedLabelTextStyle: textTheme.labelMedium,
         unselectedLabelTextStyle: textTheme.labelMedium,

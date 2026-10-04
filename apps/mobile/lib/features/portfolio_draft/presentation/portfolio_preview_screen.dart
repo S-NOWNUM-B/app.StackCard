@@ -49,7 +49,10 @@ class PortfolioPreviewScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text(context.strings.tr('builder.previewPrivate')),
+                            Text(
+                              context.strings.tr('builder.previewPrivate'),
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
                             const SizedBox(height: StackCardSpacing.sm),
                             if (state.loaded && content != null)
                               Semantics(

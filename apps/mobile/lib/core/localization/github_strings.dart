@@ -35,10 +35,11 @@ const russianGitHubStrings = <String, String>{
   'github.copyLink': 'Скопировать ссылку',
   'github.linkCopied': 'Ссылка скопирована',
   'github.cache.title': 'Сохранённая копия GitHub',
-  'github.cache.hint': 'Не удалось обновить GitHub. Показаны ранее загруженные данные; повторите обновление при восстановлении соединения.',
+  'github.cache.hint': 'Показаны ранее загруженные данные. Обнови позже.',
   'github.cache.date': 'Последняя проверка: {date}',
   'github.cache.storageTitle': 'Копия на устройстве недоступна',
-  'github.cache.storageHint': 'Данные загружены, но локальное хранение недоступно. Доступ без сети для этого ответа не гарантирован.',
+  'github.cache.storageHint':
+      'Данные загружены, но не сохранены для доступа без сети.',
   'github.failure.invalidUsername.title': 'Проверь username',
   'github.failure.invalidUsername.message':
       'Введи имя аккаунта GitHub без ссылки.',
@@ -104,10 +105,11 @@ const englishGitHubStrings = <String, String>{
   'github.copyLink': 'Copy link',
   'github.linkCopied': 'Link copied',
   'github.cache.title': 'Saved GitHub copy',
-  'github.cache.hint': 'GitHub could not be refreshed. Previously loaded data is shown; refresh again when the connection returns.',
+  'github.cache.hint': 'Showing previously loaded data. Try refreshing later.',
   'github.cache.date': 'Last checked: {date}',
   'github.cache.storageTitle': 'Device copy unavailable',
-  'github.cache.storageHint': 'Data was loaded, but local storage is unavailable. Offline access to this response is not guaranteed.',
+  'github.cache.storageHint':
+      'Data was loaded but could not be saved for offline access.',
   'github.failure.invalidUsername.title': 'Check the username',
   'github.failure.invalidUsername.message':
       'Enter a GitHub account name, without a URL.',

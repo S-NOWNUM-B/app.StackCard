@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/localization/app_strings.dart';
+import '../../../core/theme/stackcard_colors.dart';
 import '../../../shared/widgets/stackcard_button.dart';
-import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../auth_providers.dart';
 import '../domain/auth_failure.dart';
@@ -194,12 +194,8 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
       AuthFormMode.register => 'account.register',
       AuthFormMode.resetPassword => 'account.resetPassword',
     };
-    final descriptionKey = switch (widget.mode) {
-      AuthFormMode.signIn => 'account.signInDescription',
-      AuthFormMode.register => 'account.registerDescription',
-      AuthFormMode.resetPassword => 'account.resetDescription',
-    };
-    return StackCardCard(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: AutofillGroup(
         child: Form(
           key: _formKey,
@@ -208,10 +204,12 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
             children: [
               Text(
                 strings.tr(titleKey),
-                style: Theme.of(context).textTheme.headlineSmall,
+                style: Theme.of(context).textTheme.headlineMedium,
               ),
-              const SizedBox(height: 12),
-              Text(strings.tr(descriptionKey)),
+              if (widget.mode == AuthFormMode.resetPassword) ...[
+                const SizedBox(height: 8),
+                Text(strings.tr('account.resetDescription')),
+              ],
               if (session.isLoading) ...[
                 const SizedBox(height: 16),
                 Semantics(
@@ -312,7 +310,13 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
               ),
               if (errorKey != null) ...[
                 const SizedBox(height: 12),
-                Semantics(liveRegion: true, child: Text(strings.tr(errorKey))),
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    strings.tr(errorKey),
+                    style: TextStyle(color: context.colors.error),
+                  ),
+                ),
               ],
               if (_resetSent) ...[
                 const SizedBox(height: 12),
@@ -332,19 +336,21 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
               ],
               const SizedBox(height: 12),
               if (widget.mode == AuthFormMode.signIn) ...[
-                TextButton(
-                  onPressed: busy ? null : () => _openMode('/register'),
-                  child: Text(
-                    strings.tr('account.register'),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                TextButton(
-                  onPressed: busy ? null : () => _openMode('/reset-password'),
-                  child: Text(
-                    strings.tr('account.forgotPassword'),
-                    textAlign: TextAlign.center,
-                  ),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: busy ? null : () => _openMode('/register'),
+                      child: Text(strings.tr('account.register')),
+                    ),
+                    TextButton(
+                      onPressed: busy
+                          ? null
+                          : () => _openMode('/reset-password'),
+                      child: Text(strings.tr('account.forgotPassword')),
+                    ),
+                  ],
                 ),
               ] else
                 TextButton(
@@ -365,10 +371,12 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                         context.go('/home');
                       },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 8),
               Text(
                 strings.tr('account.guestNote'),
-                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: context.colors.textSecondary),
               ),
             ],
           ),

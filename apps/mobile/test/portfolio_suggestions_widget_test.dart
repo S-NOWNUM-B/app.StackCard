@@ -78,10 +78,7 @@ void main() {
       expect(find.byKey(const ValueKey('github_preview_42')), findsOneWidget);
       expect(find.text('Предпросмотр источника'), findsNothing);
       await _tap(tester, find.byKey(const ValueKey('github_preview_42')));
-      expect(
-        find.textContaining('Данные портфолио не меняются'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Портфолио не меняется'), findsOneWidget);
       expect(container.read(portfolioDraftControllerProvider).content, content);
       expect(local.writes, 0);
       expect(

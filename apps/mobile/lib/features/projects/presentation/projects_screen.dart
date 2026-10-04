@@ -11,6 +11,7 @@ import '../../../shared/widgets/stackcard_async_view.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_input.dart';
+import '../../../shared/widgets/stackcard_poster.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/project.dart';
 import '../domain/project_filters.dart';
@@ -48,22 +49,11 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pageTextColor = Theme.of(context).brightness == Brightness.light
-        ? context.colors.textPrimary
-        : context.colors.textSecondary;
     final filters = ref.watch(projectFiltersProvider);
     final projectsState = ref.watch(visibleProjectsProvider);
     final suggestions = ref.watch(portfolioSuggestionsProvider);
     final draftState = ref.watch(portfolioDraftControllerProvider);
     final hasDraft = ref.watch(portfolioWorkingContentProvider) != null;
-    final hasGitHub =
-        ref
-            .watch(portfolioWorkingContentProvider)
-            ?.projects
-            .any(
-              (project) => project.source == PortfolioProjectSource.github,
-            ) ==
-        true;
     ref.listen(projectFiltersProvider.select((filters) => filters.query), (
       previous,
       query,
@@ -96,21 +86,28 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    context.strings.tr('projects.title'),
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: StackCardSpacing.sm),
-                  Text(
-                    context.strings.tr(
-                      hasDraft
-                          ? hasGitHub
-                                ? 'githubSync.projectsSubtitle'
-                                : 'builderIntegration.projectsSubtitle'
-                          : 'projects.subtitle',
+                  SizedBox(
+                    width: double.infinity,
+                    child: StackCardPoster(
+                      color: context.colors.cyan,
+                      variant: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.arrow_outward_rounded,
+                            color: context.colors.ink,
+                            size: 40,
+                          ),
+                          const SizedBox(height: StackCardSpacing.xxl),
+                          Text(
+                            context.strings.tr('projects.title'),
+                            style: Theme.of(context).textTheme.displaySmall
+                                ?.copyWith(color: context.colors.ink),
+                          ),
+                        ],
+                      ),
                     ),
-                    style: Theme.of(context).textTheme.bodyLarge
-                        ?.copyWith(color: pageTextColor),
                   ),
                   const SizedBox(height: StackCardSpacing.xl),
                   Wrap(
@@ -156,6 +153,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                     const SizedBox(height: StackCardSpacing.lg),
                   ],
                   StackCardCard(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: StackCardSpacing.lg,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -182,19 +182,21 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                                 onSelected: (_) => ref
                                     .read(projectFiltersProvider.notifier)
                                     .setFilter(filter),
-                                selectedColor: context.colors.accentSoft,
-                                backgroundColor: context.colors.surface,
-                                checkmarkColor: context.colors.textPrimary,
+                                showCheckmark: false,
+                                selectedColor: context.colors.cyan,
+                                backgroundColor: Colors.transparent,
                                 side: BorderSide(
                                   color: filters.filter == filter
-                                      ? context.colors.accent
-                                      : context.colors.textSecondary,
+                                      ? context.colors.cyan
+                                      : context.colors.border,
                                 ),
                                 labelStyle: Theme.of(context)
                                     .textTheme
                                     .labelLarge
                                     ?.copyWith(
-                                      color: context.colors.textPrimary,
+                                      color: filters.filter == filter
+                                          ? context.colors.ink
+                                          : context.colors.textPrimary,
                                     ),
                               ),
                           ],
@@ -244,7 +246,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                             : gridConstraints.maxWidth;
                         return Wrap(
                           spacing: StackCardSpacing.lg,
-                          runSpacing: StackCardSpacing.lg,
+                          runSpacing: StackCardSpacing.sm,
                           children: [
                             for (final project in projects)
                               SizedBox(
@@ -255,16 +257,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                         );
                       },
                     ),
-                  const SizedBox(height: StackCardSpacing.xl),
-                  Text(
-                    context.strings.tr(
-                      hasDraft
-                          ? 'builderIntegration.localNote'
-                          : 'projects.demoNote',
-                    ),
-                    style: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(color: pageTextColor),
-                  ),
                 ],
               ),
             ),
@@ -282,76 +274,89 @@ class _ProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final metadata = [
+      project.source.labelFor(context),
+      if (project.featured) context.strings.tr('filter.featured'),
+      if (!project.visible) context.strings.tr('builderIntegration.hidden'),
+    ].join(' · ');
     return StackCardCard(
+      padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _ProjectCover(project: project),
-          const SizedBox(height: StackCardSpacing.lg),
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: StackCardSpacing.sm,
-            runSpacing: StackCardSpacing.sm,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                project.source.labelFor(context),
-                style: Theme.of(context).textTheme.labelLarge
-                    ?.copyWith(color: context.colors.textSecondary),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      metadata,
+                      style: Theme.of(context).textTheme.labelLarge
+                          ?.copyWith(color: context.colors.textSecondary),
+                    ),
+                    const SizedBox(height: StackCardSpacing.sm),
+                    Text(
+                      project.title,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ],
+                ),
               ),
-              if (project.featured)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: StackCardSpacing.sm,
-                    vertical: StackCardSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.colors.surfaceElevated,
-                    borderRadius: BorderRadius.circular(StackCardRadius.small),
-                  ),
-                  child: Text(
-                    context.strings.tr('filter.featured'),
-                    style: Theme.of(context).textTheme.labelMedium,
+              const SizedBox(width: StackCardSpacing.lg),
+              ExcludeSemantics(
+                child: Text(
+                  project.symbol,
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? project.featured
+                              ? context.colors.pink
+                              : context.colors.cyan
+                        : context.colors.textPrimary,
                   ),
                 ),
-              if (!project.visible)
-                Text(context.strings.tr('builderIntegration.hidden')),
+              ),
             ],
           ),
-          const SizedBox(height: StackCardSpacing.md),
-          Text(project.title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: StackCardSpacing.sm),
-          Text(
-            project.description,
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: context.colors.textSecondary),
-          ),
+          if (project.description.isNotEmpty) ...[
+            const SizedBox(height: StackCardSpacing.md),
+            Text(
+              project.description,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: context.colors.textSecondary),
+            ),
+          ],
+          if (project.technologies.isNotEmpty) ...[
+            const SizedBox(height: StackCardSpacing.lg),
+            Text(
+              project.technologies.join(' / '),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ],
           const SizedBox(height: StackCardSpacing.lg),
           Wrap(
             spacing: StackCardSpacing.sm,
             runSpacing: StackCardSpacing.sm,
             children: [
-              for (final technology in project.technologies)
-                _TechnologyTag(label: technology),
+              StackCardButton(
+                key: ValueKey('project_preview_${project.id ?? project.title}'),
+                label: context.strings.tr('githubSync.preview'),
+                icon: Icons.arrow_outward_rounded,
+                onPressed: () => _showProjectDetails(context, project),
+              ),
+              if (project.id != null)
+                StackCardButton(
+                  label: context.strings.tr('builderIntegration.edit'),
+                  icon: Icons.edit_outlined,
+                  onPressed: () => context.push(
+                    '/projects/${Uri.encodeComponent(project.id!)}/edit',
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: StackCardSpacing.xl),
-          StackCardButton(
-            label: context.strings.tr('projects.view', {
-              'title': project.title,
-            }),
-            icon: Icons.arrow_outward_rounded,
-            onPressed: () => _showProjectDetails(context, project),
-          ),
-          if (project.id != null) ...[
-            const SizedBox(height: StackCardSpacing.sm),
-            StackCardButton(
-              label: context.strings.tr('builderIntegration.editProject'),
-              icon: Icons.edit_outlined,
-              onPressed: () => context.push(
-                '/projects/${Uri.encodeComponent(project.id!)}/edit',
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -364,115 +369,26 @@ class _ProjectCover extends StatelessWidget {
   final Project project;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(StackCardSpacing.xl),
-      decoration: BoxDecoration(
-        color: context.colors.surfaceElevated,
-        borderRadius: BorderRadius.circular(StackCardRadius.large),
-        border: Border.all(color: context.colors.borderSubtle),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            project.category.toUpperCase(),
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: context.colors.textSecondary,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: StackCardSpacing.xl),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                project.symbol,
-                style:
-                    (project.id == null
-                            ? Theme.of(context).textTheme.displayMedium
-                            : Theme.of(context).textTheme.headlineSmall)
-                        ?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(width: StackCardSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: context.colors.border,
-                        borderRadius: BorderRadius.circular(
-                          StackCardRadius.small,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: StackCardSpacing.sm),
-                    FractionallySizedBox(
-                      widthFactor: 0.65,
-                      child: Container(
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: context.colors.border,
-                          borderRadius: BorderRadius.circular(
-                            StackCardRadius.small,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: StackCardSpacing.lg),
-              Icon(
-                project.category == 'Web tool'
-                    ? Icons.terminal_rounded
-                    : Icons.widgets_outlined,
-                color: context.colors.textSecondary,
-                size: 28,
-              ),
-            ],
-          ),
-          const SizedBox(height: StackCardSpacing.lg),
-          Text(
-            context.strings.tr(
-              project.id == null
-                  ? 'projects.demoCase'
-                  : project.source == ProjectSource.github
-                  ? 'githubSync.githubCase'
-                  : 'builderIntegration.manualCase',
-            ),
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: context.colors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TechnologyTag extends StatelessWidget {
-  const _TechnologyTag({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: StackCardSpacing.sm,
-        vertical: StackCardSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: context.colors.surfaceElevated,
-        borderRadius: BorderRadius.circular(StackCardRadius.small),
-      ),
-      child: Text(label, style: Theme.of(context).textTheme.labelMedium),
-    );
-  }
+  Widget build(BuildContext context) => StackCardPoster(
+    color: project.featured ? context.colors.pink : context.colors.cyan,
+    variant: 1,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          project.category.toUpperCase(),
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(color: context.colors.ink),
+        ),
+        StackCardArtwork(height: 140, color: context.colors.ink, variant: 1),
+        Text(
+          project.title,
+          style: Theme.of(context).textTheme.headlineMedium
+              ?.copyWith(color: context.colors.ink),
+        ),
+      ],
+    ),
+  );
 }
 
 void _showProjectDetails(BuildContext context, Project project) {
@@ -495,12 +411,7 @@ void _showProjectDetails(BuildContext context, Project project) {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _ProjectCover(project: project),
-            const SizedBox(height: StackCardSpacing.xl),
-            Text(
-              project.title,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: StackCardSpacing.sm),
+            const SizedBox(height: StackCardSpacing.lg),
             Text(
               context.strings.tr(
                 project.id == null
@@ -513,15 +424,13 @@ void _showProjectDetails(BuildContext context, Project project) {
             ),
             const SizedBox(height: StackCardSpacing.xl),
             Text(project.details, style: Theme.of(context).textTheme.bodyLarge),
-            const SizedBox(height: StackCardSpacing.xl),
-            Wrap(
-              spacing: StackCardSpacing.sm,
-              runSpacing: StackCardSpacing.sm,
-              children: [
-                for (final technology in project.technologies)
-                  _TechnologyTag(label: technology),
-              ],
-            ),
+            if (project.technologies.isNotEmpty) ...[
+              const SizedBox(height: StackCardSpacing.xl),
+              Text(
+                project.technologies.join(' / '),
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ],
             const SizedBox(height: StackCardSpacing.xl),
             StackCardButton(
               label: context.strings.tr('projects.close'),
