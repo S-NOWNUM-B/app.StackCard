@@ -24,58 +24,69 @@ class StackCardButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final scheme = Theme.of(context).colorScheme;
     final enabled = onPressed != null && !loading;
-    final foreground = primary && enabled
-        ? StackCardColors.dark.background
-        : Theme.of(context).colorScheme.onSurface;
+    final primaryVisible = primary && (enabled || loading);
+    final foreground = primaryVisible
+        ? scheme.onPrimary
+        : enabled || loading
+        ? scheme.onSurface
+        : colors.textSecondary;
     final button = FilledButton(
       onPressed: enabled ? onPressed : null,
-      style: ButtonStyle(
-        minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
-        padding: const WidgetStatePropertyAll(
-          EdgeInsets.symmetric(
-            horizontal: StackCardSpacing.lg,
-            vertical: StackCardSpacing.md,
+      style: (Theme.of(context).filledButtonTheme.style ?? const ButtonStyle())
+          .merge(
+            ButtonStyle(
+              minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
+              padding: const WidgetStatePropertyAll(
+                EdgeInsets.symmetric(
+                  horizontal: StackCardSpacing.lg,
+                  vertical: StackCardSpacing.md,
+                ),
+              ),
+              tapTargetSize: MaterialTapTargetSize.padded,
+              textStyle: WidgetStatePropertyAll(
+                Theme.of(context).textTheme.labelLarge,
+              ),
+              foregroundColor: WidgetStatePropertyAll(foreground),
+              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (primaryVisible) return scheme.primary;
+                if (states.contains(WidgetState.disabled)) {
+                  return colors.surfaceHover;
+                }
+                if (states.contains(WidgetState.hovered) ||
+                    states.contains(WidgetState.pressed)) {
+                  return colors.surfaceHover;
+                }
+                return colors.surface;
+              }),
+              // Сохранение фона primary не ухудшает контраст при нажатии.
+              overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+              surfaceTintColor: const WidgetStatePropertyAll(
+                Colors.transparent,
+              ),
+              elevation: const WidgetStatePropertyAll(0),
+              side: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.focused)) {
+                  return BorderSide(
+                    color: primary ? colors.textPrimary : colors.accent,
+                    width: 2,
+                  );
+                }
+                if (primary && states.contains(WidgetState.hovered)) {
+                  return BorderSide(color: scheme.primary, width: 2);
+                }
+                return BorderSide(
+                  color: primaryVisible ? scheme.primary : colors.border,
+                );
+              }),
+              shape: WidgetStatePropertyAll(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100),
+                ),
+              ),
+            ),
           ),
-        ),
-        tapTargetSize: MaterialTapTargetSize.padded,
-        textStyle: WidgetStatePropertyAll(
-          Theme.of(context).textTheme.labelLarge,
-        ),
-        foregroundColor: WidgetStatePropertyAll(foreground),
-        backgroundColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.disabled)) {
-            return colors.surfaceHover;
-          }
-          if (primary) return colors.accent;
-          if (states.contains(WidgetState.hovered) ||
-              states.contains(WidgetState.pressed)) {
-            return colors.surfaceHover;
-          }
-          return colors.surface;
-        }),
-        // Сохранение фона primary не ухудшает контраст при нажатии.
-        overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
-        elevation: const WidgetStatePropertyAll(0),
-        side: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.focused)) {
-            return BorderSide(
-              color: primary ? colors.textPrimary : colors.accent,
-              width: 2,
-            );
-          }
-          if (primary && states.contains(WidgetState.hovered)) {
-            return BorderSide(color: colors.accentHover, width: 2);
-          }
-          return BorderSide(
-            color: primary && enabled ? colors.accent : colors.border,
-          );
-        }),
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-        ),
-      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,

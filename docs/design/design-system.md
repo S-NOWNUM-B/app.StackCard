@@ -58,8 +58,9 @@ Canonical source: [StackCardColors](../../apps/mobile/lib/core/theme/stackcard_c
 | border / borderSubtle | #29292E / #1F1F23 | #DEDEE3 / #E8E8EC | Разделители |
 | textPrimary | #F5F5F7 | #18181B | Основной текст |
 | textSecondary | #A1A1AA | #52525B | Подписи |
-| accent | #FF0012 | #FF0012 | Signal Red, CTA и active state |
+| accent | #FF0012 | #FF0012 | Signal Red, brand и active state |
 | accentHover / accentSoft | #E60010 / #351014 | #E60010 / #FFE5E7 | Interaction |
+| ColorScheme.primary / onPrimary | #E60010 / #FFFFFF | #E60010 / #FFFFFF | Красные основные кнопки с белым текстом и иконками |
 | acid | #C8FF31 | #C8FF31 | Профиль, крупные поверхности |
 | cyan | #79E8F2 | #79E8F2 | Projects / редактор |
 | pink | #FF79B7 | #FF79B7 | Featured / Settings |
@@ -71,6 +72,9 @@ Canonical source: [StackCardColors](../../apps/mobile/lib/core/theme/stackcard_c
 Signal Red и Obsidian сохраняются. Большие цветовые поля теперь разрешены;
 каждая секция получает осмысленную роль. На acid/cyan/pink использовать ink.
 Красный не заменяет подпись ошибки; декоративный цвет не означает sync success.
+Основные кнопки во всех экранах используют `ColorScheme.primary/onPrimary`:
+существующий оттенок `accentHover` с белым текстом даёт контраст 4.80:1.
+Brand сохраняет исходный `accent`; auth не вводит отдельный цвет CTA.
 
 ## 3. Typography
 
@@ -97,7 +101,10 @@ Display — 40–64, заголовки — 24–36, body — 14–16, подп�
 - Projects: компактный поиск и фильтры → счётчик → выразительные строки проектов.
 - Settings: цветной заголовок → плоские группы настроек и аккаунта.
 - Вход, регистрация и сброс пароля: компактный brand → форма и auth/guest
-  действия; единая колонка шириной до 440 px без рекламного блока.
+  действия; единая колонка шириной до 400 px без рекламного блока, центрируется
+  по обеим осям. Brand центрируется отдельно, заголовки, поля и вторичные
+  действия выровнены влево. При нехватке высоты и открытой клавиатуре доступна
+  прокрутка всей формы.
 - GitHub: поиск username → источник/кэш → profile/repositories → pagination.
 - Builder: статус/Save/preview → строки разделов → projects/blocks/theme/notes.
 - Editors: заголовок → поля → Apply/Cancel; клавиатура не закрывает действия.
@@ -115,6 +122,17 @@ Display — 40–64, заголовки — 24–36, body — 14–16, подп�
 Кнопки — capsule с target ≥48; icon actions — круг. Поиск/поля имеют спокойную
 подложку и нижнюю линию, focus видим. Метаданные проектов — короткая строка,
 не набор вложенных badge. Tags оставлять только для реально выбираемых filters.
+
+Для авторизации применяется scoped
+[`StackCardTheme.authentication`](../../apps/mobile/lib/core/theme/stackcard_theme.dart):
+матовые поля с полной рамкой и radius 12, кнопки такой же формы без glow/tint,
+красный/белый primary и нейтральные secondary. Forgot password находится под
+password; submit и Google образуют
+группу, переход между режимами расположен ниже, guest отделён разделителем.
+`StackCardButton` принимает оформление из `FilledButtonTheme`, сохраняя
+стандартный вид в остальных областях приложения.
+Loading primary сохраняет красный фон и белые label/spinner, блокируя повторный
+вызов. Disabled без loading получает нейтральные фон и читаемый текст.
 
 Brand mark использует геометрию оригиналов
 [brand kit](../../assets/branding/stackcard-link-brand-kit.json); оригинальные SVG

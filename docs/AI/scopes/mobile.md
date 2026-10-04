@@ -30,6 +30,11 @@ guides. Этот файл дополняет их только для Flutter-п
   декоративная геометрия — [StackCardPoster](../../../apps/mobile/lib/shared/widgets/stackcard_poster.dart).
   На acid/cyan/pink использовать ink; декоративная графика исключается из semantics.
   Не возвращать nested cards и дублирующие helper paragraphs.
+  Auth использует scoped `StackCardTheme.authentication`: центрированный блок
+  и brand, текст формы слева, матовые controls; poster отсутствует. Во всём UI
+  primary CTA получает красный/белый `ColorScheme.primary/onPrimary`, включая auth,
+  icons и loading. Исходный brand Signal Red сохраняется отдельно.
+  `StackCardButton` учитывает локальный `FilledButtonTheme` без смены остальных UI.
 - ThemeMode/Locale/preferences: [AppearanceController](../../../apps/mobile/lib/core/state/appearance_controller.dart)
   через Provider; pure Dart [AppSettings](../../../apps/mobile/lib/core/state/app_settings.dart)
   и [SettingsRepository](../../../apps/mobile/lib/core/state/settings_repository.dart)

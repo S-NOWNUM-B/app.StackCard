@@ -7,14 +7,95 @@ abstract final class StackCardTheme {
   static final dark = _build(Brightness.dark, StackCardColors.dark);
   static final light = _build(Brightness.light, StackCardColors.light);
 
+  /// Формы входа используют спокойные controls без ярких рекламных поверхностей.
+  static ThemeData authentication(ThemeData base) {
+    final colors =
+        base.extension<StackCardColors>() ??
+        (base.brightness == Brightness.dark
+            ? StackCardColors.dark
+            : StackCardColors.light);
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(StackCardRadius.medium),
+      borderSide: BorderSide(
+        color: base.brightness == Brightness.dark
+            ? colors.textMuted
+            : colors.textSecondary,
+      ),
+    );
+    return base.copyWith(
+      inputDecorationTheme: base.inputDecorationTheme.copyWith(
+        fillColor: colors.surface,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
+        labelStyle: base.textTheme.bodyLarge?.copyWith(
+          color: colors.textSecondary,
+        ),
+        floatingLabelStyle: base.textTheme.bodyMedium?.copyWith(
+          color: colors.textSecondary,
+        ),
+        prefixIconColor: colors.textSecondary,
+        border: border,
+        enabledBorder: border,
+        focusedBorder: border.copyWith(
+          borderSide: BorderSide(color: colors.textPrimary, width: 2),
+        ),
+        errorBorder: border.copyWith(
+          borderSide: BorderSide(color: colors.error),
+        ),
+        focusedErrorBorder: border.copyWith(
+          borderSide: BorderSide(color: colors.error, width: 2),
+        ),
+        disabledBorder: border.copyWith(
+          borderSide: BorderSide(color: colors.border),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(Size(48, 52)),
+          textStyle: WidgetStatePropertyAll(base.textTheme.titleMedium),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(StackCardRadius.medium),
+            ),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: colors.textPrimary,
+          disabledForegroundColor: colors.textSecondary,
+          alignment: Alignment.centerLeft,
+          minimumSize: const Size(48, 48),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          textStyle: base.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(StackCardRadius.medium),
+          ),
+        ),
+      ),
+      textSelectionTheme: base.textSelectionTheme.copyWith(
+        cursorColor: colors.textPrimary,
+        selectionColor: colors.cyan.withValues(alpha: 0.25),
+        selectionHandleColor: colors.textPrimary,
+      ),
+      progressIndicatorTheme: base.progressIndicatorTheme.copyWith(
+        color: base.colorScheme.primary,
+      ),
+    );
+  }
+
   static ThemeData _build(Brightness brightness, StackCardColors colors) {
     final isDark = brightness == Brightness.dark;
     final inverse = isDark ? StackCardColors.light : StackCardColors.dark;
     final scheme = ColorScheme(
       brightness: brightness,
-      primary: colors.accent,
-      // Obsidian сохраняет AA для обычного текста на Signal Red.
-      onPrimary: StackCardColors.dark.background,
+      // Этот оттенок Signal Red сохраняет AA для белого текста кнопок.
+      primary: colors.accentHover,
+      onPrimary: Colors.white,
       primaryContainer: colors.accentSoft,
       onPrimaryContainer: colors.textPrimary,
       secondary: colors.textPrimary,
@@ -83,6 +164,12 @@ abstract final class StackCardTheme {
       dividerColor: colors.borderSubtle,
       disabledColor: colors.textSecondary,
       splashFactory: NoSplash.splashFactory,
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: colors.textPrimary,
+          disabledForegroundColor: colors.textSecondary,
+        ),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.background,
         foregroundColor: colors.textPrimary,

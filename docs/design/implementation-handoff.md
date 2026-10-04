@@ -12,6 +12,13 @@ StackCardCard — flat section, StackCardPoster — общий цветной he
 Никаких новых business layers, зависимости, network assets или schema changes.
 Оригинальные branding assets и локальные fonts сохраняются.
 
+Auth: scoped `StackCardTheme.authentication`, maxWidth 400, центрирование блока
+по обеим осям и brand отдельно; тексты формы слева. Без poster, слогана и glow.
+Красный primary с белыми text/icons через общий `ColorScheme`, нейтральные
+secondary, matte outline fields и buttons с radius 12. Auth наследует цвет CTA
+всего приложения: `#E60010`/`#FFFFFF`, без отдельного cyan override.
+Клавиатура и крупный текст включают прокрутку вместо обрезания действий.
+
 Первый render должен показать крупную иерархию, цельную цветовую поверхность,
 короткую copy и отсутствие вложенных cards. Проверить 320/390 phone, landscape,
 768/1024 tablet, text scale 1/2, light/dark, ru/en, keyboard и critical states.
