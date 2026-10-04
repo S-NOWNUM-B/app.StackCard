@@ -193,6 +193,18 @@ Hive v3/private Firestore schema 2 защищают metadata от старых w
 public schema 1 исключает source/override/ignore state.
 Приёмка — в [Phase 9](../product/product-spec.md#phase-9--living-portfolio--smart-github-sync).
 
+## Принято для Phase 10
+
+Suggestions вычисляются pure rules внутри существующего draft domain; новый
+repository/service и `ProjectScore` не нужны. Явные content/source/UTC time
+дают стабильный read-only результат, UI использует те же пороги для объяснений.
+Projects работает по accepted source offline, GitHub cards — по загруженному
+snapshot. Preview означает demo-ссылку; изображения остаются Phase 11.
+Подсказки открывают прежний Preview/editor и не пишут draft/publication;
+отдельный список в Hive/Firestore не хранится. Подробности и пороги — в
+[architecture](../architecture/architecture.md#portfolio-suggestions),
+приёмка — в [Phase 10](../product/product-spec.md#phase-10--portfolio-suggestions).
+
 ## Решить перед соответствующими фазами
 
 - Перед Phase 13 проверить совместимость web с принятыми Firestore envelope,

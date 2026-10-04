@@ -45,6 +45,10 @@
   override fields разделены; repository ID исключает повторный импорт.
   Stale review и смена UID не применяют captured action к новому draft.
   Контракт — в [ADR 0002](../decisions/0002-github-import-and-review.md).
+  Suggestions принадлежат pure draft domain: явное время и snapshots, стабильный
+  read-only результат; UI объясняет правило и ведёт к Preview/editor, не пишет
+  draft/publication. Пороги берутся из одного API; контракт — в
+  [architecture](../architecture/architecture.md#portfolio-suggestions).
   Hive cache проверяется сетью; hard TTL 7 дней
   и fallback только для network/timeout/server определены в data contract.
   UI явно показывает сохранённую копию, дату и ошибки локального хранения.

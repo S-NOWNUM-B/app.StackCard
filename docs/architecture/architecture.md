@@ -5,7 +5,7 @@
 **Текущая Flutter-основа и целевые границы mobile, web и общего backend**
 
 ![Architecture guide](https://raster.shields.io/badge/Architecture-guide-09090B?style=for-the-badge)
-![Stage Phase 9 complete](https://raster.shields.io/badge/Stage-Phase_9_complete-FF0012?style=for-the-badge)
+![Stage Phase 10 complete](https://raster.shields.io/badge/Stage-Phase_10_complete-FF0012?style=for-the-badge)
 
 </div>
 
@@ -13,7 +13,7 @@
 
 ## Содержание
 
-- [Текущее состояние — Phase 9](#текущее-состояние--phase-9)
+- [Текущее состояние — Phase 10](#текущее-состояние--phase-10)
 - [Схема системы](#схема-системы)
 - [Зоны ответственности](#зоны-ответственности)
 - [Целевые границы — ещё не реализованы](#целевые-границы--ещё-не-реализованы)
@@ -22,6 +22,7 @@
 - [Authentication и изоляция локального draft](#authentication-и-изоляция-локального-draft)
 - [GitHub Import: HTTP и persistent-кэш](#github-import-http-и-persistent-кэш)
 - [Smart GitHub Sync и ручные overrides](#smart-github-sync-и-ручные-overrides)
+- [Portfolio Suggestions](#portfolio-suggestions)
 - [Локальные настройки и draft на Phase 5](#локальные-настройки-и-draft-на-phase-5)
 - [Portfolio domain и локальный Builder](#portfolio-domain-и-локальный-builder)
 - [Source, draft и публикация](#source-draft-и-публикация)
@@ -32,7 +33,7 @@
 
 ---
 
-## Текущее состояние — Phase 9
+## Текущее состояние — Phase 10
 
 В monorepo есть одно Flutter-приложение в `apps/mobile`. Код Architecture
 Phase 3 реализован поверх UI foundation и basic state management;
@@ -47,9 +48,11 @@ Phase 8 завершена: local-first Firestore sync проверен на And
 механизм явной публикации подготовлен и проверен в adapter/Rules tests.
 Phase 9 завершена: явные GitHub import/review/ignore сохраняют overrides;
 private metadata проверены при offline Save, Android restart и cloud ACK.
+Phase 10 завершена: read-only подсказки вычисляются pure rules по текущему
+content и известным GitHub snapshots; UI предлагает явные Preview/editor actions.
 Непроверенные сценарии Phase 7 остаются открытыми.
 Приёмка и фактические результаты проверок ведутся в
-[product spec](../product/product-spec.md#phase-9--living-portfolio--smart-github-sync).
+[product spec](../product/product-spec.md#phase-10--portfolio-suggestions).
 Sign In, Home, Portfolio, Projects и Settings сохраняют общий app shell,
 Material 3 light/dark. До начала Builder они показывают демонстрационный контент;
 после начала — проекции единого рабочего draft через Riverpod. Данные сохраняются
@@ -297,7 +300,7 @@ features/<feature>/
 | [projects](../../apps/mobile/lib/features/projects/projects.dart) | Read model `Project`, typed `ProjectSource`, `ProjectsRepository`, pure query/filter и featured-отбор; проекция ручных проектов Builder либо demo repository через Riverpod |
 | [github_import](../../apps/mobile/lib/features/github_import/github_import.dart) | Public source models и `GitHubImportRepository`; Dio/DTO/cache в data, отдельный Riverpod controller и экран. Не меняет profile/projects/portfolio repositories |
 | [portfolio](../../apps/mobile/lib/features/portfolio/portfolio.dart) | `PortfolioOverview` объединяет публичные profile/projects states для Home и demo Portfolio; это presentation read model |
-| [portfolio_draft](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart) | Pure Dart portfolio content, validation/completion, draft/sync/publication contracts; working controller, Builder/preview, Hive cache/outbox и UID-bound Firestore adapters |
+| [portfolio_draft](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart) | Pure Dart portfolio content, validation/completion/suggestions, draft/sync/publication contracts; working controller, Builder/preview, Hive cache/outbox и UID-bound Firestore adapters |
 | Home и Settings | Рендерят данные публичных feature APIs; Home использует overview, Settings — profile state и AppSettings через Provider |
 
 </div>
@@ -519,6 +522,48 @@ Prepared publication repository не вызывается этим путём.
 
 ---
 
+## Portfolio Suggestions
+
+[Pure rules](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_suggestions.dart)
+принадлежат существующему draft domain. `buildPortfolioSuggestions` получает
+content, необязательные source snapshots и явно заданное `now`; результат
+immutable, имеет stable IDs и порядок. Domain не читает часы, сеть или SDK,
+не меняет content и не вызывает Save/publication.
+
+`PortfolioSuggestionThresholds` — единственное место числовых порогов;
+UI берёт их для объяснений из того же API. `ProjectScore` не вводится:
+для текущих правил достаточно конкретного условия и полезного действия.
+
+| Правило | Условие и действие |
+| --- | --- |
+| Новый repository | Загруженный source ещё не импортирован, не fork/archived и не ignored для этой версии; Preview ведёт к прежнему явному Add |
+| Недавнее обновление | Imported repository обновлён не более 30 дней назад; future date исключена, редактор позволяет актуализировать описание |
+| Длительный простой | Последнее известное обновление imported repository было не менее 180 дней назад; владелец проверяет актуальность в редакторе |
+| Нет description/demo | У visible curated проекта пустое описание или `liveUrl`; редактор позволяет заполнить соответствующее поле |
+| Кандидат для featured | Visible, ещё не featured, заполнены описание и технологии; manual имеет demo, GitHub не fork/archived и имеет ссылку плюс недавнее обновление или не менее 5 stars; владелец решает в редакторе |
+
+В Projects правила используют working curated content и accepted source, поэтому
+работают offline. В GitHub Import используется явно загруженный source текущего
+repository. При нескольких snapshots одного ID выбирается более поздний
+`updatedAt`, затем fingerprint для стабильного tie break. Invalid source пропускается.
+Source `updatedAt` означает обновление repository, не подтверждённый commit или
+полную историю активности. Ignore конкретной версии подавляет source advice,
+но не подсказки о незаполненных curated полях; новая версия снова рассматривается.
+Hidden проекты исключаются из рекомендаций. Изображения и screenshots принадлежат
+Phase 11; preview текущего правила означает demo-ссылку, без новой storage schema.
+
+[Provider](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft_providers.dart)
+проверяет account/explicit guest до private read и не предлагает demo advice при
+отсутствии content, loading или повреждённом draft. Working edits немедленно
+пересчитывают результат, смена UID убирает подсказки прежнего владельца.
+[Общий UI](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_suggestion_list.dart)
+показывает причины ru/en в Projects и GitHub source cards; действия открывают
+Preview или прежний project editor. Подсказки не применяют featured автоматически,
+не сохраняются отдельным списком и не требуют cloud/Rules migration.
+Приёмка — в [Phase 10](../product/product-spec.md#phase-10--portfolio-suggestions).
+
+---
+
 ## Локальные настройки и draft на Phase 5
 
 [`LocalRuntime`](../../apps/mobile/lib/app/local_runtime.dart) — composition root:
@@ -692,8 +737,8 @@ publish/rename/unpublish и захват чужого username запрещен�
 Детальный контракт и альтернативы — в [ADR 0001](../decisions/0001-firestore-sync-and-publication.md),
 команды Rules/native checks — в [CONTRIBUTING](../../CONTRIBUTING.md#firestore-rules-и-native-sync-acceptance).
 
-Suggestions сначала deterministic, тестируются независимо от UI. Числовой
-ProjectScore необязательно показывать; UI объясняет полезное действие.
+Suggestions вычисляются pure deterministic rules, описанными в
+[Portfolio Suggestions](#portfolio-suggestions); UI объясняет условие и действие.
 
 ---
 

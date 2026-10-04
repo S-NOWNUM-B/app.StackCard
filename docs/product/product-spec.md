@@ -4,7 +4,7 @@
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage Phase 9 complete](https://raster.shields.io/badge/Stage-Phase_9_complete-111111?style=for-the-badge)
+![Stage Phase 10 complete](https://raster.shields.io/badge/Stage-Phase_10_complete-111111?style=for-the-badge)
 ![Mobile + Web planned](https://raster.shields.io/badge/Mobile_%2B_Web-planned-FF0012?style=for-the-badge)
 
 </div>
@@ -61,6 +61,8 @@ session, защищённые routes и UID isolation. Обязательная 
 [ADR](../decisions/0001-firestore-sync-and-publication.md).
 По следующему прямому поручению завершена **Phase 9: Living Portfolio / Smart GitHub Sync**:
 явный импорт repositories, review изменений и сохранение ручных overrides.
+По следующему прямому поручению завершена **Phase 10: Portfolio Suggestions**:
+детерминированные подсказки с объяснением и явным действием владельца.
 Этот документ отделяет реализованный интерфейс от целевых функций.
 Flutter-приложение находится в `apps/mobile`; в `apps/web`
 сейчас только README. Remote `origin` уже подключён; `main` отслеживает `origin/main`.
@@ -87,7 +89,7 @@ guest draft переносится только явно из Settings в пус
 меняют working draft; Save сохраняет его отдельно, публикация остаётся отдельным действием.
 Пользователь явно разрешил переход к Phase 8 при открытой приёмке Phase 7;
 это не означает завершения оставшихся auth сценариев. Phase 9 завершена;
-Phase 10 и последующие этапы требуют отдельного поручения.
+Phase 10 завершена; Phase 11 и последующие этапы требуют отдельного поручения.
 
 ---
 
@@ -160,15 +162,17 @@ Smart Sync обнаруживает новый репозиторий или и�
 
 ## Portfolio Suggestions
 
-Рекомендации v1 используют понятные deterministic rules, без AI. Примеры:
-новый репозиторий, недавняя активность или длительный простой, отсутствующие
-description или screenshot, новые технологии, проект, который стоит выделить.
+Рекомендации Phase 10 используют понятные deterministic rules, без AI:
+новый репозиторий, недавнее известное обновление или длительный простой,
+отсутствующие description/demo и кандидат для featured. UI объясняет причину
+и открывает Preview или редактор; владелец выбирает и сохраняет изменения сам.
+Screenshot относится к Media Phase 11; новые технологии и другие сигналы могут
+расширить правила позже при отдельном scope.
 
-Внутренний `ProjectScore` допустим. Его возможные факторы: README, description,
-activity, дата обновления, topics, stars/forks, technologies, homepage/demo и
-ручной priority. Формула и пороги пока не выбраны. В UI показываются полезное
-объяснение и действие, например «Recommended for your portfolio», а не обязательно
-число. Правила должны проверяться отдельно от UI и не публиковать изменения сами.
+`ProjectScore` не вводится: для текущих действий достаточно конкретных условий.
+Пороги активности и stars определены в одном pure API; подробный контракт — в
+[architecture](../architecture/architecture.md#portfolio-suggestions).
+Правила проверяются отдельно от UI и не публикуют изменения сами.
 
 ---
 
@@ -372,9 +376,8 @@ web-редактор и публичные портфолио. Этот разд
 
 **Phase 0–6 завершены:** основа, UI, состояние, архитектура, GitHub Import, offline и Builder проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
-Последнее поручение — перейти к Phase 9: Living Portfolio / Smart GitHub Sync.
-Открытые
-Google/reset/iOS проверки Phase 7 сохранены; Phase 10–20 остаются планом и
+Последнее поручение — перейти к Phase 10: Portfolio Suggestions.
+Открытые Google/reset/iOS проверки Phase 7 сохранены; Phase 11–20 остаются планом и
 требуют отдельного поручения пользователя.
 
 Чекбокс `- [x]` означает подтверждённый результат, `- [ ]` — оставшуюся задачу
@@ -395,7 +398,7 @@ Google/reset/iOS проверки Phase 7 сохранены; Phase 10–20 ос
 | Phase 7 — Firebase authentication | В работе; Android email flow проверен, Google/iOS приёмка открыта |
 | Phase 8 — Firestore synchronization | Завершена; offline/reconnect, Android restart, LWW и Rules проверены |
 | Phase 9 — Living Portfolio / Smart GitHub Sync | Завершена; импорт/review/ignore, overrides, совместимость draft и Android restart проверены |
-| Phase 10 — Portfolio Suggestions | Запланирована |
+| Phase 10 — Portfolio Suggestions | Завершена; pure rules, объяснения ru/en, явные Preview/editor actions и Android-запуск проверены |
 | Phase 11 — Media | Запланирована |
 | Phase 12 — Location | Запланирована |
 | Phase 13a — Public shell | Запланирована |
@@ -1068,29 +1071,68 @@ sign out и смена пользователя не раскрывают чуж
   iOS native sync не проверен из-за незавершённого Xcode/CocoaPods toolchain;
   Google/reset/iOS приёмка Phase 7 остаётся открытой. Commit/push не выполнялись.
 
-Phase 10 и последующие этапы требуют отдельного поручения пользователя.
+По следующему отдельному поручению начата Phase 10; дальнейшие этапы требуют
+отдельного поручения пользователя.
 
 ### Phase 10 — Portfolio Suggestions
 
 **Задачи**
 
-- [ ] Реализовать deterministic rules: новый repository, активность, отсутствующие
+- [x] Реализовать deterministic rules: новый repository, активность, отсутствующие
   description/preview и кандидаты для featured.
-- [ ] Если нужен внутренний ProjectScore, определить факторы и пороги в одном месте;
+- [x] Если нужен внутренний ProjectScore, определить факторы и пороги в одном месте;
   UI показывает причину и полезное действие.
-- [ ] Проверить правила unit tests независимо от UI и внешних сервисов.
+- [x] Проверить правила unit tests независимо от UI и внешних сервисов.
 
 **Проверки и приёмка**
 
-- [ ] Одинаковые входные данные дают одинаковые suggestions;
+- [x] Одинаковые входные данные дают одинаковые suggestions;
   новый repository, активность и отсутствие description/preview проверены.
-- [ ] Каждая suggestion объясняет причину и предлагает действие владельцу;
+- [x] Каждая suggestion объясняет причину и предлагает действие владельцу;
   факторы и пороги ProjectScore определены в одном месте, если он используется.
-- [ ] Unit tests правил проходят без UI и внешних сервисов; AI и
+- [x] Unit tests правил проходят без UI и внешних сервисов; AI и
   автоматическая публикация не введены.
 
 **Готово, когда:** одинаковые входные данные дают объяснимые suggestions,
 владелец выбирает действие; AI и автоматическая публикация не используются.
+
+**Текущий результат (2026-10-04):** Phase 10 завершена. Pure rules и причины
+описаны в [architecture](../architecture/architecture.md#portfolio-suggestions).
+
+- `buildPortfolioSuggestions` принимает content, source snapshots и явное время;
+  возвращает immutable рекомендации со stable IDs и порядком. Реализованы новый
+  repository, недавнее известное обновление, длительный простой, отсутствующие
+  description/demo и candidate для featured. Hidden проекты исключены, повторные
+  sources объединяются по ID; Ignore конкретной версии учитывается, ручные
+  overrides не меняются. Projects использует accepted source offline, GitHub cards —
+  загруженный snapshot конкретного repository.
+- `PortfolioSuggestionThresholds` хранит пороги в одном месте: recent ≤30 дней,
+  inactive ≥180 дней, featured ≥5 stars либо recent при заполненных curated полях;
+  future date не считается recent. Manual candidate требует description,
+  technologies и demo. UI объясняет фактическое условие и предлагает действие;
+  `ProjectScore` не понадобился. Preview означает demo link (`liveUrl`),
+  изображения и screenshots остаются Phase 11.
+- Projects и source cards показывают причины ru/en и открывают прежний
+  Preview/project editor. Нет автоматических Add/Accept, изменения featured,
+  Save или публикации. Provider не читает private draft без account/explicit guest,
+  не показывает demo advice при отсутствии content и сбрасывает рекомендации
+  прежнего UID. Новых зависимостей, storage schema или Firebase конфигурации не вводилось.
+- `dart format --output=none --set-exit-if-changed lib test integration_test` —
+  **180 files, 0 changed**; `flutter analyze` — **No issues found**;
+  `flutter test` — **822 passed**. Включены **33 pure rules**, **5 provider**
+  и **12 widget** tests: границы времени, future dates, dedup/order, ignored
+  versions, manual/legacy, hidden/featured/forks/archived, overrides и отсутствие
+  мутаций; working edits, UID/private read guards, editor/Preview actions,
+  loading/failure, ru/en и responsive при увеличенном тексте.
+- Synthetic Projects/source screenshots при 390×844 просмотрены в light/dark;
+  overflow не обнаружен, оригинальные assets и прежние goldens сохранены.
+  Обычный `main.dart` собран и запущен на `emulator-5554`, процесс работает;
+  checksum исходного guest draft совпал. Docs links и diff проверены;
+  Markdown render отдельно не проверялся. iOS native запуск не проверен при
+  незавершённом Xcode/CocoaPods toolchain; Google/reset/iOS приёмка Phase 7
+  остаётся открытой. Commit/push не выполнялись.
+
+Phase 11 и последующие этапы требуют отдельного поручения пользователя.
 
 ### Phase 11 — Media
 
@@ -1373,7 +1415,7 @@ browser push автоматически в scope не добавляется.
 App Distribution или deploy web требует запроса пользователя; iOS-публикация
 не заявляется выполненной по одному Android release.
 
-**Phase 0–6 и Phase 8–9 завершены. Google/reset/iOS приёмка Phase 7 остаётся открытой. Phase 10 и последующие этапы требуют отдельного поручения.**
+**Phase 0–6 и Phase 8–10 завершены. Google/reset/iOS приёмка Phase 7 остаётся открытой. Phase 11 и последующие этапы требуют отдельного поручения.**
 
 ---
 

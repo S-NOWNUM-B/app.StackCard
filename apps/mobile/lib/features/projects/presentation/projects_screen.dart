@@ -53,6 +53,8 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         : context.colors.textSecondary;
     final filters = ref.watch(projectFiltersProvider);
     final projectsState = ref.watch(visibleProjectsProvider);
+    final suggestions = ref.watch(portfolioSuggestionsProvider);
+    final draftState = ref.watch(portfolioDraftControllerProvider);
     final hasDraft = ref.watch(portfolioWorkingContentProvider) != null;
     final hasGitHub =
         ref
@@ -136,6 +138,23 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                     ],
                   ),
                   const SizedBox(height: StackCardSpacing.lg),
+                  if (suggestions.isNotEmpty &&
+                      draftState.canEdit &&
+                      !draftState.saving) ...[
+                    PortfolioSuggestionList(
+                      key: const ValueKey('projects_suggestions'),
+                      suggestions: suggestions,
+                      onAction: (suggestion) {
+                        final id = suggestion.projectId;
+                        if (id != null) {
+                          context.push(
+                            '/projects/${Uri.encodeComponent(id)}/edit',
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: StackCardSpacing.lg),
+                  ],
                   StackCardCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

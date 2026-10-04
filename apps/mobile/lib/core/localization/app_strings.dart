@@ -9,6 +9,7 @@ import 'github_strings.dart';
 import 'github_sync_strings.dart';
 import 'auth_strings.dart';
 import 'sync_strings.dart';
+import 'suggestion_strings.dart';
 
 class AppStrings {
   const AppStrings(this.locale);
@@ -219,6 +220,7 @@ const russianAppStrings = <String, String>{
   ...russianGitHubSyncStrings,
   ...russianAuthStrings,
   ...russianSyncStrings,
+  ...russianSuggestionStrings,
   ...russianDraftStrings,
   ...builderRussianStrings,
   ...builderFormRussianStrings,
@@ -364,6 +366,7 @@ const englishAppStrings = <String, String>{
   ...englishGitHubSyncStrings,
   ...englishAuthStrings,
   ...englishSyncStrings,
+  ...englishSuggestionStrings,
   ...englishDraftStrings,
   ...builderEnglishStrings,
   ...builderFormEnglishStrings,

@@ -175,6 +175,18 @@ guides. Этот файл дополняет их только для Flutter-п
   свежую дату проверки. Stale review/captured owner проверяются до применения;
   public browsing без account/explicit guest не открывает private repository.
   Public codec исключает source/override/ignore state; publication не вызывается.
+- Suggestions: [pure rules](../../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_suggestions.dart)
+  принимают content/source и явное время, возвращают immutable/stable advice.
+  Числовые пороги принадлежат PortfolioSuggestionThresholds, UI не дублирует их.
+  Preview означает demo link (`liveUrl`), media не вводится до своей фазы.
+  Projects использует accepted source offline, source cards — загруженную версию;
+  updatedAt не выдавать за commit history. Ignore/version и hidden/featured
+  учитываются, curated overrides сохраняются. Provider проверяет account/guest
+  до private state; при UID transition предыдущие рекомендации убираются.
+  [Общий UI](../../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_suggestion_list.dart)
+  показывает ru/en причину и ведёт к прежним Preview/editor actions без записи.
+  Domain, provider и widget tests — `test/portfolio_suggestions*_test.dart`;
+  контракт — в [architecture](../../architecture/architecture.md#portfolio-suggestions).
 - Account sync: [pure contracts](../../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_sync.dart),
   [local-first repository](../../../apps/mobile/lib/features/portfolio_draft/data/synced_portfolio_draft_repository.dart),
   [Hive metadata](../../../apps/mobile/lib/features/portfolio_draft/data/hive_portfolio_sync_metadata_store.dart)
