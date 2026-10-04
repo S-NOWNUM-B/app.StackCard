@@ -6,6 +6,32 @@ import 'domain/portfolio_draft.dart';
 import 'domain/portfolio_content.dart';
 import 'domain/portfolio_draft_repository.dart';
 import 'domain/portfolio_sync.dart';
+import 'domain/portfolio_suggestions.dart';
+import 'presentation/portfolio_draft_controller.dart';
+
+final portfolioSuggestionClockProvider = Provider<DateTime Function()>(
+  (ref) => DateTime.now,
+);
+
+/// Suggestions are read-only and never open a previous or unauthorized draft.
+final portfolioSuggestionsProvider = Provider<List<PortfolioSuggestion>>((ref) {
+  if (ref.watch(accountAuthRepositoryProvider) != null) {
+    final session = ref.watch(accountSessionProvider);
+    if (session.isLoading || session.hasError || !session.hasValue) {
+      return const [];
+    }
+    if (session.value == null && !ref.watch(guestAccessProvider)) {
+      return const [];
+    }
+  }
+  final state = ref.watch(portfolioDraftControllerProvider);
+  final content = state.content;
+  if (!state.canEdit || content == null) return const [];
+  return buildPortfolioSuggestions(
+    content: content,
+    now: ref.watch(portfolioSuggestionClockProvider)(),
+  );
+});
 
 final guestDraftTransferProvider = Provider<Future<void> Function(String uid)?>(
   (ref) => null,

@@ -5,7 +5,7 @@
 **Flutter-клиент для Android и iOS с мобильным редактором общего портфолио**
 
 ![Mobile Android + iOS](https://raster.shields.io/badge/Mobile-Android_%2B_iOS-09090B?style=for-the-badge)
-![Stage Phase 9 complete](https://raster.shields.io/badge/Stage-Phase_9_complete-FF0012?style=for-the-badge)
+![Stage Phase 10 complete](https://raster.shields.io/badge/Stage-Phase_10_complete-FF0012?style=for-the-badge)
 
 </div>
 
@@ -42,9 +42,12 @@ Hive draft с durable outbox и pending/synced/error/retry. Publication reposito
 подготовлен для отдельного явного действия; public UI/web ещё не созданы.
 Phase 9 завершена: явные Add/Review/Ignore для GitHub repositories проверены;
 source metadata и ручные overrides сохраняются раздельно в том же draft.
+Phase 10 завершена: read-only подсказки объясняют новый repository, обновления,
+недостающие description/demo и кандидатов для featured. Владелец открывает
+Preview или редактор и применяет изменения отдельно.
 Последующие функции развиваются по roadmap;
 статус и результаты проверок — в
-[product spec](../../docs/product/product-spec.md#phase-9--living-portfolio--smart-github-sync).
+[product spec](../../docs/product/product-spec.md#phase-10--portfolio-suggestions).
 ThemeMode/Locale/preferences управляются Provider; product state, repository
 loading и DI — Riverpod. Их границы и
 учебная эволюция описаны в
@@ -76,6 +79,7 @@ loading и DI — Riverpod. Их границы и
 | [lib/features/portfolio_draft/data/firestore_portfolio_draft_repository.dart](lib/features/portfolio_draft/data/firestore_portfolio_draft_repository.dart), [data/hive_portfolio_sync_metadata_store.dart](lib/features/portfolio_draft/data/hive_portfolio_sync_metadata_store.dart) | UID-bound SDK adapter и persistent sync metadata рядом с draft envelope |
 | [lib/features/portfolio_draft/data/firestore_portfolio_publication_repository.dart](lib/features/portfolio_draft/data/firestore_portfolio_publication_repository.dart), [data/portfolio_public_content_codec.dart](lib/features/portfolio_draft/data/portfolio_public_content_codec.dart) | Prepared online publish/unpublish и public projection без hidden data/private notes |
 | [lib/features/settings/data/shared_preferences_settings_repository.dart](lib/features/settings/data/shared_preferences_settings_repository.dart) | Один versioned snapshot настроек через SharedPreferencesAsync |
+| [lib/features/portfolio_draft/domain/portfolio_suggestions.dart](lib/features/portfolio_draft/domain/portfolio_suggestions.dart), [presentation/portfolio_suggestion_list.dart](lib/features/portfolio_draft/presentation/portfolio_suggestion_list.dart) | Pure deterministic rules, единые пороги и локализованные объяснения без автоматической записи |
 | [assets/fonts](assets/fonts/) | Локальные DM Sans, Noto Sans fallback и SIL OFL лицензии |
 | [test/widget_test.dart](test/widget_test.dart), [test/responsive_test.dart](test/responsive_test.dart) | UI-сценарии, навигация, темы и адаптивность |
 | [test/auth_di_test.dart](test/auth_di_test.dart), [test/profile_di_test.dart](test/profile_di_test.dart), [test/projects_di_test.dart](test/projects_di_test.dart) | Подмена repositories в реальных экранах и async states |

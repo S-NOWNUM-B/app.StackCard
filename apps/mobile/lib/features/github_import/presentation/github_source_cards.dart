@@ -150,6 +150,13 @@ class _GitHubProjectActions extends ConsumerWidget {
       );
     }
     final ready = state?.canEdit == true && state?.saving != true;
+    final suggestions = state?.canEdit == true
+        ? buildPortfolioSuggestions(
+            content: state?.content ?? PortfolioContent(),
+            sources: [source],
+            now: ref.watch(portfolioSuggestionClockProvider)(),
+          ).where((item) => item.repositoryId == repository.id).toList()
+        : const <PortfolioSuggestion>[];
     final strings = context.strings;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -163,6 +170,16 @@ class _GitHubProjectActions extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: StackCardSpacing.sm),
+        ],
+        if (suggestions.isNotEmpty) ...[
+          PortfolioSuggestionList(
+            key: ValueKey('github_suggestions_${repository.id}'),
+            suggestions: suggestions,
+            showTitle: false,
+            showTargetTitle: false,
+            showActions: false,
+          ),
+          const SizedBox(height: StackCardSpacing.lg),
         ],
         StackCardButton(
           key: ValueKey('github_preview_${repository.id}'),

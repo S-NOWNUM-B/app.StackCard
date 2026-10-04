@@ -5,7 +5,7 @@
 **Процесс работы, проверки и правила внесения согласованных изменений**
 
 ![Contributing guide](https://raster.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
-![Scope Phase 9 complete](https://raster.shields.io/badge/Scope-Phase_9_complete-FF0012?style=for-the-badge)
+![Scope Phase 10 complete](https://raster.shields.io/badge/Scope-Phase_10_complete-FF0012?style=for-the-badge)
 
 </div>
 
@@ -32,8 +32,9 @@ Account session/actions, auth guards и UID isolation введены на Phase 
 Google flow, полный password reset и iOS приёмка остаются открытыми.
 Phase 8 добавила local-first sync и подготовила atomic publication repository;
 Phase 9 завершена: явный GitHub import/review/ignore сохраняет ручные overrides;
+Phase 10 завершена: детерминированные подсказки объясняют причины и явные действия;
 статус и результаты проверок находятся в
-[product spec](docs/product/product-spec.md#phase-9--living-portfolio--smart-github-sync).
+[product spec](docs/product/product-spec.md#phase-10--portfolio-suggestions).
 Продуктовые функции вводятся последовательно по
 [roadmap](docs/product/product-spec.md#roadmap),
 переход к следующей фазе требует подтверждения пользователя.
@@ -368,6 +369,11 @@ Builder domain/repository tests проверяют validation/completion, schema
 и сохранность private notes; controller/forms/preview/integration tests проверяют
 CRUD, рабочее состояние, сохранение и единые проекции. Визуальные проверки
 Builder находятся в `test/portfolio_builder_visual_test.dart`.
+`test/portfolio_suggestions_test.dart` проверяет pure rules с заданным временем,
+границы активности, ignore, stable IDs и отсутствие мутаций.
+`test/portfolio_suggestions_provider_test.dart` проверяет working edits и
+account/guest/UID boundaries без записи; `test/portfolio_suggestions_widget_test.dart`
+проверяет объяснения ru/en, Preview/editor actions и responsive UI.
 Account tests находятся в `test/firebase_auth_repository_test.dart`,
 `test/firebase_auth_controller_test.dart`, `test/firebase_auth_google_test.dart`,
 `test/account_auth_ui_test.dart`, `test/account_navigation_test.dart`,
