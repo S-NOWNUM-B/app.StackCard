@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
-import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_draft_repository.dart';
@@ -189,7 +188,8 @@ class _PortfolioProjectEditorScreenState
             );
           }
           _initialize(project);
-          return StackCardCard(
+          return Padding(
+            padding: EdgeInsets.zero,
             child: Form(
               key: _formKey,
               child: Column(

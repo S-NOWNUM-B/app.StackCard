@@ -28,8 +28,9 @@ const russianAuthStrings = <String, String>{
   'account.sendReset': 'Отправить письмо',
   'account.resetSuccess': 'Если для этого email существует аккаунт, письмо с инструкцией отправлено. Проверьте почту и папку «Спам».',
   'account.guest': 'Продолжить без аккаунта',
-  'account.guestNote': 'Гостевой черновик хранится только на этом устройстве и доступен без сети. Для облачной синхронизации войди в аккаунт.',
-  'account.localNote': 'Сохранённый черновик синхронизируется с аккаунтом и доступен без сети. Статус синхронизации показан в редакторе; публикация выполняется отдельно.',
+  'account.guestNote': 'Только на этом устройстве. Доступно без сети.',
+  'account.localNote':
+      'Черновик синхронизируется и доступен без сети. Публикация — отдельно.',
   'account.title': 'Аккаунт',
   'account.guestTitle': 'Гостевой режим',
   'account.signedIn': 'Вы вошли в аккаунт',
@@ -85,8 +86,9 @@ const englishAuthStrings = <String, String>{
   'account.sendReset': 'Send reset email',
   'account.resetSuccess': 'If an account exists for this email, reset instructions have been sent. Check your inbox and spam folder.',
   'account.guest': 'Continue without an account',
-  'account.guestNote': 'Your guest draft stays on this device and works offline. Sign in to synchronize with your account.',
-  'account.localNote': 'Saved drafts synchronize with your account and are available offline. Check synchronization status in the editor; publishing is a separate action.',
+  'account.guestNote': 'On this device only. Available offline.',
+  'account.localNote':
+      'Your draft syncs and works offline. Publishing is separate.',
   'account.title': 'Account',
   'account.guestTitle': 'Guest mode',
   'account.signedIn': 'You are signed in',

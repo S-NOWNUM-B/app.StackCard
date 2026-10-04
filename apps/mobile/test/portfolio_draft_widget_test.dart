@@ -40,6 +40,11 @@ void main() {
       expect(find.text('Есть несохранённые изменения'), findsOneWidget);
       await _save(tester);
       expect(find.text('Заметки сохранены на устройстве'), findsOneWidget);
+      expect(find.text('Последняя сохранённая версия: 1'), findsNothing);
+      final details = find.byKey(const ValueKey('portfolio_draft_details'));
+      await tester.ensureVisible(details);
+      await tester.tap(details);
+      await tester.pumpAndSettle();
       expect(find.text('Последняя сохранённая версия: 1'), findsOneWidget);
       expect(
         find.text(
@@ -201,7 +206,12 @@ void main() {
       language: AppLanguage.en,
     );
     expect(find.text('Local draft'), findsOneWidget);
-    expect(find.text('Portfolio notes'), findsOneWidget);
+    expect(
+      find.text(
+        'Notes are not part of the portfolio and do not appear in the preview.',
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Save on device'), findsOneWidget);
     await tester.enterText(_notes, 'English note');
     await tester.pump();

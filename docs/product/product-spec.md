@@ -14,6 +14,7 @@
 ## Содержание
 
 - [Статус и границы текущей работы](#статус-и-границы-текущей-работы)
+- [Редизайн мобильного интерфейса](#редизайн-мобильного-интерфейса)
 - [Концепция и аудитория](#концепция-и-аудитория)
 - [Living Portfolio: данные и контроль пользователя](#living-portfolio-данные-и-контроль-пользователя)
 - [Portfolio Suggestions](#portfolio-suggestions)
@@ -90,6 +91,53 @@ guest draft переносится только явно из Settings в пус
 Пользователь явно разрешил переход к Phase 8 при открытой приёмке Phase 7;
 это не означает завершения оставшихся auth сценариев. Phase 9 завершена;
 Phase 10 завершена; Phase 11 и последующие этапы требуют отдельного поручения.
+
+---
+
+## Редизайн мобильного интерфейса
+
+**Результат (2026-10-04):** по прямому поручению пользователя в существующей
+ветке `redesign/full-app` переработан UI возможностей Phase 0–10. Палитра
+Obsidian/Signal Red расширена acid/cyan/pink; UI адаптирует композицию
+прикреплённого референса и короткие controls/sections из 21st.dev.
+Общий визуальный контракт для mobile и будущего web находится в
+[design system](../design/design-system.md).
+
+**Задачи и приёмка**
+
+- [x] Обновить canonical theme/shared widgets, навигацию и Home.
+- [x] Переработать auth, Portfolio, Projects, Settings, GitHub Import/review,
+  Builder, формы, notes и preview; убрать вложенные cards, повторные подписи
+  и декоративные badges. Metadata/revision/date доступны через раскрытие.
+- [x] Сохранить critical states и явные actions; auth/guest/transfer, CRUD,
+  Save/reload, sync, Add/Accept/Ignore, visibility/order и private preview
+  проверены existing tests. Domain/data/controllers/providers, Rules/schema,
+  dependencies и оригинальные branding assets не изменены.
+- [x] `dart format lib test integration_test` — **181 files, 0 changed**;
+  `flutter analyze` — **No issues found**; полный `flutter test` — **822 passed**.
+  UI expectations адаптированы к коротким действиям и раскрытию metadata.
+  Contrast/touch-target проверки измеряют целиком отрисованный контент при
+  исходной ширине; пороги WCAG/Android не снижались, overflow/goldens остаются
+  на исходных viewports.
+- [x] Обновлены **56** Flutter previews для основных экранов и Builder в
+  light/dark, portrait/landscape phone/tablet. Выборочно просмотрены Home,
+  Sign In, Portfolio, Projects, Settings, Builder hub и light preview,
+  включая phone и tablet layouts.
+  Responsive checks включают 320 px и text scale 2, Builder/review — ru/en
+  и клавиатуру. Ordinary `main.dart` собран и запущен на `emulator-5554`,
+  native Sign In и Home после guest access просмотрены; checksum существующего
+  `portfolio_draft.hive` совпал до/после запуска.
+- [ ] Native iOS запуск не проверен; прежняя открытая приёмка Phase 7 сохраняется.
+
+**Уточнение входа (2026-10-04):** по обратной связи пользователя удалён весь
+розовый декоративный poster со слоганом. Вход, регистрация и сброс пароля
+используют компактный brand и единую колонку формы шириной до 440 px.
+Прошли 46 existing auth/navigation/widget/localization tests и 20 responsive
+проверок входа, включая 320 px и text scale 2; обновлены 8 sign-in previews.
+`flutter analyze` — **No issues found**. Компактный account Sign In собран и
+просмотрен на `emulator-5554`; checksum локального draft до/после совпал.
+
+Редизайн не начинает Phase 11 или web implementation. Commit/push не выполнялись.
 
 ---
 
@@ -334,7 +382,8 @@ Mobile и web используют один Firebase project и согласов
 когда сервисы будут подключены. Dart- и TypeScript-клиенты реализуют эти контракты
 в своих стеках; общей runtime-библиотеки между ними сейчас нет.
 
-Визуальный язык **Obsidian + Signal Red**, редкое применение красного,
+Визуальный язык **Obsidian / Signal Red / Electric**: цельные цветные поверхности,
+крупная типографика и открытые секции без вложенных карточек;
 палитры и правила компонентов закреплены в
 [design-system.md](../design/design-system.md). Решения и нерешённые вопросы
 фиксируются в [ADR](../decisions/README.md).
@@ -376,7 +425,8 @@ web-редактор и публичные портфолио. Этот разд
 
 **Phase 0–6 завершены:** основа, UI, состояние, архитектура, GitHub Import, offline и Builder проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
-Последнее поручение — перейти к Phase 10: Portfolio Suggestions.
+Phase 10 завершена. Текущее прямое поручение — редизайн существующего mobile UI
+в ветке `redesign/full-app`, с общей стилистикой для будущего web.
 Открытые Google/reset/iOS проверки Phase 7 сохранены; Phase 11–20 остаются планом и
 требуют отдельного поручения пользователя.
 
@@ -530,7 +580,7 @@ web-редактор и публичные портфолио. Этот разд
 - При обычном масштабе автоматические проверки контраста текста проходят
   в начале и конце страницы; Android touch target guideline проходит на начальном
   viewport. Это не полный accessibility audit и не подтверждение всех платформ.
-- [Эскизы](../design/design-system.md#эскизы-экранов-mobile) согласованы с реализованной
+- [Эскизы](../design/design-system.md#5-layout--composition) согласованы с реализованной
   компоновкой. 40 Flutter PNG в `docs/design/previews` просмотрены для всех пяти
   экранов, двух тем, phone/tablet и обеих ориентаций. Overflow при обычном и
   удвоенном тексте не обнаружен; красный используется локально в CTA и индикаторах.

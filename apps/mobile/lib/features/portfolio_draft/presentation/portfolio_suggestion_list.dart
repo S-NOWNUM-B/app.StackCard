@@ -36,11 +36,6 @@ class PortfolioSuggestionList extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: StackCardSpacing.sm),
-          Text(
-            context.strings.tr('suggestions.note'),
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: context.colors.textSecondary),
-          ),
           const SizedBox(height: StackCardSpacing.lg),
         ],
         for (var index = 0; index < suggestions.length; index++) ...[
@@ -161,9 +156,7 @@ class _SuggestionReason extends StatelessWidget {
               label: context.strings.tr(
                 'suggestions.action.${suggestion.kind.name}',
               ),
-              icon: suggestion.action == PortfolioSuggestionAction.editProject
-                  ? Icons.edit_outlined
-                  : Icons.visibility_outlined,
+              icon: Icons.north_east_rounded,
               onPressed: onAction == null ? null : () => onAction!(suggestion),
             ),
           ],

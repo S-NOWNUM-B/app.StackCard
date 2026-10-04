@@ -85,8 +85,11 @@ void main() {
       await tester.tap(find.text('Сбросить фильтры'));
       await tester.pumpAndSettle();
       expect(find.text('Проекты: 4'), findsOneWidget);
-      await tester.ensureVisible(find.text('Посмотреть Atlas UI Kit'));
-      await tester.tap(find.text('Посмотреть Atlas UI Kit'));
+      final preview = find.byKey(
+        const ValueKey('project_preview_Atlas UI Kit'),
+      );
+      await tester.ensureVisible(preview);
+      await tester.tap(preview);
       await tester.pumpAndSettle();
       expect(find.byType(BottomSheet), findsOneWidget);
       await tester.binding.handlePopRoute();
@@ -112,6 +115,11 @@ void main() {
       Theme.of(tester.element(find.text('Внешний вид'))).brightness,
       Brightness.dark,
     );
+    expect(find.text('Ошибка'), findsNothing);
+    final statePreviews = find.byKey(const Key('settings_state_previews'));
+    await tester.ensureVisible(statePreviews);
+    await tester.tap(statePreviews);
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Ошибка'));
     await tester.tap(find.text('Ошибка'));
     await tester.pumpAndSettle();

@@ -93,10 +93,8 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(
-      tester
-          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Системная'))
-          .selected,
-      isTrue,
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.system,
     );
     expect(
       Theme.of(tester.element(find.text('Внешний вид'))).brightness,

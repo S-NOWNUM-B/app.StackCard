@@ -124,20 +124,8 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          context.strings.tr('github.title'),
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        const SizedBox(height: StackCardSpacing.sm),
-        Text(
-          context.strings.tr('github.hint'),
-          style: Theme.of(context).textTheme.bodyLarge
-              ?.copyWith(color: pageTextColor),
-        ),
-        const SizedBox(height: StackCardSpacing.xl),
-        const _GitHubDraftActions(),
-        const SizedBox(height: StackCardSpacing.lg),
         StackCardCard(
+          padding: const EdgeInsets.only(bottom: StackCardSpacing.xl),
           child: Form(
             key: _formKey,
             child: Column(
@@ -173,7 +161,8 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
             ),
           ),
         ),
-        const SizedBox(height: StackCardSpacing.xl),
+        const _GitHubDraftActions(),
+        const SizedBox(height: StackCardSpacing.lg),
         if (state.loading)
           StackCardStateView(
             kind: StackCardViewState.loading,
@@ -194,6 +183,7 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
           ),
           const SizedBox(height: StackCardSpacing.xl),
           StackCardCard(
+            padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -217,16 +207,20 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
                         ),
                         selected: state.filter == filter,
                         onSelected: (_) => controller.setFilter(filter),
-                        selectedColor: context.colors.accentSoft,
-                        backgroundColor: context.colors.surface,
-                        checkmarkColor: context.colors.textPrimary,
+                        showCheckmark: false,
+                        selectedColor: context.colors.cyan,
+                        backgroundColor: Colors.transparent,
                         side: BorderSide(
                           color: state.filter == filter
-                              ? context.colors.accent
-                              : context.colors.textSecondary,
+                              ? context.colors.cyan
+                              : context.colors.border,
                         ),
                         labelStyle: Theme.of(context).textTheme.labelLarge
-                            ?.copyWith(color: context.colors.textPrimary),
+                            ?.copyWith(
+                              color: state.filter == filter
+                                  ? context.colors.ink
+                                  : context.colors.textPrimary,
+                            ),
                       ),
                   ],
                 ),
@@ -244,19 +238,16 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
-          const SizedBox(height: StackCardSpacing.sm),
-          Text(
-            context.strings.tr('github.searchScope'),
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: pageTextColor),
-          ),
+          if (state.nextPage != null) ...[
+            const SizedBox(height: StackCardSpacing.sm),
+            Text(
+              context.strings.tr('github.searchScope'),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: pageTextColor),
+            ),
+          ],
           const SizedBox(height: StackCardSpacing.lg),
-        ] else if (!state.loading && state.failure == null)
-          StackCardStateView(
-            kind: StackCardViewState.empty,
-            title: context.strings.tr('github.emptyUsername'),
-            message: context.strings.tr('github.emptyUsernameHint'),
-          ),
+        ],
       ],
     );
   }
@@ -318,11 +309,10 @@ class _GitHubDraftActions extends ConsumerWidget {
     final controller = ref.read(portfolioDraftControllerProvider.notifier);
     final cloud = ref.watch(portfolioSyncRepositoryProvider) != null;
     return StackCardCard(
+      padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(strings.tr('githubSync.draftNote')),
-          const SizedBox(height: StackCardSpacing.sm),
           if (state.loading)
             Text(strings.tr('draft.loading'))
           else if (!state.loaded) ...[
@@ -347,30 +337,45 @@ class _GitHubDraftActions extends ConsumerWidget {
                       : 'githubSync.saved',
                 ),
                 key: const ValueKey('github_draft_status'),
+                style: Theme.of(context).textTheme.labelLarge,
               ),
             ),
             if (state.failure != null)
               Text(strings.tr('builder.failure.title')),
             const SizedBox(height: StackCardSpacing.sm),
-            StackCardButton(
-              key: const ValueKey('github_draft_save'),
-              label: strings.tr(
-                state.remoteUpdateAvailable
-                    ? 'sync.saveMine'
-                    : 'githubSync.save',
-              ),
-              icon: Icons.save_outlined,
-              primary: true,
-              loading: state.saving,
-              onPressed: state.canSave ? controller.save : null,
+            Wrap(
+              spacing: StackCardSpacing.sm,
+              runSpacing: StackCardSpacing.sm,
+              children: [
+                StackCardButton(
+                  key: const ValueKey('github_draft_save'),
+                  label: strings.tr(
+                    state.remoteUpdateAvailable
+                        ? 'sync.saveMine'
+                        : 'githubSync.save',
+                  ),
+                  icon: Icons.save_outlined,
+                  primary: state.canSave,
+                  loading: state.saving,
+                  onPressed: state.canSave ? controller.save : null,
+                ),
+                StackCardButton(
+                  label: strings.tr('githubSync.openBuilder'),
+                  icon: Icons.tune_rounded,
+                  onPressed: () => context.push('/portfolio/builder'),
+                ),
+              ],
             ),
             if (state.remoteUpdateAvailable)
               Text(strings.tr('sync.remoteUpdate')),
-            const SizedBox(height: StackCardSpacing.sm),
-            StackCardButton(
-              label: strings.tr('githubSync.openBuilder'),
-              onPressed: () => context.push('/portfolio/builder'),
-            ),
+            if (state.hasUnsavedChanges) ...[
+              const SizedBox(height: StackCardSpacing.sm),
+              Text(
+                strings.tr('githubSync.draftNote'),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: context.colors.textSecondary),
+              ),
+            ],
           ],
         ],
       ),

@@ -125,7 +125,7 @@ void main() {
 
   for (final item in [
     (route: '/home', heading: 'Hello, Alex'),
-    (route: '/portfolio', heading: 'My portfolio'),
+    (route: '/portfolio', heading: 'Editor'),
     (route: '/projects', heading: 'Made by you'),
     (route: '/settings', heading: 'Appearance'),
   ]) {

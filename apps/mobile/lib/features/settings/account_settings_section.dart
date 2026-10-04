@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/localization/app_strings.dart';
+import '../../core/theme/stackcard_colors.dart';
 import '../../shared/widgets/stackcard_button.dart';
 import '../../shared/widgets/stackcard_card.dart';
 import '../auth/auth.dart';
@@ -135,7 +136,7 @@ class _AccountSettingsSectionState
             (available.value == true ||
                 available.hasError ||
                 _message != null)) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           StackCardCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -145,7 +146,11 @@ class _AccountSettingsSectionState
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 12),
-                Text(context.strings.tr('account.transferHint')),
+                Text(
+                  context.strings.tr('account.transferHint'),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: context.colors.textSecondary),
+                ),
                 const SizedBox(height: 16),
                 if (available.hasError)
                   StackCardButton(
