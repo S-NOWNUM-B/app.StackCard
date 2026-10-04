@@ -1,43 +1,48 @@
 # Контракт редизайна StackCard
 
-Цель: полностью переработать существующий мобильный UI developer-портфолио,
-убрав вложенные карточки, избыток текста и однообразный серый интерфейс.
-Canonical visual direction: [design-system.md](design-system.md).
+Новый запрос 2026-10-04 задаёт Figma-first UX/UI refactor: сначала аудит,
+IA, target design system и целостные flows, затем Flutter/web. Он явно заменяет
+прежние решения о Signal Red, одиночном Portfolio и root Settings.
+Canonical visual contract — [design-system.md](design-system.md), scope/acceptance —
+[redesign-plan.md](redesign-plan.md).
 
-| Свидетельство | Достоверность | Вывод |
+| Свидетельство | Достоверность | Следствие |
 | --- | --- | --- |
-| Прикреплённый пользователем референс трёх телефонов | observed | Крупные headlines, цельные lime/pink поверхности, круговые CTA, графика |
-| Просьба сохранить палитру и расширить в киберпанк | provided | Obsidian + Signal Red сохраняем, добавляем acid/cyan/pink |
-| [21st Tabs](https://21st.dev/blog/react-tabs-components), [Minimal Button](https://21st.dev/%40radiumcoders/components/minimal-button), [Settings](https://news.21st.dev/blog/react-settings-page-components) | observed | Компактный active indicator, минимальные controls, плоские группы |
-| Текущие theme/shared widgets и screens | observed | Изменяем существующую систему, сохраняем слои и состояния |
-| Геометрическая графика вместо anime-персонажей | inferred | Собственный образ продукта, автономный renderer, без внешних assets |
+| Новые требования пользователя, 31 раздел | provided | Четыре сущности, multiple outputs, lime вместо red, Figma до кода |
+| [StackCard Figma](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard) | observed через MCP | Исходный аудит: 9 pages, 31 COMPONENT/COMPONENT_SET узел; результаты итерации и IDs — в plan |
+| Flutter routing/theme/domain | observed | Home/Portfolio/Projects/Settings, red primary, один content с resumeText и global featured |
+| [Web README](../../apps/web/README.md) и tree | observed | Web runtime отсутствует; website design не равен готовому Next.js-приложению |
+| [Openship](https://openship.io/) | observed web benchmark | Светлая бело-чёрная страница, крупные заголовки с italic акцентом, paired CTA и product visuals; dark palette задаёт пользователь, а не этот сайт |
+| [21st.dev stepper](https://21st.dev/@sean0205/components/c-stepper-11), [Motion Primitives](https://21st.dev/@ibelick/library/motion-primitives) | observed pattern references | Иерархия шагов и interaction feedback адаптируются к mobile; готовые React controls не являются Flutter/Figma components |
+| Cyberpunk reference, упомянутый в требованиях | provided description | Editorial rhythm/controlled neon; отсутствующие pixels не считать изученным screenshot |
 
-| Референс | Keep | Change | Do not copy |
-| --- | --- | --- | --- |
-| Три телефона | Seamless composition, большие цвета, типографика, круглые действия | Developer content, ru/en, accessibility и реальные workflows | Персонажи, ABYTE, NFT-claims, точные layout/text |
-| 21st.dev components | Короткие controls, раскрытие деталей по требованию, sections/dividers | Flutter widgets и существующая навигация | React dependencies, рекламная copy и несвязанные effects |
-| GitKraken screenshot | Существующая ветка `redesign/full-app` | UI мобильного приложения | UI GitKraken не является design reference |
+Target: DeveloperProfile и Projects Library переиспользуются в нескольких
+Resumes/Portfolios. Visibility/featured/order принадлежат PortfolioProject
+association; inline create создаёт global Project + attach. Resume — structured
+CV с selectors, visibility/overrides и photo. [Plan](redesign-plan.md) задаёт relations.
 
-Выбранное направление: редакционный cyberpunk с чёрной основой, цветными
-постерами и графикой из геометрических лент. Открытые секции разделяются
-типографикой, отступами и линиями. Главный CTA очевиден, вторичные действия
-компактны. У каждого экрана собственный визуальный ритм.
+Направление: neutral dark foundation, lime primary, cyan/pink artwork,
+DM Sans/Noto Sans, сильная hierarchy и occasional metadata mono. Основной
+viewport 390 px; четыре постоянных tab labels, contextual Settings и nested
+Back. Larger screens сохраняют mental model и centered content без sidebar.
 
-Уточнение пользователя: на экранах авторизации большой розовый poster лишний.
-Вход, регистрация и сброс пароля используют brand и форму без слогана
-и декоративной графики. Весь блок и brand центрируются по обеим осям;
-текст формы остаётся слева. Поля и кнопки матовые с radius 12, вторичные ссылки
-нейтральные. Последнее уточнение пользователя задаёт единый красный primary с
-белым текстом и иконками во всём приложении, включая auth. CTA использует
-существующий `#E60010` для контраста белого текста 4.80:1; brand остаётся `#FF0012`.
-Иерархия действий: password recovery → submit/Google → mode switch → guest.
+| Keep | Change | Не переносить |
+| --- | --- | --- |
+| Logo geometry и архив оригиналов | Lime recolor в новых Figma assets | Red как target brand/CTA |
+| Source review/overrides, offline Save, auth/guest/UID, notes | Presentation/discoverability | Automatic overwrite/publish при refresh |
+| Focused editors, order/visibility, preview | Named Portfolios и structured Resumes | Plain Resume textarea, global Featured, дублирование Project |
+| Matte auth controls и читаемая форма | Общая lime система | Большой decorative poster за формой |
+| Existing theme/tokens/shared widgets | Новые semantic targets | Параллельная runtime UI library |
+| Openship: hierarchy, product visuals, paired actions | Neutral dark/lime mobile composition | Полная web-страница и её light palette |
+| 21st.dev: stepper и feedback | Пять содержательных creation шагов, touch targets | Сборка интерфейса из несвязанных templates |
 
-Риски: overflow русских строк и text scale 2, контраст на bright panels,
-сохранение keys/actions существующих tests, выразительность без лишней графики.
-Unknown: native iOS readiness не подтверждается widget renders.
+Риски: IA требует будущей singleton storage/publication migration; camera/gallery
+и permission flows не реализованы; connection не должен блокировать current
+public GitHub username import; Copy не обещает URL unpublished output.
+Light/large text/keyboard/contrast требуют самостоятельной проверки.
 
-- [x] Единое направление и источники решений зафиксированы.
-- [x] Палитра, type, grid, components, motion, voice, anti-patterns определены.
-- [x] Все существующие экраны адаптированы и проверены.
-- [x] Flutter renders просмотрены в light/dark; narrow/large-text layouts проверены tests.
-- [x] Critical auth/draft/import/sync actions проходят existing tests.
+История прежнего redesign и executed checks сохраняется в
+[product spec](../product/product-spec.md#редизайн-мобильного-интерфейса).
+Прежние completed checkboxes относились к старому Flutter UI и не принимаются
+как результат нового Figma target. Runtime/Rules/dependencies/storage и
+original branding sources этой итерацией не изменяются.

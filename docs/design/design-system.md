@@ -2,16 +2,25 @@
 
 # StackCard Design
 
-**Obsidian / Signal Red / Electric — общий визуальный язык mobile и будущего web**
+**Целевая дизайн-система Figma: editorial cyberpunk, developer tooling и controlled neon**
 
-![Palette](https://raster.shields.io/badge/Palette-Electric-C8FF31?style=for-the-badge)
-![Accent](https://raster.shields.io/badge/Accent-Signal_Red-FF0012?style=for-the-badge)
+![Design target Figma](https://raster.shields.io/badge/Design-Figma_target-111111?style=for-the-badge)
+![Accent Acid Lime](https://raster.shields.io/badge/Accent-Acid_Lime-C7FF1A?style=for-the-badge)
 
 </div>
 
-Единый визуальный язык mobile: **Obsidian / Signal Red / Electric**.
-Редизайн от 2026-10-04 выполняется по прямому поручению пользователя поверх
-существующих возможностей Phase 0–10. Web остаётся отдельной будущей работой.
+---
+
+Этот guide определяет **целевой дизайн**, принятый по новым требованиям
+2026-10-04. Он заменяет прежнее направление Obsidian / Signal Red / Electric
+для новой работы в [Figma StackCard](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard).
+Текущий Flutter пока использует красный primary, одиночный portfolio draft
+и прежнюю навигацию; runtime tokens, schema и assets этим документом не изменены.
+Историческая приёмка прежнего UI сохраняется в [product spec](../product/product-spec.md#редизайн-мобильного-интерфейса).
+
+Порядок и проверяемые результаты — в [redesign plan](redesign-plan.md),
+происхождение решений — в [design contract](design-contract.md),
+граница переноса в код — в [implementation handoff](implementation-handoff.md).
 
 ## Содержание
 
@@ -25,142 +34,212 @@
 - [Voice & Brand](#8-voice--brand)
 - [Anti-patterns](#9-anti-patterns)
 
+---
+
 ## 1. Visual Theme & Atmosphere
 
-Интерфейс developer-портфолио с редакционной композицией и киберпанк-графикой.
-Пользовательский референс задаёт цельные цветные поверхности, крупный текст,
-свободную композицию и круглые действия. Переносим эти свойства в StackCard;
-персонажей, NFT-тексты, логотип ABYTE и точную композицию не копируем.
+StackCard управляет developer identity: один базовый профиль и библиотека
+проектов дают несколько Resumes и Portfolios. Внутренний UI помогает создавать,
+редактировать и делиться; публичное Portfolio допускает более выразительный
+showcase, чем editor.
 
-Дополнительные UI-ориентиры: [21st Tabs](https://21st.dev/blog/react-tabs-components),
-[Minimal Button](https://21st.dev/%40radiumcoders/components/minimal-button),
-[Settings sections](https://news.21st.dev/blog/react-settings-page-components).
-Их визуальные решения адаптируются на Flutter; этот же контракт применяется к
-будущему web через его собственные components. React код в mobile не переносится.
+Характер создают крупная typography, чёткая сетка, редакционная композиция,
+технические подписи и геометрический artwork. Neutral surfaces занимают
+основную площадь; neon выделяет действия и небольшие visual accents.
+Ориентир — 80–85% neutral, 10–15% typography/borders и 5–10% accent;
+это композиционный ориентир, а не обязательная формула каждого экрана.
 
-Одна выразительная поверхность на ключевой экран, затем открытые секции с
-разделителями. Home, портфолио, Projects и Settings имеют свой цветовой
-ритм. Не делать весь продукт одинаковым серым списком. В формах главным остаётся
-ввод; графика используется в заголовках и preview, а не за полями. На экранах
-авторизации остаются компактный brand и форма без декоративного poster и слогана.
+Home, Resume, Project и Portfolio имеют разную композицию. Artwork использует
+reusable ribbons, wireframe curves, generative lines, grids и dither textures.
+Декорация не перекрывает controls и исключается из screen-reader semantics.
+[Openship](https://openship.io/) — benchmark typography/rhythm/grids/product demos;
+[21st.dev](https://21st.dev/) — источник адаптируемых patterns и motion ideas.
+Точные страницы и layouts не копируются.
+
+---
 
 ## 2. Color
 
-Canonical source: [StackCardColors](../../apps/mobile/lib/core/theme/stackcard_colors.dart).
-Все экраны используют `context.colors`, без локальных случайных HEX.
+Таблица — **целевые** semantic roles Figma. При последующей реализации
+расширяем [StackCardColors](../../apps/mobile/lib/core/theme/stackcard_colors.dart)
+и [StackCardTheme](../../apps/mobile/lib/core/theme/stackcard_theme.dart),
+не создаём вторую runtime palette. Значения текущего Flutter пока отличаются.
 
-| Роль | Dark | Light | Назначение |
+| Роль | Dark target | Light target | Назначение |
 | --- | --- | --- | --- |
-| background | #09090B | #F5F5F6 | Базовая поверхность |
-| surface | #111113 | #FFFFFF | Диалоги и необходимые отдельные панели |
-| surfaceElevated | #18181B | #FAFAFA | Поля и состояния controls |
-| surfaceHover | #202024 | #EFEFF1 | Hover/disabled |
-| border / borderSubtle | #29292E / #1F1F23 | #DEDEE3 / #E8E8EC | Разделители |
-| textPrimary | #F5F5F7 | #18181B | Основной текст |
-| textSecondary | #A1A1AA | #52525B | Подписи |
-| accent | #FF0012 | #FF0012 | Signal Red, brand и active state |
-| accentHover / accentSoft | #E60010 / #351014 | #E60010 / #FFE5E7 | Interaction |
-| ColorScheme.primary / onPrimary | #E60010 / #FFFFFF | #E60010 / #FFFFFF | Красные основные кнопки с белым текстом и иконками |
-| acid | #C8FF31 | #C8FF31 | Профиль, крупные поверхности |
-| cyan | #79E8F2 | #79E8F2 | Projects / редактор |
-| pink | #FF79B7 | #FF79B7 | Featured / Settings |
-| ink | #09090B | #09090B | Текст на цветных поверхностях |
-| success | #22C55E | #16A34A | Успех |
-| warning | #F59E0B | #D97706 | Предупреждение |
-| error | #EF4444 | #DC2626 | Ошибка с текстовым объяснением |
+| background | #070708 | #F5F5F6 | Основная поверхность |
+| surface | #0D0E11 | #FFFFFF | Панели и sheets |
+| surfaceElevated | #14161B | #FAFAFA | Inputs и elevated content |
+| surfaceActive | #1B1E24 | #EFEFF1 | Neutral active/pressed |
+| border | #272A32 | #DEDEE3 | Разделители и controls |
+| borderStrong | #373B46 | #B8BBC4 | Усиленная граница |
+| textPrimary | #F4F5F7 | #18181B | Основной текст |
+| textSecondary | #A4A8B3 | #52525B | Вторичный текст |
+| textMuted | #737884 | #676C77 | Необязательная metadata; contrast проверять по месту |
+| primary / acid | #C7FF1A | #C7FF1A | Основные действия и navigation selection |
+| onPrimary / ink | #070708 | #070708 | Text/icons на neon |
+| cyan | #6FE7F2 | #6FE7F2 | Project/source artwork |
+| sourceText | #6FE7F2 | #0B6570 | Читаемые GitHub/source labels |
+| pink | #FF6AB2 | #FF6AB2 | Portfolio/showcase artwork |
+| violet, optional | #9B7BFF | #9B7BFF | Возможное расширение; variable пока не создана |
+| paper | #F4F5F7 | #F4F5F7 | CV-thumbnail с ink, независимо от темы |
+| focus | #C7FF1A | #526B00 | Focus indicator, различимый на поверхности |
+| success | #41E68A | #168449 | Подтверждённый успех + icon/label |
+| warning | #FFD166 | #996000 | Предупреждение + пояснение |
+| error / destructive | #F06272 | #C92D45 | Семантика ошибок, не brand |
 
-Signal Red и Obsidian сохраняются. Большие цветовые поля теперь разрешены;
-каждая секция получает осмысленную роль. На acid/cyan/pink использовать ink.
-Красный не заменяет подпись ошибки; декоративный цвет не означает sync success.
-Основные кнопки во всех экранах используют `ColorScheme.primary/onPrimary`:
-существующий оттенок `accentHover` с белым текстом даёт контраст 4.80:1.
-Brand сохраняет исходный `accent`; auth не вводит отдельный цвет CTA.
+Light сохраняет нейтральную основу существующей темы. Lime/cyan/pink на светлом
+фоне используются как fill с ink, не как мелкий text. Muted text не применяется
+для важных инструкций. Selected/error/offline/success различаются также label,
+icon или формой. Не использовать все supporting accents на каждом экране.
+
+В существующей Figma collection роль `surfaceActive` сохраняет variable name
+`color/surfaceHover`, чтобы не ломать bindings. `sourceText` отделён от artwork:
+яркий cyan не используется для мелкого текста на светлом фоне. Проверенный
+контраст primary/ink — 17.02:1; sourceText/background — 13.80:1 dark и 6.20:1 light.
+Полная проверка каждого состояния и соседней поверхности остаётся в QA.
+
+Signal Red удаляется из **целевого brand**, включая logo accent и CTA.
+Геометрию сохраняем и recolor в lime в Figma. Оригиналы
+[brand kit](../../assets/branding/stackcard-link-brand-kit.json) и SVG остаются
+архивным источником; runtime assets этой итерацией не заменяются.
+Нужны dark/light/monochrome logo и app icon.
+
+---
 
 ## 3. Typography
 
-Локальные **DM Sans** и **Noto Sans** остаются в
-[pubspec](../../apps/mobile/pubspec.yaml), лицензии — в `assets/fonts`.
-[StackCardTheme](../../apps/mobile/lib/core/theme/stackcard_theme.dart) владеет шкалой.
-Display — 40–64, заголовки — 24–36, body — 14–16, подписи — 11–14.
-Крупные заголовки имеют плотный интерлиньяж и отрицательный tracking.
-Короткие section labels могут быть uppercase; большие русские тексты сохраняют
-обычный регистр. Системный text scale не ограничивается.
+**DM Sans** для UI/display и **Noto Sans** для fallback, включая кириллицу,
+сохраняются: fonts/licenses уже зарегистрированы в [pubspec](../../apps/mobile/pubspec.yaml).
+Характер усиливается hierarchy, leading/tracking и композицией. IBM Plex Mono
+используется для metadata: наличие DM Sans, Noto Sans и IBM Plex Mono проверено
+через Figma API. IBM Plex Mono не считается подключённым к Flutter.
+
+| Роль | Размер / line height | Правило |
+| --- | --- | --- |
+| Display | 40–56 / 40–58 | Короткие root headings, предусмотренные переносы |
+| Heading | 24–32 / 28–36 | Detail, sections и cards |
+| Title | 18–20 / 24–28 | Названия сущностей и controls |
+| Body | 14–16 / 20–24 | Читаемый neutral text |
+| Label / metadata | 12–14 / 16–20 | Короткие подписи; mono выборочно |
+
+Oversized headings не уменьшают body. Uppercase уместен для короткого
+`01 / PROJECTS`, а не длинных русских абзацев. Text scaling не блокируется;
+long names, multiline descriptions и ru/en входят в layout checks.
+
+---
 
 ## 4. Spacing & Grid
 
-[tokens](../../apps/mobile/lib/core/theme/stackcard_tokens.dart) задают spacing:
-4, 8, 12, 16, 20, 24, 32, 48. Phone gutter — 16, tablet — 24.
-Контент свободно прокручивается. От 700 доступна боковая навигация;
-две колонки используются только при достаточной ширине и обычном text scale.
-320 px, landscape и text scale 2 должны сохранять все действия без overflow.
+Основной target — **390 px**. Phone gutter — **20 px**; spacing —
+4, 8, 12, 16, 20, 24, 32, 48. Radius — 8, 12, 16, 24; capsule применяется
+к действиям осмысленно. Interactive target — минимум **48×48 px**, включая
+settings icon и Copy action.
+
+Большие экраны сохраняют IA и bottom navigation. Контент центрируется с
+max-width **600 px** и увеличенными внешними отступами; две колонки допустимы
+для естественных списков/selectors. Отдельная sidebar/tablet navigation не
+вводится. Landscape/smaller phones остаются scrollable и keyboard-safe.
+Existing [runtime tokens](../../apps/mobile/lib/core/theme/stackcard_tokens.dart)
+служат точкой последующего переноса; новый gutter пока является target.
+
+---
 
 ## 5. Layout & Composition
 
-- Home: персональный poster → компактная полнота → featured → рабочие действия.
-- Portfolio: инструменты → выразительный профиль → открытые ordered sections.
-- Projects: компактный поиск и фильтры → счётчик → выразительные строки проектов.
-- Settings: цветной заголовок → плоские группы настроек и аккаунта.
-- Вход, регистрация и сброс пароля: компактный brand → форма и auth/guest
-  действия; единая колонка шириной до 400 px без рекламного блока, центрируется
-  по обеим осям. Brand центрируется отдельно, заголовки, поля и вторичные
-  действия выровнены влево. При нехватке высоты и открытой клавиатуре доступна
-  прокрутка всей формы.
-- GitHub: поиск username → источник/кэш → profile/repositories → pagination.
-- Builder: статус/Save/preview → строки разделов → projects/blocks/theme/notes.
-- Editors: заголовок → поля → Apply/Cancel; клавиатура не закрывает действия.
+Root tabs: **Home / Resumes / Projects / Portfolios**. Все labels видны постоянно;
+large text не превращает nav в icon-only. Settings открывается компактной
+кнопкой каждого root; Logout находится в Settings / Account. Повторяющийся
+StackCard/Demo header удаляется из target. Nested screens сохраняют compact
+contextual Back и platform gesture. Tab switch отличается от nested navigation.
 
-Большие posters имеют один внешний radius. Внутри них нет дополнительных
-карточек. В остальных секциях граница только там, где разделяет реальные группы.
+| Экран | Целевая композиция |
+| --- | --- |
+| Home | Короткое greeting, quick-access rail, Recent / Continue, GitHub changes при наличии |
+| Resumes | Contextual heading, Create, список с role/date/status/preview и постоянным Copy/Open |
+| Projects | Import/Create, Search, All/GitHub/Manual, source/usage; без Featured filter |
+| Portfolios | Список именованных outputs с project count/status/URL и Copy/Open |
+| Settings | Account, connections, social, base profile, appearance, privacy, notifications, session |
+| Editor | Compact back/title, focused sections, Saved/Saving либо доступный Save |
+| Portfolio Builder | Name/status, mini-preview, section rows/reorder, appearance/publishing |
+| Auth | Центрированная форма, text слева, matte controls, без тяжёлой декорации |
+
+Copy Link постоянно доступен у published Resume/Portfolio. Draft показывает
+Draft и Edit/Preview, не выдаёт несуществующую ссылку за публичную. Detail содержит
+Share/Open in browser. Stepper применяется в creation flow; completion percentage
+не возвращается на Home. [Navigation map](redesign-plan.md#navigation-map) задаёт переходы.
+
+---
 
 ## 6. Components
 
-Расширяем [shared widgets](../../apps/mobile/lib/shared/widgets), не вводим вторую
-систему компонентов. `StackCardCard` теперь плоская секция с нижним разделителем.
-`StackCardPoster` — цветовая поверхность с общей декоративной геометрией;
-картинка рисуется локально, не требует сети и не содержит пользовательские данные.
-Графика обрезается поверхностью, исключена из semantics и не принимает pointer.
-Кнопки — capsule с target ≥48; icon actions — круг. Поиск/поля имеют спокойную
-подложку и нижнюю линию, focus видим. Метаданные проектов — короткая строка,
-не набор вложенных badge. Tags оставлять только для реально выбираемых filters.
+Figma использует Auto Layout, semantic variables и variants `state`, `size`,
+`theme`, `selected`, `disabled`, `loading` по необходимости. Layer names
+объясняют назначение; instances сохраняют связь с masters.
 
-Для авторизации применяется scoped
-[`StackCardTheme.authentication`](../../apps/mobile/lib/core/theme/stackcard_theme.dart):
-матовые поля с полной рамкой и radius 12, кнопки такой же формы без glow/tint,
-красный/белый primary и нейтральные secondary. Forgot password находится под
-password; submit и Google образуют
-группу, переход между режимами расположен ниже, guest отделён разделителем.
-`StackCardButton` принимает оформление из `FilledButtonTheme`, сохраняя
-стандартный вид в остальных областях приложения.
-Loading primary сохраняет красный фон и белые label/spinner, блокируя повторный
-вызов. Disabled без loading получает нейтральные фон и читаемый текст.
+| Группа | Компоненты и контракт |
+| --- | --- |
+| Actions | Button, IconButton, SettingsButton, CopyLinkButton, ShareButton; normal/pressed/focus/disabled/loading |
+| Input | Input, Textarea, SearchInput; label/hint/value/error, keyboard-safe layout |
+| Selection | Chip, FilterChip, selected rows; выбор виден без одного цвета |
+| Navigation | BottomNavigation с четырьмя labels, SectionHeader, compact nested back |
+| Entities | ProjectCard, ResumeCard, PortfolioCard, SocialLink; разная композиция сущностей |
+| Flow | Stepper, ProgressStep, CarouselItem; progress текущего процесса |
+| Feedback | Status, Toast/Snackbar, Modal/BottomSheet; Copy success, delete confirmation |
+| States | EmptyState, ErrorState, LoadingSkeleton; offline/denied/photo/long content |
+| Artwork | Reusable ribbon/wire/grid primitives вместо detached duplicates |
 
-Brand mark использует геометрию оригиналов
-[brand kit](../../assets/branding/stackcard-link-brand-kit.json); оригинальные SVG
-не заменяются. ThemeMode и PortfolioTheme остаются отдельными настройками.
+Первый набор создаётся под пять key screens. Остальные components расширяются
+по core flows; перечень не означает, что все masters уже готовы. Offline
+отличается от local save failure, Saved — от Synced. Ошибка сохраняет input,
+показывает причину и Retry. Validation находится у поля; snackbar её не заменяет.
+
+При переносе расширяем [shared widgets](../../apps/mobile/lib/shared/widgets).
+Card/Poster/Artwork, Button/Input и AsyncView/StateView — existing integration
+points, не повод создавать вторую UI library. Source review, UID isolation,
+private notes и recovery сохраняют семантику.
+
+---
 
 ## 7. Motion & Interaction
 
-Не добавляем looping glow, scanline animation или параллакс. Статическая геометрия
-создаёт характер без отвлечения от данных. Existing navigation и feedback
-сохраняются; loading показан явным progress. Декоративное движение не требуется.
+Motion следует стабильному layout: обычные transitions **180–300 ms**.
+Намеренные варианты — page/back, press feedback, navigation indicator,
+card expand, stepper, carousel snap, copy confirmation и publish transition.
+Spring допустим для indicator/cards/bottom actions, если не блокирует действия.
+
+Reduced motion отключает decorative reveal/parallax/stagger, сохраняя feedback.
+Continuous heavy animations, looping glow и long blocking transitions запрещены.
+Motion variables 180/240/300 ms созданы в Figma; key navigation prototype
+использует dissolve 180 ms. Native implementation и остальные interactions
+вводятся на соответствующем шаге.
+Web допускает restrained reveal/background effects с performance/focus/reduced
+motion; библиотека выбирается при implementation по реальному стеку.
+
+---
 
 ## 8. Voice & Brand
 
-UI ru/en остаётся в [localization](../../apps/mobile/lib/core/localization).
-Подпись объясняет действие или состояние. Убираем повтор заголовков, рекламные
-описания и обещания будущих функций. Demo/working draft, private notes,
-cached source, unsaved и sync failures всегда различимы.
-Suggestions сохраняют объяснение причины и явное действие владельца.
+Тон короткий, прямой и developer-oriented. Metadata задаёт ритм, не имитирует
+terminal. UI ru/en остаётся в [localization](../../apps/mobile/lib/core/localization);
+source content не переводится. Empty Projects предлагает Import GitHub/Create;
+empty outputs — Create. Постоянного давления «доделай профиль» нет.
+
+Demo/draft/public/cached/offline/unsaved/sync failures различимы. GitHub suggestions
+остаются deterministic с причиной и решением владельца. AI chat/badges и
+центральная AI-generation feature не добавляются.
+
+---
 
 ## 9. Anti-patterns
 
-Запрещены карточка в карточке, badge на badge, одинаковые grey bento panels,
-постоянный glow, случайная палитра, NFT-содержание из референса, мелкий текст на
-яркой графике, фиксированная высота с обрезанием текста, скрытые critical states.
-Редизайн не меняет Repository/DI, auth/UID isolation, storage/sync/import semantics.
+Не принимать generic Material/CRUD dashboard, одинаковые cards, outlined-button-heavy
+Builder, RGB/glow overload, stock photography, glass на всех surfaces,
+бесцельные пустые web sections или набор 21st components без системы.
+Не кодировать state одним цветом и не делать body neon; hover не mobile interaction.
 
-Приёмка: format, analyze, existing behavior tests, responsive/contrast/tap targets
-и просмотр реальных Flutter renders. Результаты — в
-[product spec](../product/product-spec.md). Снимки — в [previews](previews/).
-Решения и handoff — [design contract](design-contract.md) и
-[implementation handoff](implementation-handoff.md).
+Нужны full/empty/loading/error/offline, long content, contrast, logical focus,
+screen-reader semantics, targets, keyboard web navigation и reduced motion.
+Первые full-data screens не закрывают core flows/state QA. Фактическая Figma-приёмка
+и pending checks — в [plan](redesign-plan.md#приёмка). Flutter tests/native run
+относятся к последующей реализации; результаты старого UI не доказывают target.

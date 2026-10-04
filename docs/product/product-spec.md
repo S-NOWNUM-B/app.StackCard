@@ -161,13 +161,43 @@ loading/disabled и secondary в обеих темах, включая auth.
 
 Редизайн не начинает Phase 11 или web implementation. Commit/push не выполнялись.
 
+### Новый Figma-first target (2026-10-04)
+
+По следующему прямому запросу принят новый UX/UI target: DeveloperProfile и
+глобальная Projects Library дают несколько структурированных Resumes и Portfolios;
+featured/visible/order относятся к связи Project с Portfolio. Root navigation —
+Home / Resumes / Projects / Portfolios с постоянными labels; Settings открывается
+через contextual gear, nested Back сохраняется. Target brand заменяет Signal Red
+на acid lime с neutral foundation и cyan/pink artwork; 390 px — основной размер,
+большие экраны сохраняют ту же IA.
+
+Первый scope — repository и
+[Figma audit](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard), IA,
+target design system и пять key screens. Через MCP изучены 9 Figma pages,
+31 COMPONENT/COMPONENT_SET узел на components page и color/metrics collections.
+Первая итерация выполнена: по пять ключевых экранов в dark/light на 390×844,
+обновлённые shared masters/variables и root prototype с 19 переходами в каждой
+теме. Структура через MCP и все десять renders просмотрены; это не закрывает
+полные flows, responsive и accessibility QA.
+Экранная карта, relations и pending acceptance — в
+[redesign plan](../design/redesign-plan.md); canonical visual target — в
+[design system](../design/design-system.md).
+
+Текущий Flutter сохраняет red primary, одиночный PortfolioContent, plain
+resumeText и прежнюю навигацию. Runtime/schema/Rules, dependencies и original
+branding assets этой Figma-first задачей не изменены. Исторические checks выше
+сохраняют свой scope и не подтверждают target. Core flows, state/responsive set,
+web design, multiple-output migration и Flutter/web implementation остаются
+следующими шагами. Node links и фактическая приёмка — в redesign plan.
+
 ---
 
 ## Концепция и аудитория
 
-**StackCard** — конструктор developer-портфолио для мобильного приложения и сайта
-с синхронизацией публичных данных GitHub и публикацией web-визитки. Flutter-приложение
-и web-кабинет — два редактора одного портфолио. Сайт также объясняет проект на
+**StackCard** — приложение для управления developer identity: базовый профиль,
+глобальная библиотека проектов, несколько резюме и портфолио под разные роли.
+Flutter-приложение и будущий web-кабинет используют общие данные владельца и
+явную публикацию outputs; текущий runtime пока хранит один draft. Сайт объясняет проект на
 главной странице, предлагает скачать мобильное приложение и показывает
 опубликованные портфолио с контактной формой и metadata для распространения ссылки.
 
@@ -250,7 +280,12 @@ Screenshot относится к Media Phase 11; новые технологии
 
 ### Мобильное приложение
 
-Целевой первый запуск:
+Принятый target экранов и переходов — в
+[Figma-first плане](../design/redesign-plan.md#navigation-map). Ниже сохранён
+прежний single-portfolio scope для связи с учебными фазами и current runtime;
+completion, global Featured и пять tabs не являются новым target.
+
+Прежний целевой первый запуск:
 
 `Splash → Onboarding → Sign In / Sign Up → Create Profile → Choose username →
 GitHub import → Select projects → Complete profile → Preview → Publish → Share`.
@@ -324,7 +359,10 @@ Experience, Education, GitHub, Links, Resume, Location. Пользователь
 
 ## MVP и полный scope v1
 
-MVP — целевой результат нескольких фаз, а не задача Phase 0:
+Ниже сохранён прежний MVP по фазам, а не задача Phase 0. Его single Portfolio и
+global Featured заменены новым [target model](../design/redesign-plan.md#целевая-domain-relation):
+multiple Resumes/Portfolios и featured в PortfolioProject. Историческая приёмка
+фаз сохраняется; будущая migration определяется до implementation.
 
 <div align="center">
 
@@ -447,8 +485,20 @@ web-редактор и публичные портфолио. Этот разд
 
 **Phase 0–6 завершены:** основа, UI, состояние, архитектура, GitHub Import, offline и Builder проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
-Phase 10 завершена. Текущее прямое поручение — редизайн существующего mobile UI
-в ветке `redesign/full-app`, с общей стилистикой для будущего web.
+**С 2026-10-05 основная разработка новых функций приостановлена:** активна только
+R0 инициативы [StackCard Design v2](../redesign/README.md), отдельный
+[план R0–R9](../redesign/plan.md) подготовлен для согласования. Точка остановки —
+после Phase 10, перед Phase 11 Media; Google/reset/iOS приёмка Phase 7 остаётся
+открытой. Возврат к roadmap предлагается после пользовательской приёмки
+REDESIGN_DONE и требует отдельного поручения. Новые model/migration/media/account/
+publication/web возможности перечислены как [продуктовые пробелы](../redesign/audit.md#продуктовые-пробелы)
+и [предпосылки R8](../redesign/plan.md#зависимости-реализации); их реализация сейчас
+не разрешена. Последние требования Design v2 имеют приоритет над прежними макетами.
+
+Phase 10 завершена. Предыдущее прямое поручение — Figma-first refactor:
+audit, IA, design system и ключевые экраны по [redesign plan](../design/redesign-plan.md).
+Первый этап Figma выполнен; core flows/states и перенос Flutter/web остаются
+отдельными последующими шагами. История runtime-redesign выше сохраняется.
 Открытые Google/reset/iOS проверки Phase 7 сохранены; Phase 11–20 остаются планом и
 требуют отдельного поручения пользователя.
 

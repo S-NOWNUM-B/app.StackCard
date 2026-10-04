@@ -1,0 +1,505 @@
+<div align="center">
+
+# StackCard Design v2 — план
+
+**Поэтапный редизайн с явными границами, проверками и приёмкой**
+
+![Phase R0](https://raster.shields.io/badge/Phase-R0-C7FF1A?style=for-the-badge)
+![Status awaiting review](https://raster.shields.io/badge/Status-awaiting_review-14161B?style=for-the-badge)
+
+</div>
+
+---
+
+## Содержание
+
+- [Правила выполнения](#правила-выполнения)
+- [Обзор фаз](#обзор-фаз)
+- [Фазы и задачи](#фазы-и-задачи)
+- [Зависимости реализации](#зависимости-реализации)
+- [Проверки и результаты](#проверки-и-результаты)
+- [Журнал решений](#журнал-решений)
+
+---
+
+## Правила выполнения
+
+На 2026-10-05 выполнена подготовка R0, фаза `awaiting_review`.
+Основная разработка функций приостановлена перед Phase 11 Media; открытая
+Google/reset/iOS приёмка Phase 7 сохранена. Подробности — [README](README.md)
+и [audit](audit.md), основной roadmap остаётся в [product spec](../product/product-spec.md#план-разработки).
+
+Одновременно активна одна фаза и только текущая согласованная задача внутри неё.
+Допустимые статусы: `todo`, `in_progress`, `blocked`, `awaiting_review`, `done`.
+Новый артефакт переводит визуальную задачу в awaiting_review; done требует
+приёмки пользователя. Следующий шаг начинается по явному поручению.
+R0 содержит технически выполненные audit/docs задачи, но приёмка всей фазы ещё pending.
+
+R1–R7 создают UX, editable макеты и прототип. Только после пользовательского
+DESIGN_READY и отдельного разрешения R8 начинается перенос UI. R9 устанавливает
+REDESIGN_DONE только после пользовательской приёмки реализации в согласованном
+scope. Mock, prototype, implemented UI и backend capability отмечаются отдельно.
+
+Requirement IDs принадлежат [requirements](requirements.md), S-* экраны и
+current paths — [screens](screens.md), GAP-* — [audit](audit.md#продуктовые-пробелы).
+Диапазон IDs означает каждое требование диапазона. Будущие Figma-имена в таблицах
+явно предлагаемые; существующие frame IDs указаны только в проверенном реестре.
+Доказательство в строках todo — требуемый будущий результат, а не уже выполненная проверка.
+Каждый step R5.1/R5.2/R5.3/R5.4 согласуется отдельно.
+R4.7 и R8.2–R8.5 — группы отдельных задач с буквенными IDs ниже, не задачи
+на весь раздел. При задаче о shared controls или нескольких секциях выполнять
+один компонент/экран за проверяемый срез; запись evidence перечисляет каждый срез.
+
+---
+
+## Обзор фаз
+
+| **Фаза** | **Результат / точка согласования** | **Статус** |
+|:---|:---|:---|
+| R0 — Аудит и план | Комплект docs/redesign и сохранённая точка roadmap. Принять план и разрешить R1.1; само создание документа не является разрешением. | awaiting_review |
+| R1 — UX и информационная архитектура | Согласованная IA и проверяемые low-fi; имена frames ниже предлагаемые. Принять IA и low-fi; определить политику output URLs/rename для будущего backend, без обещаний redirect. | todo |
+| R2 — Визуальное направление | Два сопоставимых варианта Home, public Resume, Settings и принятое направление. Выбрать направление и logo-концепцию; этот выбор заранее не сделан. | todo |
+| R3 — Дизайн-система | Editable DS dark/light с нужными variants и usage rules. Принять DS; выбрать шрифты после проверки кириллицы/латиницы и лицензии. | todo |
+| R4 — Основные экраны и настройки | Набор hi-fi full/empty/errors и focused settings screens. Принять roots и каждую settings группу; неподдерживаемые функции остаются target-design. | todo |
+| R5 — Создание, редактирование и публикация | Полные hi-fi flows с input/error/back/preview и отдельным Publish. Принять последовательно R5.1 → R5.2 → R5.3 → R5.4; уточнить delete/rename consequences. | todo |
+| R6 — Web | Полный web design visitor/owner flow, не один hero. Принять web-подачу и доступность CTA/download; URL scheme с GAP-URL-01. | todo |
+| R7 — Прототип, адаптивность и приёмка дизайна | Пакет финальных frames/prototype, результатов и известных ограничений. Принять итоговый дизайн; после явного подтверждения установить DESIGN_READY. | todo |
+| R8 — Перенос согласованного UI | Реальные экраны в согласованном scope; неподдерживаемые действия обозначены честно. Разрешить R8 отдельно, выбрать prerequisite work или явно сузить scope; перенос не разрешает deploy/commit/push. | todo |
+| R9 — Регрессия и завершение | Принятый redesign с REDESIGN_DONE и сохранённой точкой roadmap. Принять R9 и поставить REDESIGN_DONE; затем отдельно решить следующую продуктовую задачу. | todo |
+
+---
+
+## Фазы и задачи
+
+### R0 — Аудит и план
+
+**Цель:** Установить фактическую базу и отдельный согласуемый план.
+
+**Зависимости:** Полный запрос пользователя, инструкции, source, существующие docs/Figma и референсы.
+
+**Входит:** Чтение репозитория/Figma/сайтов; шесть полезных документов и согласование R0.
+
+**Не входит:** Новые экраны, изменения Figma/runtime/backend, зависимости, deploy и Git mutations.
+
+**Результат:** Комплект docs/redesign и сохранённая точка roadmap.
+
+**Критерии приёмки:** Все выводы имеют источник или пометку ограничения; требования покрыты задачами и проверками; пользовательские правки сохранены.
+
+**Проверка:** Статический source audit, read-only Figma, внешние источники, doc validator и ручная проверка противоречий.
+
+**Решения пользователя:** Принять план и разрешить R1.1; само создание документа не является разрешением.
+
+**Статус фазы:** `awaiting_review`.
+
+| **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
+|:---|:---|:---|:---|:---|:---|:---|
+| R0.1 | REQ-WORKFLOW-01, REQ-PRESERVE-01 | [audit](audit.md), основной roadmap | Проверить tree/status/routes/domain, зафиксировать Phase 10 и открытые проверки Phase 7. | C-SCOPE, C-MODEL | Source-ссылки и исходный dirty snapshot в audit. | done |
+| R0.2 | REQ-REFERENCE-01..02, REQ-WORKFLOW-01, REQ-FIGMA-02 | [Figma registry](screens.md#реестр-figma), [references](references.md) | Прочитать Figma и референсы; назвать реально увиденное и недоступное. | C-ASSET, C-SCOPE | Проверенные node IDs и источник/приём/ограничение в документах. | done |
+| R0.3 | REQ-CHECK-01, REQ-MODEL-01 | [requirements](requirements.md), [screens](screens.md) | Назначить ID и карту текущих/целевых экранов, сохранить все явные решения. | C01–C17, C-MODEL | Реестр requirements → task → screen → check → result. | done |
+| R0.4 | REQ-WORKFLOW-02..03, REQ-WORKFLOW-05, REQ-SCOPE-01 | Этот plan; [audit gaps](audit.md#продуктовые-пробелы) | Разбить R0–R9, выделить продуктовые предпосылки R8 и approval gates. | C-SCOPE | Задачи, зависимости, criteria/evidence/status и журнал ниже. | done |
+| R0.5 | REQ-CHECK-02, REQ-PRESERVE-01 | Все шесть документов и existing docs pointers | Проверить ссылки, соответствие требованиям, сохранность source; показать результат и остановиться. | C-SCOPE | Фактические doc checks в разделе результатов; решение пользователя pending. | awaiting_review |
+
+### R1 — UX и информационная архитектура
+
+**Цель:** Согласовать пользовательские пути и владение данными до визуального дизайна.
+
+**Зависимости:** Принятый R0 и отдельное разрешение R1.1.
+
+**Входит:** Карта переходов, перечень экранов и low-fi ключевых сценариев.
+
+**Не входит:** Hi-fi, новый logo, выбор шрифтов, runtime/schema implementation.
+
+**Результат:** Согласованная IA и проверяемые low-fi; имена frames ниже предлагаемые.
+
+**Критерии приёмки:** Home-фильтр отделён от root nav; Settings возвращает к источнику; база → документ → Publish понятны; attachment не удаляет Project.
+
+**Проверка:** Walkthrough на обычных/пустых данных, Back/skip/unsaved paths, связь с S-* и requirement IDs.
+
+**Решения пользователя:** Принять IA и low-fi; определить политику output URLs/rename для будущего backend, без обещаний redirect.
+
+**Статус фазы:** `todo`.
+
+| **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
+|:---|:---|:---|:---|:---|:---|:---|
+| R1.1 | REQ-MODEL-01..08, REQ-NAV-01..05 | Предлагаемый Figma frame Design v2 / UX / IA; S-HOME/S-SETTINGS | Сопоставить DeveloperProfile, library, Resume, Portfolio и связи; четыре roots и вложенные screens. | C-MODEL, C01, C02, C11, C12 | IA frame + схема ownership и запись пользовательской приёмки. | todo |
+| R1.2 | REQ-HOME-01..03, REQ-SETTINGS-01..04 | Предлагаемые UX / Roots + Profile-to-document; S-HOME/S-PROFILE/S-CONTACTS | Пройти Home filter/settings/back и настройку базы перед созданием документа. | C01–C06, C12 | Low-fi с путями и сохранением origin/state; review. | todo |
+| R1.3 | REQ-RESUME-01..04, REQ-EDITOR-01..03 | Предлагаемый UX / Resume; S-RESUME-WIZARD/S-RESUME-EDITOR | Спроектировать пять шагов, optional skip, фото/no-photo и прямую правку секции. | C07, C10, C12, C16 | Связанный low-fi и сценарий Back без потери ввода. | todo |
+| R1.4 | REQ-PROJECT-04, REQ-PORTFOLIO-01..03, REQ-SHARE-01 | Предлагаемый UX / Projects-Portfolio-Publish; S-GITHUB/S-PORTFOLIO-EDITOR/S-PUBLISH | Пройти create/import/review, attach/remove relation, preview и отдельную публикацию. | C-GITHUB, C-MODEL, C09, C10, C17 | Low-fi positive/error/unsaved paths и review. | todo |
+
+### R2 — Визуальное направление
+
+**Цель:** Выбрать один выразительный язык внутри неизменяемой палитры.
+
+**Зависимости:** Принятая R1; точная палитра и запреты requirements.
+
+**Входит:** Два различающихся направления на одинаковых пилотах и данных; новый logo внутри UI.
+
+**Не входит:** Полный продукт, финальная component library, новая палитра, код.
+
+**Результат:** Два сопоставимых варианта Home, public Resume, Settings и принятое направление.
+
+**Критерии приёмки:** Одинаковые содержание/фото/состояния; различия в typography/composition/motive видны; редактор спокойный; знак читается малым.
+
+**Проверка:** Side-by-side renders 390, оба брендинга в реальном UI; preliminary contrast и font/asset license review.
+
+**Решения пользователя:** Выбрать направление и logo-концепцию; этот выбор заранее не сделан.
+
+**Статус фазы:** `todo`.
+
+| **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
+|:---|:---|:---|:---|:---|:---|:---|
+| R2.1 | REQ-VISUAL-01..03, REQ-PALETTE-01..03 | Предлагаемые Direction A/B / S-HOME, S-PUBLIC-RESUME, S-SETTINGS | Два направления Cyber Editorial / Developer Identity: различать композицию и типографику, сохранив palette/content. | C-PALETTE, C01, C03, C04, C14 | Шесть pilot frames, одинаковые fixtures, сравнение и review. | todo |
+| R2.2 | REQ-LOGO-01..02, REQ-TYPE-01..02 | Предлагаемые Direction A/B / Brand specimens | Предложить ограниченный набор новых mark/wordmark/app icon/mono; проверить 16–48 и UI. | C-ASSET, C14 | Редактируемые знаки, small-size specimens, licenses; выбор. | todo |
+| R2.3 | REQ-VISUAL-01..03, REQ-WORKFLOW-06 | Пилоты R2.1 и specimens R2.2 | Сопоставить requirements/contrast/readability, зафиксировать принятое направление и отклонённые варианты. | C-PALETTE, C14, C16 | Решение пользователя в журнале; фаза awaiting_review до выбора. | todo |
+
+### R3 — Дизайн-система
+
+**Цель:** Сделать принятую композицию переиспользуемой и доступной.
+
+**Зависимости:** Принятая R2, лицензии и существующие integration points.
+
+**Входит:** Semantic tokens, typography, Auto Layout, variables, components/variants/states.
+
+**Не входит:** Runtime theme migration, импорты React-кода в Flutter, библиотека ради каталога.
+
+**Результат:** Editable DS dark/light с нужными variants и usage rules.
+
+**Критерии приёмки:** Long ru labels, 48×48, text scaling, contrast всех используемых поверхностей; state определяется не только цветом.
+
+**Проверка:** Variables/bindings/component audit + specimen renders dark/light/ru/en и state matrix.
+
+**Решения пользователя:** Принять DS; выбрать шрифты после проверки кириллицы/латиницы и лицензии.
+
+**Статус фазы:** `todo`.
+
+| **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
+|:---|:---|:---|:---|:---|:---|:---|
+| R3.1 | REQ-PALETTE-01..03, REQ-TYPE-01..02, REQ-FIGMA-01 | Предлагаемый Design v2 / DS / Foundations; existing core/theme как integration point | Определить light roles и type scale; проверить textMuted на каждом фоне, сохранить dark HEX. | C-PALETTE, C14, C-ASSET | Tokens/type specimens и таблица contrast с фактическими парами. | todo |
+| R3.2 | REQ-NAV-01..05, REQ-TECH-01..02, REQ-PROJECT-03 | Предлагаемый DS / Navigation-Cards-TechnologyBadge; S-HOME/S-PROJECTS | Четыре постоянных labels, gear/back, три Home tabs, entity cards и доступные badges/placeholder. | C01–C05, C08, C11, C12, C15 | Component sets и states; metadata + renders + icon licenses. | todo |
+| R3.3 | REQ-EDITOR-01..03, REQ-RESUME-02..03, REQ-SETTINGS-02 | Предлагаемый DS / Forms-Stepper-Sections; S-RESUME-WIZARD/S-PROFILE | Fields/selectors/photo/stepper/settings rows, visible Save и reorder drag+Выше/Ниже. | C06, C07, C12, C15, C16 | Keyboard/long-label specimens и alternative-action сценарий. | todo |
+| R3.4 | REQ-MOTION-01..02, REQ-ADAPT-01..03, REQ-EDITOR-03 | Предлагаемый DS / States-Motion; S-PUBLISH/S-SHARE | Empty/loading/error/offline/saved/synced/published variants; 180–280 ms и статические equivalents. | C10, C13, C-MOTION | State matrix, motion timings и reduced-motion specimens. | todo |
+
+### R4 — Основные экраны и настройки
+
+**Цель:** Собрать четыре библиотеки и полноценные настройки из DS.
+
+**Зависимости:** Принятые R1–R3; backend gaps маркируются, не реализуются.
+
+**Входит:** Root screens, Profile/photo, contacts/links, account/app/privacy settings.
+
+**Не входит:** Wizard/editors/publication flows R5; заявления о backend готовности.
+
+**Результат:** Набор hi-fi full/empty/errors и focused settings screens.
+
+**Критерии приёмки:** Все запреты выполнены; Settings содержит editable profile/contacts/account сценарии, а не только theme/language.
+
+**Проверка:** Requirement walkthrough, renders+metadata dark/light, реальная viewport-height до первого Project.
+
+**Решения пользователя:** Принять roots и каждую settings группу; неподдерживаемые функции остаются target-design.
+
+**Статус фазы:** `todo`.
+
+| **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
+|:---|:---|:---|:---|:---|:---|:---|
+| R4.1 | REQ-HOME-01..03, REQ-NAV-01..03 | S-HOME; existing /home | Header+gear, ровно Все/Резюме/Проекты, recent mixed cards и отдельная Copy зона; убрать dashboard элементы. | C01–C04, C09 | Design v2 Home frames full/empty; фильтр проверен вручную. | todo |
+| R4.2 | REQ-RESUME-01, REQ-SHARE-01 | S-RESUMES; нового runtime route ещё нет | Create + cards role/preview/date/status/open/copy; без completion percent. | C01, C02, C09, C10 | Resume list frames с draft/published состояниями. | todo |
+| R4.3 | REQ-PROJECT-01..04, REQ-TECH-01..02 | S-PROJECTS; existing /projects | Import/Create/Search/List в указанном порядке, wrap actions, cover/placeholder, badges; без filters/hero. | C05, C08, C13, C15 | Project list frames full/empty/no-results/narrow. | todo |
+| R4.4 | REQ-PORTFOLIO-01, REQ-SHARE-01 | S-PORTFOLIOS; existing /portfolio пока singleton | Список named Portfolio и доступ к create/edit/duplicate/publish/unpublish/share. | C09, C10, C13 | List и action states; отличить target от storage gap. | todo |
+| R4.5 | REQ-SETTINGS-01,04, REQ-RESUME-03 | S-SETTINGS/S-PROFILE; existing profile editor | Focused profile и photo selector/replace/remove/no-photo, опыт/образование/навыки. | C06, C07, C12, C16 | Settings/Profile frames, permission/taken-name states. | todo |
+| R4.6 | REQ-SETTINGS-02..03 | S-CONTACTS; existing /portfolio/builder/links | Отделить contact email от login, custom label+URL, CRUD/reorder и public selection. | C06, C17 | Contact/link screens full/validation/edit/reorder. | todo |
+| R4.7a | REQ-SETTINGS-01,03,04 | S-ACCOUNT; existing /settings account actions | Отдельный экран аккаунта: login email/password/provider inventory, reauth/link error/last-provider protection; выход и delete отдельно. | C06, C10, C12, C13 | Account screens и ошибки/подтверждения, backend gaps явны. | todo |
+| R4.7b | REQ-SETTINGS-01,03, REQ-SHARE-01 | S-PRIVACY; существующего privacy route нет | Экран privacy: selected contacts/location/обращения, не смешивать login email с public contact. | C06, C12, C17 | Privacy full/save/error states и проверка public selections. | todo |
+| R4.7c | REQ-SETTINGS-01, REQ-MOTION-02 | S-APP; existing /settings preferences | Экран приложения: dark/light/system, ru/en, notifications/reduced motion; unsupported backend обозначен. | C06, C12, C13, C-MOTION | App settings full/save/error/reduced-motion states. | todo |
+
+### R5 — Создание, редактирование и публикация
+
+**Цель:** Завершить сценарии документов, проектов и общего sharing.
+
+**Зависимости:** Принятые R3–R4, IA и правила модели; каждый R5.x проверяется отдельно.
+
+**Входит:** Resume wizard/edit, manual/GitHub Projects, Portfolio builder, shared publish/share/delete.
+
+**Не входит:** Backend migration/media/OAuth implementation и свободный canvas.
+
+**Результат:** Полные hi-fi flows с input/error/back/preview и отдельным Publish.
+
+**Критерии приёмки:** Нет потери ввода, смешения Save/sync/publish, тихого overwrite, duplicate import или удаления общей работы через attachment.
+
+**Проверка:** Пошаговый walkthrough обычного/пустого/ошибочного flow, сравнение с source contract.
+
+**Решения пользователя:** Принять последовательно R5.1 → R5.2 → R5.3 → R5.4; уточнить delete/rename consequences.
+
+**Статус фазы:** `todo`.
+
+| **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
+|:---|:---|:---|:---|:---|:---|:---|
+| R5.1a | REQ-RESUME-02..04, REQ-SETTINGS-02 | S-RESUME-WIZARD; предлагаемое Mobile / Resume / Steps 1-2 | Profile/title/role/photo/bio и selected contacts; использовать базу, локальные overrides, no-photo и Skip. | C06, C07, C12, C16 | Steps 1–2 с Back/data retention, photo denied/error. | todo |
+| R5.1b | REQ-RESUME-02,04, REQ-TECH-01..02 | S-RESUME-WIZARD; предлагаемые Steps 3-4 | Выбор опыта/образования/tech/projects, optional skip; не выдумывать факты и skill levels. | C08, C12, C16, C-MODEL | Steps 3–4 с empty/selected/hidden и сохранением ввода. | todo |
+| R5.1c | REQ-RESUME-04, REQ-EDITOR-01..03, REQ-MODEL-07 | S-RESUME-EDITOR; existing plain /portfolio/builder/resume — только legacy | Список секций и focused edit без повторного wizard, local overrides и review изменений профиля. | C10, C12, C-MODEL | Edit section/override/profile-diff frames. | todo |
+| R5.1d | REQ-RESUME-02..03, REQ-SHARE-01 | S-PREVIEW/S-PUBLISH; предлагаемый Resume Step 5 | Структурированный preview с выбранным фото и отдельный переход к Publish. | C07, C09, C10, C17 | Step 5/no-photo/long Resume; публикация связана с R5.4. | todo |
+| R5.2a | REQ-PROJECT-03..04, REQ-TECH-01..02 | S-PROJECT-EDITOR; /projects/new, /projects/:id/edit | Ручной global Project: форма/media placeholder/badges, validation/Save/Cancel. | C08, C12, C13 | Create/edit/error/no-cover frames. | todo |
+| R5.2b | REQ-PROJECT-04, REQ-MODEL-02 | S-GITHUB; /github-import | Выбор repos, already imported, pagination/cache/rate/error, без повторного Project. | C-GITHUB, C13 | Import full/empty/error/duplicate paths. | todo |
+| R5.2c | REQ-PROJECT-04, REQ-MODEL-06 | S-GITHUB-REVIEW; existing GitHub review sheet | Показать diff source/curated, Accept/Ignore/Cancel, stale review и отдельный Save. | C-GITHUB, C10, C13 | Review frames с сохранёнными overrides и retry. | todo |
+| R5.3a | REQ-PORTFOLIO-01..02, REQ-EDITOR-01 | S-PORTFOLIO-EDITOR; /portfolio/builder пока singleton | Создать named Portfolio из предложения Profile, content/appearance/preview отдельно. | C-MODEL, C10, C12 | Create/basic editor frames с draft status. | todo |
+| R5.3b | REQ-PORTFOLIO-03, REQ-MODEL-02, REQ-MODEL-05 | S-PORTFOLIO-EDITOR; предлагаемый Project selector | Add existing или create global+attach; order/visibility/featured association, remove relation. | C-MODEL, C12 | Attach/create/remove/reorder paths; library Project сохраняется. | todo |
+| R5.3c | REQ-EDITOR-01..03, REQ-PORTFOLIO-02 | S-PORTFOLIO-EDITOR/S-PREVIEW; existing /portfolio/preview | Focused sections, show/hide/order, layout/accent/photo visibility, no three narrow mobile panels. | C07, C08, C10, C12 | Sections/appearance/full/no-photo preview frames. | todo |
+| R5.4a | REQ-EDITOR-03, REQ-MODEL-08 | S-PUBLISH; prepared publication adapter, UI отсутствует | Draft/locally saved/pending/synced/published различимы; Publish explicit, dirty published draft не меняет public. | C10, C17 | Status diagram и first/update publish/error states. | todo |
+| R5.4b | REQ-SHARE-01 | S-SHARE + cards/detail | Постоянные Copy/Open/Share у опубликованного; подтверждение Copy; draft предлагает Publish. | C09, C15 | Повторное sharing после re-open, отдельные hit areas. | todo |
+| R5.4c | REQ-SHARE-01, REQ-SETTINGS-04, REQ-PORTFOLIO-01 | S-PUBLISH/S-SHARE/S-ACCOUNT | Unpublish/delete/duplicate/rename confirmations; не обещать старый URL; сохранность draft и связей. | C-MODEL, C09, C10, C17 | Подтверждения и anonymous unavailable state; URL decision logged. | todo |
+
+### R6 — Web
+
+**Цель:** Спроектировать три web-поверхности как части того же продукта.
+
+**Зависимости:** Принятые модель/DS/flows R1–R5; actual web runtime пока отсутствует.
+
+**Входит:** Landing, auth/download, рабочий кабинет/editor, public Resume/Portfolio.
+
+**Не входит:** Next.js scaffold/code, hosting/deploy, фиктивные store links/отзывы/цифры.
+
+**Результат:** Полный web design visitor/owner flow, не один hero.
+
+**Критерии приёмки:** Различимы marketing/private/public, narrow/wide editing; публичный просмотр без входа и приватных полей.
+
+**Проверка:** Desktop/narrow renders, keyboard/focus план, CTA destination audit, anonymous/owner walkthrough.
+
+**Решения пользователя:** Принять web-подачу и доступность CTA/download; URL scheme с GAP-URL-01.
+
+**Статус фазы:** `todo`.
+
+| **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
+|:---|:---|:---|:---|:---|:---|:---|
+| R6.1 | REQ-WEB-01..02, REQ-VISUAL-01..03 | S-WEB-LANDING; apps/web/README.md; предлагаемый Web / Landing | Объяснить общая база→разные Resume/Portfolio; настоящее product preview и все секции задания. | C-WEB, C-ASSET | Полный landing desktop/mobile и проверка утверждений/CTA. | todo |
+| R6.2 | REQ-WEB-02, REQ-PRESERVE-04 | S-WEB-AUTH/S-WEB-DOWNLOAD; runtime отсутствует | Auth/register/reset/return route и download с честным unavailable-state. | C-WEB, C12, C13 | Полные страницы и путь visitor→owner, без ложных store buttons. | todo |
+| R6.3 | REQ-WEB-03, REQ-EDITOR-01..03 | S-WEB-WORKSPACE; предлагаемый Web / Workspace | Wide параметры+preview, narrow modes, shared base/library/documents, explicit publishing. | C-WEB, C10, C13, C16 | Workspace/edit/preview/error/unsaved frames. | todo |
+| R6.4 | REQ-WEB-04, REQ-PORTFOLIO-02, REQ-SHARE-01 | S-PUBLIC-RESUME/S-PUBLIC-PORTFOLIO; предлагаемые Web / Public | Документный Resume и showcase Portfolio, выбранные фото/контакты, not-found/unpublished. | C07, C08, C17, C-WEB | Anonymous full/empty/unpublished frames, privacy checklist. | todo |
+
+### R7 — Прототип, адаптивность и приёмка дизайна
+
+**Цель:** Проверить целостные сценарии и зафиксировать DESIGN_READY.
+
+**Зависимости:** Принятые R1–R6, реальные frames и complete state matrix.
+
+**Входит:** Linked prototype, phone/tablet/landscape/text/keyboard/motion/a11y evidence.
+
+**Не входит:** Реализация runtime/backend и автоматическая установка DESIGN_READY.
+
+**Результат:** Пакет финальных frames/prototype, результатов и известных ограничений.
+
+**Критерии приёмки:** Все C01–C17 и дополнительные проверки имеют evidence; пользователь принял дизайн.
+
+**Проверка:** Prototype walkthrough + screenshots + metadata/contrast; simulated keyboard states, фактический native keyboard в R8/R9.
+
+**Решения пользователя:** Принять итоговый дизайн; после явного подтверждения установить DESIGN_READY.
+
+**Статус фазы:** `todo`.
+
+| **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
+|:---|:---|:---|:---|:---|:---|:---|
+| R7.1 | REQ-WORKFLOW-04, REQ-FIGMA-02 | Все S-*; реальные frame IDs появятся в screens.md | Связать root/settings/create/edit/preview/publish/share и error/back paths. | C01–C13, C17 | Prototype link + выполненный сценарий и зафиксированные ошибки. | todo |
+| R7.2 | REQ-ADAPT-01..03, REQ-NAV-01,05 | Mobile frames 320/390/large phone/tablet/landscape (контрольный набор предлагаемый) | SafeArea, centered max width, без rail, keyboard-safe/long content, scale1/2. | C11, C12, C15, C16 | Сравнимые renders dark/light ru/en; landscape/tablet evidence. | todo |
+| R7.3 | REQ-CHECK-01..02, REQ-MOTION-01..02 | DS + все critical states | Контраст/targets/focus/semantics specs; reduced-motion 180–280/static, empty/error/offline. | C13–C17, C-MOTION, C-ASSET | Таблица contrast и state/motion review; native semantics остаются runtime check. | todo |
+| R7.4 | REQ-WORKFLOW-04..05, REQ-WORKFLOW-07, REQ-FIGMA-02 | screens.md финальный реестр, этот журнал | Свести requirements→frames→checks→results; явная приёмка пользователя. | C-SCOPE, C01–C17 | Принятый пакет + решение DESIGN_READY; до решения awaiting_review. | todo |
+
+### R8 — Перенос согласованного UI
+
+**Цель:** Внедрить принятый дизайн постепенно, сохранив реальное поведение.
+
+**Зависимости:** DESIGN_READY, отдельное разрешение R8, принятый integration scope и выполненные продуктовые prerequisites.
+
+**Входит:** Tokens/components, shell/roots/settings/editors и поддерживаемые web surfaces по одному срезу.
+
+**Не входит:** Тихая domain/backend/Rules migration, OAuth/media/публикация новых функций, смена стека, fake success.
+
+**Результат:** Реальные экраны в согласованном scope; неподдерживаемые действия обозначены честно.
+
+**Критерии приёмки:** Старые данные/UID/cache/outbox/notes/review сохранены, новое UI проверено; нет mock-success вместо backend.
+
+**Проверка:** По изменённому scope: format/analyze/focused tests, визуальный native run; web scripts по реальным manifests.
+
+**Решения пользователя:** Разрешить R8 отдельно, выбрать prerequisite work или явно сузить scope; перенос не разрешает deploy/commit/push.
+
+**Статус фазы:** `todo`.
+
+| **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
+|:---|:---|:---|:---|:---|:---|:---|
+| R8.1 | REQ-SCOPE-01..04, REQ-PRESERVE-01..04 | audit.md gaps; actual domain/Hive/Firestore/Rules; apps/web/README.md | Сопоставить каждый action с реальным contract. Несовместимые gaps block соответствующий slice; миграцию здесь не выполнять. | C-SCOPE, C-MODEL, C-WEB | Согласованный список prerequisites/исключений; без этого UI slice blocked. | todo |
+| R8.2a | REQ-PALETTE-01..03, REQ-TYPE-01..02 | apps/mobile/lib/core/theme/stackcard_colors.dart, stackcard_theme.dart, stackcard_tokens.dart | Перенести semantic colors/type/spacing, сохранив единый theme mechanism и Material 3. | C14, C16, C-PALETTE | Theme diff, contrast checks и dark/light native renders. | todo |
+| R8.2b | REQ-NAV-01..05, REQ-EDITOR-02..03 | apps/mobile/lib/shared/widgets; actual component files по approved DS | По одному shared control: button/input/back/gear/navigation/state; сохранить loading/semantics/retry. | C12, C13, C15, C16 | Для каждого компонента diff и focused widget/render evidence. | todo |
+| R8.2c | REQ-TECH-01..02, REQ-PROJECT-03 | apps/mobile/lib/shared/widgets; новые TechnologyBadge/card paths предлагаемые до выбора source placement | Ввести badge icon+text/+N/wrap и entity-card presentation; проверять по одному компоненту. | C08, C14, C15, C-ASSET | Реальные widget tests, icon provenance и long-label renders. | todo |
+| R8.3a | REQ-NAV-01..05 | apps/mobile/lib/app/app_router.dart, apps/mobile/lib/app/app_shell.dart | Shell/routes: четыре permanent labels, gear/settings nested, origin Back, guards/deep links, tablet bottom nav. | C01, C02, C11, C12, C16 | Navigation/state tests и phone/tablet renders. | todo |
+| R8.3b | REQ-HOME-01..03 | apps/mobile/lib/features/home/home_screen.dart; S-HOME | Перенести только Home: три фильтра/recent mixed list и separate Copy, после готовности library модели. | C03, C04, C09, C13 | Home behavioral/filter tests и accepted-frame render. | todo |
+| R8.3c | REQ-RESUME-01, REQ-SHARE-01 | S-RESUMES; новые source/route пути предлагаются после GAP-DATA-01 | Перенести Resume list/create entry/status/link presentation только при настоящем Resume contract. | C09, C10, C13 | List states/reopen tests и render; без contract задача blocked. | todo |
+| R8.3d | REQ-PROJECT-01..04 | apps/mobile/lib/features/projects/presentation/projects_screen.dart; S-PROJECTS | Перенести Projects Import/Create/Search/List, без categories/hero, сохранить repository/search states. | C05, C08, C13, C15 | Projects search/action/state tests и narrow render. | todo |
+| R8.3e | REQ-PORTFOLIO-01, REQ-SHARE-01 | apps/mobile/lib/features/portfolio/presentation/portfolio_screen.dart; S-PORTFOLIOS | Перенести Portfolio list после multiple-output contract; настоящие actions, без mock success. | C09, C10, C13 | List/actions/reopen tests и render; contract gate. | todo |
+| R8.3f | REQ-SETTINGS-01..04, REQ-NAV-05 | apps/mobile/lib/features/settings/settings_screen.dart; S-SETTINGS и children | Переносить по одному согласованному settings экрану R4.5/4.6/4.7a/b/c; поддерживаемые Save/auth actions, origin Back. | C02, C06, C12, C13, C17 | Отдельный diff и native acceptance каждого settings сценария. | todo |
+| R8.4a | REQ-EDITOR-01..03 | apps/mobile/lib/features/portfolio_draft/presentation/builder_editor_widgets.dart; existing section editors | Перенести focused section scaffold/Apply/Cancel/visible Save, сохранив validation/input/retry. | C10, C12, C13, C16 | Forms/input retention tests + keyboard native render. | todo |
+| R8.4b | REQ-PROJECT-03..04 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_project_editor_screen.dart | Перенести manual Project create/edit после library gate, stable IDs и validation без потери ввода. | C08, C10, C12, C13 | Project CRUD/Cancel/validation tests и no-cover render. | todo |
+| R8.4c | REQ-PROJECT-04, REQ-MODEL-06 | apps/mobile/lib/features/github_import/presentation/github_import_screen.dart, github_source_cards.dart | Перенести import/review controls; dedup, Add/Accept/Ignore, stale/UID/cached behavior сохраняются. | C-GITHUB, C10, C13 | Existing smart-sync tests и native source/review walkthrough. | todo |
+| R8.4d | REQ-RESUME-02..04, REQ-MODEL-07 | S-RESUME-WIZARD/S-RESUME-EDITOR; новые paths после отдельно принятого Resume contract | Перенести wizard и прямую правку по одному согласованному этапу R5.1; без fake structured storage. | C07, C08, C10, C12, C16 | Step/Back/selection/override/photo tests и native evidence; gaps block. | todo |
+| R8.4e | REQ-PORTFOLIO-02..03, REQ-EDITOR-01..03 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_builder_screen.dart, portfolio_preview_screen.dart | Перенести Portfolio sections/appearance/preview по одному flow; attach/remove только после готовой relation модели. | C-MODEL, C07, C08, C10, C12, C17 | Builder/reorder/preview/private data tests и native evidence. | todo |
+| R8.5a | REQ-WEB-01..02 | apps/web; source paths после отдельно разрешённого Next.js runtime | Перенести landing/auth/download по одному accepted page, реальные CTA без отсутствующих store links. | C-WEB, C12, C13 | Actual build/page/focus/responsive checks; нет runtime → blocked. | todo |
+| R8.5b | REQ-WEB-03, REQ-EDITOR-01..03 | apps/web; S-WEB-WORKSPACE, actual paths после prerequisites | Перенести supported workspace/section editor/preview, actual owner guards и explicit publication только при готовом contract. | C-WEB, C10, C13, C16 | Actual owner/edit/reopen/input-retention acceptance. | todo |
+| R8.5c | REQ-WEB-04, REQ-SHARE-01 | apps/web; S-PUBLIC-RESUME/S-PUBLIC-PORTFOLIO, actual paths после prerequisites | Перенести публичные renderer по одному документу, anonymous unavailable и payload privacy. | C-WEB, C07, C08, C09, C17 | Actual anonymous/public/private checks и matched renders. | todo |
+
+### R9 — Регрессия и завершение
+
+**Цель:** Подтвердить принятый scope и возвращение к основной разработке.
+
+**Зависимости:** Реализованные R8 slices, решённые blockers либо явно принятые scope changes.
+
+**Входит:** Поведение/данные/integrations, visual parity, ограничения, пользовательская приёмка.
+
+**Не входит:** Деплой, автоматический старт Phase 11, закрытие непроверенной Phase 7, заявление о полном продукте.
+
+**Результат:** Принятый redesign с REDESIGN_DONE и сохранённой точкой roadmap.
+
+**Критерии приёмки:** C01–C17 проверены в реализации, необходимые tests/native/web выполнены; незавершённое перечислено и принято.
+
+**Проверка:** Existing/focused regression tests, migration checks если отдельно менялись, native Android/iOS по доступности, визуальное сопоставление frames.
+
+**Решения пользователя:** Принять R9 и поставить REDESIGN_DONE; затем отдельно решить следующую продуктовую задачу.
+
+**Статус фазы:** `todo`.
+
+| **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
+|:---|:---|:---|:---|:---|:---|:---|
+| R9.1 | REQ-PRESERVE-01..04, REQ-MODEL-05..08 | Existing tests в audit + CONTRIBUTING; root/nested routes | Проверить UID/auth/guest/offline/restart/review/notes/local-save/sync и данные без reset/cleanup. | C-GITHUB, C-MODEL, C10, C13 | Реальные command results и state/data acceptance; ограничения iOS отдельно. | todo |
+| R9.2 | REQ-CHECK-01..02, REQ-NAV-01..05, REQ-WEB-04 | Финальные accepted Figma frames и actual UI | Сравнить layout/actions/photo/badges/links/tablet/a11y; public payload/private isolation отдельно. | C01–C17, C-WEB, C-MOTION | Matched screenshots, визуальный review + public security checks в разрешённом scope. | todo |
+| R9.3 | REQ-WORKFLOW-07..08 | Этот журнал, README.md, product-spec.md | Записать limitations/accepted scope, приёмку REDESIGN_DONE и предложение вернуться перед Phase 11. | C-SCOPE | Явное решение пользователя и обновлённый status; незакрытое не помечать done. | todo |
+
+---
+
+## Зависимости реализации
+
+R1–R7 могут спроектировать все заданные функции без изменения backend. Перенос
+невозможной модели нельзя решить переименованием вкладок. До R8.1 для каждого
+GAP пользователь согласует отдельную продуктовую задачу или явное ограничение
+implementation scope. Такие задачи принадлежат основному roadmap и требуют
+отдельного разрешения; пока основная разработка на паузе, они не запускаются.
+
+| **Зависимость из audit** | **Основной roadmap / решение перед R8** |
+|:---|:---|
+| GAP-DATA-01..03 | Общая база/library/multiple documents/association/profile-review: предлагаемые дополнения к domain/persistence/sync tasks Phase 6/8 и web 13b, без отмены прежней приёмки |
+| GAP-MEDIA-01 | Phase 11 Media: camera/gallery/upload/media lifecycle/Storage; дизайн состояний возможен раньше |
+| GAP-PUB-01, GAP-PUB-02 | Phase 8 publication contract + Phase 13c public UI: multiple snapshots/URL и отдельное public validation hardening; не считать client codec доказательством server security |
+| GAP-URL-01 | Согласовать адреса нескольких outputs и последствия rename; нынешний adapter удаляет старый snapshot/claim, redirect не обещается |
+| GAP-AUTH-01, GAP-ACCOUNT-01 | Открытая Phase 7 и отдельно спланированные account management/linking/reauth/delete; Google sign-in не означает provider linking |
+| GAP-CONTACT-01 | Public contact/privacy contract отдельно; Inbox/Contact/FCM — Phase 14, location integrations — Phase 12 |
+| GAP-WEB-01 | Phase 13a → 13b → 13c: новый Next.js runtime/owner/public scenarios; R6 — только дизайн |
+| GAP-PREF-01 / native share | Phase 15 sharing и отдельно согласованные notification/reduced-motion settings; существующий app stack сохраняется |
+
+Никакие перечисленные prerequisites не отмечены выполненными в R0. Если они
+не готовы, зависимая R8-задача получает blocked, независимый поддерживаемый UI
+переносится в согласованном scope. Уменьшение scope фиксируется в журнале и
+утверждается пользователем. R9 не объявляет весь запрошенный редизайн завершённым
+при нерешённых blockers; completion возможен после их закрытия либо явной
+приёмки пересмотренного scope с конкретными исключениями.
+
+---
+
+## Проверки и результаты
+
+Прослеживаемость: requirement → task в таблицах выше и requirements →
+S-* в screens → C-* ниже → фактический результат/evidence. Сейчас есть
+статическое доказательство расхождений; target UI ещё не создан. Поиск текста
+в source не подтверждает выполнение визуального требования.
+
+| **Check** | **Способ проверки и ожидаемый результат** | **Задача / экран** | **Результат R0** |
+|:---|:---|:---|:---|
+| C01 | Render + walkthrough: на roots нет greeting/logout/STACKCARD DEMO | R4.1..4, R8.3; roots | Target не выполнен; source/Figma conflicts в audit |
+| C02 | Нажать gear на каждом root, открыть нужные settings/back | R1.2, R4.5, R4.6, R4.7a..c, R8.3; S-SETTINGS | Runtime gear-flow отсутствует |
+| C03 | Нажать ровно Все/Резюме/Проекты; Все включает Portfolio | R4.1, R7.1, R8.3; S-HOME | В current UI нет такого фильтра |
+| C04 | Визуально проверить Home без readiness/progress/old quick actions | R4.1, R9.2; S-HOME | Legacy source содержит запрещённые элементы |
+| C05 | Проверить порядок actions/search/list без categories/hero | R4.3, R9.2; S-PROJECTS | Current source и прежний Figma содержат filters |
+| C06 | Изменить имя/ник/фото/contacts/links, validation+save+reopen | R4.5, R4.6, R4.7a..c, R8.3; Settings groups | Полный сценарий отсутствует |
+| C07 | Выбрать/убрать фото; проверить Resume editor и preview | R5.1a,d, R9.2; Resume | Avatar URL есть; нужного photo flow/renderer нет |
+| C08 | Inspect semantics + render icon/text/+N/wrap TechnologyBadge | R3.2, R4.3, R9.2; cards/detail | Runtime использует slash text |
+| C09 | Published card/detail: Copy/Open/Share после повторного открытия; draft без URL | R5.4b,c, R9.2; S-SHARE/cards | Document link UI отсутствует |
+| C10 | Change→local Save→sync ACK→explicit Publish; previous public snapshot unchanged | R5.4a, R8.4, R9.1; editors/publish | Save/sync contracts есть; user publication flow нет |
+| C11 | Tablet portrait/landscape: та же bottom nav, нет sidebar/rail | R7.2, R8.3, R9.2; roots | Current shell имеет rail >=700 px |
+| C12 | Back/close, system navigation, cancel/unsaved handling и возврат origin | R1, R5, R7.1, R9.1; nested | Existing nested Back есть; новая IA не проверена |
+| C13 | Empty/loading/error/retry/offline/long content; ввод и previous success не теряются | R3.4, R7.3, R9.1; все | Shared states есть; полный target набор pending |
+| C14 | sRGB contrast всех actual text/surface/disabled/focus pairs; normal text >=4.5:1 | R3.1, R7.3, R9.2; DS/UI | Полная target матрица pending; R0 расчёты ниже |
+| C15 | Metadata/hit tests реальных tap regions >=48×48 logical px, включая Copy/back/gear | R3, R7.2, R9.2; controls | Existing Button min48; полный target UI pending |
+| C16 | Text scale1/2 и OS увеличенный текст, ru/en, узкие экраны/keyboard | R7.2, группы R8.3–R8.5, R9.2 | Target ещё не создан; legacy nav скрывает labels |
+| C17 | Anonymous payload/renderer без private notes/contacts/account/editor; absent/unpublished | R6.4, R9.2; public | Client projection есть, web отсутствует; server hardening gap |
+| C-MODEL | Один Project в разных outputs; create+attach/remove relation; profile diff/local override | R1.1, R5.1c, R5.3b, R8.1 | Singleton source, migration pending |
+| C-GITHUB | Selection/Add/reimport/Accept/Ignore/stale/UID/offline; curated fields сохраняются | R5.2b,c, R9.1 | Source implementation есть, R0 tests не запускались |
+| C-ASSET | License/provenance fonts/icons/photos; настоящий текст badges, editable Figma | R2.2, R3.2, R7.3 | Existing fonts лицензии в repo; новый набор не выбран |
+| C-PALETTE | Exact dark HEX/semantic roles, lime primary, error red; light actual pairs | R2.1, R3.1, R8.2 | Требования зафиксированы; runtime отличается |
+| C-WEB | Полный visitor/owner/public path, реальные CTA и download availability | R6.1..4, R8.5 | Web source отсутствует; legacy concepts не runtime |
+| C-MOTION | 180–280 ms, ввод доступен, reduced/static variants и Copy feedback | R3.4, R7.3, R9.2 | Только target requirement; current timings не перенесены |
+| C-SCOPE | Изменения только разрешённой фазы; сохранены user edits/assets/history/stack | R0.5, R8.1, R9.3 | Документация-only, финальные diff/hash checks фиксируются ниже |
+
+Обычный текст проверяется по 4.5:1 даже при небольших metadata размерах.
+48 logical px — критерий этого проекта. WCAG web target-size и Flutter logical
+px не смешиваются в отчётах. Figma keyboard/focus/semantics спецификации не
+доказывают работу реального IME, TalkBack или VoiceOver.
+
+На R8/R9 команды берутся из фактического [CONTRIBUTING](../../CONTRIBUTING.md#проверки).
+macOS, zsh/bash, cwd `apps/mobile`: `dart format --output=none --set-exit-if-changed lib test integration_test`,
+`flutter analyze`, `flutter test` с релевантными файлами.
+Rules tests из cwd `firebase`: `npm run test:rules` только при отдельно разрешённом
+изменении backend contract. Native live acceptance имеет отдельные предусловия
+и opt-in; обычный test не доказывает Android/iOS/web readiness.
+Web checks назначаются по созданным manifests, отсутствующие npm scripts не придумываются.
+
+### Фактические результаты R0
+
+- Прочитаны инструкции, roadmap, действующий source/config и existing design docs.
+- Git status показал исходные user edits; branch `redesign/full-app` сохранена.
+- Figma root read подтвердил девять страниц; metadata и пять выбранных renders
+  прочитаны; Figma не изменялась. Полный prototype старой итерации не прогонялся.
+- Внешние источники и ограничения доступа зафиксированы в references.
+- Target UI/native/backend tests в R0 не запускались: код не изменялся.
+- Validator оформления, H1, fenced-блоков, anchors и локальных ссылок: шесть новых
+  документов и четыре изменённых указателя — PASS. git diff --check — PASS.
+- Реестр: 78 уникальных requirements, все 29 исходных IDs сохранены; новые
+  требования связаны с задачами и экранами, вымышленных requirement IDs нет.
+- Hash-сверка прежних docs/design и root README подтвердила отсутствие изменений.
+  Продуктовый source/config, dependencies и Git staging не менялись.
+- Markdown-render в целевом viewer не проверен; открытие plan было поставлено
+  приложением в очередь, это не подтверждает успешное отображение.
+- Результат C01–C17 для нового дизайна: pending. R0 не устанавливает DESIGN_READY/REDESIGN_DONE.
+
+
+Расчёт в R0 по WCAG sRGB relative luminance даёт следующие пары из заданной
+палитры. Это числовая проверка цветов, не приёмка будущего экрана.
+
+| **Пара** | **Контраст / применение** |
+|:---|:---|
+| textMuted #737884 / background #070708 | 4.55:1; проходит 4.5 только для этой пары |
+| textMuted / surface #0D0E11 | 4.36:1; обычный текст не проходит |
+| textMuted / surfaceElevated #14161B | 4.09:1; обычный текст не проходит |
+| textMuted / surfaceActive #1B1E24 | 3.78:1; обычный текст не проходит |
+| ink #070708 / lime #C7FF1A | 17.02:1; подходит для текста на lime fill |
+
+HEX сохраняются. На поверхностях с недостаточным контрастом важный текст
+использует подходящую textSecondary/textPrimary роль из той же палитры;
+textMuted не назначается автоматически. Light-theme роли и все state-пары
+проверяются в R3.1 и R7.3. Источник метода —
+[WCAG Contrast Minimum](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html).
+
+---
+
+## Журнал решений
+
+| **ID / дата** | **Решение / источник** | **Статус и влияние** |
+|:---|:---|:---|
+| D001 / 2026-10-05 | Полное последнее задание пользователя: только R0; freeze новых функций | Принято заданием; эта работа не разрешает R1/Figma edits/code |
+| D002 / 2026-10-05 | Приоритет latest requirements; legacy как functional reference | Принято; greeting/carousel/categories/recolor старого S заменены новым контрактом |
+| D003 / 2026-10-05 | Общая база/library, multiple outputs, association order/featured/visibility | Принято; миграция пока продуктовый gap, не действие R0/R8 UI |
+| D004 / 2026-10-05 | Существующие документы обновляются через review; draft и public разделены | Принято; live inheritance/тихий Publish не проектируются |
+| D005 / 2026-10-05 | Palette/nav/home/settings/photo требования не переуточняются | Принято; точные roles/запреты в requirements |
+| D006 / 2026-10-05 | Старые docs/Figma/assets и незакоммиченные правки сохраняются | Принято; новая версия размещается отдельно после approval |
+| D007 / 2026-10-05 | Новый URL/slug и rename/старые ссылки | awaiting_review для R1; рекомендация: явное предупреждение, без обещаний redirect до backend решения |
+| D008 / 2026-10-05 | Prerequisites перед R8 / возможный scope change | awaiting_review; не начинать backend/web scaffold автоматически |
+| D009 / 2026-10-05 | Приёмка плана R0 и разрешение R1.1 | awaiting_review; пользователь ещё не подтвердил |
+| D010 / позднее | R2 direction/logo и R7 DESIGN_READY | todo; фиксировать реальную дату, выбор и accepted frame IDs |
+| D011 / позднее | R8 отдельное разрешение и R9 REDESIGN_DONE | todo; перечислить actual scope/limitations и evidence |
+
+Новый scope change записывается отдельной строкой с причиной, requirement IDs,
+влиянием на задачи/gaps и явным решением пользователя. Исторические результаты
+не переписываются. До приёмки текущего плана следующая задача — R1.1 — остаётся todo.
+
