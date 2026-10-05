@@ -36,7 +36,7 @@
 Этот исторический срез предшествовал выбору направления/логотипа R2.
 Теперь бренд A принят D024; fonts review R3.1 добавлен D027. R3.3 принята D032;
 state/adapt/motion specimens R3.4 и полная R3 приняты D034 после review D033.
-R4.1–R4.7c приняты D036 после review D035; вся следующая R5 в работе
+R4.1–R4.7c приняты D036 после review D035; следующая R5 ожидает review D037
 по интерпретации продолжения с прежним full-phase/parallel/no-preview режимом; визуальный просмотр/preview/run
 пропущены по прямому запросу D034, не считаются пройденной проверкой.
 Результаты исходного исследования ниже не переаттестованы.
@@ -436,7 +436,7 @@ SearchField184:2784 (Empty184:2766/Filled184:2772/Focus184:2778) добавле�
 содержит9boards/61states/122Dark-Light frames; palette values/styles/variable counts сохранены
 без drift; onPrimary расширен STROKE_COLOR scope без смены color values. ProjectListItem185:2771 и PortfolioListItem188:2861 — scoped
 compositions прежних R3 elements; новых media/font sources не добавлено.
-R5 flows теперь проектируются отдельно в scope D036; backend/media/schema
+R5 flows собраны отдельно в scope D036–D037; backend/media/schema
 и native implementation остаются будущими отдельно разрешаемыми результатами.
 
 ---
@@ -448,15 +448,24 @@ R5 flows теперь проектируются отдельно в scope D036;
 пользователь не перечислял все 13 задач R5 буквально. Wizard/edit/import/review/
 attachments/publication используют принятые fonts/tokens/assets R3–R4:
 Manrope, brand A, Lucide/Simple Icons/official Flutter-Dart и помеченный
-R3.3 generated_demo Portrait. Новые external visual sources или media
-не заявляются до фактического появления и проверки.
+R3.3 generated_demo Portrait. Новые external visual sources, icons, fonts или media не добавлены.
+Три scoped DS families DocumentIdentity193:2864 (photo/no-photo),
+ChangeComparison193:2865 и ProjectAssociationRow193:2872 составлены из прежних
+shared controls/assets. Все14IMAGE fills — тот же generated_demo Portrait80×80,
+imageHash `c5809a5c0f968bd8ed1f163a5adfeb2d0b2a077b`.
+98variable values и50style IDs сохранены точно;274originalFlutter/Dart VECTOR
+fills retained — только targeted canonical source-brand exemption.
 
 Save, private sync ACK и explicit Publish остаются отдельными результатами;
 import/source review не перезаписывают curated/public данные автоматически.
 R5 static specimens не доказывают работу native camera/gallery, SDK/OAuth,
 cloud publication или реального sharing. Визуальный просмотр/preview/run
-остаются пропущенными по сохранённому запросу; actual IDs и metadata/contrast
-QA будут добавлены после сборки. R6+ и runtime R8 не начаты.
+остаются пропущенными по сохранённому запросу. [Реестр и QA R5](screens.md#r5--создание-редактирование-и-публикация)
+фиксируют13boards/83states/166Dark-Light frames,18failure categories0,
+3474text samples min4.832909811:1,1280stroke samples min4.364564811:1,
+966targets≥48 и48actual identity checks PASS. Wizard1–5/16preview/84forms/
+152fixedfooter проверены структурно; SafeArea padding20 — static geometry.
+Весь пакет awaiting_review D037; R6+ и runtime R8 не начаты.
 
 ---
 

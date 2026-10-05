@@ -487,7 +487,7 @@ web-редактор и публичные портфолио. Этот разд
 результаты и ограничения записаны в соответствующих разделах ниже.
 **С 2026-10-05 основная разработка новых функций приостановлена:** активна только
 R5 инициативы [StackCard Design v2](../redesign/README.md), весь пакет
-R5.1a–R5.4c в сохранённом full-phase/parallel/no-preview режиме D036. Прямое поручение
+R5.1a–R5.4c ожидает общей приёмки D037, в сохранённом full-phase/parallel/no-preview режиме D036. Прямое поручение
 использовать [план R0–R9](../redesign/plan.md) и начать первую фазу приняло R0
 и разрешило R1.1. Поручение «переходи к следующей фазе» приняло
 [три схемы IA](../redesign/screens.md#r11--информационная-архитектура)
@@ -548,13 +548,25 @@ onPrimary расширен STROKE_COLOR без смены palette values.
 приложения не выполнялись по прямому запросу D034. Полный пакет принят
 следующим поручением продолжить, D036. Это Figma target; новые screens/routes/
 backend этим пакетом не реализованы.
-**R5 — in_progress D036**: «переходи к следующему этапу разработки»
-интерпретировано как приёмка всей R4 и переход к следующей R5 с сохранением
-прежнего режима фаза целиком/параллельно/без preview и запуска приложения.
-Пользователь не называл весь набор R5 буквально; в текущем scope выполняются
-все 13 задач R5.1a–R5.4c. Runtime/backend/media/schema не меняются, R6+ и R8
-не начаты. Figma IDs и QA R5 будут записаны после фактической сборки;
-готовность flow/runtime сейчас не заявлена.
+**R5 — awaiting_review D037**: поручение «переходи к следующему этапу
+разработки» приняло всю R4 и продолжило следующую R5 в сохранённом режиме
+фаза целиком/параллельно/без preview и запуска. Это интерпретация прежних
+предпочтений; пользователь не называл весь набор R5 буквально.
+Все 13 задач собраны: [83 состояния / 166 Dark/Light frames / 13 boards](../redesign/screens.md#r5--создание-редактирование-и-публикация).
+Resume wizard/edit/structured preview, manual/GitHub Projects/review,
+Portfolio content/associations/appearance и Publish/Share/Unpublish/delete
+сохраняют отдельные local Save, sync ACK и explicit Publish. Unknown outcome
+не объявляется success. Structural QA:3474actual-mode text samples
+min4.832909811:1,1280strokes min4.364564811:1,966targets≥48;18failure categories0.
+Wizard1–5/16preview/84forms/152fixedfooter и48actual identity checks PASS.
+98variable values/50style IDs сохранены точно;274originalFlutter/Dart fills
+retained targeted source exemption,14existing demo imagefills80×80. DS дополнили
+DocumentIdentity(photo/no-photo), ChangeComparison и ProjectAssociationRow.
+Visual inspection/preview/run пропущены по сохранённому запросу. Это статический
+Figma target, без native input/media/SDK/OAuth/schema/backend/cloud evidence.
+После приёмки R5 и поручения продолжить следующая полная фаза — R6 Web;
+сейчас R6+ и R8 не начаты, основная разработка функций сохраняет freeze.
+
 Новая URL route scheme и миграция adapter остаются предпосылкой R8.
 Runtime/schema не изменены. Проверки и ограничения — в
 [результатах R3.4](../redesign/plan.md#фактический-результат-r34-d032d033);
