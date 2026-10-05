@@ -5,7 +5,7 @@
 **Проверенные источники, приёмы и границы их применения в редизайне**
 
 ![Reference audit R0](https://raster.shields.io/badge/References-R0_audit-111111?style=for-the-badge)
-![Direction awaiting R2](https://raster.shields.io/badge/Direction-awaiting_R2-0EA5E9?style=for-the-badge)
+![Direction A selected](https://raster.shields.io/badge/Direction-A_selected-C7FF1A?style=for-the-badge)
 
 </div>
 
@@ -18,6 +18,8 @@
 - [Структура содержимого](#структура-содержимого)
 - [Конкретные компоненты 21st](#конкретные-компоненты-21st)
 - [Проверки доступности](#проверки-доступности)
+- [Шрифты R3.1](#шрифты-r31)
+- [Иконки R3.2](#иконки-r32)
 - [Применение в StackCard](#применение-в-stackcard)
 - [Ограничения и следующий шаг](#ограничения-и-следующий-шаг)
 
@@ -27,7 +29,9 @@
 
 Срез проверки — 2026-10-05. Это результат R0: источники прочитаны, публичные
 изображения просмотрены, несколько демонстраций проверены в браузере.
-Направление R2, новый логотип, макеты и зависимости не утверждены.
+Этот исторический срез предшествовал выбору направления/логотипа R2.
+Теперь бренд A принят D024; fonts review R3.1 добавлен D027.
+Результаты исходного исследования ниже не переаттестованы.
 Правила переноса заданы в [требованиях](requirements.md#референсы-и-сохранность-проекта):
 `REQ-REFERENCE-01..02`; применение планируется в [R1–R8](plan.md), экраны
 обозначены по [карте S-*](screens.md#целевые-экраны).
@@ -288,6 +292,63 @@ web не меняет заданную архитектуру отдельног
 для логотипов на меню, кнопки или содержимое Resume. Текст W3C не копируется;
 страница используется как основание числовых условий. Это не заявление о
 полной WCAG-сертификации Flutter-приложения.
+
+---
+
+## Шрифты R3.1
+
+Срез **2026-10-05, D027**. Официальный Google Fonts metadata подтверждает
+Latin/Latin-ext и Cyrillic/Cyrillic-ext для всех трёх кандидатов;
+лицензии прочитаны отдельно. Это проверка языковых subsets и условий
+распространения, не доказательство native rendering.
+
+| **Семейство** | **Официальный metadata / лицензия** | **Варианты и границы** |
+|:---|:---|:---|
+| Noto Sans | [metadata](https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/METADATA.pb), [OFL](https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/OFL.txt) | normal/italic, weight100–900, width62.5–100; уже bundled baseline |
+| Manrope | [metadata](https://raw.githubusercontent.com/google/fonts/main/ofl/manrope/METADATA.pb), [OFL](https://raw.githubusercontent.com/google/fonts/main/ofl/manrope/OFL.txt) | normal, weight200–800; основной альтернативный кандидат |
+| Golos Text | [metadata](https://raw.githubusercontent.com/google/fonts/main/ofl/golostext/METADATA.pb), [OFL](https://raw.githubusercontent.com/google/fonts/main/ofl/golostext/OFL.txt) | normal, weight400–900; третий сравниваемый вариант |
+
+Все три — SIL OFL1.1; при будущем включении binaries сохраняются copyright и
+license. Назначение Golos для длительного экранного чтения описано в
+[официальном проекте](https://github.com/googlefonts/golos-text).
+Начертания Manrope400/600/700/800 дополнительно подтверждены
+[source config](https://raw.githubusercontent.com/googlefonts/manrope/master/sources/config.yaml).
+Фактический Figma font API отдельно подтвердил Regular/SemiBold/Bold/ExtraBold
+всех трёх. Default full_name в metadata не используется как название style.
+
+[Font Review138:19](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=138-19)
+показывает одинаковые ru/en, glyphs, metadata12/13 и static reflow16/32.
+Manrope рекомендован по визуальному сравнению: выразительнее display при
+спокойном body. После поручения продолжить закреплена эта рекомендация D028;
+это интерпретация продолжения, отдельного сообщения о семействе не было.
+Wordmark A/палитра/прежние shared styles сохранены;10 новых Manrope styles — Figma UI;
+новые fonts/dependencies не установлены. Android/iOS shaping и OS scaling
+остаются отдельной проверкой. [Evidence и IDs](screens.md#пересмотр-foundations-и-шрифта-d026d027).
+
+---
+
+## Иконки R3.2
+
+Срез2026-10-05, D029. Source SVGs проверены как editable vectors без scripts,
+images/href/external paints; badges используют настоящее текстовое имя.
+Ни package, ни runtime asset этим шагом не добавлены.
+
+| **Источник** | **Использованные assets / условия** |
+|:---|:---|
+| [Lucide pinned500620a2](https://github.com/lucide-icons/lucide/tree/500620a2e8123f8d1db191538886dc0c223f69a9/icons), [LICENSE](https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/LICENSE) | house(home), file-text, folder, panels-top-left, settings, arrow-left, copy, check, image, ellipsis(more-horizontal). ISC; arrow-left/check/ellipsis также MIT Feather-derived. Полные copyright/ISC/MIT notices сохранены в Figma153:6036 |
+| [Simple Icons pinned98820a4d](https://github.com/simple-icons/simple-icons/tree/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons), [metadata](https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/data/simple-icons.json), [CC0 project](https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/LICENSE.md) | react.svg #61DAFB / typescript.svg #3178C6: shapes не изменены, icon18 на Ink tile24; label нейтральная. Individual license metadata отсутствует; CC0 проекта не доказывает права на любой брендовый знак |
+| [React source MIT](https://raw.githubusercontent.com/facebook/create-react-app/282c03f9525fdf8061ffa1ec50dce89296d916bd/LICENSE) | Исходный source repository, указанный Simple Icons, проверен отдельно; trademark права не подменяются MIT |
+| [TypeScript branding](https://www.typescriptlang.org/branding/) | Официальный single-color cut-out variant разрешён для идентификации технологии; shape не менять, не включать в логотип приложения и не подразумевать endorsement |
+| [Flutter official archive](https://flutter.dev/flutter-brand-assets.zip), [guidelines](https://docs.flutter.dev/brand) | Flutter/icon_flutter/icon_flutter_wht.svg: approved white logomark, original shape/white/opacity0.72 сохранены; aspect ratio вписан в24 grid. Технологическая идентификация, не часть StackCard mark |
+| [Dart official archive](https://services.google.com/fh/files/misc/dart_brand_guidelines_assets.zip), [guidelines](https://dart.dev/brand) | Dart Brand Guidelines Assets/Logomark (Icon)/icon_dart_knockout.svg: original knockout shape/fill/opacity, на Ink tile |
+
+[Simple Icons disclaimer](https://github.com/simple-icons/simple-icons/blob/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/DISCLAIMER.md)
+отделяет CC0 проекта от прав на индивидуальные marks; отсутствие license metadata
+не означает отсутствия ограничений. Simple Icons Flutter/Dart monochrome paths
+не использованы: выбран approved knockout из официальных archives.
+Все четыре технологии показываются только в badges, без endorsement или смешивания
+с собственным логотипом. React/TypeScript color roles остаются `technology/*`,
+не новой брендовой палитрой. Native distribution notices/exports — отдельный gate R8.
 
 ---
 

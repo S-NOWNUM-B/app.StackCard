@@ -58,8 +58,13 @@
 после цветовых правок D020; R1 — `done`. [Шесть пилотов R2.1](screens.md#r21--два-визуальных-направления)
 приняты как сравнение D022; [brand specimens R2.2](screens.md#r22--знак-написание-и-иконка-приложения)
 приняты выбором бренда A D024: R2.2/R2.3/R2 done. Связанные пилоты A — основа R3;
-[Dark/Light foundations R3.1](screens.md#r31--цвета-типографика-и-метрики) ожидают
-review D025, Noto Sans предложен для DS. Постоянные адреса документов приняты D019. Новый макет,
+[Dark/Light foundations R3.1](screens.md#r31--цвета-типографика-и-метрики) приняты
+поручением продолжить D028; исходное предложение Noto Sans заменено Manrope.
+Постоянные адреса документов приняты D019.
+После Font Review D027 поручение продолжить закрыло R3.1, D028. Закреплён
+рекомендованный Manrope; [компоненты R3.2](screens.md#r32--навигация-карточки-и-technologybadge)
+проверены и ожидают review D029. Цвета/Wordmark A сохранены; R3.3–R3.4 todo.
+Новый макет,
 интерактивный прототип, реализованный интерфейс и работающая backend-функция
 учитываются отдельно. Действующий Flutter содержит единый `PortfolioContent`
 и `resumeText`: это текущая реализация, а не ограничение целевой модели.
@@ -99,8 +104,9 @@ R2.1 и разрешило R2.2 (D022), без выбора A/B. Brand specimens
 проверены, первоначально awaiting_review D023. Прямой выбор бренда A и поручение
 перейти к следующей фазе закрыли R2.2/R2.3/R2 и разрешили R3.1 (D024).
 Связанные пилоты A / Cyber Editorial — основа R3; B сохранён как история.
-Foundations созданы и проверены, awaiting_review D025; финальная типографика,
-полная DS, компоненты R3.2–R3.4 и runtime ещё не приняты.
+Foundations созданы D025, пересмотрены D027 и приняты поручением продолжить
+D028: R3.1 done, закреплён рекомендованный Manrope. Полная DS и runtime ещё
+не приняты; компоненты R3.2 awaiting_review D029.
 
 ### REQ-SCOPE-02 — Отдельная инициатива
 
@@ -599,6 +605,11 @@ light-значения из design guide — входные материалы �
 Декоративный шрифт не используется для длинного текста, разные наборы
 по страницам не создаются.
 
+Review R3.1 D027 сравнил три кандидата на одинаковых specimens. После
+поручения продолжить закреплён рекомендованный Manrope, D028; исходные Noto Sans
+styles и Wordmark A сохранены как прежние assets. Новый UI использует одну
+Manrope-family; native font migration остаётся R8.
+
 ### REQ-LOGO-01 — Новый знак
 
 Логотип проектируется заново, а не перекрашивает legacy S. Предлагается
@@ -807,8 +818,8 @@ Screen IDs соответствуют [screens.md](screens.md), task IDs — [pl
 `S-PRIVACY`, `S-APP`.
 `ВСЕ` означает все применимые screens этой карты, включая web, а не
 выдуманный маршрут. «Документы» означает requirement процесса без экранной
-поверхности. Результаты R0 дополнены принятой IA R1.1, принятыми low-fi R1.2/R1.3
-и ожидающими review low-fi R1.4, где они относятся к требованию.
+поверхности. Результаты R0 дополнены принятой IA R1.1 и принятыми low-fi
+R1.2–R1.4, а также проверенными компонентами R3.2, где они относятся к требованию.
 Low-fi evidence — в [карте](screens.md#r14--low-fi-projects-portfolio-и-публикации);
 prototype/runtime evidence ещё не создавалось. История и target contract сохранены.
 
@@ -825,7 +836,7 @@ prototype/runtime evidence ещё не создавалось. История и
 | `REQ-WORKFLOW-03` | `R0.4`, `R0.5`, `R7.4`, `R9.3` | Документы | `C-SCOPE` | зафиксировано R0 |
 | `REQ-WORKFLOW-04` | `R0.5`, `R7.4`, `R9.3` | Документы | `C-SCOPE` | зафиксировано R0 |
 | `REQ-WORKFLOW-05` | `R0.4`, `R0.5` | Документы | `C-SCOPE` | зафиксировано R0 |
-| `REQ-WORKFLOW-06` | `R2.1`, `R2.2`, `R2.3` | `S-HOME`, `S-PUBLIC-RESUME`, `S-SETTINGS` | `C-ASSET`, `C-PALETTE` | Сравнение принято D022; бренд A выбран D024, R2 done. Связанные A pilots — основа R3; финальная типографика и полная DS ожидают приёмки |
+| `REQ-WORKFLOW-06` | `R2.1`, `R2.2`, `R2.3` | `S-HOME`, `S-PUBLIC-RESUME`, `S-SETTINGS` | `C-ASSET`, `C-PALETTE` | Сравнение принято D022; бренд A выбран D024, R2 done. Типографика Manrope закреплена D028; R3.2 awaiting_review D029, полная DS ещё требует приёмки |
 | `REQ-WORKFLOW-07` | `R7.4`, `R8.1`, `R9.3` | Документы; ВСЕ | `C-SCOPE` | зафиксировано R0 |
 | `REQ-WORKFLOW-08` | `R0.5` | Документы | `C-SCOPE` | зафиксировано R0 |
 | `REQ-MODEL-01` | `R1.1`, `R4.5`, `R5.1a`, `R5.3a` | `S-PROFILE`, `S-RESUMES`, `S-PORTFOLIOS`, EDITORS | `C-MODEL`, `C06` | IA R1.1 принята; UI не проверен |
@@ -836,17 +847,17 @@ prototype/runtime evidence ещё не создавалось. История и
 | `REQ-MODEL-06` | `R1.1`, `R1.4`, `R5.2b`, `R5.2c` | `S-GITHUB`, `S-GITHUB-REVIEW`, `S-PROJECT-EDITOR` | `C-GITHUB` | IA принята; H10/H14–H16 R1.4: dedup/explicit review/protected overrides, принято D020; runtime не проверен |
 | `REQ-MODEL-07` | `R1.1`, `R1.4`, `R5.1c`, `R5.3a` | `S-PROFILE`, `S-RESUME-EDITOR`, `S-PORTFOLIO-EDITOR` | `C-MODEL`, `C10` | IA принята; H17 R1.4: создание из базы, принято D020; review существующего Resume принят R1.3; runtime не проверен |
 | `REQ-MODEL-08` | `R1.1`, `R1.4`, `R5.4a`, `R5.4b`, `R5.4c`, `R9.1`, `R9.2` | EDITORS; `S-SHARE`; PUBLIC | `C10`, `C17` | IA принята; H25–H36 R1.4: Apply/Save/sync/Publish разделены, принято D020; runtime не проверен |
-| `REQ-NAV-01` | `R1.1`, `R1.2`, `R3.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4` | ROOT | `C11`, `C15`, `C16` | IA R1.1 принята; low-fi R1.2 приняты, D015; UI не проверен |
-| `REQ-NAV-02` | `R1.1`, `R1.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4`, `R4.5` | ROOT; `S-SETTINGS` | `C02` | IA R1.1 принята; low-fi R1.2 приняты, D015; UI не проверен |
-| `REQ-NAV-03` | `R1.1`, `R1.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4` | ROOT | `C01` | IA R1.1 принята; low-fi R1.2 приняты, D015; UI не проверен |
-| `REQ-NAV-04` | `R1.1`, `R1.2`, `R1.3`, `R1.4`, `R3.2`, `R5.1c`, `R5.2a`, `R5.3a` | EDITORS; SETTINGS | `C12` | IA/R1.2/R1.3 приняты; H07/H08 и origin captions R1.4 принято D020; native Back не проверен |
-| `REQ-NAV-05` | `R1.1`, `R1.2`, `R4.5`, `R4.6`, `R4.7a`, `R4.7b`, `R4.7c` | `S-SETTINGS`, `S-PROFILE`, `S-CONTACTS`, `S-ACCOUNT`, `S-PRIVACY`, `S-APP` | `C02`, `C12` | IA R1.1 принята; low-fi R1.2 приняты, D015; UI не проверен |
-| `REQ-HOME-01` | `R1.2`, `R4.1` | `S-HOME` | `C03` | low-fi R1.2 приняты, D015; UI не проверен |
-| `REQ-HOME-02` | `R1.2`, `R3.2`, `R4.1` | `S-HOME` | `C03`, `C09`, `C15` | low-fi R1.2 приняты, D015; UI не проверен |
+| `REQ-NAV-01` | `R1.1`, `R1.2`, `R3.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4` | ROOT | `C11`, `C15`, `C16` | R3.2 BottomNavigation146:253/148:340:4 постоянные labels, выбранный marker; metadata/render PASS, awaiting_review D029. Native/OS scaling pending |
+| `REQ-NAV-02` | `R1.1`, `R1.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4`, `R4.5` | ROOT; `S-SETTINGS` | `C02` | R3.2 SectionHeader146:274: compact Root gear/Nested Back,148:340 PASS; полнота Settings R4, native routing pending |
+| `REQ-NAV-03` | `R1.1`, `R1.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4` | ROOT | `C01` | R3.2 Root header без дублирующего brand/title,148:340 metadata/render PASS; root screens R4 pending |
+| `REQ-NAV-04` | `R1.1`, `R1.2`, `R1.3`, `R1.4`, `R3.2`, `R5.1c`, `R5.2a`, `R5.3a` | EDITORS; SETTINGS | `C12` | R1.4 origin принят D020; R3.2 Nested Back146:274/148:340 и origin caption PASS; native Back pending |
+| `REQ-NAV-05` | `R1.1`, `R1.2`, `R4.5`, `R4.6`, `R4.7a`, `R4.7b`, `R4.7c` | `S-SETTINGS`, `S-PROFILE`, `S-CONTACTS`, `S-ACCOUNT`, `S-PRIVACY`, `S-APP` | `C02`, `C12` | R3.2 Settings specimen148:340 без bottom nav; возврат к origin записан, awaiting_review D029; native pending |
+| `REQ-HOME-01` | `R1.2`, `R4.1` | `S-HOME` | `C03` | R3.2 HomeFilter146:337/148:340: ровно3 filters, All включает Portfolio, независим от root; PASS, runtime query pending |
+| `REQ-HOME-02` | `R1.2`, `R3.2`, `R4.1` | `S-HOME` | `C03`, `C09`, `C15` | R3.2 DocumentCard146:632/148:894: тип/Updated, Open и Copy без пересечения;6 Published/6 Draft, PASS; sorting/clipboard runtime pending |
 | `REQ-HOME-03` | `R1.2`, `R4.1` | `S-HOME` | `C01`, `C04` | low-fi R1.2 приняты, D015; UI не проверен |
 | `REQ-PROJECT-01` | `R1.2`, `R1.4`, `R4.3` | `S-PROJECTS` | `C05`, `C15`, `C16` | R1.2 принят; H05/H06 R1.4: компактный ряд действий и search с лупой, принято D020; runtime не проверен |
 | `REQ-PROJECT-02` | `R1.4`, `R4.3` | `S-PROJECTS` | `C05` | H05/H06 R1.4: нет категорий/hero, принято D020; runtime не проверен |
-| `REQ-PROJECT-03` | `R1.4`, `R3.2`, `R4.3` | `S-PROJECTS` | `C08`, `C13`, `C-ASSET` | H01/H03 R1.4: поля проекта/optional cover и описание, принято D020; финальная карточка/реальный asset ещё не проверены |
+| `REQ-PROJECT-03` | `R1.4`, `R3.2`, `R4.3` | `S-PROJECTS` | `C08`, `C13`, `C-ASSET` | R3.2 ProjectCard146:696/148:894: cover placeholder/title/description/source/icon badges, PASS; fixture без фото, user asset/runtime pending |
 | `REQ-PROJECT-04` | `R1.4`, `R5.2a`, `R5.2b`, `R5.2c` | `S-PROJECTS`, `S-PROJECT-EDITOR`, `S-GITHUB`, `S-GITHUB-REVIEW` | `C13`, `C-GITHUB` | H01–H16 R1.4: manual/import/loading/empty/error/review/stale, принято D020; runtime не проверен |
 | `REQ-RESUME-01` | `R1.2`, `R1.3`, `R4.2` | `S-RESUMES`; сохранённый Resume | `C09`, `C10`, `C13` | список R1.2 принят; переход к saved Resume R1.3 принят D017; UI не проверен |
 | `REQ-RESUME-02` | `R1.3`, `R3.3`, `R5.1a`, `R5.1b`, `R5.1c` | `S-RESUME-WIZARD`, `S-RESUME-EDITOR` | `C04`, `C10`, `C12` | low-fi R1.3 принят D017; UI не проверен |
@@ -863,19 +874,19 @@ prototype/runtime evidence ещё не создавалось. История и
 | `REQ-EDITOR-01` | `R1.3`, `R1.4`, `R5.1c`, `R5.2a`, `R5.3a`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C10`, `C12`, `C16` | R1.3 принят D017; H18/H22/H24–H26 R1.4: секции/preview/publication, принято D020; runtime не проверен |
 | `REQ-EDITOR-02` | `R1.3`, `R1.4`, `R3.3`, `R5.1c`, `R5.2a`, `R5.3b`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C12`, `C15`, `C16` | R1.3 принят D017; H07/H22 R1.4: короткие действия/перестановка, принято D020; native/scale 2 не проверены |
 | `REQ-EDITOR-03` | `R1.3`, `R1.4`, `R5.1c`, `R5.3a`, `R5.4a`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C10`, `C12`, `C-MODEL` | R1.3 принят D017; H03/H07/H08/H18/H26/H34 R1.4: working/local/sync/errors, принято D020; runtime не проверен |
-| `REQ-TECH-01` | `R3.2`, `R4.3`, `R5.1b`, `R5.3c`, `R6.4` | `S-PROJECTS`, `S-RESUME-EDITOR`, `S-PREVIEW`, PUBLIC | `C08`, `C16` | целевое; не проверено в UI |
-| `REQ-TECH-02` | `R3.2`, `R3.4` | `S-PROJECTS`, EDITORS; PUBLIC | `C08`, `C14`, `C-ASSET` | целевое; не проверено в UI |
-| `REQ-VISUAL-01` | `R2.1`, `R2.2`, `R2.3`, `R3.4` | ВСЕ | `C01`, `C04`, `C05`, `C-PALETTE` | Бренд A принят D024; связанные A / Cyber Editorial pilots — основа R3. R3.1 foundations проверены, awaiting_review D025; полный продукт не проверен |
+| `REQ-TECH-01` | `R3.2`, `R4.3`, `R5.1b`, `R5.3c`, `R6.4` | `S-PROJECTS`, `S-RESUME-EDITOR`, `S-PREVIEW`, PUBLIC | `C08`, `C16` | R3.2 TechnologyBadge144:180/MoreTechnologies144:198: icon+Name TEXT, compact+N48/full wrap,148:894 PASS; integration pending |
+| `REQ-TECH-02` | `R3.2`, `R3.4` | `S-PROJECTS`, EDITORS; PUBLIC | `C08`, `C14`, `C-ASSET` | Lucide/Simple Icons и official Flutter/Dart sources/license caveats проверены; editable vectors+liveName, Dark/Light render PASS; native exports pending |
+| `REQ-VISUAL-01` | `R2.1`, `R2.2`, `R2.3`, `R3.4` | ВСЕ | `C01`, `C04`, `C05`, `C-PALETTE` | Бренд A D024; R3.1 done D028, Manrope; R3.2 components148:340/148:894 awaiting_review D029; полный продукт pending |
 | `REQ-VISUAL-02` | `R2.1`, `R2.3`, `R3.4` | `S-HOME`, `S-SETTINGS`, PUBLIC; `S-WEB-LANDING` | `C-ASSET`, `C-PALETTE` | Сопоставимые R2.1 fixtures приняты D022; бренд A выбран D024, B сохранён как история; media/web позднее |
 | `REQ-VISUAL-03` | `R2.1`, `R2.3`, `R7.3` | ВСЕ | `C04`, `C05`, `C-MOTION` | R2.1: нет dashboard/hero/fake avatar/HUD; static dark review PASS; motion/full product позднее |
-| `REQ-PALETTE-01` | `R2.1`, `R2.2`, `R3.1`, `R3.4` | ВСЕ | `C-PALETTE` | R3.1: 25 прежних color variables обеих тем и locked Dark HEX сохранены; новые semantic aliases, active использует surfaceHover. Foundations awaiting_review D025; runtime pending |
-| `REQ-PALETTE-02` | `R2.1`, `R2.2`, `R3.1`, `R3.2`, `R3.4` | ВСЕ | `C14`, `C-PALETTE` | D020 акценты сохранены. R3.1: 64 text/16 outline-focus pairs PASS; 246 actual painted texts ≥4.5. Dark textMuted ограничен background, metadata использует textMeta; full a11y pending |
-| `REQ-PALETTE-03` | `R2.2`, `R3.1`, `R3.4` | ВСЕ | `C14`, `C-PALETTE` | R3.1 Light foundations: четыре surfaces, все text roles/focus/control boundaries проверены, lime CTA получает Ink stroke. Awaiting_review D025; full component states позднее |
-| `REQ-TYPE-01` | `R2.1`, `R2.2`, `R3.1`, `R3.4`, `R7.2` | ВСЕ | `C15`, `C16` | R3.1: девять Noto roles40–12, body16/24; reuse8 UI styles, new display40/48. Static ru reflow16/32 PASS, шесть examples bound touch48; OS scaling/keyboard ещё pending |
-| `REQ-TYPE-02` | `R2.1`, `R2.2`, `R3.1`, `R3.4` | ВСЕ | `C14`, `C16`, `C-ASSET` | Noto SIL OFL1.1/pubspec прочитаны; ru/en live specimens обеих тем и 246 paints проверены. Noto предложен, font choice/native shaping pending |
+| `REQ-PALETTE-01` | `R2.1`, `R2.2`, `R3.1`, `R3.4` | ВСЕ | `C-PALETTE` | D028/R3.2: все93 прежних variable values сохранены;4 technology vars не меняют бренд, locked Dark HEX PASS; runtime pending |
+| `REQ-PALETTE-02` | `R2.1`, `R2.2`, `R3.1`, `R3.2`, `R3.4` | ВСЕ | `C14`, `C-PALETTE` | R3.2 audit4boards:410 texts ≥4.5,36 painted stroke samples/14 markers ≥5.282; actual modes/bindings PASS; full native a11y pending |
+| `REQ-PALETTE-03` | `R2.2`, `R3.1`, `R3.4` | ВСЕ | `C14`, `C-PALETTE` | R3.2 Light: accessible marker accentText, focus/control outlines и все labels PASS; full component/native states pending |
+| `REQ-TYPE-01` | `R2.1`, `R2.2`, `R3.1`, `R3.4`, `R7.2` | ВСЕ | `C15`, `C16` | D028 Manrope9 core roles40–12/body16/24 + navLabel12/18; labels controls16, touch48, long-title Hug PASS; OS scaling pending |
+| `REQ-TYPE-02` | `R2.1`, `R2.2`, `R3.1`, `R3.4` | ВСЕ | `C14`, `C16`, `C-ASSET` | D027 OFL/subsets3кандидатов проверены; D028 продолжение закрепило рекомендованный Manrope. 244 foundation texts обновлены; Wordmark A сохранён, native shaping pending |
 | `REQ-LOGO-01` | `R2.1`, `R2.2`, `R2.3` | `S-HOME`, `S-SETTINGS`, `S-PUBLIC-RESUME`; app icon | `C-ASSET` | Бренд A принят D024: Mark110:282/Wordmark111:284/AppIcon111:297, прежние IDs/variants сохранены в StackCard / v2. B и legacy — история; native exports pending |
 | `REQ-LOGO-02` | `R2.1`, `R2.2`, `R2.3`, `R3.4` | `S-HOME`, `S-SETTINGS`, `S-PUBLIC-RESUME`; app icon | `C-ASSET`, `C14` | R2.2 small-size/восемь UI contexts проверены, A принят D024; cleaner16/UI32, Light Ink. Foundations используют Wordmark A; native exports pending |
-| `REQ-FIGMA-01` | `R3.1`, `R3.2`, `R3.3`, `R3.4` | Figma components; ВСЕ | `C-ASSET`, `C-SCOPE` | R3.1 page121:7, два editable Auto Layout boards, Dark/Light modes/alias scopes, 7variables/1style; reused collections/styles. Полные components/variants R3.2–R3.4 todo |
+| `REQ-FIGMA-01` | `R3.1`, `R3.2`, `R3.3`, `R3.4` | Figma components; ВСЕ | `C-ASSET`, `C-SCOPE` | DS121:7:9 sets/44variants,2 singles/14icons,10 Manrope styles; TEXT/SWAP/metric/theme bindings PASS. R3.2 awaiting_review, R3.3–R3.4 todo |
 | `REQ-FIGMA-02` | `R0.2`, `R0.3`, `R1.1`, `R7.4` | Документы; Figma v2 | `C-SCOPE` | зафиксировано R0 |
 | `REQ-ADAPT-01` | `R7.2` | ВСЕ | `C11`, `C15`, `C16` | целевое; не проверено в UI |
 | `REQ-ADAPT-02` | `R1.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4`, `R7.2` | ROOT; tablet Flutter | `C11`, `C16` | целевое; не проверено в UI |
@@ -887,7 +898,7 @@ prototype/runtime evidence ещё не создавалось. История и
 | `REQ-WEB-03` | `R6.3`, `R7.2` | `S-WEB-WORKSPACE` | `C12`, `C16`, `C-WEB` | целевое; не проверено в UI |
 | `REQ-WEB-04` | `R6.4`, `R9.2` | PUBLIC | `C09`, `C17`, `C-WEB` | целевое; не проверено в UI |
 | `REQ-REFERENCE-01` | `R0.2`, `R0.5` | Документы | `C-ASSET`, `C-SCOPE` | зафиксировано R0 |
-| `REQ-REFERENCE-02` | `R0.2`, `R2.2`, `R3.1`, `R3.2`, `R3.4` | Документы; `S-PROJECTS`, EDITORS; PUBLIC | `C-ASSET`, `C-SCOPE` | R0 sources сохранены; Noto bundled fonts/pubspec и SIL OFL1.1 прочитаны для R2.2/R3.1. Нет новых assets/dependencies, native shaping отдельно |
+| `REQ-REFERENCE-02` | `R0.2`, `R2.2`, `R3.1`, `R3.2`, `R3.4` | Документы; `S-PROJECTS`, EDITORS; PUBLIC | `C-ASSET`, `C-SCOPE` | D027 font sources/OFL; R3.2 pinned Lucide/Simple Icons и official knockout archives/licensing caveats,153:6036 notices; runtime assets/dependencies не добавлены |
 | `REQ-PRESERVE-01` | `R0.1`, `R0.5`, `R8.1`, `R9.2` | Документы; repository/Figma | `C-SCOPE` | зафиксировано R0 |
 | `REQ-PRESERVE-02` | `R0.1`, `R8.1`, `R9.1`, `R9.2` | ВСЕ | `C11`, `C14`, `C16`, `C-SCOPE` | зафиксировано R0 |
 | `REQ-PRESERVE-03` | `R8.3a`, `R8.3b`, `R8.3c`, `R8.3d`, `R8.3e`, `R8.3f`, `R8.4a`, `R8.4b`, `R8.4c`, `R8.4d`, `R8.4e`, `R8.5a`, `R8.5b`, `R8.5c`, `R9.1`, `R9.2` | ROOT; EDITORS; `S-ACCOUNT`, `S-GITHUB`, `S-GITHUB-REVIEW`, PUBLIC | `C10`, `C-GITHUB`, `C-SCOPE` | целевое; не проверено в UI |
