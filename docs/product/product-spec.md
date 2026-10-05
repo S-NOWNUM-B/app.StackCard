@@ -515,14 +515,20 @@ errors/unsaved/public access. Ответом пользователя приня
 пользователь поручил перейти к следующему этапу. Закреплена рекомендация Manrope;
 [Dark/Light foundations](../redesign/screens.md#закреплённая-типографика-manrope-d028)
 обновлены, исходная палитра/Wordmark A сохранены. Это Figma UI, bundled fonts
-пока прежние. **R3.2 — awaiting_review D029**:
+пока прежние. **R3.2 — done D030**:
 [Navigation/cards/TechnologyBadge](../redesign/screens.md#r32--навигация-карточки-и-technologybadge)
 содержат9 sets/44variants,4 root labels,3 Home filters, gear/back, отдельное Copy
 и badges icon+text/+N/full wrap. Итоговые410 texts contrast/bounds PASS;
-R3.3–R3.4, native scaling/routing/clipboard/icon exports ещё pending.
+**R3.3 — awaiting_review D031**:
+[формы, stepper, фото и секции](../redesign/screens.md#r33--формы-stepper-фото-и-секции)
+содержат10 sets/67 variants, PhotoSourceSheet и6 SVG icons; четыре Dark/Light
+boards показывают keyboard и static ×2 reflow.513 texts/103 strokes, bounds,
+references и touch audit PASS. Фотография — обозначенный generated_demo,
+не пользовательский upload. R3.4, native keyboard/media/OS scaling/routing/
+clipboard/icon exports ещё pending.
 Новая URL route scheme и миграция adapter остаются предпосылкой R8.
 Runtime/schema не изменены. Проверки и ограничения — в
-[результатах R3.2](../redesign/plan.md#фактический-результат-r32-d028d029);
+[результатах R3.3](../redesign/plan.md#фактический-результат-r33-d030d031);
 предыдущие цветовые правки и результаты R2 сохранены отдельно.
 Точка остановки функционального roadmap —
 после Phase 10, перед Phase 11 Media; Google/reset/iOS приёмка Phase 7 остаётся

@@ -25,6 +25,7 @@
 - [R2.3 — Принятый бренд и направление](#r23--принятый-бренд-и-направление)
 - [R3.1 — Цвета, типографика и метрики](#r31--цвета-типографика-и-метрики)
 - [R3.2 — Навигация, карточки и TechnologyBadge](#r32--навигация-карточки-и-technologybadge)
+- [R3.3 — Формы, stepper, фото и секции](#r33--формы-stepper-фото-и-секции)
 - [Переходы и действия](#переходы-и-действия)
 - [Состояния и компоненты](#состояния-и-компоненты)
 - [Реестр Figma](#реестр-figma)
@@ -35,7 +36,7 @@
 
 Срез R0 — 2026-10-05, статический аудит; далее добавлены результаты R1.1–R1.4
 и шесть визуальных пилотов R2.1, brand specimens R2.2, выбор A в R2.3
-и Dark/Light foundations R3.1.
+и Dark/Light foundations R3.1, components R3.2–R3.3.
 `S-*` — ID целевого экрана, а не реализованный route. Новые route paths и
 runtime screen IDs не назначены; созданные IA и low-fi frames перечислены отдельно. Конкретные
 paths согласуются вместе с guards/deep links перед переносом. Существующие пути
@@ -384,7 +385,7 @@ input retention/Back reactions, keyboard, scale 2/tablet, reopen/storage/sync
 и publication не проверены. Реальный `resumeText` editor остаётся прежним,
 GAP-DATA-01/GAP-MEDIA-01 и остальные предпосылки реализации сохранены.
 R1.3 принята D017; R1.4 принята после правок D020, показана ниже.
-Сравнение R2.1 принято D022; бренд A и R2 приняты D024; R3.1 done D028; R3.2 awaiting_review D029; runtime не перенесён.
+Сравнение R2.1 принято D022; бренд A и R2 приняты D024; R3.1 done D028; R3.2 done D030; R3.3 awaiting_review D031; runtime не перенесён.
 
 ---
 
@@ -515,7 +516,7 @@ real photo, clipboard/native share или безопасность anonymous rea
 global project featured/visible и username publication adapter прежние;
 GAP-DATA-01..03/GAP-PUB-01/02/GAP-URL-01 остаются предпосылками реализации R8.
 
-R1.1–R1.4 done, D020; R2 done D024, R3.1 done D028; R3.2 awaiting_review D029. Runtime не перенесён,
+R1.1–R1.4 done, D020; R2 done D024, R3.1 done D028; R3.2 done D030; R3.3 awaiting_review D031. Runtime не перенесён,
 DESIGN_READY/REDESIGN_DONE не установлены.
 
 ---
@@ -920,7 +921,7 @@ Manrope selected. Native fonts/pubspec остаются прежними до R8
 
 ## R3.2 — Навигация, карточки и TechnologyBadge
 
-**Статус: `awaiting_review`, D029.** DS page121:7, Manrope, принятый бренд A:
+**Статус: `done`, D030; исходный срез D029.** DS page121:7, Manrope, принятый бренд A:
 [Navigation and States148:340](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-340)
 **900×1570**, Dark148:344 / Light148:619;
 [Cards and TechnologyBadge148:894](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-894)
@@ -999,9 +1000,113 @@ propertyUnbound0/stylesMissing0. Dark/Light renders просмотрены по�
 общая выборка558 texts, contrast/bounds/property bindings/touch targets — PASS.
 Это структурная и визуальная проверка390px, не native a11y certification.
 
-R3.2 ждёт приёмки; R3.3/forms и R3.4/full states/adapt/motion остаются todo.
+R3.2 принята D030; ниже добавлен следующий срез R3.3. R3.4/full states/adapt/motion остаётся todo.
 Runtime/fonts/assets/backend не переносились. OS scaling, keyboard, native
 clipboard/Back/SafeArea и responsive pages проверяются в следующих своих фазах.
+
+---
+
+## R3.3 — Формы, stepper, фото и секции
+
+**Статус: `awaiting_review`, D031.** R3.2 принята поручением продолжить D030;
+разрешена только R3.3. Page121:7, Manrope/brand A; четыре editable boards:
+
+| **Board / проверенный ID** | **Размер и specimen** |
+|:---|:---|
+| [Forms163:1334](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1334) | 900×2219; Dark163:1338 / Light163:1340, fields/selection/settings/actions |
+| [Editing163:1576](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1576) | 900×2532; Dark163:1580 / Light163:1582, step2/photo/sections/link/add/Save |
+| [Keyboard163:2060](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-2060) | 900×1193; Dark163:2064 / Light163:2066, fixtures163:2068/163:2101 по390×844 |
+| [Scale166:1988](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=166-1988) | 900×1103; fixtures166:1994/166:2016 по390×844, text ×2 и reserved keyboard264h |
+
+Review показывает instances; layout containers связывают их auto-layout.
+Scale action bar — отдельная композиция исходных ActionButton instances,
+проверяющая измеренные widths; это stress fixture, не новая продуктовая кнопка.
+Masters находятся вне review: x200/y8900–13048, icons y8750. Палитра и branding
+R2 не менялись. Broad lifecycle/motion и full screens/flows ещё R3.4/R4–R5.
+
+### Формы и общие контролы
+
+| **Компонент / ID** | **Variants / свойства** | **Контракт** |
+|:---|:---|:---|
+| ActionButton160:1106 | Role=Primary/Secondary/Quiet/Danger × Default/Pressed/Focus/Unavailable =16; Label TEXT | Min48h/Hug, горизонтальные siblings; focus вне Face с neutral gap, причина unavailable у owner |
+| TextField160:1157 | Kind=Single/Multiline × Empty/Filled/Focus/Error/Unavailable =10; Label/Value/Helper TEXT | Постоянный label, single min56, multiline min120/Hug; input/error не только цвет |
+| SelectField160:1190 | Default/Focus/Error/Unavailable =4; Label/Value/Helper TEXT | Whole control min56, long values wrap; короткий выбор/sheet, helper объясняет отсутствие вариантов |
+| SelectionRow160:1266 | Kind=Checkbox/Switch × Selected=No/Yes × Default/Focus/Unavailable =12; Label/Helper TEXT | Whole row min56, marker24 или track40×24 informational внутри hit area; check/knob position |
+| SettingsRow160:1313 | Default/Focus/Unavailable =3; Icon SWAP, Label/Value TEXT | Whole row min64; value под label, focused settings group и source/add action |
+| StepIndicator160:1279 | Complete/Current/Upcoming =3; Step/Label TEXT | Info mark32; это не32px tap target и не процент готовности документа |
+| WizardStepper161:1462 | Active=1..5 =5 | Профиль → Контакты → Опыт/образование → Технологии/проекты → Просмотр; caption выводится из Active |
+| PhotoControl161:1564 | Photo=Absent/Selected × Default/Focus/Unavailable =6 | Optional no-photo, choose/replace/delete, отдельный Show photo switch; state copy следует Photo |
+| PhotoSourceSheet161:1565 | Single component | Profile/gallery/camera через SettingsRow; cancel не меняет документ, permissions — runtime target |
+| CollectionRow161:1850 | Visible=Yes/No × Position=First/Middle/Last =6; Title/Subtitle TEXT, ShowRemove BOOLEAN | Edit48/drag48, «Выше/Ниже»48+; первый/последний элемент объясняет недоступность, visibility относится к документу |
+| EditorActionBar161:1872 | Mode=Focused/Wizard =2; Status TEXT | Focused Отмена/Сохранить; Wizard Назад/Пропуск/Дальше, горизонтально48+, Status задаёт owner |
+
+Всего10 sets/67 variants и один source-sheet component; максимальная matrix16.
+При выборе варианта Label/Value/Helper/Status получает реальные данные от caller;
+Figma TEXT default не заменяет owner state. Step caption и photo state copy
+не вынесены в независимые TEXT props, чтобы variant merge не давал неверный шаг
+или «Можно без фото» над выбранным портретом. CollectionRow вложенная
+SelectionRow сохраняет собственный Label/Helper API; refs не пишутся на sublayer.
+
+Прежние `spacing/*` и `radius/*` связаны с gap/padding/radius; общий новый
+Metrics token `size/inputHeight=56` / VariableID160:1057, WIDTH_HEIGHT scope,
+WEB `var(--size-input-height)` — design handoff. Multiline120, portrait80,
+step32 и switch geometry40×24 фиксированы осознанно. Всего98 vars/50 styles;
+все93 исходных variable values сверены с baseline, drift0.
+
+### Keyboard, крупный текст и смысл действий
+
+Focused edit не перезапускает wizard; Back сохраняет working input, необязательный
+шаг имеет Skip. Save сохраняет документ локально; Apply меняет working state,
+Sync и Publish — отдельные действия. R3.3 не симулирует их успешное выполнение.
+«Убрать» удаляет association с документом, не базовый Project/профиль/ссылку.
+Новая ссылка открывает форму с именем, URL и типом; публичная почта отделена
+от login email/OAuth. Drag и «Выше/Ниже» имеют один смысл; сортировка невозможна
+в недоступном направлении. Вариант without-photo не блокирует публикацию.
+
+Keyboard fixture: header72 + viewport394 + Save bar114 + keyboard264 =844;
+bar заканчивается на y580, клавиатура начинается y580. Viewport прокручивается
+при реализации, fixed toolbar не участвует в этом scroll. Long labels/values
+растут по высоте. Здесь есть статический резерв, не работающая системная клавиатура.
+
+Static ×2:12 явных overrides Manrope16→32/14→28/12→24 только внутри Scale board;
+normal shared styles не менялись. Focused field337h помещается в viewport427h
+с padding20; helper полностью виден. Action bar153h начинается y427 и заканчивается
+y580. Подписи «Отмена»120px/«Сохранить»170px измерены в Manrope32; buttons144/198w
+с gap8 сохраняют целые слова и соседний горизонтальный уровень. В stress bar
+использованы исходные button instances с нужными widths, не detached copies.
+Native TextFormField horizontal scroll/caret, keyboard resize/safe area,
+scroll-to-focus и TalkBack/VoiceOver остаются проверками R8; Figma wrap URL
+не обещает такое же отображение native single-line input.
+
+### Фото, источники и проверка R3.3
+
+Selected state использует обозначенный «Демопортрет · вымышленный человек»:
+[PNG](assets/r33-demo-portrait.png), [source/prompt/SHA256](assets/r33-demo-portrait.json).
+Новый portrait создан built-in image_gen.imagegen,1254×1254, исходные bytes
+сохранены; raster загружен через upload_assets, не network-fetch внутри plugin.
+Source rectangle160:1314, imageHashc5809a5c0f968bd8ed1f163a5adfeb2d0b2a077b.
+Это visual fixture, не фотография пользователя и не реализованный picker/storage.
+Profile/gallery/camera, replace/remove/cancel/permission/persistence входят
+в последующие реальные flows и prerequisite media scope; готовность не заявлена.
+
+Шесть новых Lucide mains: camera160:1022, user-round160:1026,
+chevron-down160:1030, grip-vertical160:1033, pencil160:1049, plus160:1053.
+Точные pinned SVG paths, semantic stroke и полные ISC/MIT notices сохранены;
+[источники](references.md#assets-r33), provenance153:6036 расширен до1200×1288.
+Check/image переиспользованы из R3.2; runtime assets/dependencies не добавлены.
+
+Финальный audit всех67 variant masters, sheet и четырёх boards: **513 видимых
+texts**, minimum **4.8329098110:1**; **103 control/selection strokes**,
+minimum **4.3645648113:1**. Contrast/bounds/overlaps/bad property refs/unbound
+solid paints/missing normal styles —0. **160 interactive samples ≥48×48**.
+12 stress font overrides учитываются отдельно как намеренная проверка ×2.
+Все четыре итоговых renders Dark/Light просмотрены; C06/C07/C12/C15 и C16 static
+подтверждены на component specimens. Это не native a11y certification.
+
+R3.3 ждёт приёмки D031; R3.4 — следующая отдельная задача. Полные hi-fi flows,
+prototype/runtime, OS text scaling, media permission/persistence и реальная
+reorder/Save остаются непроверенными в своих этапах. Flutter/pubspec/Firestore
+не менялись; DESIGN_READY/REDESIGN_DONE ещё не установлены.
 
 ---
 
@@ -1098,9 +1203,13 @@ Home/Settings/Projects новой прежней итерации и legacy land
 | Design v2 / DS / R3.1 / Foundations | Page121:7; [123:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=123-7),1400×1657; Dark123:13/Light123:22; Manrope/brand A, done D028 |
 | Design v2 / DS / R3.1 / Typography and Metrics | [125:19](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=125-19),1400×1423; Dark125:25/Light125:64; Manrope9 core roles + navigationLabel shared style, done D028 |
 | Design v2 / DS / R3.1 / Font Review | [138:19](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=138-19); historical Noto/Manrope/Golos specimens сохранены, выбран рекомендованный Manrope D028 |
-| Design v2 / DS / R3.2 / Navigation and States | [148:340](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-340),900×1570; Dark148:344/Light148:619, awaiting_review D029 |
-| Design v2 / DS / R3.2 / Cards and TechnologyBadge | [148:894](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-894),900×1565; Dark148:898/Light148:1043, awaiting_review D029 |
-| Design v2 / DS / R3.2 / Asset provenance | [153:6036](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=153-6036),1200×1202; source links + full Lucide ISC/MIT notices |
+| Design v2 / DS / R3.2 / Navigation and States | [148:340](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-340),900×1570; Dark148:344/Light148:619, done D030 |
+| Design v2 / DS / R3.2 / Cards and TechnologyBadge | [148:894](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-894),900×1565; Dark148:898/Light148:1043, done D030 |
+| Design v2 / DS / R3.2 / Asset provenance | [153:6036](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=153-6036),1200×1288 после R3.3; source links + full Lucide ISC/MIT notices/generated_demo provenance |
+| Design v2 / DS / R3.3 / Forms and Selection | [163:1334](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1334),900×2219, Dark163:1338/Light163:1340; awaiting_review D031 |
+| Design v2 / DS / R3.3 / Stepper Photo and Sections | [163:1576](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1576),900×2532, Dark163:1580/Light163:1582; awaiting_review D031 |
+| Design v2 / DS / R3.3 / Keyboard and Long Labels | [163:2060](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-2060),900×1193; fixtures390×844; awaiting_review D031 |
+| Design v2 / DS / R3.3 / Static text scale2 | [166:1988](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=166-1988),900×1103; Manrope ×2 stress, not OS scaling; awaiting_review D031 |
 | Финальные Design v2 frames | Ещё не созданы; IDs, variant/state и evidence добавляются после R4–R7, без подстановки legacy ссылок |
 
 Prototype reactions старой итерации не приняты и полностью не прогонялись в R0.

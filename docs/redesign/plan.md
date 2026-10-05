@@ -35,13 +35,18 @@ R1.4 и R1 — `done`. Поручение «переходи к следующе
 R2.1 и разрешило R2.2 (D022), без выбора A/B. Поручение «вариант бренда мне
 понавился А. приступай к следующей фазе» приняло бренд A и разрешило R3.1,
 D024: R2.2/R2.3/R2 done. Связанные пилоты A служат основой следующей фазы.
-Активна R3, текущая задача **R3.2 — `awaiting_review`**, D029:
+Активна R3, текущая задача **R3.3 — `awaiting_review`**, D031. Поручение
+«переходи к следующему этапу разраотки» после R3.2 принято как её приёмка
+и разрешение только R3.3, D030.
+Результаты R3.2:
 [Navigation/cards/TechnologyBadge](screens.md#r32--навигация-карточки-и-technologybadge)
-собраны и проверены в Dark/Light. Поручение «переходи к следующему этапу
+собраны и проверены в Dark/Light, R3.2 — done D030. Поручение «переходи к следующему этапу
 разраотки» после review R3.1 принято как её приёмка и разрешение R3.2, D028.
 Для продолжения закреплена рекомендация Manrope; отдельного сообщения с названием
-семейства не было. Палитра и Wordmark A сохранены. R3.3–R3.4 ещё todo;
-runtime/backend и Git mutations не входят в этот шаг.
+семейства не было. Палитра и Wordmark A сохранены.
+[Формы, stepper, фото и секции R3.3](screens.md#r33--формы-stepper-фото-и-секции)
+собраны в четырёх Dark/Light boards. R3.4 ещё todo; runtime/backend и
+Git mutations не входят в этот шаг.
 Ответ пользователя о постоянном адресе документа закрыл выбор политики D007
 (D019); реализация и точная схема URL остаются отдельной предпосылкой R8.
 Основная разработка функций приостановлена перед Phase 11 Media; открытая
@@ -56,7 +61,7 @@ R0 завершена после пользовательского разреш
 поручением продолжить; R1.2 принята после правок D015, R1.3 — поручением D017.
 R1.4 принята условным поручением D020 после проверки цветовых правок.
 Приёмка сравнения R2.1 сама по себе не означала выбора направления/логотипа;
-последующий прямой выбор A закрыл R2 (D024). Шрифт и полная DS ещё не приняты.
+последующий прямой выбор A закрыл R2 (D024). Manrope закреплён D028; полная DS ещё требует приёмки.
 
 R1–R7 создают UX, editable макеты и прототип. Только после пользовательского
 DESIGN_READY и отдельного разрешения R8 начинается перенос UI. R9 устанавливает
@@ -82,7 +87,7 @@ R4.7 и R8.2–R8.5 — группы отдельных задач с букве
 | R0 — Аудит и план | Комплект docs/redesign и сохранённая точка roadmap. Принята прямым поручением начать R1; D009. | done |
 | R1 — UX и информационная архитектура | IA и 88 low-fi экранов приняты; цветовые правки D020 выполнены. Постоянные адреса документов приняты D019; URL backend ещё не реализован. | done |
 | R2 — Визуальное направление | Принят бренд A D024; связанные пилоты A / Cyber Editorial — основа R3. A families закреплены с прежними IDs; B сохранён как история. R2.1–R2.3 done. | done |
-| R3 — Дизайн-система | R3.1 done D028, Manrope; R3.2 navigation/cards/badges проверены, awaiting_review D029. R3.3–R3.4 todo. | awaiting_review |
+| R3 — Дизайн-система | R3.1 done D028, Manrope; R3.2 done D030. R3.3 forms/stepper/photo/sections проверены, awaiting_review D031; R3.4 todo. | awaiting_review |
 | R4 — Основные экраны и настройки | Набор hi-fi full/empty/errors и focused settings screens. Принять roots и каждую settings группу; неподдерживаемые функции остаются target-design. | todo |
 | R5 — Создание, редактирование и публикация | Полные hi-fi flows с input/error/back/preview и отдельным Publish. Принять последовательно R5.1 → R5.2 → R5.3 → R5.4; уточнить delete/rename consequences. | todo |
 | R6 — Web | Полный web design visitor/owner flow, не один hero. Принять web-подачу и доступность CTA/download; URL scheme с GAP-URL-01. | todo |
@@ -194,13 +199,13 @@ low-fi R1.2/R1.3 приняты, R1.4 принята после цветовых
 
 **Решения пользователя:** Принять DS; выбрать шрифты после проверки кириллицы/латиницы и лицензии.
 
-**Статус фазы:** `awaiting_review` (R3.1 done D028; R3.2 awaiting_review D029; R3.3–R3.4 todo).
+**Статус фазы:** `awaiting_review` (R3.1 done D028; R3.2 done D030; R3.3 awaiting_review D031; R3.4 todo).
 
 | **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
 |:---|:---|:---|:---|:---|:---|:---|
 | R3.1 | REQ-PALETTE-01..03, REQ-TYPE-01..02, REQ-FIGMA-01 | [Foundations123:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=123-7), [Typography125:19](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=125-19), Font Review138:19; page121:7 | После сравнения трёх семейств закреплён Manrope D028. 244 foundation texts обновлены; прежние variables/styles и Wordmark A сохранены. | C-PALETTE, C14, C-ASSET; C16 static | [Текущая типографика](screens.md#закреплённая-типографика-manrope-d028); повторные renders/contrast/bounds PASS. OS scaling/native shaping ещё pending. | done |
-| R3.2 | REQ-NAV-01..05, REQ-HOME-01..02, REQ-TECH-01..02, REQ-PROJECT-03 | [Navigation148:340](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-340), [Cards148:894](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-894); DS page121:7 | Четыре root labels, gear/back, три Home filters; document/project cards, Copy states, badge icon+text/+N/full wrap. 9 sets/44 variants, 2 single components/14 SVG icons. | C01–C05, C08, C11, C12, C14, C15, C-ASSET | [Metadata, bindings и renders](screens.md#r32--навигация-карточки-и-technologybadge) PASS; 164 новых specimen texts ≥4.5, overflow0. Native routing/clipboard/assets и responsive states pending. | awaiting_review |
-| R3.3 | REQ-EDITOR-01..03, REQ-RESUME-02..03, REQ-SETTINGS-02 | Предлагаемый DS / Forms-Stepper-Sections; S-RESUME-WIZARD/S-PROFILE | Fields/selectors/photo/stepper/settings rows, visible Save и reorder drag+Выше/Ниже. | C06, C07, C12, C15, C16 | Keyboard/long-label specimens и alternative-action сценарий. | todo |
+| R3.2 | REQ-NAV-01..05, REQ-HOME-01..02, REQ-TECH-01..02, REQ-PROJECT-03 | [Navigation148:340](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-340), [Cards148:894](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-894); DS page121:7 | Четыре root labels, gear/back, три Home filters; document/project cards, Copy states, badge icon+text/+N/full wrap. 9 sets/44 variants, 2 single components/14 SVG icons. | C01–C05, C08, C11, C12, C14, C15, C-ASSET | [Metadata, bindings и renders](screens.md#r32--навигация-карточки-и-technologybadge) PASS; 164 новых specimen texts ≥4.5, overflow0. Native routing/clipboard/assets и responsive states pending. | done D030 |
+| R3.3 | REQ-EDITOR-01..03, REQ-RESUME-02..03, REQ-SETTINGS-02 | [Forms163:1334](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1334), [Editing163:1576](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1576), Keyboard163:2060 / Scale166:1988; DS121:7 | 10 sets/67 variants, PhotoSourceSheet,6 Lucide icons; поля/выбор/фото/пять шагов, Save над клавиатурой, drag+Выше/Ниже. | C06, C07, C12, C15, C16 static | [Компоненты и фактическое evidence](screens.md#r33--формы-stepper-фото-и-секции):513 texts ≥4.5,103 strokes ≥3, bounds/overlap/references/touch PASS. Native keyboard/media/scaling и полные flows pending. | awaiting_review |
 | R3.4 | REQ-MOTION-01..02, REQ-ADAPT-01..03, REQ-EDITOR-03 | Предлагаемый DS / States-Motion; S-PUBLISH/S-SHARE | Empty/loading/error/offline/saved/synced/published variants; 180–280 ms и статические equivalents. | C10, C13, C-MOTION | State matrix, motion timings и reduced-motion specimens. | todo |
 
 ### R4 — Основные экраны и настройки
@@ -945,6 +950,56 @@ textMuted не назначается автоматически. Light-theme р
 
 ---
 
+### Фактический результат R3.3, D030–D031
+
+Поручение продолжить после R3.2 принято как её приёмка и разрешение только
+R3.3, D030. Созданы [четыре review boards](screens.md#r33--формы-stepper-фото-и-секции)
+на DS121:7: Forms163:1334, Editing163:1576, Keyboard163:2060 и Scale166:1988.
+Каждый показывает реальные instances в Dark/Light; main components отдельно.
+R3.3 — awaiting_review D031, R3.4 — todo; полная R3 ещё не принята.
+
+Новый набор содержит10 sets/67 variants, один PhotoSourceSheet и6 Lucide icons.
+Поля single/multiline, selectors, checkbox/switch, SettingsRow, пять шагов,
+фото/no-photo и CollectionRow используют прежние Manrope/styles/theme roles.
+Видимые действия сохраняют минимум48×48; Label/Value/Helper и причины ошибок
+читаемы. Drag имеет альтернативы «Выше / Ниже»; первый/последний элемент
+объясняет недоступное направление. «Убрать» меняет связь с документом,
+не удаляет базовую ссылку или Project. Добавление ссылки ведёт к форме label+URL.
+
+Keyboard fixtures390×844: Save bar114h заканчивается на y580, сразу перед
+резервом264h. Static ×2 fixture использует 12 намеренных font-size overrides
+16→32,14→28,12→24 и отдельную композицию из исходных button instances:
+«Отмена»144w / «Сохранить»198w, измеренные надписи120/170px не ломаются внутри
+слов. Action bar153h также заканчивается y580; весь focused field/helper виден.
+Это Figma reflow, а не подтверждение native keyboard/OS scaling.
+
+Финальный audit15 roots (все67 masters, standalone sheet, четыре boards):
+**513 видимых texts**, minimum **4.8329098110:1**, contrast failures0;
+**103 control/selection stroke samples**, minimum **4.3645648113:1**, failures0.
+**160 interactive samples ≥48×48**; bounds/overlaps/bad references/unbound
+solid paints/missing normal styles — 0. Все четыре итоговых renders просмотрены.
+50 прежних text styles сохранены; всего98 variables, новый `size/inputHeight=56`
+в Metrics с WIDTH_HEIGHT scope и WEB syntax. Все93 исходных variable values
+сверены с baseline: drift0; четыре technology roles R3.2 не менялись.
+
+Фото — вымышленный generated_demo, созданный встроенным image_gen и явно
+обозначенный в Selected state. [PNG](assets/r33-demo-portrait.png) и
+[metadata/prompt](assets/r33-demo-portrait.json) сохранены в репозитории;
+оригинальные bytes1254×1254/SHA256 сохранены. Raster загружен через upload_assets,
+imageHashc5809a5c0f968bd8ed1f163a5adfeb2d0b2a077b. Это specimen, не пользовательское
+фото и не camera/gallery/storage implementation. Полные ISC/MIT notices и
+source provenance расширены в153:6036; [источники](references.md#assets-r33).
+
+Документация: validator6 файлов PASS (локальные ссылки/anchors/hero/badges),
+78 requirement headings соответствуют78 trace rows, отсутствующие/дублирующиеся
+IDs не найдены. SHA256/размер PNG совпадают с metadata; git diff --check PASS.
+Runtime/pubspec/Firestore/backend не менялись. Native caret, scroll-to-focus,
+semantics/announcements, permission/picker/cancel/persistence, safe area и
+OS scaling ещё не проверены; full screens/flows относятся к R4–R5, motion и
+широкая state matrix — R3.4. Flutter tests для Figma/docs/assets не запускались.
+
+---
+
 ## Журнал решений
 
 | **ID / дата** | **Решение / источник** | **Статус и влияние** |
@@ -978,9 +1033,11 @@ textMuted не назначается автоматически. Light-theme р
 | D027 / 2026-10-05 | Повторный audit foundations и editable Font Review Noto Sans / Manrope / Golos Text | awaiting_review; board138:19, шесть390×588 specimens,82 texts contrast PASS. Цвета/styles сохранены; Manrope — рекомендация, пользовательский выбор не сделан; R3.2–R3.4 todo |
 | D028 / 2026-10-05 | «переходи к следующему этапу разраотки» после Font Review R3.1 | Поручение принято как приёмка review R3.1 и разрешение только R3.2. Для продолжения закреплён рекомендованный Manrope; отдельного сообщения с названием шрифта не было. R3.1 done; палитра/Wordmark A сохранены. R3.3/R3.4/runtime/Git mutations не разрешены |
 | D029 / 2026-10-05 | Editable Navigation/cards/TechnologyBadge R3.2 | awaiting_review; boards148:340/148:894, 9 sets/44 variants, 14 SVG icons. 410 actual texts/36 stroke samples/14 markers contrast PASS; bounds/property bindings/touch targets PASS. R3.3–R3.4 todo; native routing/clipboard/exports pending |
+| D030 / 2026-10-05 | «переходи к следующему этапу разраотки» после результата R3.2 | Принята R3.2; разрешена только R3.3 — формы, stepper, фото и секции. R3.4/R4/runtime/backend/Git mutations не разрешены |
+| D031 / 2026-10-05 | Editable forms/stepper/photo/sections R3.3 и keyboard/scale specimens | awaiting_review;163:1334/163:1576/163:2060/166:1988,10 sets/67 variants,1 sheet/6 SVG icons.513 texts/103 strokes/160 interactive samples PASS; bounds/reference/normal styles PASS. Фото generated_demo, native keyboard/media/OS scaling pending; R3.4 todo |
 
 Новый scope change записывается отдельной строкой с причиной, requirement IDs,
 влиянием на задачи/gaps и явным решением пользователя. Исторические результаты
-не переписываются. Текущая точка приёмки — R3.2; следующий отдельный шаг после
-её review — R3.3: формы, stepper и секции. R3.1 done D028; полная DS и итоговые
+не переписываются. Текущая точка приёмки — R3.3; следующий отдельный шаг после
+её review — R3.4: состояния, адаптивность и motion. R3.2 done D030; полная DS и итоговые
 gates ещё требуют приёмки.

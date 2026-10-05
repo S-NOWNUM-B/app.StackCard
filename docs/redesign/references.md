@@ -20,6 +20,7 @@
 - [Проверки доступности](#проверки-доступности)
 - [Шрифты R3.1](#шрифты-r31)
 - [Иконки R3.2](#иконки-r32)
+- [Assets R3.3](#assets-r33)
 - [Применение в StackCard](#применение-в-stackcard)
 - [Ограничения и следующий шаг](#ограничения-и-следующий-шаг)
 
@@ -349,6 +350,30 @@ images/href/external paints; badges используют настоящее те
 Все четыре технологии показываются только в badges, без endorsement или смешивания
 с собственным логотипом. React/TypeScript color roles остаются `technology/*`,
 не новой брендовой палитрой. Native distribution notices/exports — отдельный gate R8.
+
+---
+
+## Assets R3.3
+
+Срез2026-10-05, D031. R3.3 расширяет прежний набор шестью нужными Lucide SVG:
+camera, user-round, chevron-down, grip-vertical, pencil, plus.
+Источник — тот же [pinned commit500620a2](https://github.com/lucide-icons/lucide/tree/500620a2e8123f8d1db191538886dc0c223f69a9/icons)
+и [LICENSE](https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/LICENSE).
+XML/viewBox24/vector-only/no scripts/href/external paint проверены; оригинальные
+paths сохранены. ISC для всех, chevron-down/plus также MIT Feather-derived;
+полные notices уже есть в153:6036, source inventory расширен. Роли stroke
+семантические; собственная геометрия вместо оригинальных icons не рисовалась.
+
+PhotoControl использует собственный [демопортрет](assets/r33-demo-portrait.png),
+созданный built-in image_gen.imagegen для этого specimen. [Metadata](assets/r33-demo-portrait.json)
+сохраняет точный prompt, source/type=generated_demo,1254×1254 PNG и SHA256
+`4579846cf4006cfb403562a1ecfb9ee4920da4e9e9c2fc8f974b9509487ff67d`.
+Bytes скопированы без редактирования, raster загружен через upload_assets;
+выбранное фото явно подписано «Демопортрет · вымышленный человек».
+Изображение не обозначается фотографией пользователя или лицензированным stock;
+не входит в Flutter assets/pubspec. Реальные camera/gallery/profile media,
+permission/storage/cancel и фотографии конечного пользователя — будущая реализация.
+Generated demo не заменяет подтверждение прав на реальные пользовательские assets.
 
 ---
 
