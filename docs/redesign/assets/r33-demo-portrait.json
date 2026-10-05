@@ -1,0 +1,13 @@
+{
+  "type": "generated_demo",
+  "source": "built-in image_gen.imagegen",
+  "path": "r33-demo-portrait.png",
+  "width": 1254,
+  "height": 1254,
+  "format": "PNG",
+  "bytes": 2129958,
+  "sha256": "4579846cf4006cfb403562a1ecfb9ee4920da4e9e9c2fc8f974b9509487ff67d",
+  "transparent_background": false,
+  "purpose": "Explicit fictional demo portrait for Figma R3.3 PhotoControl specimens only",
+  "prompt": "Use case: photorealistic-natural\nAsset type: a clearly fictional demo portrait for a Figma PhotoControl specimen, one new image.\nPrimary request: one photorealistic square-cropped head-and-shoulders professional portrait of a fictional adult man, approximately 30 years old, with a neutral studio backdrop and a matte neutral shirt.\nComposition/framing: square 1:1, centered head and upper shoulders, entire head visible with modest headroom; face clearly readable when the image is used as a small profile thumbnail.\nLighting/mood: soft natural daylight, relaxed professional expression, realistic skin texture and natural fabric, understated photographic finish.\nConstraints: invent a new fictional person; do not resemble any known or real person. No logos, text, watermark, props, badges, or decorative graphic elements. Opaque neutral backdrop; do not make background transparent. Generate only one portrait. Do not edit an existing image."
+}

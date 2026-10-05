@@ -24,6 +24,7 @@
 - [R2.2 — Знак, написание и иконка приложения](#r22--знак-написание-и-иконка-приложения)
 - [R2.3 — Принятый бренд и направление](#r23--принятый-бренд-и-направление)
 - [R3.1 — Цвета, типографика и метрики](#r31--цвета-типографика-и-метрики)
+- [R3.2 — Навигация, карточки и TechnologyBadge](#r32--навигация-карточки-и-technologybadge)
 - [Переходы и действия](#переходы-и-действия)
 - [Состояния и компоненты](#состояния-и-компоненты)
 - [Реестр Figma](#реестр-figma)
@@ -198,7 +199,7 @@ GAP-URL-01 (route scheme/миграция), global delete Project consequences
 Portfolio открывает выбранное Resume только через его опубликованную версию;
 выбор draft не разрешает публичный доступ. R1.1 принята на уровне IA;
 это не готовность backend. R1.2 принята с правками D015, R1.3 — D017,
-R1.4 принята после цветовых правок D020; R2 `done` D024, R3.1 `awaiting_review` D025;
+R1.4 принята после цветовых правок D020; R2 `done` D024, R3.1 `done` D028; R3.2 `awaiting_review` D029;
 DESIGN_READY/REDESIGN_DONE не установлены.
 
 ---
@@ -383,7 +384,7 @@ input retention/Back reactions, keyboard, scale 2/tablet, reopen/storage/sync
 и publication не проверены. Реальный `resumeText` editor остаётся прежним,
 GAP-DATA-01/GAP-MEDIA-01 и остальные предпосылки реализации сохранены.
 R1.3 принята D017; R1.4 принята после правок D020, показана ниже.
-Сравнение R2.1 принято D022; бренд A и R2 приняты D024; R3.1 awaiting_review D025; runtime не перенесён.
+Сравнение R2.1 принято D022; бренд A и R2 приняты D024; R3.1 done D028; R3.2 awaiting_review D029; runtime не перенесён.
 
 ---
 
@@ -514,7 +515,7 @@ real photo, clipboard/native share или безопасность anonymous rea
 global project featured/visible и username publication adapter прежние;
 GAP-DATA-01..03/GAP-PUB-01/02/GAP-URL-01 остаются предпосылками реализации R8.
 
-R1.1–R1.4 done, D020; R2 done D024, R3.1 awaiting_review D025. Runtime не перенесён,
+R1.1–R1.4 done, D020; R2 done D024, R3.1 done D028; R3.2 awaiting_review D029. Runtime не перенесён,
 DESIGN_READY/REDESIGN_DONE не установлены.
 
 ---
@@ -714,12 +715,14 @@ legacy S и девять прежних страниц не изменены. С
 
 ## R3.1 — Цвета, типографика и метрики
 
-**Статус: `awaiting_review`, D025.** Page **121:7 / StackCard Design v2 / DS**:
+**Статус: `done`, D028.** Текущая UI-family — Manrope, Wordmark A сохранён. Page **121:7 / StackCard Design v2 / DS**:
 [Foundations 123:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=123-7)
 **1400×1657**, Dark123:13 / Light123:22;
 [Typography and Metrics 125:19](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=125-19)
-**1400×1471**, Dark125:25 / Light125:64. Editable Auto Layout и живой текст.
+**1400×1423**, Dark125:25 / Light125:64. Editable Auto Layout и живой текст.
 Foundations используют принятый Wordmark A, без новых logo variants.
+Подразделы ниже сохраняют **исторический срез D025** до выбора Manrope;
+актуальное продолжение — [D028](#закреплённая-типографика-manrope-d028) и R3.2.
 
 ### Семантические роли и темы
 
@@ -834,6 +837,172 @@ R3.2–R3.4 ещё todo. Runtime/backend/schema/configs не изменены, p
 DESIGN_READY/REDESIGN_DONE не установлены. Flutter tests для Figma/doc-only
 работы не запускались; приёмка foundations не подменяет native a11y-проверку.
 
+### Пересмотр foundations и шрифта, D026–D027
+
+**Исторический срез D026–D027.** Пользователь выбрал «Остаться на R3.1 — сначала пересмотреть foundations и
+шрифт», D026. R3.1 остаётся `awaiting_review`; R3.2 не разрешена.
+Повторно просмотрены оба исходных boards и пересчитаны фактические backgrounds
+всех 246 texts: failures0, minimum **4.585348853507275:1**. Палитра и Wordmark A
+сохранены. Dark textMuted по-прежнему ограничен background; Light lime получает
+Ink outline. Оснований менять эти семантические решения при проверке не найдено.
+
+На той же page121:7 создан [Font Review 138:19](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=138-19),
+**1400×2074**, `R3.1 / Font Review / Unselected`. Это один editable
+сравнительный лист, а не новый экран или выбранное семейство.
+Три колонки содержат одинаковые имя/роль, русский и английский body, даты,
+glyph specimen `Ёё Йй Дд Лл Жж Щщ Il1 O0 0123456789 {} <> @ # + /`
+и static CTA48; по два mode-specimens **390×588**, текстовое поле350.
+
+| **Семейство** | **Dark / Light IDs** | **Long-caption16 / 32 IDs** | **Height при 16/24 / 32/48** |
+|:---|:---|:---|:---|
+| Noto Sans, текущий baseline | 138:27 / 138:38 | 138:52 / 138:54 | 24 / 144 px |
+| Manrope, альтернативный кандидат | 138:59 / 138:70 | 138:84 / 138:86 | 24 / 96 px |
+| Golos Text, альтернативный кандидат | 138:91 / 138:102 | 138:116 / 138:118 | 24 / 144 px |
+
+Все **48 matched samples** имеют одинаковые тексты, размеры, line-height,
+weight и ширину: display40/48 ExtraBold800, heading28/33.6 Bold700,
+title20/26 Bold700, body16/24 Regular400, metadata12/18 и13/20,
+controls16/22.4 SemiBold600. Отличаются семейство и естественный перенос.
+Metadata13 — образец для выбора, базовый meta12 не заменён.
+На длинной русской подписи при32 Manrope занимает две строки, остальные — три.
+Это один статический fixture, не гарантия меньшей высоты любых экранов.
+
+**Рекомендация для review — Manrope:** в этих specimens геометрические
+заголовки выразительнее, body остаётся спокойным. Noto Sans сохраняет
+нейтральный baseline, Golos Text — третий сравниваемый вариант.
+Это дизайнерская оценка, не решение пользователя и не смена wordmark.
+Latin/Cyrillic subsets и OFL1.1 проверены по
+[официальным источникам](references.md#шрифты-r31). Figma API подтвердил
+Regular/SemiBold/Bold/ExtraBold всех трёх семейств; missing-font failures0.
+Лицензия и metadata не доказывают native shaping или byte-identical binaries.
+
+Исходная фиксированная высота новых texts вызвала наложение; она исправлена
+на HEIGHT/HUG без изменения размеров шрифта. **Итоговый render после правки
+просмотрен:** bounds failures0, fixture mismatches0, все82 texts имеют bound
+fills и contrast≥4.5, minimum **4.8329098110002136:1**.
+Всего создано102 nodes; components/sets/variables/styles не добавлены.
+Все **93 variables и их значения** совпадают с baseline до review;
+40 shared text styles и оба исходных boards сохранены.
+Новые font files/dependencies/runtime не добавлены. Выбор одного UI-семейства,
+приёмка R3.1 и отдельный следующий шаг остаются открытыми.
+
+---
+
+### Закреплённая типографика Manrope, D028
+
+Последующее поручение перейти к следующему этапу принято как приёмка review
+R3.1. Для продолжения закреплён рекомендованный Manrope; отдельного сообщения
+с названием семейства не было. 244 texts двух foundation boards обновлены;
+два Wordmark instance texts и исходные40 styles сохранены. Созданы10 shared
+styles с префиксом `StackCard/v2/Manrope/`; размер/line/weight прежних9 ролей
+сохранены. Новый `navigationLabel`12/18 SemiBold поддерживает4 постоянные подписи.
+
+| **Роль** | **StyleID, префикс S:** |
+|:---|:---|
+| displayA | 5c69a84cfb6c7f914e5ea7e293e38453da3ed2c2 |
+| heading | 785b7b0fc2e09602baff4f2e94183aaf82c67b77 |
+| section | 77eee136a57b096416dfa0af61defa6177e3b44f |
+| title | 22de2df69b85117637eaa9c3faa12f2f28cc5cc0 |
+| body | 69814583b61be40ade874d855f631363121d119e |
+| secondary | 4a6ee253646c7d0f3a4662db841d5e13a350367f |
+| metadata | 7905b448a5162790854f3c924725c287574c7e0b |
+| control | 8ac920cc9e10d056b3db3e3e0632dd8c4d1bdade |
+| label | 51cb8df0f776afc4ff9b82937d5fe0d33174b252 |
+| navigationLabel | 81c4c41a63ec9f51ebb83f17943f6e230e8ee5c8 |
+
+В Figma style IDs заканчиваются запятой; таблица хранит ключ без `S:` и запятой.
+Display/body/metadata font sizes bound к существующим Metrics. Static32 specimen
+теперь переносится на две строки/96px; это всё ещё не OS scaling.
+Font Review138:19 сохраняет три исторических семейства; имя/подпись отмечают
+Manrope selected. Native fonts/pubspec остаются прежними до R8.
+
+---
+
+## R3.2 — Навигация, карточки и TechnologyBadge
+
+**Статус: `awaiting_review`, D029.** DS page121:7, Manrope, принятый бренд A:
+[Navigation and States148:340](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-340)
+**900×1570**, Dark148:344 / Light148:619;
+[Cards and TechnologyBadge148:894](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-894)
+**900×1565**, Dark148:898 / Light148:1043. Columns390, внутренние карточки350.
+В review только instances; main components и license notices находятся отдельно.
+
+### Компоненты, свойства и варианты
+
+Имена начинаются `StackCard/v2/`. TEXT/INSTANCE_SWAP свойства связаны с реальными
+дочерними text/instance nodes; variant matrix каждой семьи не превышает12.
+
+| **Компонент / ID** | **Variants и свойства** | **Размер / контракт** |
+|:---|:---|:---|
+| IconAction144:78 | State=Default/Pressed/Focus; Icon swap | 48×48; gear/back, semantic label при R8 |
+| NavItem144:127 | Selected=No/Yes ×3 states; Label TEXT, Icon swap | 87.5×64; постоянная label12/18, underline geometry |
+| FilterItem144:148 | Selected=No/Yes ×3 states; Label TEXT | 48h; выбранный check, label16/22.4 |
+| CopyAction144:175 | Ready/Pressed/Focus/Copied/Unavailable | 154×48; copy/check+живой текст, причина отсутствия ссылки |
+| BottomNavigation146:253 | Active=Home/Resume/Projects/Portfolio | 390×96;4 labels,24px inset — placeholder для native SafeArea |
+| SectionHeader146:274 | Mode=Root/Nested; Title TEXT | 390×72; title Fill, root gear / nested Back |
+| HomeFilter146:337 | Active=All/Resume/Projects | 350×48; Все/Резюме/Проекты, query без смены root tab |
+| DocumentCard146:632 | Kind=Resume/Portfolio × Publication=Published/Draft ×3 states; Title/Summary/Updated TEXT | 350w/Hug; type/icon/summary отличают сущности, недавние выше |
+| ProjectCard146:696 | State=Default/Pressed/Focus; Title/Description/Source/Updated TEXT | 350w/Hug; optional CoverSlot, no-cover placeholder, badges/source |
+| TechnologyBadge144:180 | single main; Icon swap, Name TEXT | 32h informational; fixed Ink tile24, оригинальный vector18 |
+| MoreTechnologies144:198 | single main; Count TEXT | 48×48; +N открывает detail с полным wrapped list |
+
+Всего9 sets/44 variants,2 single components и14 icon mains. Shared Metrics
+переиспользуются для spacing/padding/radius; nav marker24×3 и icon grid24/20/18
+— фиксированная геометрия. Не созданы поля, stepper или broad states R3.3/R3.4.
+
+### Поведение и handoff
+
+Root header не повторяет огромный брендовый заголовок. Settings — nested:
+Back возвращает к сохранённому origin; нижняя вкладка Resume там не активна.
+All включает Portfolio, отдельная четвёртая Home filter не добавлена.
+Selected получает check/underline, в Light маркер использует `accentText #526B00`.
+Pressed отличается заливкой; Focus имеет отдельную2px границу.
+
+У DocumentCard верхний `OpenHitArea` и footer `CopyHitArea` геометрически
+разделены. Во всех6 Published variants copy visible; у6 Draft copy скрыт,
+показано «Ссылка появится после публикации». Published URL берётся из snapshot,
+не из draft. Copied показывается только после настоящего clipboard write;
+Figma не симулирует успешный clipboard/native Back или сортировку данных.
+
+ProjectCard показывает сознательный placeholder «Обложка не добавлена», без
+декоративных инициалов. Реальный image fill — slot для будущего пользовательского
+asset, fixture не имеет фото. Compact list React/TypeScript/+2 и detail wrap
+React/TypeScript/Flutter/Dart сохраняют доступный живой текст. Badge32 не button;
++N48 — самостоятельная touch zone. Source TEXT принимает GitHub или ручной источник.
+
+### Assets, темы и фактическая проверка
+
+Lucide mains: home144:19, file-text144:23, folder144:30, panels-top-left144:33,
+settings144:38, arrow-left144:42, copy144:46, check144:50, image144:53,
+more-horizontal144:58. React144:63 / TypeScript144:66 — точные Simple Icons SVG;
+Flutter145:65 / Dart145:70 — официальные белые knockout без изменения shape/fill/opacity.
+[Provenance153:6036](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=153-6036)
+**1200×1202** хранит источники и полные Lucide ISC/MIT notices;
+[license caveats](references.md#иконки-r32) проверены отдельно от project CC0.
+
+Добавлены4 technology variables: primitive144:176 / semantic144:177 React,
+primitive144:178 / semantic144:179 TypeScript. Scoped SHAPE_FILL aliases двух
+тем, WEB `var(--technology-react)` / `var(--technology-typescript)` — будущий
+handoff, не CSS runtime. Всего97 vars/50 text styles; все93 прежних values
+сохранены. Фирменные цвета технологий не меняют StackCard palette.
+Четыре существующие роли textPrimary/textSecondary/accentText/successText
+получили дополнительные SHAPE_FILL/STROKE_COLOR scopes для icons/selection,
+с сохранением всех values. Измерены22 technology paint samples, включая
+исходную opacity approved knockout: minimum4.4419243488:1, failures0 при пороге3.
+
+Итоговый audit123:7/125:19/148:340/148:894: **410 painted texts ≥4.5**,
+minimum **4.5853488535:1**, failures0. Из них164 новых R3.2 texts, все со shared
+Manrope styles. 36 painted stroke samples/14 visible selection markers имеют
+minimum **5.2824191159:1**. Bounds failures0; все interactive masters ≥48×48;
+propertyUnbound0/stylesMissing0. Dark/Light renders просмотрены после исправлений.
+Дополнительный audit всех variant masters/single components/provenance:
+общая выборка558 texts, contrast/bounds/property bindings/touch targets — PASS.
+Это структурная и визуальная проверка390px, не native a11y certification.
+
+R3.2 ждёт приёмки; R3.3/forms и R3.4/full states/adapt/motion остаются todo.
+Runtime/fonts/assets/backend не переносились. OS scaling, keyboard, native
+clipboard/Back/SafeArea и responsive pages проверяются в следующих своих фазах.
+
 ---
 
 ## Переходы и действия
@@ -926,8 +1095,12 @@ Home/Settings/Projects новой прежней итерации и legacy land
 | Directions / R2.1 / Experimental mains | 100:10 / 100:13 marks, 100:16 / 100:30 DocumentCards, 104:266 ProjectCard B; editable components вне comparison wrapper, не финальная DS R3 |
 | Design v2 / Directions / R2.2 / Brand Comparison | [110:268](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=110-268), 1400×1992; A 110:274 / B 110:275; done D024, принят бренд A |
 | Directions / Selected A brand families | StackCard / v2 / Mark110:282, Wordmark111:284, AppIcon111:297; девять variants, прежние IDs; B110:289/111:314/111:327 сохранён как история, native exports pending |
-| Design v2 / DS / R3.1 / Foundations | Page121:7; [123:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=123-7), 1400×1657, Dark123:13 / Light123:22; colors/contrast/boundaries, awaiting_review D025 |
-| Design v2 / DS / R3.1 / Typography and Metrics | [125:19](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=125-19), 1400×1471, Dark125:25 / Light125:64; nine type roles, static16/32 reflow, awaiting_review D025 |
+| Design v2 / DS / R3.1 / Foundations | Page121:7; [123:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=123-7),1400×1657; Dark123:13/Light123:22; Manrope/brand A, done D028 |
+| Design v2 / DS / R3.1 / Typography and Metrics | [125:19](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=125-19),1400×1423; Dark125:25/Light125:64; Manrope9 core roles + navigationLabel shared style, done D028 |
+| Design v2 / DS / R3.1 / Font Review | [138:19](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=138-19); historical Noto/Manrope/Golos specimens сохранены, выбран рекомендованный Manrope D028 |
+| Design v2 / DS / R3.2 / Navigation and States | [148:340](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-340),900×1570; Dark148:344/Light148:619, awaiting_review D029 |
+| Design v2 / DS / R3.2 / Cards and TechnologyBadge | [148:894](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-894),900×1565; Dark148:898/Light148:1043, awaiting_review D029 |
+| Design v2 / DS / R3.2 / Asset provenance | [153:6036](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=153-6036),1200×1202; source links + full Lucide ISC/MIT notices |
 | Финальные Design v2 frames | Ещё не созданы; IDs, variant/state и evidence добавляются после R4–R7, без подстановки legacy ссылок |
 
 Prototype reactions старой итерации не приняты и полностью не прогонялись в R0.

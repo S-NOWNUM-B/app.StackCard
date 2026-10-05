@@ -486,7 +486,7 @@ web-редактор и публичные портфолио. Этот разд
 **Phase 0–6 завершены:** основа, UI, состояние, архитектура, GitHub Import, offline и Builder проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
 **С 2026-10-05 основная разработка новых функций приостановлена:** активна только
-R2 инициативы [StackCard Design v2](../redesign/README.md). Прямое поручение
+R3 инициативы [StackCard Design v2](../redesign/README.md). Прямое поручение
 использовать [план R0–R9](../redesign/plan.md) и начать первую фазу приняло R0
 и разрешило R1.1. Поручение «переходи к следующей фазе» приняло
 [три схемы IA](../redesign/screens.md#r11--информационная-архитектура)
@@ -511,14 +511,18 @@ errors/unsaved/public access. Ответом пользователя приня
 обоих вариантов содержат знак/написание/иконку, dark/light/mono, проверку
 16–48 px и восьми UI-шапок. Пользователь выбрал бренд A и поручил продолжить;
 связанные пилоты A / Cyber Editorial служат основой R3. B сохранён как история.
-**R3.1 — awaiting_review D025**: [Dark/Light foundations и типографика](../redesign/screens.md#r31--цвета-типографика-и-метрики)
-созданы и проверены. Исходные цвета сохранены; semantic roles, девять Noto Sans
-type roles и static reflow16/32 предложены для приёмки. 246 текстов имеют
-contrast ≥4.5 на фактическом фоне. Шрифт/полная DS, states/components и native
-scaling/icon exports ещё не приняты; R3.2–R3.4 не начаты.
+**R3.1 — done D028**: после сравнения Noto Sans / Manrope / Golos Text
+пользователь поручил перейти к следующему этапу. Закреплена рекомендация Manrope;
+[Dark/Light foundations](../redesign/screens.md#закреплённая-типографика-manrope-d028)
+обновлены, исходная палитра/Wordmark A сохранены. Это Figma UI, bundled fonts
+пока прежние. **R3.2 — awaiting_review D029**:
+[Navigation/cards/TechnologyBadge](../redesign/screens.md#r32--навигация-карточки-и-technologybadge)
+содержат9 sets/44variants,4 root labels,3 Home filters, gear/back, отдельное Copy
+и badges icon+text/+N/full wrap. Итоговые410 texts contrast/bounds PASS;
+R3.3–R3.4, native scaling/routing/clipboard/icon exports ещё pending.
 Новая URL route scheme и миграция adapter остаются предпосылкой R8.
 Runtime/schema не изменены. Проверки и ограничения — в
-[результатах R2.3 и R3.1](../redesign/plan.md#фактические-результаты-r23-и-r31);
+[результатах R3.2](../redesign/plan.md#фактический-результат-r32-d028d029);
 предыдущие цветовые правки и результаты R2 сохранены отдельно.
 Точка остановки функционального roadmap —
 после Phase 10, перед Phase 11 Media; Google/reset/iOS приёмка Phase 7 остаётся
