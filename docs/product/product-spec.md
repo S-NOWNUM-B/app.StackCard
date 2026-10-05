@@ -519,16 +519,24 @@ errors/unsaved/public access. Ответом пользователя приня
 [Navigation/cards/TechnologyBadge](../redesign/screens.md#r32--навигация-карточки-и-technologybadge)
 содержат9 sets/44variants,4 root labels,3 Home filters, gear/back, отдельное Copy
 и badges icon+text/+N/full wrap. Итоговые410 texts contrast/bounds PASS;
-**R3.3 — awaiting_review D031**:
+**R3.3 — done D032**:
 [формы, stepper, фото и секции](../redesign/screens.md#r33--формы-stepper-фото-и-секции)
 содержат10 sets/67 variants, PhotoSourceSheet и6 SVG icons; четыре Dark/Light
 boards показывают keyboard и static ×2 reflow.513 texts/103 strokes, bounds,
 references и touch audit PASS. Фотография — обозначенный generated_demo,
-не пользовательский upload. R3.4, native keyboard/media/OS scaling/routing/
-clipboard/icon exports ещё pending.
+не пользовательский upload. Последнее поручение продолжить приняло R3.3 и
+разрешило R3.4, работу нескольких агентов и ускорение, D032.
+**R3.4 — awaiting_review D033**:
+[states/motion/adaptive](../redesign/screens.md#r34--состояния-motion-и-адаптивность)
+содержат2sets/18variants и10Dark/Light fixtures320/390/430/768/844landscape.
+Local Save, server ACK иPublish разделены; unknown publication result честно
+обозначен. Save/Отмена закреплены над bottom tabs; motion180/240/280ms и0ms
+reduced — статические specs.393texts/786mode samples,342strokes/96targets,
+geometry/bindings/references/scopes PASS. Native keyboard/media/OS scaling/
+routing/clipboard/icon exports иplayable prototype ещё pending.
 Новая URL route scheme и миграция adapter остаются предпосылкой R8.
 Runtime/schema не изменены. Проверки и ограничения — в
-[результатах R3.3](../redesign/plan.md#фактический-результат-r33-d030d031);
+[результатах R3.4](../redesign/plan.md#фактический-результат-r34-d032d033);
 предыдущие цветовые правки и результаты R2 сохранены отдельно.
 Точка остановки функционального roadmap —
 после Phase 10, перед Phase 11 Media; Google/reset/iOS приёмка Phase 7 остаётся

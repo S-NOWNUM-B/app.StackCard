@@ -35,7 +35,10 @@ R1.4 и R1 — `done`. Поручение «переходи к следующе
 R2.1 и разрешило R2.2 (D022), без выбора A/B. Поручение «вариант бренда мне
 понавился А. приступай к следующей фазе» приняло бренд A и разрешило R3.1,
 D024: R2.2/R2.3/R2 done. Связанные пилоты A служат основой следующей фазы.
-Активна R3, текущая задача **R3.3 — `awaiting_review`**, D031. Поручение
+Активна R3, текущая задача **R3.4 — `awaiting_review`**, D033. Последнее
+поручение перейти к следующему этапу приняло R3.3 и разрешило R3.4, D032.
+По прямому запросу независимые компоненты, motion, QA и документация подготовлены
+параллельно четырьмя агентами; ведущий последовательно интегрировал Figma. Поручение
 «переходи к следующему этапу разраотки» после R3.2 принято как её приёмка
 и разрешение только R3.3, D030.
 Результаты R3.2:
@@ -45,8 +48,9 @@ D024: R2.2/R2.3/R2 done. Связанные пилоты A служат осно
 Для продолжения закреплена рекомендация Manrope; отдельного сообщения с названием
 семейства не было. Палитра и Wordmark A сохранены.
 [Формы, stepper, фото и секции R3.3](screens.md#r33--формы-stepper-фото-и-секции)
-собраны в четырёх Dark/Light boards. R3.4 ещё todo; runtime/backend и
-Git mutations не входят в этот шаг.
+приняты D032. [Состояния, motion и адаптивность R3.4](screens.md#r34--состояния-motion-и-адаптивность)
+собраны и проверены в четырёх Dark/Light boards; runtime/backend и Git mutations
+не входят в этот шаг.
 Ответ пользователя о постоянном адресе документа закрыл выбор политики D007
 (D019); реализация и точная схема URL остаются отдельной предпосылкой R8.
 Основная разработка функций приостановлена перед Phase 11 Media; открытая
@@ -87,7 +91,7 @@ R4.7 и R8.2–R8.5 — группы отдельных задач с букве
 | R0 — Аудит и план | Комплект docs/redesign и сохранённая точка roadmap. Принята прямым поручением начать R1; D009. | done |
 | R1 — UX и информационная архитектура | IA и 88 low-fi экранов приняты; цветовые правки D020 выполнены. Постоянные адреса документов приняты D019; URL backend ещё не реализован. | done |
 | R2 — Визуальное направление | Принят бренд A D024; связанные пилоты A / Cyber Editorial — основа R3. A families закреплены с прежними IDs; B сохранён как история. R2.1–R2.3 done. | done |
-| R3 — Дизайн-система | R3.1 done D028, Manrope; R3.2 done D030. R3.3 forms/stepper/photo/sections проверены, awaiting_review D031; R3.4 todo. | awaiting_review |
+| R3 — Дизайн-система | R3.1 done D028, Manrope; R3.2 done D030. R3.3 done D032. R3.4 states/motion/adaptive: 18 variants и10fixtures проверены, awaiting_review D033. | awaiting_review |
 | R4 — Основные экраны и настройки | Набор hi-fi full/empty/errors и focused settings screens. Принять roots и каждую settings группу; неподдерживаемые функции остаются target-design. | todo |
 | R5 — Создание, редактирование и публикация | Полные hi-fi flows с input/error/back/preview и отдельным Publish. Принять последовательно R5.1 → R5.2 → R5.3 → R5.4; уточнить delete/rename consequences. | todo |
 | R6 — Web | Полный web design visitor/owner flow, не один hero. Принять web-подачу и доступность CTA/download; URL scheme с GAP-URL-01. | todo |
@@ -199,14 +203,14 @@ low-fi R1.2/R1.3 приняты, R1.4 принята после цветовых
 
 **Решения пользователя:** Принять DS; выбрать шрифты после проверки кириллицы/латиницы и лицензии.
 
-**Статус фазы:** `awaiting_review` (R3.1 done D028; R3.2 done D030; R3.3 awaiting_review D031; R3.4 todo).
+**Статус фазы:** `awaiting_review` (R3.1 done D028; R3.2 done D030; R3.3 done D032; R3.4 awaiting_review D033).
 
 | **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
 |:---|:---|:---|:---|:---|:---|:---|
 | R3.1 | REQ-PALETTE-01..03, REQ-TYPE-01..02, REQ-FIGMA-01 | [Foundations123:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=123-7), [Typography125:19](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=125-19), Font Review138:19; page121:7 | После сравнения трёх семейств закреплён Manrope D028. 244 foundation texts обновлены; прежние variables/styles и Wordmark A сохранены. | C-PALETTE, C14, C-ASSET; C16 static | [Текущая типографика](screens.md#закреплённая-типографика-manrope-d028); повторные renders/contrast/bounds PASS. OS scaling/native shaping ещё pending. | done |
 | R3.2 | REQ-NAV-01..05, REQ-HOME-01..02, REQ-TECH-01..02, REQ-PROJECT-03 | [Navigation148:340](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-340), [Cards148:894](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-894); DS page121:7 | Четыре root labels, gear/back, три Home filters; document/project cards, Copy states, badge icon+text/+N/full wrap. 9 sets/44 variants, 2 single components/14 SVG icons. | C01–C05, C08, C11, C12, C14, C15, C-ASSET | [Metadata, bindings и renders](screens.md#r32--навигация-карточки-и-technologybadge) PASS; 164 новых specimen texts ≥4.5, overflow0. Native routing/clipboard/assets и responsive states pending. | done D030 |
-| R3.3 | REQ-EDITOR-01..03, REQ-RESUME-02..03, REQ-SETTINGS-02 | [Forms163:1334](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1334), [Editing163:1576](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1576), Keyboard163:2060 / Scale166:1988; DS121:7 | 10 sets/67 variants, PhotoSourceSheet,6 Lucide icons; поля/выбор/фото/пять шагов, Save над клавиатурой, drag+Выше/Ниже. | C06, C07, C12, C15, C16 static | [Компоненты и фактическое evidence](screens.md#r33--формы-stepper-фото-и-секции):513 texts ≥4.5,103 strokes ≥3, bounds/overlap/references/touch PASS. Native keyboard/media/scaling и полные flows pending. | awaiting_review |
-| R3.4 | REQ-MOTION-01..02, REQ-ADAPT-01..03, REQ-EDITOR-03 | Предлагаемый DS / States-Motion; S-PUBLISH/S-SHARE | Empty/loading/error/offline/saved/synced/published variants; 180–280 ms и статические equivalents. | C10, C13, C-MOTION | State matrix, motion timings и reduced-motion specimens. | todo |
+| R3.3 | REQ-EDITOR-01..03, REQ-RESUME-02..03, REQ-SETTINGS-02 | [Forms163:1334](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1334), [Editing163:1576](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1576), Keyboard163:2060 / Scale166:1988; DS121:7 | 10 sets/67 variants, PhotoSourceSheet,6 Lucide icons; поля/выбор/фото/пять шагов, Save над клавиатурой, drag+Выше/Ниже. | C06, C07, C12, C15, C16 static | [Компоненты и фактическое evidence](screens.md#r33--формы-stepper-фото-и-секции):513 texts ≥4.5,103 strokes ≥3, bounds/overlap/references/touch PASS. Native keyboard/media/scaling и полные flows pending. | done D032 |
+| R3.4 | REQ-MOTION-01..02, REQ-ADAPT-01..03, REQ-EDITOR-03 | [States176:2036](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2036), Lifecycle176:2110, Motion176:2214, Adaptive176:2418; DS121:7 | StatePanel5/LifecycleStatus13, независимые Save/Sync/Publish и подтверждённый Unpublish; шесть180/240/280ms эффектов с0ms reduced,10fixtures320/390/430/768/844. | C10, C13, C14, C15, C16 static, C-MOTION | [Фактическое evidence](screens.md#r34--состояния-motion-и-адаптивность):393 text nodes/786 mode samples ≥4.5,342 strokes ≥3,96targets≥48, bindings/scopes/bounds/overlaps/refs PASS; prototype/native pending. | awaiting_review D033 |
 
 ### R4 — Основные экраны и настройки
 
@@ -448,7 +452,7 @@ S-* в screens → C-* ниже → фактический результат/ev
 | C10 | Change→local Save→sync ACK→explicit Publish; previous public snapshot unchanged | R5.4a, R8.4, R9.1; editors/publish | Save/sync contracts есть; user publication flow нет |
 | C11 | Tablet portrait/landscape: та же bottom nav, нет sidebar/rail | R7.2, R8.3, R9.2; roots | Current shell имеет rail >=700 px |
 | C12 | Back/close, system navigation, cancel/unsaved handling и возврат origin | R1, R5, R7.1, R9.1; nested | Existing nested Back есть; новая IA не проверена |
-| C13 | Empty/loading/error/retry/offline/long content; ввод и previous success не теряются | R3.4, R7.3, R9.1; все | Shared states есть; полный target набор pending |
+| C13 | Empty/loading/error/retry/offline/long content; ввод и previous success не теряются | R3.4, R7.3, R9.1; все | R3.4 StatePanel5 + LifecycleStatus13 static PASS; полный flow/runtime pending |
 | C14 | sRGB contrast всех actual text/surface/disabled/focus pairs; normal text >=4.5:1 | R3.1, R7.3, R9.2; DS/UI | Полная target матрица pending; R0 расчёты ниже |
 | C15 | Metadata/hit tests реальных tap regions >=48×48 logical px, включая Copy/back/gear | R3, R7.2, R9.2; controls | Existing Button min48; полный target UI pending |
 | C16 | Text scale1/2 и OS увеличенный текст, ru/en, узкие экраны/keyboard | R7.2, группы R8.3–R8.5, R9.2 | Target ещё не создан; legacy nav скрывает labels |
@@ -458,7 +462,7 @@ S-* в screens → C-* ниже → фактический результат/ev
 | C-ASSET | License/provenance fonts/icons/photos; настоящий текст badges, editable Figma | R2.2, R3.2, R7.3 | R2.2: оригинальные vectors, editable families, Noto SIL OFL 1.1 проверена; финальный набор/native assets ещё не приняты |
 | C-PALETTE | Exact dark HEX/semantic roles, lime primary, error red; light actual pairs | R2.1, R3.1, R8.2 | R2.1 dark contrast и R2.2 ink/paper 18.46:1 проверены; full light DS/native pending |
 | C-WEB | Полный visitor/owner/public path, реальные CTA и download availability | R6.1..4, R8.5 | Web source отсутствует; legacy concepts не runtime |
-| C-MOTION | 180–280 ms, ввод доступен, reduced/static variants и Copy feedback | R3.4, R7.3, R9.2 | Только target requirement; current timings не перенесены |
+| C-MOTION | 180–280 ms, ввод доступен, reduced/static variants и Copy feedback | R3.4, R7.3, R9.2 | R3.4 шесть180/240/280ms событий и0ms статических equivalents PASS; playable prototype/runtime pending |
 | C-SCOPE | Изменения только разрешённой фазы; сохранены user edits/assets/history/stack | R0.5, R8.1, R9.3 | Документация-only, финальные diff/hash checks фиксируются ниже |
 
 Обычный текст проверяется по 4.5:1 даже при небольших metadata размерах.
@@ -1000,6 +1004,41 @@ OS scaling ещё не проверены; full screens/flows относятся
 
 ---
 
+### Фактический результат R3.4, D032–D033
+
+Поручение «переходи к следующему этапу», ускорить работу и постоянно подключать
+несколько агентов приняло R3.3 и разрешило R3.4, D032. Четыре независимых агента
+подготовили states, motion contract, QA и два документа; ведущий интегрировал
+изменения Figma последовательно и проверил результат. R3.4 — awaiting_review D033.
+
+- StatePanel175:2056:5variants Empty/Loading/Error/Offline/NoResults.
+- LifecycleStatus175:2101:13variants Working/Unsaved/Saving/LocalSaved/SyncPending/
+  SyncError/Synced/Draft/Published/SaveError/Publishing/PublishError/Unpublished.
+  Working, persistence и publication независимы; PublishError не объявляет
+  неизвестный результат успешным. Unpublished требует подтверждённого Unpublish.
+- Четыре editable boards:176:2036 900×1443,176:2110 900×2019,
+  176:2214 900×1472,176:2418 1808×3619. State-only props, shared Manrope,
+  ActionButton/CopyAction/BottomNavigation/WizardStepper и прежние icons.
+- Десять Dark/Light fixtures:320×568,390×680,430×680,768×680,844×390.
+  Content cap600; long ru/en/URL wrapping; Save/Отмена закреплены над четырьмя
+  нижними вкладками. Вертикальный overflow разрешён только в явно clipped
+  scroll viewport. SafeArea — геометрический резерв, не native acceptance.
+- Шесть motion events: press/active tab/content/wizard/editor/copy. Timings
+  180/240/280ms, easing cubic-bezier(0.2,0,0,1), reduced0ms сохраняет feedback.
+  Это статическая спецификация; интерактивный прототип проверяется в R7.3.
+- Финальный metadata audit:393 text nodes,786 Dark/Light contrast samples,
+  minimum4.833:1;342 interactive stroke samples,minimum4.365:1;
+  96interactive samples≥48×48. Bounds/overlaps/property references/bindings/
+  TEXT scopes/styles/fixture failures0. Все четыре boards визуально просмотрены;
+  после точечных правок — lifecycle и оба430fixtures.
+- Из93 прежних variable values изменён только motion/slow36:13:300→280.
+  Палитра и Wordmark A сохранены;98variables/50text styles, новых assets нет.
+  Flutter/runtime/backend не менялись; Git-операции не выполнялись. Native scroll/keyboard/text scaling,
+  actual Save/ACK/Publish и full flows остаются отдельными проверками.
+
+Реестр и контракты: [R3.4 в screens](screens.md#r34--состояния-motion-и-адаптивность).
+После пользовательской приёмки полной R3 следующая задача — R4.1.
+
 ## Журнал решений
 
 | **ID / дата** | **Решение / источник** | **Статус и влияние** |
@@ -1035,9 +1074,10 @@ OS scaling ещё не проверены; full screens/flows относятся
 | D029 / 2026-10-05 | Editable Navigation/cards/TechnologyBadge R3.2 | awaiting_review; boards148:340/148:894, 9 sets/44 variants, 14 SVG icons. 410 actual texts/36 stroke samples/14 markers contrast PASS; bounds/property bindings/touch targets PASS. R3.3–R3.4 todo; native routing/clipboard/exports pending |
 | D030 / 2026-10-05 | «переходи к следующему этапу разраотки» после результата R3.2 | Принята R3.2; разрешена только R3.3 — формы, stepper, фото и секции. R3.4/R4/runtime/backend/Git mutations не разрешены |
 | D031 / 2026-10-05 | Editable forms/stepper/photo/sections R3.3 и keyboard/scale specimens | awaiting_review;163:1334/163:1576/163:2060/166:1988,10 sets/67 variants,1 sheet/6 SVG icons.513 texts/103 strokes/160 interactive samples PASS; bounds/reference/normal styles PASS. Фото generated_demo, native keyboard/media/OS scaling pending; R3.4 todo |
+| D032 / 2026-10-05 | «переходи к следующему этапу», ускорить работу, несколько агентов постоянно, ограничения на агентов сняты | Принята R3.3; разрешена R3.4. Независимые части делегированы, Figma writes последовательные. Переходы фаз и DESIGN_READY сохраняют приёмку; runtime/backend/Git не разрешены |
+| D033 / 2026-10-05 | Editable states/motion/adaptive R3.4 | awaiting_review;2sets/18variants,4boards176:2036/2110/2214/2418,10Dark/Light fixtures.393texts/786mode samples,342strokes/96targets PASS;0bounds/refs/bindings/scopes failures.180/240/280ms+reduced0ms — static spec; R7prototype/native pending |
 
 Новый scope change записывается отдельной строкой с причиной, requirement IDs,
 влиянием на задачи/gaps и явным решением пользователя. Исторические результаты
-не переписываются. Текущая точка приёмки — R3.3; следующий отдельный шаг после
-её review — R3.4: состояния, адаптивность и motion. R3.2 done D030; полная DS и итоговые
-gates ещё требуют приёмки.
+не переписываются. Текущая точка приёмки — R3.4 и полная DS; следующий отдельный шаг после
+её review — R4.1. R3.1–R3.3 done; DESIGN_READY и итоговые gates ещё требуют приёмки.

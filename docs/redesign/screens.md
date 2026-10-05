@@ -26,6 +26,7 @@
 - [R3.1 — Цвета, типографика и метрики](#r31--цвета-типографика-и-метрики)
 - [R3.2 — Навигация, карточки и TechnologyBadge](#r32--навигация-карточки-и-technologybadge)
 - [R3.3 — Формы, stepper, фото и секции](#r33--формы-stepper-фото-и-секции)
+- [R3.4 — Состояния, motion и адаптивность](#r34--состояния-motion-и-адаптивность)
 - [Переходы и действия](#переходы-и-действия)
 - [Состояния и компоненты](#состояния-и-компоненты)
 - [Реестр Figma](#реестр-figma)
@@ -36,7 +37,7 @@
 
 Срез R0 — 2026-10-05, статический аудит; далее добавлены результаты R1.1–R1.4
 и шесть визуальных пилотов R2.1, brand specimens R2.2, выбор A в R2.3
-и Dark/Light foundations R3.1, components R3.2–R3.3.
+и Dark/Light foundations R3.1, components R3.2–R3.4, state/motion/adapt specimens.
 `S-*` — ID целевого экрана, а не реализованный route. Новые route paths и
 runtime screen IDs не назначены; созданные IA и low-fi frames перечислены отдельно. Конкретные
 paths согласуются вместе с guards/deep links перед переносом. Существующие пути
@@ -385,7 +386,7 @@ input retention/Back reactions, keyboard, scale 2/tablet, reopen/storage/sync
 и publication не проверены. Реальный `resumeText` editor остаётся прежним,
 GAP-DATA-01/GAP-MEDIA-01 и остальные предпосылки реализации сохранены.
 R1.3 принята D017; R1.4 принята после правок D020, показана ниже.
-Сравнение R2.1 принято D022; бренд A и R2 приняты D024; R3.1 done D028; R3.2 done D030; R3.3 awaiting_review D031; runtime не перенесён.
+Сравнение R2.1 принято D022; бренд A и R2 приняты D024; R3.1 done D028; R3.2 done D030; R3.3 done D032; R3.4 awaiting_review D033; runtime не перенесён.
 
 ---
 
@@ -516,7 +517,7 @@ real photo, clipboard/native share или безопасность anonymous rea
 global project featured/visible и username publication adapter прежние;
 GAP-DATA-01..03/GAP-PUB-01/02/GAP-URL-01 остаются предпосылками реализации R8.
 
-R1.1–R1.4 done, D020; R2 done D024, R3.1 done D028; R3.2 done D030; R3.3 awaiting_review D031. Runtime не перенесён,
+R1.1–R1.4 done, D020; R2 done D024, R3.1 done D028; R3.2 done D030; R3.3 done D032; R3.4 awaiting_review D033. Runtime не перенесён,
 DESIGN_READY/REDESIGN_DONE не установлены.
 
 ---
@@ -1000,7 +1001,8 @@ propertyUnbound0/stylesMissing0. Dark/Light renders просмотрены по�
 общая выборка558 texts, contrast/bounds/property bindings/touch targets — PASS.
 Это структурная и визуальная проверка390px, не native a11y certification.
 
-R3.2 принята D030; ниже добавлен следующий срез R3.3. R3.4/full states/adapt/motion остаётся todo.
+R3.2 принята D030; R3.3 принята D032. Ниже добавлены её компоненты
+и следующий срез R3.4: state/adapt/motion specimens ожидают review D033.
 Runtime/fonts/assets/backend не переносились. OS scaling, keyboard, native
 clipboard/Back/SafeArea и responsive pages проверяются в следующих своих фазах.
 
@@ -1008,8 +1010,9 @@ clipboard/Back/SafeArea и responsive pages проверяются в следу
 
 ## R3.3 — Формы, stepper, фото и секции
 
-**Статус: `awaiting_review`, D031.** R3.2 принята поручением продолжить D030;
-разрешена только R3.3. Page121:7, Manrope/brand A; четыре editable boards:
+**Статус: `done`, D032.** R3.2 принята поручением продолжить D030;
+её исходное разрешение R3.3 и результаты review D031 приняты новым поручением
+перейти к следующему этапу, D032. Page121:7, Manrope/brand A; четыре editable boards:
 
 | **Board / проверенный ID** | **Размер и specimen** |
 |:---|:---|
@@ -1103,10 +1106,116 @@ solid paints/missing normal styles —0. **160 interactive samples ≥48×48**.
 Все четыре итоговых renders Dark/Light просмотрены; C06/C07/C12/C15 и C16 static
 подтверждены на component specimens. Это не native a11y certification.
 
-R3.3 ждёт приёмки D031; R3.4 — следующая отдельная задача. Полные hi-fi flows,
+R3.3 принята D032; R3.4 подготовлена отдельно и ожидает review D033. Полные hi-fi flows,
 prototype/runtime, OS text scaling, media permission/persistence и реальная
 reorder/Save остаются непроверенными в своих этапах. Flutter/pubspec/Firestore
 не менялись; DESIGN_READY/REDESIGN_DONE ещё не установлены.
+
+---
+
+## R3.4 — Состояния, motion и адаптивность
+
+**Статус: `awaiting_review`, D033.** Поручение перейти к следующему этапу
+приняло R3.3 и разрешило R3.4, D032. На DS page121:7 созданы четыре editable
+boards с Dark/Light specimens. Полные hi-fi screens принадлежат R4–R6;
+интерактивный motion-прототип — R7.3, runtime — R8.
+
+| **Board / проверенный ID** | **Размер и mode columns** |
+|:---|:---|
+| [Data states 176:2036](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2036) | 900×1443; Dark 176:2040 / Light 176:2042 |
+| [Save / Sync / Publication 176:2110](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2110) | 900×2019; Dark 176:2114 / Light 176:2116 |
+| [Motion / Reduced 176:2214](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2214) | 900×1472; Dark 176:2218 / Light 176:2220 |
+| [Adaptive fixtures 176:2418](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2418) | 1808×3619; Dark 176:2422 / Light 176:2424 |
+
+### Состояния и жизненный цикл
+
+| **Component set / ID** | **Variants и контракт** |
+|:---|:---|
+| [StatePanel 175:2056](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=175-2056) | State=Empty/Loading/Error/Offline/NoResults; пять variants. Empty только после успешного пустого чтения, NoResults только для query/filter projection; Loading без фиктивного процента; Error с явным Retry; Offline не обещает server ACK |
+| [LifecycleStatus 175:2101](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=175-2101) | State=Working/Unsaved/Saving/SaveError/LocalSaved/SyncPending/SyncError/Synced/Draft/Publishing/PublishError/Published/Unpublished; тринадцать variants. Local Save, matching server ACK и явный Publish имеют отдельный смысл |
+
+Оба семейства имеют только State variant property: label/title/helper выводятся
+из состояния, без независимых TEXT defaults, которые могли бы смешаться
+при смене variant. Vertical Hug, wrapping и Fill children сохраняют длинные
+подписи. ActionButton и check переиспользованы из R3.2–R3.3; новые icons,
+images, text styles или token roles не вводились. Masters расположены отдельно
+от review: StatePanel x200/y13600, LifecycleStatus x1800/y13600.
+
+Working, persistence и publication — независимые группы. «Опубликовано» может
+сосуществовать с «Есть несохранённые изменения» или «Ожидает синхронизации»:
+читатель получает прежнюю публичную версию до следующего успешного Publish.
+Preview не означает Save, local Save не означает Synced, Synced не означает
+Publish. Старый server ACK не подтверждает новую revision; guest остаётся
+local-only. Ошибки/retry и refresh сохраняют working input и предыдущий успех;
+refresh-state располагается рядом с успешным контентом. SaveError удерживает
+несохранённые правки, Publishing не объявляет успех по таймеру. PublishError
+не объявляет успех или сохранность прежней публичной версии при неизвестном
+исходе; сначала проверяется статус операции. Unpublished закрывает ссылку
+и оставляет draft. Эти правила показаны как DS contract, не как выполненный
+backend/clipboard flow.
+
+### Motion и статические equivalents
+
+| **Событие** | **Обычный transition** | **Reduced motion** |
+|:---|:---|:---|
+| Нажатие | 180ms: заливка pressed; геометрия/hit area стабильны | 0ms: pressed сразу |
+| Active item | 180ms: цвет и маркер выбранного пункта | 0ms: label/selected/marker сразу |
+| Смена контента | 240ms: opacity без масштабирования | 0ms: новый контент сразу |
+| Wizard step | 240ms: opacity; шаг/title/focus меняются сразу | 0ms: шаг, input и ошибки сразу |
+| Открытие редактора | 280ms: fade и optional shift ≤8px | 0ms: поля и действия сразу |
+| Copy confirmation | 180ms: «Скопировано» и check только после успеха | 0ms: те же подпись/check после успеха |
+
+Existing variables motion/fast=180 и motion/standard=240 сохранены;
+motion/slow, VariableID36:13, изменён300→280. Easing:
+`cubic-bezier(0.2, 0, 0, 1)`. Значение состояния, focus, валидация и доступность
+ввода не ждут transition; исходящий слой не перехватывает ввод. Reduced motion
+сохраняет тот же результат без движения. Loading имеет статический текст,
+не бесконечный spinner/shimmer как единственное сообщение. В Copy specimen
+обычный settled и reduced immediate варианты несут одинаковый feedback.
+
+Board документирует шесть событий и static equivalents. Анимации не
+проигрывались; системная reduced-motion preference, реальные clipboard outcome
+и screen-reader announcements остаются R7.3/R8.
+
+### Адаптивность и проверка
+
+| **Fixture** | **Dark / Light IDs** |
+|:---|:---|
+| 320×568 | [176:2427](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2427) / [176:2672](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2672) |
+| 390×680 | [176:2488](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2488) / [176:2733](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2733) |
+| 430×680 | [177:2646](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=177-2646) / [177:2707](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=177-2707) |
+| 768×680 | [176:2549](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2549) / [176:2794](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2794) |
+| 844×390 | [176:2610](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2610) / [176:2855](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2855) |
+
+Geometry перестраивается по ширине: content288 на320,350 на390,390 на430
+и cap600 на768/844; wide content центрирован. Внутренняя область имеет собственные
+padding12, long RU title/EN link переносятся. Четыре подписанные bottom tabs
+сохраняются, rail/sidebar отсутствуют. На коротком landscape прокручивается
+только content viewport; горизонтальные «Отмена/Сохранить» и navigation
+закреплены вне него. Overflow content viewport намеренно clipped; это
+спецификация scroll, не работающий scroll-прототип.
+
+Top20/bottom16 обозначают статический резерв SafeArea; реальные device insets
+не проверялись. Existing R3.3 keyboard и static×2 specimens переиспользуются
+как прежнее evidence. Полный набор продуктовых экранов, OS scaling,
+клавиатура и native semantics остаются R7.2/R8.
+
+Финальный audit двух component sets и четырёх boards: **393 text nodes**,
+**786 Dark/Light text contrast samples**, minimum
+**4.8329098110:1**; **342 control/selection stroke samples**,
+minimum **4.3645648113:1**. **96 interactive samples ≥48×48**.
+Text/stroke contrast, bounds, unintended overlap, property refs, variable
+bindings/scopes, missing styles и fixture checks —0 failures. Intentional
+viewport clipping учитывается отдельно. Четыре исходных renders просмотрены;
+после расширения повторно просмотрены Lifecycle и оба430 fixtures.
+
+Всего98 variables/50 text styles — прежнее количество. Из93 baseline variables
+изменилось только значение motion/slow300→280; palette и Wordmark A сохранены.
+C10/C13/C-MOTION подтверждены на static DS specimens. Это не результаты
+native Save/sync/publication, доступности screen readers или работы анимаций.
+
+R3.4 ожидает review D033; полная R3 и DESIGN_READY ещё не приняты. Flutter,
+Firestore, runtime fonts и configs этим шагом не изменены.
 
 ---
 
@@ -1206,10 +1315,14 @@ Home/Settings/Projects новой прежней итерации и legacy land
 | Design v2 / DS / R3.2 / Navigation and States | [148:340](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-340),900×1570; Dark148:344/Light148:619, done D030 |
 | Design v2 / DS / R3.2 / Cards and TechnologyBadge | [148:894](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=148-894),900×1565; Dark148:898/Light148:1043, done D030 |
 | Design v2 / DS / R3.2 / Asset provenance | [153:6036](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=153-6036),1200×1288 после R3.3; source links + full Lucide ISC/MIT notices/generated_demo provenance |
-| Design v2 / DS / R3.3 / Forms and Selection | [163:1334](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1334),900×2219, Dark163:1338/Light163:1340; awaiting_review D031 |
-| Design v2 / DS / R3.3 / Stepper Photo and Sections | [163:1576](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1576),900×2532, Dark163:1580/Light163:1582; awaiting_review D031 |
-| Design v2 / DS / R3.3 / Keyboard and Long Labels | [163:2060](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-2060),900×1193; fixtures390×844; awaiting_review D031 |
-| Design v2 / DS / R3.3 / Static text scale2 | [166:1988](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=166-1988),900×1103; Manrope ×2 stress, not OS scaling; awaiting_review D031 |
+| Design v2 / DS / R3.3 / Forms and Selection | [163:1334](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1334),900×2219, Dark163:1338/Light163:1340; done D032 |
+| Design v2 / DS / R3.3 / Stepper Photo and Sections | [163:1576](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1576),900×2532, Dark163:1580/Light163:1582; done D032 |
+| Design v2 / DS / R3.3 / Keyboard and Long Labels | [163:2060](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-2060),900×1193; fixtures390×844; done D032 |
+| Design v2 / DS / R3.3 / Static text scale2 | [166:1988](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=166-1988),900×1103; Manrope ×2 stress, not OS scaling; done D032 |
+| Design v2 / DS / R3.4 / Data states | [176:2036](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2036); 900×1443, Dark 176:2040 / Light 176:2042; awaiting_review D033 |
+| Design v2 / DS / R3.4 / Save / Sync / Publication | [176:2110](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2110); 900×2019, Dark 176:2114 / Light 176:2116; awaiting_review D033 |
+| Design v2 / DS / R3.4 / Motion / Reduced | [176:2214](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2214); 900×1472, Dark 176:2218 / Light 176:2220; awaiting_review D033 |
+| Design v2 / DS / R3.4 / Adaptive fixtures | [176:2418](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2418); 1808×3619, Dark 176:2422 / Light 176:2424; awaiting_review D033 |
 | Финальные Design v2 frames | Ещё не созданы; IDs, variant/state и evidence добавляются после R4–R7, без подстановки legacy ссылок |
 
 Prototype reactions старой итерации не приняты и полностью не прогонялись в R0.
