@@ -49,7 +49,17 @@
 [плане](plan.md), фактическое состояние — в [аудите](audit.md).
 
 Каждая запись ниже — принятое целевое решение, а не заявление о работающем UI.
-В R0 фиксируются только документация и результаты чтения. Новый макет,
+В R0 фиксировались только документация и результаты чтения. По следующему
+поручению начата R1.1; [схемы IA](screens.md#r11--информационная-архитектура)
+приняты поручением продолжить (D013). [Low-fi R1.2](screens.md#r12--low-fi-основных-сценариев)
+приняты после правок кнопок/поиска (D015).
+[Low-fi R1.3](screens.md#r13--low-fi-resume-wizard-и-редактора) приняты D017.
+[Low-fi R1.4](screens.md#r14--low-fi-projects-portfolio-и-публикации) приняты
+после цветовых правок D020; R1 — `done`. [Шесть пилотов R2.1](screens.md#r21--два-визуальных-направления)
+приняты как сравнение D022; [brand specimens R2.2](screens.md#r22--знак-написание-и-иконка-приложения)
+приняты выбором бренда A D024: R2.2/R2.3/R2 done. Связанные пилоты A — основа R3;
+[Dark/Light foundations R3.1](screens.md#r31--цвета-типографика-и-метрики) ожидают
+review D025, Noto Sans предложен для DS. Постоянные адреса документов приняты D019. Новый макет,
 интерактивный прототип, реализованный интерфейс и работающая backend-функция
 учитываются отдельно. Действующий Flutter содержит единый `PortfolioContent`
 и `resumeText`: это текущая реализация, а не ограничение целевой модели.
@@ -60,12 +70,37 @@
 
 ## Границы и порядок работы
 
-### REQ-SCOPE-01 — Только R0 в текущем запуске
+### REQ-SCOPE-01 — Границы исходного запуска R0
 
-Разрешены чтение репозитория, Figma и референсов, аудит и создание документации.
+В исходном запуске разрешены чтение репозитория, Figma и референсов, аудит и создание документации.
 Запрещены новые экраны, изменения продуктового кода или Figma, установка
 зависимостей и переписывание приложения. После отчёта R0 работа останавливается
 для согласования плана.
+
+Следующее прямое поручение от 2026-10-05 приняло этот план и разрешило R1.1
+(D009 в [журнале](plan.md#журнал-решений)): карта IA, ownership и переходов
+в отдельной области Figma, сопровождение результатов в документации.
+Runtime/schema, hi-fi, logo и выбор шрифтов не входят в R1.1; остальные
+задачи начинаются последовательно после приёмки текущего артефакта.
+
+Последующее поручение «переходи к следующей фазе» принято как приёмка R1.1
+и разрешение следующей задачи R1.2, D013. Созданы low-fi roots, настроек,
+профиля/контактов и входа в создание документа. Поручение исправить соседние
+кнопки/поиск и затем продолжить принято как условная приёмка R1.2 после
+проверенных правок и разрешение R1.3 (D015). Пять шагов Resume и focused
+section editors приняты поручением продолжить (D017). В R1.4 созданы 40 low-fi
+экранов Projects/Portfolio/Publish, первоначально awaiting_review (D018). Отдельный ответ
+пользователя согласовал постоянный адрес документа (D019).
+Поручение подсветить важные действия и некоторые детали цветом, затем
+продолжить, принято как условная приёмка R1.4 после проверенных правок и
+разрешение R2.1 (D020). Правки выполнены; два направления на шести пилотах
+созданы (D021). Поручение «переходи к следующему этапу» приняло сравнение
+R2.1 и разрешило R2.2 (D022), без выбора A/B. Brand specimens созданы и
+проверены, первоначально awaiting_review D023. Прямой выбор бренда A и поручение
+перейти к следующей фазе закрыли R2.2/R2.3/R2 и разрешили R3.1 (D024).
+Связанные пилоты A / Cyber Editorial — основа R3; B сохранён как история.
+Foundations созданы и проверены, awaiting_review D025; финальная типографика,
+полная DS, компоненты R3.2–R3.4 и runtime ещё не приняты.
 
 ### REQ-SCOPE-02 — Отдельная инициатива
 
@@ -214,6 +249,11 @@ Working draft, сохранённое локальное состояние, с�
 явная. Зафиксировать ожидаемое поведение и возможности текущих contracts без
 сложной системы версионирования ради редизайна.
 
+Перед Publish текущая рабочая версия должна быть сохранена и подтверждена
+сервером. Local Save или ACK старой mutation не разрешают публиковать новые
+несохранённые правки. Неизвестный исход сетевой операции требует сверки
+статуса; повторная отправка не должна создавать новую публикацию молча.
+
 ---
 
 ## Навигация
@@ -279,9 +319,15 @@ Working draft, сохранённое локальное состояние, с�
 
 ### REQ-PROJECT-01 — Порядок раздела
 
-Строго: название + настройки → «Импорт из GitHub» → «Создать проект» → поиск
-проектов → список. Два действия допустимы в одном ряду, если полные подписи
-помещаются; на узком экране перестраиваются без обрезания.
+Строго: название + настройки → горизонтальный ряд «Импорт из GitHub» /
+«Создать проект» → поиск → список. По правке D015 соседние действия находятся
+на одном уровне; компактные размеры и короткие понятные подписи позволяют
+разместить их горизонтально. Высота hit area 48 px сохраняется; narrow/scale 2
+проверяются отдельно, без обрезания подписей и уменьшения доступности.
+
+У поиска нет внешнего заголовка «Поиск проектов» или аналогичного. Видны
+только поле ввода, лупа и краткая подсказка о вводе; доступное имя для screen
+reader сохраняется в реализации. Это правило относится ко всем поискам.
 
 ### REQ-PROJECT-02 — Без панели категорий и hero
 
@@ -366,6 +412,13 @@ Root показывает список Portfolio. Действия: создат
 предлагает «Опубликовать», а не фиктивную доступную другим ссылку.
 Публичный посетитель не получает редактор, настройки аккаунта или приватные данные.
 
+По решению D019 публичный адрес принадлежит конкретному документу и сохраняется
+при смене его названия и никнейма владельца. Unpublish закрывает доступ;
+повторный Publish этого документа использует тот же адрес. Duplicate создаёт
+новый private документ и не копирует ссылку/статус публикации исходника.
+Точная route scheme не выбрана. Нынешний username adapter требует отдельной
+миграции перед переносом этого target UX; Figma не доказывает поддержку URL.
+
 ---
 
 ## Настройки
@@ -401,8 +454,9 @@ Root показывает список Portfolio. Действия: создат
 Нужны состояния занятого/недопустимого username, влияния смены ника на
 публичные URL, подтверждения смены почты, повторного подтверждения личности
 при необходимости, ошибки подключения провайдера, попытки отключить последний
-способ входа, сохранения/успеха/ошибки. Сохранение старых URL не обещается без
-реализации; политика старых URL — отдельное продуктовое решение.
+способ входа, сохранения/успеха/ошибки. Политика D019 сохраняет постоянные
+адреса документов при смене ника; реализация этого контракта проверяется
+перед R8. Текущий adapter пока не поддерживает принятое поведение.
 
 ---
 
@@ -421,6 +475,11 @@ Root показывает список Portfolio. Действия: создат
 Запрещены десятки одинаковых outlined-кнопок, длинная форма с Save только внизу,
 полноценный свободный canvas и обязательный drag-and-drop. Drag handle
 дополняется доступными действиями «Выше/Ниже».
+
+По прямой правке D015 все последовательные соседние кнопки располагаются
+горизонтально на одном уровне. Снижаются ширина, padding и длина подписи,
+сохраняются смысл действия и высота нажатия 48 px; группы по два/три действия
+используют общий Auto Layout row. Keyboard/scale/narrow проверяются R7/R8.
 
 ### REQ-EDITOR-03 — Данные и ограниченное оформление
 
@@ -505,6 +564,15 @@ AI-чат и AI-элементы без продуктовой необходи�
 Lime — основной интерактивный акцент. Cyan/pink/violet вспомогательные, а не
 четыре равноправные primary-кнопки. На neon-fill нужен измеренный контрастный
 текст; `textMuted` не считается подходящим для любого фона автоматически.
+
+По прямой правке D020 важные действия выделяются цветом: одно основное
+действие в контексте получает lime-fill и тёмный текст, второстепенные —
+нейтральную поверхность. Выбор дополнительно обозначается галочкой или
+геометрией, ошибка/опасное действие — понятной подписью и красным; ожидание —
+warning. Недоступный control остаётся нейтральным с объяснением причины.
+Небольшие цветные детали допустимы в пределах заданной палитры, без neon
+body-текста. Пилоты используют существующий `color/error #F06272`; это не
+брендовый красный. На карточках значимые метаданные используют `textSecondary`.
 
 ### REQ-PALETTE-03 — Light theme того же бренда
 
@@ -739,13 +807,14 @@ Screen IDs соответствуют [screens.md](screens.md), task IDs — [pl
 `S-PRIVACY`, `S-APP`.
 `ВСЕ` означает все применимые screens этой карты, включая web, а не
 выдуманный маршрут. «Документы» означает requirement процесса без экранной
-поверхности. Все строки результата ниже относятся к R0; UI evidence ещё
-не создавалось. При следующей фазе строка пополняется реальным результатом,
-не заменяя историю и target contract.
+поверхности. Результаты R0 дополнены принятой IA R1.1, принятыми low-fi R1.2/R1.3
+и ожидающими review low-fi R1.4, где они относятся к требованию.
+Low-fi evidence — в [карте](screens.md#r14--low-fi-projects-portfolio-и-публикации);
+prototype/runtime evidence ещё не создавалось. История и target contract сохранены.
 
 <div align="center">
 
-| **Требование** | **Задачи** | **Экран / поверхность** | **Проверки** | **Результат R0** |
+| **Требование** | **Задачи** | **Экран / поверхность** | **Проверки** | **Фактический результат** |
 |:---|:---|:---|:---|:---|
 | `REQ-SCOPE-01` | `R0.1`, `R0.5` | Документы | `C-SCOPE` | зафиксировано R0 |
 | `REQ-SCOPE-02` | `R0.1`, `R0.5`, `R9.3` | Документы | `C-SCOPE` | зафиксировано R0 |
@@ -756,57 +825,57 @@ Screen IDs соответствуют [screens.md](screens.md), task IDs — [pl
 | `REQ-WORKFLOW-03` | `R0.4`, `R0.5`, `R7.4`, `R9.3` | Документы | `C-SCOPE` | зафиксировано R0 |
 | `REQ-WORKFLOW-04` | `R0.5`, `R7.4`, `R9.3` | Документы | `C-SCOPE` | зафиксировано R0 |
 | `REQ-WORKFLOW-05` | `R0.4`, `R0.5` | Документы | `C-SCOPE` | зафиксировано R0 |
-| `REQ-WORKFLOW-06` | `R2.1`, `R2.2`, `R2.3` | `S-HOME`, `S-PUBLIC-RESUME`, `S-SETTINGS` | `C-ASSET`, `C-PALETTE` | целевое; не проверено в UI |
+| `REQ-WORKFLOW-06` | `R2.1`, `R2.2`, `R2.3` | `S-HOME`, `S-PUBLIC-RESUME`, `S-SETTINGS` | `C-ASSET`, `C-PALETTE` | Сравнение принято D022; бренд A выбран D024, R2 done. Связанные A pilots — основа R3; финальная типографика и полная DS ожидают приёмки |
 | `REQ-WORKFLOW-07` | `R7.4`, `R8.1`, `R9.3` | Документы; ВСЕ | `C-SCOPE` | зафиксировано R0 |
 | `REQ-WORKFLOW-08` | `R0.5` | Документы | `C-SCOPE` | зафиксировано R0 |
-| `REQ-MODEL-01` | `R1.1`, `R4.5`, `R5.1a`, `R5.3a` | `S-PROFILE`, `S-RESUMES`, `S-PORTFOLIOS`, EDITORS | `C-MODEL`, `C06` | целевое; не проверено в UI |
-| `REQ-MODEL-02` | `R1.1`, `R5.2a`, `R5.2b`, `R5.3b` | `S-PROJECTS`, `S-PROJECT-EDITOR`, `S-GITHUB`, `S-PORTFOLIO-EDITOR` | `C-MODEL`, `C-GITHUB` | целевое; не проверено в UI |
-| `REQ-MODEL-03` | `R1.1`, `R5.1a`, `R5.1b`, `R5.1c` | `S-RESUME-WIZARD`, `S-RESUME-EDITOR`, `S-PREVIEW` | `C-MODEL`, `C10` | целевое; не проверено в UI |
-| `REQ-MODEL-04` | `R1.1`, `R5.3a`, `R6.4` | `S-PORTFOLIO-EDITOR`, `S-PUBLIC-PORTFOLIO` | `C-MODEL`, `C17` | целевое; не проверено в UI |
-| `REQ-MODEL-05` | `R5.3b` | `S-PORTFOLIO-EDITOR`, `S-PROJECT-EDITOR` | `C-MODEL` | целевое; не проверено в UI |
-| `REQ-MODEL-06` | `R5.2b`, `R5.2c` | `S-GITHUB`, `S-GITHUB-REVIEW`, `S-PROJECT-EDITOR` | `C-GITHUB` | целевое; не проверено в UI |
-| `REQ-MODEL-07` | `R1.1`, `R5.1c`, `R5.3a` | `S-PROFILE`, `S-RESUME-EDITOR`, `S-PORTFOLIO-EDITOR` | `C-MODEL`, `C10` | целевое; не проверено в UI |
-| `REQ-MODEL-08` | `R5.4a`, `R5.4b`, `R5.4c`, `R9.1`, `R9.2` | EDITORS; `S-SHARE`; PUBLIC | `C10`, `C17` | целевое; не проверено в UI |
-| `REQ-NAV-01` | `R1.2`, `R3.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4` | ROOT | `C11`, `C15`, `C16` | целевое; не проверено в UI |
-| `REQ-NAV-02` | `R1.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4`, `R4.5` | ROOT; `S-SETTINGS` | `C02` | целевое; не проверено в UI |
-| `REQ-NAV-03` | `R4.1`, `R4.2`, `R4.3`, `R4.4` | ROOT | `C01` | целевое; не проверено в UI |
-| `REQ-NAV-04` | `R1.2`, `R1.3`, `R1.4`, `R3.2`, `R5.1c`, `R5.2a`, `R5.3a` | EDITORS; SETTINGS | `C12` | целевое; не проверено в UI |
-| `REQ-NAV-05` | `R1.2`, `R4.5`, `R4.6`, `R4.7a`, `R4.7b`, `R4.7c` | `S-SETTINGS`, `S-PROFILE`, `S-CONTACTS`, `S-ACCOUNT`, `S-PRIVACY`, `S-APP` | `C02`, `C12` | целевое; не проверено в UI |
-| `REQ-HOME-01` | `R1.2`, `R4.1` | `S-HOME` | `C03` | целевое; не проверено в UI |
-| `REQ-HOME-02` | `R3.2`, `R4.1` | `S-HOME` | `C03`, `C09`, `C15` | целевое; не проверено в UI |
-| `REQ-HOME-03` | `R4.1` | `S-HOME` | `C01`, `C04` | целевое; не проверено в UI |
-| `REQ-PROJECT-01` | `R4.3` | `S-PROJECTS` | `C05`, `C15`, `C16` | целевое; не проверено в UI |
-| `REQ-PROJECT-02` | `R4.3` | `S-PROJECTS` | `C05` | целевое; не проверено в UI |
-| `REQ-PROJECT-03` | `R3.2`, `R4.3` | `S-PROJECTS` | `C08`, `C13`, `C-ASSET` | целевое; не проверено в UI |
-| `REQ-PROJECT-04` | `R5.2a`, `R5.2b`, `R5.2c` | `S-PROJECTS`, `S-PROJECT-EDITOR`, `S-GITHUB`, `S-GITHUB-REVIEW` | `C13`, `C-GITHUB` | целевое; не проверено в UI |
-| `REQ-RESUME-01` | `R4.2` | `S-RESUMES` | `C09`, `C10`, `C13` | целевое; не проверено в UI |
-| `REQ-RESUME-02` | `R1.3`, `R3.3`, `R5.1a`, `R5.1b`, `R5.1c` | `S-RESUME-WIZARD`, `S-RESUME-EDITOR` | `C04`, `C10`, `C12` | целевое; не проверено в UI |
-| `REQ-RESUME-03` | `R4.5`, `R5.1a`, `R5.1c`, `R5.1d` | `S-PROFILE`, `S-RESUME-WIZARD`, `S-RESUME-EDITOR`, `S-PREVIEW`, `S-PUBLIC-RESUME` | `C07`, `C-ASSET` | целевое; не проверено в UI |
-| `REQ-RESUME-04` | `R5.1a`, `R5.1b`, `R5.1c`, `R5.1d` | `S-RESUME-WIZARD`, `S-RESUME-EDITOR`, `S-PREVIEW` | `C-MODEL`, `C08` | целевое; не проверено в UI |
-| `REQ-PORTFOLIO-01` | `R4.4`, `R5.3a`, `R5.4a`, `R5.4b`, `R5.4c` | `S-PORTFOLIOS`, `S-PORTFOLIO-EDITOR`, `S-PUBLISH`, `S-SHARE` | `C09`, `C10`, `C-MODEL` | целевое; не проверено в UI |
-| `REQ-PORTFOLIO-02` | `R5.3c`, `R6.4` | `S-PREVIEW`, `S-PUBLIC-PORTFOLIO` | `C07`, `C08`, `C17` | целевое; не проверено в UI |
-| `REQ-PORTFOLIO-03` | `R5.3b` | `S-PORTFOLIO-EDITOR`, `S-PROJECT-EDITOR` | `C-MODEL`, `C12` | целевое; не проверено в UI |
-| `REQ-SHARE-01` | `R5.4a`, `R5.4b`, `R5.4c`, `R6.4` | `S-HOME`, `S-RESUMES`, `S-PORTFOLIOS`, `S-PUBLISH`, `S-SHARE`, PUBLIC | `C09`, `C10`, `C17` | целевое; не проверено в UI |
-| `REQ-SETTINGS-01` | `R4.5`, `R4.6`, `R4.7a`, `R4.7b`, `R4.7c` | `S-SETTINGS`, `S-PROFILE`, `S-CONTACTS`, `S-ACCOUNT`, `S-PRIVACY`, `S-APP` | `C02`, `C06`, `C13` | целевое; не проверено в UI |
-| `REQ-SETTINGS-02` | `R4.6`, `R5.1a`, `R5.1c`, `R5.3a` | `S-CONTACTS`, `S-RESUME-EDITOR`, `S-PORTFOLIO-EDITOR` | `C06`, `C-MODEL` | целевое; не проверено в UI |
-| `REQ-SETTINGS-03` | `R0.1`, `R0.4`, `R4.6`, `R4.7a`, `R4.7b`, `R4.7c` | `S-CONTACTS`, `S-ACCOUNT` | `C06`, `C-SCOPE` | целевое; не проверено в UI |
-| `REQ-SETTINGS-04` | `R4.5`, `R4.7a`, `R4.7b`, `R4.7c`, `R5.4a`, `R5.4c` | `S-PROFILE`, `S-ACCOUNT`, `S-PUBLISH` | `C06`, `C09`, `C13` | целевое; не проверено в UI |
-| `REQ-EDITOR-01` | `R1.3`, `R5.1c`, `R5.2a`, `R5.3a`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C10`, `C12`, `C16` | целевое; не проверено в UI |
-| `REQ-EDITOR-02` | `R3.3`, `R5.1c`, `R5.2a`, `R5.3b`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C12`, `C15`, `C16` | целевое; не проверено в UI |
-| `REQ-EDITOR-03` | `R5.1c`, `R5.3a`, `R5.4a`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C10`, `C12`, `C-MODEL` | целевое; не проверено в UI |
+| `REQ-MODEL-01` | `R1.1`, `R4.5`, `R5.1a`, `R5.3a` | `S-PROFILE`, `S-RESUMES`, `S-PORTFOLIOS`, EDITORS | `C-MODEL`, `C06` | IA R1.1 принята; UI не проверен |
+| `REQ-MODEL-02` | `R1.1`, `R1.4`, `R5.2a`, `R5.2b`, `R5.3b` | `S-PROJECTS`, `S-PROJECT-EDITOR`, `S-GITHUB`, `S-PORTFOLIO-EDITOR` | `C-MODEL`, `C-GITHUB` | IA принята; H01–H16 R1.4: общая library, manual/GitHub, принято D020; runtime не проверен |
+| `REQ-MODEL-03` | `R1.1`, `R5.1a`, `R5.1b`, `R5.1c` | `S-RESUME-WIZARD`, `S-RESUME-EDITOR`, `S-PREVIEW` | `C-MODEL`, `C10` | IA R1.1 принята; UI не проверен |
+| `REQ-MODEL-04` | `R1.1`, `R1.4`, `R5.3a`, `R6.4` | `S-PORTFOLIO-EDITOR`, `S-PUBLIC-PORTFOLIO` | `C-MODEL`, `C17` | IA принята; H17/H18/H24/H37 R1.4: частичное покрытие независимого Portfolio/preview, принято D020; runtime не проверен |
+| `REQ-MODEL-05` | `R1.1`, `R1.4`, `R5.3b` | `S-PORTFOLIO-EDITOR`, `S-PROJECT-EDITOR` | `C-MODEL` | IA принята; H19–H23/H40 R1.4: association order/featured/visibility/remove, принято D020; runtime не проверен |
+| `REQ-MODEL-06` | `R1.1`, `R1.4`, `R5.2b`, `R5.2c` | `S-GITHUB`, `S-GITHUB-REVIEW`, `S-PROJECT-EDITOR` | `C-GITHUB` | IA принята; H10/H14–H16 R1.4: dedup/explicit review/protected overrides, принято D020; runtime не проверен |
+| `REQ-MODEL-07` | `R1.1`, `R1.4`, `R5.1c`, `R5.3a` | `S-PROFILE`, `S-RESUME-EDITOR`, `S-PORTFOLIO-EDITOR` | `C-MODEL`, `C10` | IA принята; H17 R1.4: создание из базы, принято D020; review существующего Resume принят R1.3; runtime не проверен |
+| `REQ-MODEL-08` | `R1.1`, `R1.4`, `R5.4a`, `R5.4b`, `R5.4c`, `R9.1`, `R9.2` | EDITORS; `S-SHARE`; PUBLIC | `C10`, `C17` | IA принята; H25–H36 R1.4: Apply/Save/sync/Publish разделены, принято D020; runtime не проверен |
+| `REQ-NAV-01` | `R1.1`, `R1.2`, `R3.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4` | ROOT | `C11`, `C15`, `C16` | IA R1.1 принята; low-fi R1.2 приняты, D015; UI не проверен |
+| `REQ-NAV-02` | `R1.1`, `R1.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4`, `R4.5` | ROOT; `S-SETTINGS` | `C02` | IA R1.1 принята; low-fi R1.2 приняты, D015; UI не проверен |
+| `REQ-NAV-03` | `R1.1`, `R1.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4` | ROOT | `C01` | IA R1.1 принята; low-fi R1.2 приняты, D015; UI не проверен |
+| `REQ-NAV-04` | `R1.1`, `R1.2`, `R1.3`, `R1.4`, `R3.2`, `R5.1c`, `R5.2a`, `R5.3a` | EDITORS; SETTINGS | `C12` | IA/R1.2/R1.3 приняты; H07/H08 и origin captions R1.4 принято D020; native Back не проверен |
+| `REQ-NAV-05` | `R1.1`, `R1.2`, `R4.5`, `R4.6`, `R4.7a`, `R4.7b`, `R4.7c` | `S-SETTINGS`, `S-PROFILE`, `S-CONTACTS`, `S-ACCOUNT`, `S-PRIVACY`, `S-APP` | `C02`, `C12` | IA R1.1 принята; low-fi R1.2 приняты, D015; UI не проверен |
+| `REQ-HOME-01` | `R1.2`, `R4.1` | `S-HOME` | `C03` | low-fi R1.2 приняты, D015; UI не проверен |
+| `REQ-HOME-02` | `R1.2`, `R3.2`, `R4.1` | `S-HOME` | `C03`, `C09`, `C15` | low-fi R1.2 приняты, D015; UI не проверен |
+| `REQ-HOME-03` | `R1.2`, `R4.1` | `S-HOME` | `C01`, `C04` | low-fi R1.2 приняты, D015; UI не проверен |
+| `REQ-PROJECT-01` | `R1.2`, `R1.4`, `R4.3` | `S-PROJECTS` | `C05`, `C15`, `C16` | R1.2 принят; H05/H06 R1.4: компактный ряд действий и search с лупой, принято D020; runtime не проверен |
+| `REQ-PROJECT-02` | `R1.4`, `R4.3` | `S-PROJECTS` | `C05` | H05/H06 R1.4: нет категорий/hero, принято D020; runtime не проверен |
+| `REQ-PROJECT-03` | `R1.4`, `R3.2`, `R4.3` | `S-PROJECTS` | `C08`, `C13`, `C-ASSET` | H01/H03 R1.4: поля проекта/optional cover и описание, принято D020; финальная карточка/реальный asset ещё не проверены |
+| `REQ-PROJECT-04` | `R1.4`, `R5.2a`, `R5.2b`, `R5.2c` | `S-PROJECTS`, `S-PROJECT-EDITOR`, `S-GITHUB`, `S-GITHUB-REVIEW` | `C13`, `C-GITHUB` | H01–H16 R1.4: manual/import/loading/empty/error/review/stale, принято D020; runtime не проверен |
+| `REQ-RESUME-01` | `R1.2`, `R1.3`, `R4.2` | `S-RESUMES`; сохранённый Resume | `C09`, `C10`, `C13` | список R1.2 принят; переход к saved Resume R1.3 принят D017; UI не проверен |
+| `REQ-RESUME-02` | `R1.3`, `R3.3`, `R5.1a`, `R5.1b`, `R5.1c` | `S-RESUME-WIZARD`, `S-RESUME-EDITOR` | `C04`, `C10`, `C12` | low-fi R1.3 принят D017; UI не проверен |
+| `REQ-RESUME-03` | `R1.3`, `R4.5`, `R5.1a`, `R5.1c`, `R5.1d` | `S-PROFILE`, `S-RESUME-WIZARD`, `S-RESUME-EDITOR`, `S-PREVIEW`, `S-PUBLIC-RESUME` | `C07`, `C-ASSET` | low-fi R1.3 принят D017; UI не проверен |
+| `REQ-RESUME-04` | `R1.3`, `R5.1a`, `R5.1b`, `R5.1c`, `R5.1d` | `S-RESUME-WIZARD`, `S-RESUME-EDITOR`, `S-PREVIEW` | `C-MODEL`, `C08` | low-fi R1.3 принят D017; UI не проверен |
+| `REQ-PORTFOLIO-01` | `R1.4`, `R4.4`, `R5.3a`, `R5.4a`, `R5.4b`, `R5.4c` | `S-PORTFOLIOS`, `S-PORTFOLIO-EDITOR`, `S-PUBLISH`, `S-SHARE` | `C09`, `C10`, `C-MODEL` | H17/H18/H25–H31/H35/H36/H40 R1.4: create/edit/publish/unpublish/duplicate, принято D020; runtime не проверен |
+| `REQ-PORTFOLIO-02` | `R1.4`, `R5.3c`, `R6.4` | `S-PREVIEW`, `S-PUBLIC-PORTFOLIO` | `C07`, `C08`, `C17` | H24/H32/H37/H38 R1.4: preview/public link selection/access, принято D020; real photo/anonymous runtime не проверены |
+| `REQ-PORTFOLIO-03` | `R1.4`, `R5.3b` | `S-PORTFOLIO-EDITOR`, `S-PROJECT-EDITOR` | `C-MODEL`, `C12` | H19–H23 R1.4: create+attach и remove relation сохраняют library, принято D020; runtime не проверен |
+| `REQ-SHARE-01` | `R1.4`, `R5.4a`, `R5.4b`, `R5.4c`, `R6.4` | `S-HOME`, `S-RESUMES`, `S-PORTFOLIOS`, `S-PUBLISH`, `S-SHARE`, PUBLIC | `C09`, `C10`, `C17` | H25–H39 R1.4: explicit publication/Copy/Open/Share/unavailable, принято D020; URL политика принята D019; native share/backend не проверены |
+| `REQ-SETTINGS-01` | `R1.2`, `R4.5`, `R4.6`, `R4.7a`, `R4.7b`, `R4.7c` | `S-SETTINGS`, `S-PROFILE`, `S-CONTACTS`, `S-ACCOUNT`, `S-PRIVACY`, `S-APP` | `C02`, `C06`, `C13` | low-fi R1.2 приняты, D015; UI не проверен |
+| `REQ-SETTINGS-02` | `R1.2`, `R4.6`, `R5.1a`, `R5.1c`, `R5.3a` | `S-CONTACTS`, `S-RESUME-EDITOR`, `S-PORTFOLIO-EDITOR` | `C06`, `C-MODEL` | low-fi R1.2 приняты, D015; UI не проверен |
+| `REQ-SETTINGS-03` | `R1.2`, `R0.1`, `R0.4`, `R4.6`, `R4.7a`, `R4.7b`, `R4.7c` | `S-CONTACTS`, `S-ACCOUNT` | `C06`, `C-SCOPE` | low-fi R1.2 приняты, D015; UI не проверен |
+| `REQ-SETTINGS-04` | `R1.2`, `R4.5`, `R4.7a`, `R4.7b`, `R4.7c`, `R5.4a`, `R5.4c` | `S-PROFILE`, `S-ACCOUNT`, `S-PUBLISH` | `C06`, `C09`, `C13` | R1.2 принят; F20/H39 обновлены по D019: постоянные ссылки при rename; ошибки account/runtime не проверены |
+| `REQ-EDITOR-01` | `R1.3`, `R1.4`, `R5.1c`, `R5.2a`, `R5.3a`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C10`, `C12`, `C16` | R1.3 принят D017; H18/H22/H24–H26 R1.4: секции/preview/publication, принято D020; runtime не проверен |
+| `REQ-EDITOR-02` | `R1.3`, `R1.4`, `R3.3`, `R5.1c`, `R5.2a`, `R5.3b`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C12`, `C15`, `C16` | R1.3 принят D017; H07/H22 R1.4: короткие действия/перестановка, принято D020; native/scale 2 не проверены |
+| `REQ-EDITOR-03` | `R1.3`, `R1.4`, `R5.1c`, `R5.3a`, `R5.4a`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C10`, `C12`, `C-MODEL` | R1.3 принят D017; H03/H07/H08/H18/H26/H34 R1.4: working/local/sync/errors, принято D020; runtime не проверен |
 | `REQ-TECH-01` | `R3.2`, `R4.3`, `R5.1b`, `R5.3c`, `R6.4` | `S-PROJECTS`, `S-RESUME-EDITOR`, `S-PREVIEW`, PUBLIC | `C08`, `C16` | целевое; не проверено в UI |
 | `REQ-TECH-02` | `R3.2`, `R3.4` | `S-PROJECTS`, EDITORS; PUBLIC | `C08`, `C14`, `C-ASSET` | целевое; не проверено в UI |
-| `REQ-VISUAL-01` | `R2.1`, `R2.2`, `R2.3`, `R3.4` | ВСЕ | `C01`, `C04`, `C05`, `C-PALETTE` | целевое; не проверено в UI |
-| `REQ-VISUAL-02` | `R2.1`, `R2.3`, `R3.4` | `S-HOME`, `S-SETTINGS`, PUBLIC; `S-WEB-LANDING` | `C-ASSET`, `C-PALETTE` | целевое; не проверено в UI |
-| `REQ-VISUAL-03` | `R2.3`, `R7.3` | ВСЕ | `C04`, `C05`, `C-MOTION` | целевое; не проверено в UI |
-| `REQ-PALETTE-01` | `R3.1`, `R3.4` | ВСЕ | `C-PALETTE` | целевое; не проверено в UI |
-| `REQ-PALETTE-02` | `R3.1`, `R3.2`, `R3.4` | ВСЕ | `C14`, `C-PALETTE` | целевое; не проверено в UI |
-| `REQ-PALETTE-03` | `R3.1`, `R3.4` | ВСЕ | `C14`, `C-PALETTE` | целевое; не проверено в UI |
-| `REQ-TYPE-01` | `R3.1`, `R3.4`, `R7.2` | ВСЕ | `C15`, `C16` | целевое; не проверено в UI |
-| `REQ-TYPE-02` | `R3.1`, `R3.4` | ВСЕ | `C14`, `C16`, `C-ASSET` | целевое; не проверено в UI |
-| `REQ-LOGO-01` | `R2.2`, `R2.3` | `S-HOME`, `S-SETTINGS`, `S-PUBLIC-RESUME`; app icon | `C-ASSET` | целевое; не проверено в UI |
-| `REQ-LOGO-02` | `R2.2`, `R2.3`, `R3.4` | `S-HOME`, `S-SETTINGS`, `S-PUBLIC-RESUME`; app icon | `C-ASSET`, `C14` | целевое; не проверено в UI |
-| `REQ-FIGMA-01` | `R3.1`, `R3.2`, `R3.3`, `R3.4` | Figma components; ВСЕ | `C-ASSET`, `C-SCOPE` | целевое; не проверено в UI |
+| `REQ-VISUAL-01` | `R2.1`, `R2.2`, `R2.3`, `R3.4` | ВСЕ | `C01`, `C04`, `C05`, `C-PALETTE` | Бренд A принят D024; связанные A / Cyber Editorial pilots — основа R3. R3.1 foundations проверены, awaiting_review D025; полный продукт не проверен |
+| `REQ-VISUAL-02` | `R2.1`, `R2.3`, `R3.4` | `S-HOME`, `S-SETTINGS`, PUBLIC; `S-WEB-LANDING` | `C-ASSET`, `C-PALETTE` | Сопоставимые R2.1 fixtures приняты D022; бренд A выбран D024, B сохранён как история; media/web позднее |
+| `REQ-VISUAL-03` | `R2.1`, `R2.3`, `R7.3` | ВСЕ | `C04`, `C05`, `C-MOTION` | R2.1: нет dashboard/hero/fake avatar/HUD; static dark review PASS; motion/full product позднее |
+| `REQ-PALETTE-01` | `R2.1`, `R2.2`, `R3.1`, `R3.4` | ВСЕ | `C-PALETTE` | R3.1: 25 прежних color variables обеих тем и locked Dark HEX сохранены; новые semantic aliases, active использует surfaceHover. Foundations awaiting_review D025; runtime pending |
+| `REQ-PALETTE-02` | `R2.1`, `R2.2`, `R3.1`, `R3.2`, `R3.4` | ВСЕ | `C14`, `C-PALETTE` | D020 акценты сохранены. R3.1: 64 text/16 outline-focus pairs PASS; 246 actual painted texts ≥4.5. Dark textMuted ограничен background, metadata использует textMeta; full a11y pending |
+| `REQ-PALETTE-03` | `R2.2`, `R3.1`, `R3.4` | ВСЕ | `C14`, `C-PALETTE` | R3.1 Light foundations: четыре surfaces, все text roles/focus/control boundaries проверены, lime CTA получает Ink stroke. Awaiting_review D025; full component states позднее |
+| `REQ-TYPE-01` | `R2.1`, `R2.2`, `R3.1`, `R3.4`, `R7.2` | ВСЕ | `C15`, `C16` | R3.1: девять Noto roles40–12, body16/24; reuse8 UI styles, new display40/48. Static ru reflow16/32 PASS, шесть examples bound touch48; OS scaling/keyboard ещё pending |
+| `REQ-TYPE-02` | `R2.1`, `R2.2`, `R3.1`, `R3.4` | ВСЕ | `C14`, `C16`, `C-ASSET` | Noto SIL OFL1.1/pubspec прочитаны; ru/en live specimens обеих тем и 246 paints проверены. Noto предложен, font choice/native shaping pending |
+| `REQ-LOGO-01` | `R2.1`, `R2.2`, `R2.3` | `S-HOME`, `S-SETTINGS`, `S-PUBLIC-RESUME`; app icon | `C-ASSET` | Бренд A принят D024: Mark110:282/Wordmark111:284/AppIcon111:297, прежние IDs/variants сохранены в StackCard / v2. B и legacy — история; native exports pending |
+| `REQ-LOGO-02` | `R2.1`, `R2.2`, `R2.3`, `R3.4` | `S-HOME`, `S-SETTINGS`, `S-PUBLIC-RESUME`; app icon | `C-ASSET`, `C14` | R2.2 small-size/восемь UI contexts проверены, A принят D024; cleaner16/UI32, Light Ink. Foundations используют Wordmark A; native exports pending |
+| `REQ-FIGMA-01` | `R3.1`, `R3.2`, `R3.3`, `R3.4` | Figma components; ВСЕ | `C-ASSET`, `C-SCOPE` | R3.1 page121:7, два editable Auto Layout boards, Dark/Light modes/alias scopes, 7variables/1style; reused collections/styles. Полные components/variants R3.2–R3.4 todo |
 | `REQ-FIGMA-02` | `R0.2`, `R0.3`, `R1.1`, `R7.4` | Документы; Figma v2 | `C-SCOPE` | зафиксировано R0 |
 | `REQ-ADAPT-01` | `R7.2` | ВСЕ | `C11`, `C15`, `C16` | целевое; не проверено в UI |
 | `REQ-ADAPT-02` | `R1.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4`, `R7.2` | ROOT; tablet Flutter | `C11`, `C16` | целевое; не проверено в UI |
@@ -818,7 +887,7 @@ Screen IDs соответствуют [screens.md](screens.md), task IDs — [pl
 | `REQ-WEB-03` | `R6.3`, `R7.2` | `S-WEB-WORKSPACE` | `C12`, `C16`, `C-WEB` | целевое; не проверено в UI |
 | `REQ-WEB-04` | `R6.4`, `R9.2` | PUBLIC | `C09`, `C17`, `C-WEB` | целевое; не проверено в UI |
 | `REQ-REFERENCE-01` | `R0.2`, `R0.5` | Документы | `C-ASSET`, `C-SCOPE` | зафиксировано R0 |
-| `REQ-REFERENCE-02` | `R0.2`, `R2.2`, `R3.2`, `R3.4` | Документы; `S-PROJECTS`, EDITORS; PUBLIC | `C-ASSET`, `C-SCOPE` | зафиксировано R0 |
+| `REQ-REFERENCE-02` | `R0.2`, `R2.2`, `R3.1`, `R3.2`, `R3.4` | Документы; `S-PROJECTS`, EDITORS; PUBLIC | `C-ASSET`, `C-SCOPE` | R0 sources сохранены; Noto bundled fonts/pubspec и SIL OFL1.1 прочитаны для R2.2/R3.1. Нет новых assets/dependencies, native shaping отдельно |
 | `REQ-PRESERVE-01` | `R0.1`, `R0.5`, `R8.1`, `R9.2` | Документы; repository/Figma | `C-SCOPE` | зафиксировано R0 |
 | `REQ-PRESERVE-02` | `R0.1`, `R8.1`, `R9.1`, `R9.2` | ВСЕ | `C11`, `C14`, `C16`, `C-SCOPE` | зафиксировано R0 |
 | `REQ-PRESERVE-03` | `R8.3a`, `R8.3b`, `R8.3c`, `R8.3d`, `R8.3e`, `R8.3f`, `R8.4a`, `R8.4b`, `R8.4c`, `R8.4d`, `R8.4e`, `R8.5a`, `R8.5b`, `R8.5c`, `R9.1`, `R9.2` | ROOT; EDITORS; `S-ACCOUNT`, `S-GITHUB`, `S-GITHUB-REVIEW`, PUBLIC | `C10`, `C-GITHUB`, `C-SCOPE` | целевое; не проверено в UI |
