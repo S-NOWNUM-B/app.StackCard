@@ -39,7 +39,8 @@
 Теперь бренд A принят D024; fonts review R3.1 добавлен D027. R3.3 принята D032;
 state/adapt/motion specimens R3.4 и полная R3 приняты D034 после review D033.
 R4.1–R4.7c приняты D036 после review D035; вся R5 принята D038 после D037.
-Весь R6/D039 принят D040; активна полная R7.1–R7.4, R8/R9 уже авторизованы
+Весь R6/D039 принят D040; R7 source package/structural QA завершены D041,
+awaiting_review; R8/R9 уже авторизованы
 на redesign/full-app; independent R8 UI перенесён/R9 supported slice950tests
 PASS, full prerequisite scope ещё ожидает решения
 по интерпретации продолжения с прежним full-phase/parallel/no-preview режимом; визуальный просмотр/preview/run
@@ -503,13 +504,20 @@ min4.832909811:1,690strokes min4.364564811:1,726targets≥48;20failure categorie
 116sourceCTA records сопоставлены с proposed destinations; actual URLs не
 проверялись. Это static audit, не runtime/privacy/availability certification.
 apps/web остаётся README-only. D040 приняло R6 и разрешило всю R7, затем
-R8/R9; actual R7 graph QA ещё pending, prerequisite scope
+R8/R9; actual R7 graph QA PASS D041/package awaiting_review, prerequisite scope
 вопрос ждёт ответа. Preview/run пропущены по прямому запросу; новый native
 или backend результат этими Figma sources не подтверждается.
 
 ---
 
 ## Перенесённые источники R8
+
+Фактический source package R7 и22 contract chunks+topology QA зафиксированы
+в [r7-handoff.json](source/r7-handoff.json).2736 actualbindings/723roots/328 unique
+starts и6 standard/reduced motionpairs проверены структурно;98 variables/50 style IDs
+preserved. Package awaiting_review D041, DESIGN_READY требует явной приёмки.
+Preview/playback/native launch пропущены по запросу; это не runtime/backend
+илиnative visual evidence.
 
 По D040 в существующий Flutter импортированы pinned источники, без нового
 raster UI. [Source manifest](../../apps/mobile/assets/design_v2/source-manifest.json)
@@ -543,7 +551,8 @@ cases; targeted SVG paint10cases и final950-case Flutter suite PASS,0SVGwarning
 Эти результаты подтверждают source integrity и headless supported UI rendering;
 native/font/SVG/AppIcon визуальная приёмка и новые backend/web capabilities
 остаются pending. Preview/app launch пропущены по запросу. Current R8 partial,
-R7 graph ещё pending, REDESIGN_DONE не установлен. Полный proposed scope
+R7 source graph PASS D041/package awaiting_review,DESIGN_READY pending,
+REDESIGN_DONE не установлен. Полный proposed scope
 перечислен в [prerequisites](prerequisites.md), не выполняется автоматически.
 
 ---

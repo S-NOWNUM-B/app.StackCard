@@ -18,7 +18,7 @@
 Shared theme/controls/assets, Projects и поддерживаемые Settings перенесены,
 но Home/Portfolio legacy composition, singleton storage/plain Resume и три
 roots сохранены. Full target model/media/publication/web требуют proposed
-[prerequisites](../redesign/prerequisites.md); R7 global graph QA pending,
+[prerequisites](../redesign/prerequisites.md); R7 source QA PASS D041/awaiting_review,
 DESIGN_READY/REDESIGN_DONE не установлены. Старые recolor S/DM Sans/greeting/
 categories/artwork требования не переопределяют Design v2.
 

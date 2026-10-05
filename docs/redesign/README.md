@@ -5,7 +5,7 @@
 **Отдельная инициатива полного редизайна mobile, web и публичных документов**
 
 ![Phase R7](https://raster.shields.io/badge/Phase-R7-C7FF1A?style=for-the-badge)
-![Status in progress](https://raster.shields.io/badge/Status-in_progress-14161B?style=for-the-badge)
+![Status awaiting review](https://raster.shields.io/badge/Status-awaiting_review-14161B?style=for-the-badge)
 
 </div>
 
@@ -28,7 +28,18 @@ StackCard создаёт разные структурированные Resume 
 перепроектирует визуальную систему и сценарии, сохраняя бизнес-логику, данные,
 интеграции и Material 3 как техническую основу Flutter.
 
-На **2026-10-05** R7.1–R7.4 — `in_progress`, D040; R6 принята.
+На **2026-10-05** R7.1–R7.4 — `awaiting_review`, D041; R6 принята D040.
+R7 source build и структурная QA завершены D041; пакет — `awaiting_review`.
+[Переносимый handoff](source/r7-handoff.json) фиксирует 2736 фактических bindings
+(1758 mobile +978 web),723 roots/52255nodes/15822 TEXT и328 уникальных starts;
+22 expected-contract chunks +topology PASS,11 failure categories0.
+Шесть motion pairs сохраняют targets,180/240/280ms иreduced0ms; нет timers
+и SET_VARIABLE.98 variables/50 style IDs сохранены точно.12 новых adaptive
+fixtures используют10существующих adaptive и2 keyboard sources;180 static ×2
+text samples иcontrast PASS. Это structural/graph evidence; preview/playback/
+native launch пропущены по запросу. R7.4/явная приёмка пользователя открыта,
+DESIGN_READY/REDESIGN_DONE не установлены; новая авторизация R8 не требуется.
+
 R8/R9 прямо разрешены D040 на `redesign/full-app`. Независимая часть переноса
 выполнена параллельно подготовке R7: Manrope/semantic Lime, shared controls,
 проверенные SVG, live Brand A, Projects search/list и поддерживаемые Settings.
@@ -40,11 +51,13 @@ Home/Portfolio сохраняют прежнюю композицию; Shell и�
 root routes, Resume library и новый web отсутствуют. Полные model/media/account/
 publication/web prerequisites ещё ждут решения scope по
 [конкретному предложению](prerequisites.md). Это не повторное разрешение R8.
-R7 global graph QA ещё pending; DESIGN_READY/REDESIGN_DONE не установлены.
+R7 graph QA PASS D041; явная пользовательская приёмка/DESIGN_READY pending.
+Полный R8/R9 и REDESIGN_DONE не закрыты.
 Visual preview/playback/native launch пропущены по запросу; headless tests не
 подтверждают native visual parity, live Google/iOS или backend новых сценариев.
-Commit/push/deploy и автоматический старт Phase11 не разрешены.
-R7 строится на [page221:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-7)
+Перенос `redesign/full-app` в `dev` и commit/push разрешены D042.
+Deployment и автоматический старт Phase11 не разрешены.
+R7 пакет создан на [page221:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-7)
 и [board221:8](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-8).
 Подробные результаты — в [плане](plan.md#фактический-перенос-поддерживаемого-ui-r8r9-d040)
 и [переносимом R9 evidence](source/r9-supported-ui-validation.json);
@@ -97,8 +110,8 @@ states/motion/adaptive собраны и проверены в review D033, за
 | Аудит и план | R0 принята поручением начать R1; исходные результаты и ограничения сохранены в audit/references |
 | IA Design v2 | [Navigation, ownership и lifecycle](screens.md#r11--информационная-архитектура); R1.1 принята поручением продолжить, D013 |
 | Low-fi Design v2 | [24 экрана R1.2](screens.md#r12--low-fi-основных-сценариев), [24 экрана R1.3](screens.md#r13--low-fi-resume-wizard-и-редактора) и [40 экранов R1.4](screens.md#r14--low-fi-projects-portfolio-и-публикации) приняты. Всего 88 phone frames, цветовые правки D020 проверены |
-| Визуальные макеты Design v2 | [Бренд A](screens.md#r23--принятый-бренд-и-направление) принят D024; R3.1 done D028, Manrope. [Navigation/cards/badges R3.2](screens.md#r32--навигация-карточки-и-technologybadge) приняты D030; [Forms/stepper/photo/sections R3.3](screens.md#r33--формы-stepper-фото-и-секции) приняты D032; [States/motion/adaptive R3.4](screens.md#r34--состояния-motion-и-адаптивность) приняты D034; [все девять задач R4](screens.md#r4--основные-экраны-и-настройки) приняты D036; [весь пакет R5](screens.md#r5--создание-редактирование-и-публикация) принят D038; [весь пакет R6](screens.md#r6--веб-поверхности) принят D040; R7 в работе, R8/R9 уже авторизованы последовательно |
-| Интерактивный прототип Design v2 | R7 graph в работе; полный QA и playback ещё не подтверждены |
+| Визуальные макеты Design v2 | [Бренд A](screens.md#r23--принятый-бренд-и-направление) принят D024; R3.1 done D028, Manrope. [Navigation/cards/badges R3.2](screens.md#r32--навигация-карточки-и-technologybadge) приняты D030; [Forms/stepper/photo/sections R3.3](screens.md#r33--формы-stepper-фото-и-секции) приняты D032; [States/motion/adaptive R3.4](screens.md#r34--состояния-motion-и-адаптивность) приняты D034; [все девять задач R4](screens.md#r4--основные-экраны-и-настройки) приняты D036; [весь пакет R5](screens.md#r5--создание-редактирование-и-публикация) принят D038; [весь пакет R6](screens.md#r6--веб-поверхности) принят D040; R7 awaiting_review D041, R8/R9 partial авторизованы D040 |
+| Интерактивный прототип Design v2 | R7 source graph/structural QA завершены D041; package awaiting_review. Playback/visual omitted, DESIGN_READY pending |
 | Реализованный Design v2 UI | R8 partial: shared theme/controls/assets, Projects и поддерживаемые Settings; 950 headless tests PASS. Полные Home/Portfolio/Resume/web не перенесены |
 | Backend новых сценариев | Не реализован этим заданием; пробелы и зависимости зафиксированы отдельно |
 
@@ -166,9 +179,10 @@ Design v2 нельзя честно реализовать. Перед R8 пол
 
 ## Как продолжать
 
-Сначала прочитать этот README и [plan.md](plan.md). R7 и независимый перенос
-поддерживаемого UI продолжаются в разрешённом D040 режиме полного пакета и
-параллельной работы. Сам перенос уже разрешён; commit/push/deploy не запрошены.
+Сначала прочитать этот README и [plan.md](plan.md). R7 source package/QA
+завершены и ожидают явной приёмки; DESIGN_READY pending. Независимый supported
+UI перенос R8 и его R9 checks выполнены в разрешённом D040 parallel режиме.
+Перенос всей ветки в `dev` и commit/push разрешены D042; deployment не запрошен.
 
 Для новых capabilities подготовлено [конкретное предложение prerequisites](prerequisites.md).
 [Gate плана](plan.md#зависимости-реализации): «До R8.1 для каждого GAP
@@ -177,6 +191,6 @@ implementation scope». Ответ о составе реализации ещё
 не запускает roadmap, migration, backend, media или Next.js автоматически.
 
 Фактическая [950-case регрессия](plan.md#фактический-перенос-поддерживаемого-ui-r8r9-d040)
-проверяет существующий Flutter slice. Полный graph R7, dependent R8 flows,
+проверяет существующий Flutter slice. Graph R7 PASS D041; dependent R8 flows,
 публичный web/security и пользовательская итоговая приёмка ещё не завершены.
 DESIGN_READY/REDESIGN_DONE не установлены; no-preview/run предпочтение сохранено.
