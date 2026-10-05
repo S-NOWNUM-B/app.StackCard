@@ -29,6 +29,7 @@
 - [R3.4 — Состояния, motion и адаптивность](#r34--состояния-motion-и-адаптивность)
 - [R4 — Основные экраны и настройки](#r4--основные-экраны-и-настройки)
 - [R5 — Создание, редактирование и публикация](#r5--создание-редактирование-и-публикация)
+- [R6 — Веб-поверхности](#r6--веб-поверхности)
 - [Переходы и действия](#переходы-и-действия)
 - [Состояния и компоненты](#состояния-и-компоненты)
 - [Реестр Figma](#реестр-figma)
@@ -40,7 +41,8 @@
 Срез R0 — 2026-10-05, статический аудит; далее добавлены результаты R1.1–R1.4
 и шесть визуальных пилотов R2.1, brand specimens R2.2, выбор A в R2.3
 и Dark/Light foundations R3.1, components R3.2–R3.4, state/motion/adapt specimens,
-R4 roots/settings и согласованный пакет R5 editors/wizard/publication.
+R4 roots/settings, принятый пакет R5 editors/wizard/publication и согласованная
+R6 для marketing/private workspace/public web.
 `S-*` — ID целевого экрана, а не реализованный route. Новые route paths и
 runtime screen IDs не назначены; созданные IA и low-fi frames перечислены отдельно. Конкретные
 paths согласуются вместе с guards/deep links перед переносом. Существующие пути
@@ -1392,9 +1394,9 @@ Save/sync/Publish/provider/delete/OS behavior ими не доказаны. Play
 Поручение продолжить после R4 принято как её приёмка и разрешение **всей
 R5.1a–R5.4c**, D036. Пакет сохраняет Manrope, принятый бренд A и editable
 instances общей DS. Сборка содержит **13 boards / 83 состояния / 166 Dark+Light phone frames**.
-Пакет подготовлен и ожидает общей приёмки пользователя, **`awaiting_review`
-D037**. Node IDs, количество и QA ниже взяты из фактического ledger
-завершённой editable-сборки.
+Пакет подготовлен D037 и принят следующим поручением продолжить, **`done`
+D038**. Node IDs, количество и исторический QA D037 ниже взяты из фактического
+ledger завершённой editable-сборки.
 Прежний срез R4/D035 и его 122 phone IDs выше сохранён как история.
 
 Сценарии предусматривают nested 390×844 screens с Back и возвращением к
@@ -1564,7 +1566,8 @@ wizard Back/Skip/Next доступны отдельно от прокручив�
 Визуальный просмотр, preview/рендеры и запуск приложения **пропущены по запросу**
 D034/D036. Эти результаты подтверждают структуру статических Figma frames,
 а не pixel-level визуальную приёмку, работающий prototype или native flow.
-**R5.1a–R5.4c и вся R5 — `awaiting_review`, D037**; приёмка пользователя ещё нужна.
+**R5.1a–R5.4c и вся R5 — `done`, D038**. Исторический QA D037 сохранён;
+поручение продолжить разрешило всю R6, описанную ниже.
 
 Current runtime сохраняет singleton content, plain-text Resume, legacy global
 Project flags и username-based publication adapter. Multiple-output/contact/URL
@@ -1576,6 +1579,156 @@ end-to-end flow. Native keyboard/SafeArea, caret/scroll-to-focus, OS text scale,
 TalkBack/VoiceOver, clipboard/share/browser/permissions и unknown-outcome
 recovery требуют реальной приёмки. Playable prototype и DESIGN_READY — R7;
 web R6, runtime R8 и Git mutations этим пакетом не выполняются.
+
+---
+
+## R6 — Веб-поверхности
+
+Поручение продолжить после R5 принято как её приёмка и разрешение **всей
+R6.1–R6.4**, D038. Согласован пакет маркетингового сайта, auth/download,
+защищённого кабинета и публичных документов. **R6.1–R6.4 и вся R6 —
+`awaiting_review`, D039**: фактические frames внесены в реестр, финальный
+structural QA — PASS. Принятые R3–R5, Manrope и бренд A сохраняются.
+
+Широкая и узкая web-композиции проектируются отдельно: 1440 и 390 px,
+каждая в Dark/Light. Marketing/auth/public — страницы по высоте содержимого;
+workspace предусматривает fixed viewport 1440×1000 и 390×844, scroll area и
+закреплённые действия. Эти размеры задают план проверки, а не доказанный
+responsive runtime. Desktop web sidebar не возвращает sidebar/rail в Flutter.
+Визуальный просмотр, preview/рендеры и запуск приложения пропускаются в
+сохранённом режиме пользователя; интерактивная/native приёмка остаётся отдельно.
+
+### Состав и границы R6
+
+| **Задача** | **Поверхность и обязательное покрытие** |
+|:---|:---|
+| R6.1 / Маркетинговый сайт | Полный landing: общая профессиональная база → разные Resume/Portfolio; compact navigation, hero с editable product document preview, сценарий, Projects/GitHub, Resume, Portfolio, Publish/links, приложение, CTA/footer. Без фиктивных отзывов, счётчиков, client logos и store URL |
+| R6.2 / Вход и скачивание | Sign in/register/reset и return destination в private workspace; input/validation/loading/error/confirmation без ложного success. Download сообщает доступность реального release; unavailable CTA имеет причину и не ведёт к вымышленному магазину |
+| R6.3 / Кабинет и редактор | Защищённая общая база/library/named outputs, scoped editor и preview. Wide допускает sidebar и editor рядом с document preview; narrow использует отдельные Edit/Preview modes, без трёх сжатых панелей. Fixed Save/Cancel, pending/error/unsaved и explicit Publish |
+| R6.4 / Публичные документы | Anonymous document Resume и showcase Portfolio, optional photo/no-photo, selected public contacts/projects и собственный published Resume link; privacy-preserving missing/unpublished. Owner editor/account controls и private fields отсутствуют |
+
+**Marketing/private/public:** посетитель читает product information и
+публичный опубликованный документ без входа; owner workspace требует аккаунт.
+Link на sign in или workspace не является условием просмотра public Resume.
+Изменение owner формы, local Save и sync сохраняют отдельные статусы и не
+обновляют immutable public snapshot без explicit Publish. Document-local
+контакты/overrides и Project attachments следуют принятым R5 contracts.
+
+**Контент и media:** product preview — редактируемая композиция существующих
+R5 document content; в landing сохранены восемь настоящих редактируемых
+clones Resume/Portfolio. Это не растровая картинка работающего приложения.
+Факты Profile/Project берутся из Mock sources либо явно обозначенных fixtures
+в captions за пределами UI. Фото optional; допускается только прежний
+80×80 `generated_demo` R3.3, Project cover имеет нейтральный no-image placeholder.
+Фото не заменяет текстовые имя/роль, а пустые experience/education не дополняются
+придуманными фактами. Public payload не включает login email, auth providers,
+private notes или owner editor state.
+
+### CTA, клавиатура и адаптивность
+
+CTA destination audit сопоставляет каждое доступное действие с конкретным
+планируемым screen key или внутренним anchor. Release/store/PDF destination
+без подтверждённого источника остаётся unavailable с понятной причиной;
+фиктивная ссылка и успешный export/download не показываются. Контакты
+mailto/https и демонстрационные `example.com/d/r_7f4c`/`example.com/d/p_8a2e`
+явно остаются fixtures. Адрес принадлежит документу по D019; rename его не
+меняет, а included Resume получает public link только после своей публикации.
+
+Keyboard/focus план предусматривает последовательность navigation → основное
+содержимое → доступные действия → footer, явный focus control variant,
+доступные названия полей и отсутствие клавиатурной ловушки. Narrow меню и
+Edit/Preview tabs сохраняют логический порядок без декоративных ratings или
+скрытых критичных CTA. Это план и static focus appearance: tab order,
+semantics/announcements, настоящий focus trap/restore и IME ещё не проверены.
+
+### Реестр экранов R6
+
+Фактическая страница `StackCard Design v2 / Web` — [202:2989](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=202-2989).
+Четыре boards содержат **24 базовых состояния / 96 frames**: для каждого ключа
+созданы Wide 1440 и Narrow 390 px в Dark/Light, то есть 24 четвёрки и
+48 пар Dark+Light. Таблица перечисляет каждый фактический frame ID;
+все четвёрки и IDs проверены финальным structural QA D039.
+
+| **Задача / screen key** | **Экран и состояние** | **Wide Dark** | **Wide Light** | **Narrow Dark** | **Narrow Light** |
+|:---|:---|:---|:---|:---|:---|
+| R6.1 / `landing_complete` | StackCard — резюме и портфолио — `complete` | [204:13](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=204-13) | [204:6969](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=204-6969) | [204:7321](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=204-7321) | [204:7681](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=204-7681) |
+| R6.2 / `web_auth_login` | Войти в StackCard — `login` | [205:631](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-631) | [205:694](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-694) | [205:757](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-757) | [205:820](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-820) |
+| R6.2 / `web_auth_register` | Создать аккаунт — `register` | [205:883](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-883) | [205:946](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-946) | [205:1009](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-1009) | [205:1072](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-1072) |
+| R6.2 / `web_auth_register_validation` | Создать аккаунт — `registration_local_validation` | [205:22824](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-22824) | [205:22887](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-22887) | [205:22950](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-22950) | [205:23013](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23013) |
+| R6.2 / `web_auth_login_error` | Войти в StackCard — `login_generic_error_retained` | [205:23076](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23076) | [205:23144](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23144) | [205:23212](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23212) | [205:23280](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23280) |
+| R6.2 / `web_auth_reset` | Восстановить пароль — `reset_request` | [205:23348](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23348) | [205:23394](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23394) | [205:23440](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23440) | [205:23486](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23486) |
+| R6.2 / `web_auth_reset_accepted` | Проверьте почту — `reset_accepted_generic` | [205:23532](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23532) | [205:23584](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23584) | [205:23636](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23636) | [205:23688](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23688) |
+| R6.2 / `web_auth_restoring` | Проверяем вход — `restoring_validated_return_guard` | [205:23740](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23740) | [205:23794](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23794) | [205:23848](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23848) | [205:23902](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23902) |
+| R6.2 / `web_download_unavailable` | StackCard для телефона — `download_releases_unavailable` | [205:23956](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-23956) | [205:24020](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-24020) | [205:24084](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-24084) | [205:24148](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-24148) |
+| R6.3 / `web_workspace_overview` | Рабочая область — `base_library_documents` | [206:1599](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-1599) | [206:1852](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-1852) | [206:2027](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-2027) | [206:2153](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-2153) |
+| R6.3 / `web_workspace_library` | Библиотека проектов — `library_shared_global_projects` | [206:2279](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-2279) | [206:2625](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-2625) | [206:2890](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-2890) | [206:3106](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-3106) |
+| R6.3 / `web_workspace_sections` | Редактор резюме — `sections_edit_private_draft` | [206:24870](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-24870) | [206:25139](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-25139) | [206:25408](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-25408) | [206:25557](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-25557) |
+| R6.3 / `web_workspace_focused_profile` | Профиль в резюме — `focused_local_override_dirty` | [206:25706](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-25706) | [206:25912](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-25912) | [206:26118](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-26118) | [206:26204](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-26204) |
+| R6.3 / `web_workspace_appearance` | Оформление резюме — `appearance_no_photo` | [206:26290](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-26290) | [206:26490](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-26490) | [206:26690](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-26690) | [206:26771](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-26771) |
+| R6.3 / `web_workspace_preview_ready` | Просмотр резюме — `preview_ready_matching_current_ack` | [206:26852](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-26852) | [206:27034](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-27034) | [206:27216](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-27216) | [206:27334](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-27334) |
+| R6.3 / `web_workspace_unsaved_guard` | Несохранённые изменения — `unsaved_route_change_guard` | [206:27452](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-27452) | [206:27632](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-27632) | [206:27812](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-27812) | [206:27872](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-27872) |
+| R6.3 / `web_workspace_save_error` | Профиль в резюме — `save_error_retained_current_inputs` | [206:27932](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-27932) | [206:28131](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-28131) | [206:28330](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-28330) | [206:28409](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-28409) |
+| R6.4 / `public-resume-photo` | Резюме — `resume_photo` | [206:28492](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-28492) | [206:28617](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-28617) | [206:28742](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-28742) | [206:28867](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-28867) |
+| R6.4 / `public-resume-no-photo` | Резюме — `resume_no_photo` | [206:28992](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-28992) | [206:29116](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-29116) | [206:29240](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-29240) | [206:29364](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-29364) |
+| R6.4 / `public-portfolio-photo` | Портфолио — `portfolio_photo` | [206:29488](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-29488) | [206:29641](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-29641) | [206:29794](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-29794) | [206:29947](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-29947) |
+| R6.4 / `public-portfolio-no-photo` | Портфолио — `portfolio_no_photo` | [206:30100](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30100) | [206:30219](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30219) | [206:30338](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30338) | [206:30457](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30457) |
+| R6.4 / `public-portfolio-minimal` | Портфолио — `minimal_selected_fields` | [206:30576](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30576) | [206:30625](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30625) | [206:30674](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30674) | [206:30723](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30723) |
+| R6.4 / `public-document-unavailable` | Страница недоступна — `missing_or_unpublished` | [206:30772](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30772) | [206:30813](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30813) | [206:30854](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30854) | [206:30895](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30895) |
+| R6.4 / `public-document-load-error` | Не удалось загрузить — `fetch_error` | [206:30936](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30936) | [206:30973](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-30973) | [206:31010](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-31010) | [206:31047](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-31047) |
+
+### Проверки и ограничения R6
+
+Финальный **structural QA — PASS**, D039: **4 boards / 24 состояния /
+96 frames / 8 962 редактируемых nodes**. R6.1 — 1 состояние/4 frames,
+R6.2 — 8/32, R6.3 — 8/32, R6.4 — 7/28. Все 24 Wide/Narrow Dark/Light
+четвёрки полны; root widths — 1440/390, workspace heights — 1000/844.
+Проверены 24 workspace pane frames и 8 base/library frames: wide sidebar/editor/
+preview, narrow Edit/Preview modes, отдельная scroll area и закреплённые
+form actions. Marketing/auth/public остаются full-page static compositions.
+
+Проверено **2 810 TEXT**: минимальный text contrast **4.832909811:1** при
+пороге 4.5; **726 интерактивных targets** имеют области не меньше 48×48;
+**690 интерактивных stroke samples** дают минимум **4.364564811:1** при
+пороге 3. Все **20 категорий нарушений — 0**: contrast, style/font и paint
+bindings/scopes, unresolved colors, property references, bounds/overlap,
+hit areas, screen/navigation/footer/workspace/public/quad/CTA и wordmark.
+Видимая вертикальная обрезка разрешена только предусмотренными scroll/viewport/
+product-preview crop containers.
+
+Сохранены ровно **98 variable values и 50 style IDs**. Paint exception ограничен
+**462 исходными Flutter/Dart VECTOR fills**; произвольные unbound paints
+не допускаются. **96 исходных `Editable wordmark` с Noto Sans ExtraBold**
+сохранены внутри принятых Wordmark variants; это точечное исключение из Manrope,
+а их colors/bindings/contrast проходят ту же проверку. **28 image fills**
+используют прежнее 80×80 фото `generated_demo` с тем же hash; no-photo states
+не получают нового media. Восемь настоящих editable R5 preview clones
+сохранены; новые shared families — только WebHeader и WorkspaceNavigation.
+
+**116 source CTA records** сверены с отображаемыми действиями, availability и
+предлагаемыми destinations. У WebHeader `ShowThirdNavigation` включает третий
+пункт «Контакты» в четырёх `public-portfolio-photo` frames; первые два пункта
+сохраняют адаптивный layout. **16 public contact hit areas** содержат Label и
+явный URL, высоту не меньше 48 px; URL сверены с CTA audit. Anonymous public
+Resume/Portfolio не имеют owner controls/private fields; missing/unpublished
+не раскрывают имя или содержание. Download/store/PDF без release evidence
+остаются unavailable. Audit не открывал live URLs и не проверял auth/backend.
+
+Это структурная проверка статической Figma-сборки. Визуальный просмотр,
+preview/рендеры, запуск приложения, playable reactions и настоящее web/native
+поведение пропущены по запросу пользователя. Focus appearance и keyboard
+план подготовлены; реальный tab order, screen-reader announcements,
+focus trap/restore, IME и responsive runtime ещё не проверены.
+**R7 остаётся `todo`; DESIGN_READY не достигнут.**
+
+В [apps/web](../../apps/web/README.md) сейчас только README: Next.js-приложение,
+dependencies, конфигурация, auth/routes/renderers/download pipeline и команды
+запуска отсутствуют. Web данные, guards и anonymous access rules требуют
+реального backend/runtime переноса. Current singleton/plain-text/username
+adapter ещё не поддерживает multiple outputs и принятые stable document URLs.
+Mobile/web persistence, Publish/current-revision guard, permissions, SSR/SEO,
+clipboard/browser/share, focus/keyboard и release/PDF availability не считаются
+работающими из-за Figma frames. R6 не создаёт scaffold, API, deployment или
+новые assets; playable prototype/DESIGN_READY — R7, runtime — отдельная R8.
 
 ---
 
@@ -1693,21 +1846,26 @@ Home/Settings/Projects новой прежней итерации и legacy land
 | Design v2 / Screens / R4.7b / Приватность | [187:15400](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-15400); 5 states /10 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r4); done D036; подготовлены D035 |
 | Design v2 / Screens / R4.7c / Приложение | [187:16002](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-16002); 5 states /10 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r4); done D036; подготовлены D035 |
 | DS / R4 shared extensions | Search SVG [184:2762](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=184-2762); SearchField [184:2784](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=184-2784) с Empty/Filled/Focus; compact list ProjectCard [185:2771](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=185-2771); PortfolioListItem [188:2861](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=188-2861), Published 188:2817 / Draft 188:2841 с отдельным entry «Действия» 48 px. Прежние R3 families сохранены; standalone SVG provenance в references |
-| Design v2 / Flows / R5.1a / Профиль и публичные контакты Resume | [194:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-7); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.1b / Опыт, образование, технологии и проекты Resume | [194:1160](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-1160); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.1c / Focused редактор Resume | [194:2270](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-2270); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.1d / Resume Step 5 и структурированный просмотр | [194:3295](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-3295); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.2a / Ручной проект | [194:4782](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-4782); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.2b / Импорт из GitHub | [194:5710](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-5710); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.2c / Review изменений GitHub | [194:6468](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-6468); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.3a / Создание и содержимое Portfolio | [194:7176](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-7176); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.3b / Связи Portfolio и Projects Library | [194:8156](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-8156); 7 states / 14 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.3c / Секции, внешний вид и preview Portfolio | [195:6196](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=195-6196); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.4a / Сохранение и явная публикация | [195:7277](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=195-7277); 8 states / 16 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.4b / Постоянная ссылка и sharing | [195:7949](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=195-7949); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
-| Design v2 / Flows / R5.4c / Последствия действий с документом | [195:8628](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=195-8628); 8 states / 16 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); awaiting_review D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.1a / Профиль и публичные контакты Resume | [194:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-7); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.1b / Опыт, образование, технологии и проекты Resume | [194:1160](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-1160); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.1c / Focused редактор Resume | [194:2270](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-2270); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.1d / Resume Step 5 и структурированный просмотр | [194:3295](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-3295); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.2a / Ручной проект | [194:4782](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-4782); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.2b / Импорт из GitHub | [194:5710](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-5710); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.2c / Review изменений GitHub | [194:6468](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-6468); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.3a / Создание и содержимое Portfolio | [194:7176](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-7176); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.3b / Связи Portfolio и Projects Library | [194:8156](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=194-8156); 7 states / 14 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.3c / Секции, внешний вид и preview Portfolio | [195:6196](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=195-6196); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.4a / Сохранение и явная публикация | [195:7277](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=195-7277); 8 states / 16 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.4b / Постоянная ссылка и sharing | [195:7949](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=195-7949); 6 states / 12 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Flows / R5.4c / Последствия действий с документом | [195:8628](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=195-8628); 8 states / 16 Dark+Light phone frames; [все ключи и IDs](#реестр-экранов-r5); done D038; подготовлены D037; static QA PASS, визуальный просмотр пропущен |
 | DS / R5 shared extensions | DocumentIdentity [193:2864](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=193-2864); ChangeComparison [193:2865](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=193-2865); ProjectAssociationRow [193:2872](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=193-2872); main components отдельно от phone viewport, прежние R3/R4 families сохранены |
-| Остальные Design v2 frames | Web R6 и проверяемый prototype R7 остаются планом; runtime R8 не начат, DESIGN_READY ещё не достигнут |
+| Design v2 / Web / R6.1 / Полный landing StackCard | [204:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=204-7); 1 states / 4 wide+narrow Dark+Light frames; [все ключи и IDs](#реестр-экранов-r6); awaiting_review D039; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Web / R6.2 / Web auth и скачивание | [205:625](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=205-625); 8 states / 32 wide+narrow Dark+Light frames; [все ключи и IDs](#реестр-экранов-r6); awaiting_review D039; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Web / R6.3 / Адаптивный рабочий кабинет | [206:1593](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-1593); 8 states / 32 wide+narrow Dark+Light frames; [все ключи и IDs](#реестр-экранов-r6); awaiting_review D039; static QA PASS, визуальный просмотр пропущен |
+| Design v2 / Web / R6.4 / Публичные Resume и Portfolio | [206:28486](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=206-28486); 7 states / 28 wide+narrow Dark+Light frames; [все ключи и IDs](#реестр-экранов-r6); awaiting_review D039; static QA PASS, визуальный просмотр пропущен |
+| DS / R6 shared extensions | WebHeader [202:2932](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=202-2932) с Wide/Narrow и ShowThirdNavigation; WorkspaceNavigation [202:2933](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=202-2933); общие main components на DS page, прежние R3–R5 families и 98 variable values/50 style IDs сохранены; awaiting_review D039, static QA PASS |
+| Остальные Design v2 frames | Web R6 подготовлена и awaiting_review D039; R5 принята D038; проверяемый prototype R7 и runtime R8 не начаты, DESIGN_READY ещё не достигнут |
 
 Prototype reactions старой итерации не приняты и полностью не прогонялись в R0.
 Публичного Resume среди перечисленных top-level legacy web frames не найдено;

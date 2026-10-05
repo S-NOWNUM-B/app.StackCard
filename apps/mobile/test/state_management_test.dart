@@ -19,32 +19,51 @@ void main() {
   });
 
   testWidgets(
-    'Theme keeps the router and project filters survive route removal',
+    'Theme keeps the router and query survives routes without exposing legacy filters',
     (tester) async {
-      await tester.pumpWidget(const StackCardApp(initialLocation: '/settings'));
+      await tester.pumpWidget(const StackCardApp(initialLocation: '/home'));
       await tester.pumpAndSettle();
       final router = tester
           .widget<MaterialApp>(find.byType(MaterialApp))
           .routerConfig;
 
+      await tester.tap(find.byKey(const Key('app.settings')));
+      await tester.pumpAndSettle();
+      final appearance = find.byKey(const Key('settings.group.appearance'));
+      await tester.ensureVisible(appearance);
+      await tester.tap(appearance);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Светлая'));
       await tester.pumpAndSettle();
       expect(
         tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig,
         same(router),
       );
+      await tester.tap(find.byTooltip('Назад'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Назад'));
+      await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.layers_outlined).last);
       await tester.pumpAndSettle();
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(ProjectsScreen)),
+      );
+      container
+          .read(projectFiltersProvider.notifier)
+          .setFilter(ProjectFilter.manual);
       await tester.enterText(find.byType(TextFormField), 'React');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Вручную'));
+      expect(find.text('Readme Studio'), findsOneWidget);
+      expect(find.text('Проекты: 1'), findsOneWidget);
+      expect(find.byType(ChoiceChip), findsNothing);
+      await tester.enterText(find.byType(TextFormField), 'missing');
       await tester.pumpAndSettle();
       expect(find.text('Ничего не найдено'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
       expect(find.byType(ProjectsScreen), findsNothing);
-      expect(find.text('Внешний вид'), findsOneWidget);
+      expect(find.text('Привет, Alex'), findsOneWidget);
       await tester.tap(find.byIcon(Icons.layers_outlined).last);
       await tester.pumpAndSettle();
 
@@ -53,21 +72,19 @@ void main() {
             .widget<TextFormField>(find.byType(TextFormField))
             .controller!
             .text,
-        'React',
+        'missing',
       );
       expect(
-        tester
-            .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Вручную'))
-            .selected,
-        isTrue,
+        container.read(projectFiltersProvider).filter,
+        ProjectFilter.manual,
       );
       expect(find.text('Ничего не найдено'), findsOneWidget);
       expect(
-        Theme.of(tester.element(find.text('Сделано тобой'))).brightness,
+        Theme.of(tester.element(find.byType(TextFormField))).brightness,
         Brightness.light,
       );
-      await tester.ensureVisible(find.text('Сбросить фильтры'));
-      await tester.tap(find.text('Сбросить фильтры'));
+      await tester.ensureVisible(find.text('Очистить поиск'));
+      await tester.tap(find.text('Очистить поиск'));
       await tester.pumpAndSettle();
       expect(
         tester
@@ -77,6 +94,15 @@ void main() {
         isEmpty,
       );
       expect(find.text('Проекты: 4'), findsOneWidget);
+      expect(
+        container.read(projectFiltersProvider).filter,
+        ProjectFilter.manual,
+      );
+      expect(
+        container.read(visibleProjectsProvider).requireValue,
+        hasLength(2),
+        reason: 'Legacy provider filtering remains independent of Projects UI',
+      );
     },
   );
 
@@ -87,7 +113,7 @@ void main() {
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
     await tester.pumpWidget(
       const StackCardApp(
-        initialLocation: '/settings',
+        initialLocation: '/settings/appearance',
         initialThemeMode: ThemeMode.system,
       ),
     );
@@ -137,9 +163,15 @@ void main() {
   testWidgets(
     'Remounting the app resets appearance and product session state',
     (tester) async {
-      await tester.pumpWidget(const StackCardApp(initialLocation: '/settings'));
+      await tester.pumpWidget(
+        const StackCardApp(initialLocation: '/settings/appearance'),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Светлая'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Назад'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.layers_outlined).last);
       await tester.pumpAndSettle();
@@ -160,7 +192,7 @@ void main() {
       );
       expect(find.text('Проекты: 4'), findsOneWidget);
       expect(
-        Theme.of(tester.element(find.text('Сделано тобой'))).brightness,
+        Theme.of(tester.element(find.byType(TextFormField))).brightness,
         Brightness.dark,
       );
     },

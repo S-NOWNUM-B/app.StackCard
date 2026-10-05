@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_stackcard/features/auth/auth.dart';
+import 'package:app_stackcard/features/home/home_screen.dart';
 import 'package:app_stackcard/main.dart';
 import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:flutter/material.dart';
@@ -151,7 +152,14 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(SignInScreen), findsNothing);
-    expect(find.text('STACKCARD / DEMO'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(HomeScreen)),
+    );
+    expect(
+      container.read(authControllerProvider).requireValue?.email,
+      'alex@example.dev',
+    );
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

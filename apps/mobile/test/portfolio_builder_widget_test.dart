@@ -2,6 +2,7 @@ import 'package:app_stackcard/core/state/app_settings.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/main.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -221,26 +222,30 @@ void main() {
           expect(tester.takeException(), isNull);
           if (scale == 1) {
             final semantics = tester.ensureSemantics();
-            await expectLater(tester, meetsGuideline(textContrastGuideline));
-            await expectLater(
-              tester,
-              meetsGuideline(labeledTapTargetGuideline),
-            );
-            // Scroll clipping сокращает semantics rect у крайних строк.
-            // Проверяем полные layout targets каждого типа control.
-            final targets = find.byWidgetPredicate(
-              (widget) =>
-                  widget is FilledButton ||
-                  widget is IconButton ||
-                  widget is SwitchListTile ||
-                  widget is RadioListTile<PortfolioTheme>,
-            );
-            for (var index = 0; index < targets.evaluate().length; index++) {
-              final size = tester.getSize(targets.at(index));
-              expect(size.width, greaterThanOrEqualTo(48));
-              expect(size.height, greaterThanOrEqualTo(48));
+            try {
+              await expectLater(tester, meetsGuideline(textContrastGuideline));
+              await expectLater(
+                tester,
+                meetsGuideline(labeledTapTargetGuideline),
+              );
+              // Scroll clipping сокращает semantics rect у крайних строк.
+              // У shared button измеряем внешний target48, а не Face40.
+              expect(find.byType(StackCardButton), findsWidgets);
+              final targets = find.byWidgetPredicate(
+                (widget) =>
+                    widget is StackCardButton ||
+                    widget is IconButton ||
+                    widget is SwitchListTile ||
+                    widget is RadioListTile<PortfolioTheme>,
+              );
+              for (var index = 0; index < targets.evaluate().length; index++) {
+                final size = tester.getSize(targets.at(index));
+                expect(size.width, greaterThanOrEqualTo(48));
+                expect(size.height, greaterThanOrEqualTo(48));
+              }
+            } finally {
+              semantics.dispose();
             }
-            semantics.dispose();
           }
           final router = GoRouter.of(
             tester.element(find.byType(PortfolioBuilderScreen)),

@@ -24,6 +24,8 @@
 - [Состояния и motion R3.4](#состояния-и-motion-r34)
 - [Источники экранов R4](#источники-экранов-r4)
 - [Источники сценариев R5](#источники-сценариев-r5)
+- [Источники веб-сценариев R6](#источники-веб-сценариев-r6)
+- [Перенесённые источники R8](#перенесённые-источники-r8)
 - [Применение в StackCard](#применение-в-stackcard)
 - [Ограничения и следующий шаг](#ограничения-и-следующий-шаг)
 
@@ -36,7 +38,10 @@
 Этот исторический срез предшествовал выбору направления/логотипа R2.
 Теперь бренд A принят D024; fonts review R3.1 добавлен D027. R3.3 принята D032;
 state/adapt/motion specimens R3.4 и полная R3 приняты D034 после review D033.
-R4.1–R4.7c приняты D036 после review D035; следующая R5 ожидает review D037
+R4.1–R4.7c приняты D036 после review D035; вся R5 принята D038 после D037.
+Весь R6/D039 принят D040; активна полная R7.1–R7.4, R8/R9 уже авторизованы
+на redesign/full-app; independent R8 UI перенесён/R9 supported slice950tests
+PASS, full prerequisite scope ещё ожидает решения
 по интерпретации продолжения с прежним full-phase/parallel/no-preview режимом; визуальный просмотр/preview/run
 пропущены по прямому запросу D034, не считаются пройденной проверкой.
 Результаты исходного исследования ниже не переаттестованы.
@@ -465,7 +470,81 @@ cloud publication или реального sharing. Визуальный про
 3474text samples min4.832909811:1,1280stroke samples min4.364564811:1,
 966targets≥48 и48actual identity checks PASS. Wizard1–5/16preview/84forms/
 152fixedfooter проверены структурно; SafeArea padding20 — static geometry.
-Весь пакет awaiting_review D037; R6+ и runtime R8 не начаты.
+Весь пакет R5 принят D038 после review D037; полный пакет R6 подготовлен D039 и ожидает приёмки,
+R7+ и runtime R8 не начаты.
+
+---
+
+## Источники веб-сценариев R6
+
+R6.1–R6.4 начата одним пакетом D038 после приёмки всей R5;
+полный результат D039 принят D040. Это продолжение
+в сохранённом phase-package/parallel/no-preview/run режиме; пользователь не
+называл весь набор R6 буквально. Основания — [REQ-WEB-01..04](requirements.md#web),
+D019 и принятые R3–R5 fonts/tokens/components/assets. Собственный product preview
+использует8editable clones фактического R5 document content;28IMAGE fills —
+прежний generated_demo Portrait80×80 с тем же imageHash.98variable values и
+50style IDs сохранены точно. WebHeader202:2932 (две variants) и
+WorkspaceNavigation202:2933 переиспользуют принятую DS.96Noto Wordmark texts
+сохранены как targeted exception Editable Wordmark A, paints audited;
+462canonical Flutter/Dart VECTOR fills — targeted original-source exemption.
+
+Landing/auth/download, responsive owner workspace и anonymous public views —
+static Figma target. Настоящая доступность store/release/CTA не подменяется
+макетом; download unavailable допустим, фиктивные ссылки запрещены. Private
+Save/sync ACK и explicit Publish разделены; D019 — постоянный адрес документа,
+а `/u/[username]` в прежнем Phase13 описании — legacy singleton plan.
+Новая route scheme и migration не реализуются этим пакетом.
+
+Visual inspection/preview/run пропущены по сохранённому запросу. [Реестр и
+QA R6](screens.md#r6--веб-поверхности) фиксируют4boards/24base/96frames в
+wide1440/narrow390 × Dark/Light; landing1440×3475/390×5628.2810text samples
+min4.832909811:1,690strokes min4.364564811:1,726targets≥48;20failure categories0.
+116sourceCTA records сопоставлены с proposed destinations; actual URLs не
+проверялись. Это static audit, не runtime/privacy/availability certification.
+apps/web остаётся README-only. D040 приняло R6 и разрешило всю R7, затем
+R8/R9; actual R7 graph QA ещё pending, prerequisite scope
+вопрос ждёт ответа. Preview/run пропущены по прямому запросу; новый native
+или backend результат этими Figma sources не подтверждается.
+
+---
+
+## Перенесённые источники R8
+
+По D040 в существующий Flutter импортированы pinned источники, без нового
+raster UI. [Source manifest](../../apps/mobile/assets/design_v2/source-manifest.json)
+содержит40canonical entries и отдельный Flutter render derivative;41files/33SVG,
+32runtimeSVG реально compiled/decoded в headless suite. SHA/license/geometry/
+font coverage/source commit хранятся в manifest, не выводятся из screenshot.
+[Portable Figma source](source/figma-design-v2.json) содержит variables/styles
+и hash source export; это не сертификат полного R7 graph/продукта.
+
+Manrope400/600/700/800 — неизменённые pinned TTF Google Fonts, SIL OFL1.1;
+семейство зарегистрировано в [pubspec](../../apps/mobile/pubspec.yaml).
+Noto fallback и прежние DM Sans/Noto originals сохранены. Lucide monochrome
+SVG получают semantic foreground через StackCardIcon; React/TypeScript raw
+default black отображается в зафиксированных Figma brand colors, Flutter/Dart
+используют source fills. Badge label — живой Text, неизвестный label не
+заменяется raster; +N открывает настоящий полный список.
+
+Импортированы9исходных Mark/Wordmark/AppIcon A SVG из approved Figma masters;
+Wordmark сохраняет original outlined Noto ExtraBold, не набирается Manrope.
+Live [StackCardBrand](../../apps/mobile/lib/shared/widgets/stackcard_brand.dart)
+использует один Wordmark (уже включает Mark) либо compact Mark, Dark paper/
+Light ink, contain/no tint. AppIcon exports не означают замены native packaging.
+CSS Flutter source оказался несовместим с установленным parser: canonical
+SVG сохранён, runtime выбирает отдельный `flutter.render.svg` с прежними
+points/order/viewBox/white/.72 opacity и explicit renderDerivatives provenance.
+
+[check_imports.py](../../tools/redesign/check_imports.py) strict PASS +12negative
+cases; targeted SVG paint10cases и final950-case Flutter suite PASS,0SVGwarnings.
+[Переносимый итог R9](source/r9-supported-ui-validation.json) содержит команды,
+950-case/analyze результаты, source/log hashes и границы проверки.
+Эти результаты подтверждают source integrity и headless supported UI rendering;
+native/font/SVG/AppIcon визуальная приёмка и новые backend/web capabilities
+остаются pending. Preview/app launch пропущены по запросу. Current R8 partial,
+R7 graph ещё pending, REDESIGN_DONE не установлен. Полный proposed scope
+перечислен в [prerequisites](prerequisites.md), не выполняется автоматически.
 
 ---
 

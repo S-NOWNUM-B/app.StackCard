@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../core/localization/app_strings.dart';
-
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
 import 'stackcard_button.dart';
 
-enum StackCardViewState { loading, empty, error }
+enum StackCardViewState {
+  loading,
+  empty,
+  error,
+  offline,
+  noResults,
+  unavailable,
+}
 
 class StackCardStateView extends StatelessWidget {
   const StackCardStateView({
@@ -26,6 +32,10 @@ class StackCardStateView extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
+    final canRetry =
+        onRetry != null &&
+        (kind == StackCardViewState.error ||
+            kind == StackCardViewState.offline);
     return Semantics(
       liveRegion: kind != StackCardViewState.empty,
       child: Padding(
@@ -44,9 +54,15 @@ class StackCardStateView extends StatelessWidget {
             else
               ExcludeSemantics(
                 child: Icon(
-                  kind == StackCardViewState.error
-                      ? Icons.error_outline_rounded
-                      : Icons.inbox_outlined,
+                  switch (kind) {
+                    StackCardViewState.error => Icons.error_outline_rounded,
+                    StackCardViewState.offline => Icons.cloud_off_outlined,
+                    StackCardViewState.noResults => Icons.search_off_outlined,
+                    StackCardViewState.unavailable =>
+                      Icons.lock_outline_rounded,
+                    StackCardViewState.empty ||
+                    StackCardViewState.loading => Icons.inbox_outlined,
+                  },
                   size: 32,
                   color: kind == StackCardViewState.error
                       ? colors.error
@@ -57,15 +73,17 @@ class StackCardStateView extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: textTheme.titleMedium,
+              style: textTheme.titleMedium?.copyWith(color: colors.textPrimary),
             ),
             const SizedBox(height: StackCardSpacing.sm),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: textTheme.bodyMedium,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colors.textSecondary,
+              ),
             ),
-            if (kind == StackCardViewState.error && onRetry != null) ...[
+            if (canRetry) ...[
               const SizedBox(height: StackCardSpacing.lg),
               StackCardButton(
                 label: context.strings.tr('common.retry'),

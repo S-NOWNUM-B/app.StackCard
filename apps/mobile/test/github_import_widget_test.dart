@@ -54,8 +54,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('GitHub Import'));
+      await tester.tap(find.text('Импорт из GitHub'));
       await tester.pumpAndSettle();
+      expect(find.byType(GitHubImportScreen), findsOneWidget);
       expect(source.profileReads, 0);
       await tester.tap(find.text('Загрузить профиль'));
       await tester.pumpAndSettle();

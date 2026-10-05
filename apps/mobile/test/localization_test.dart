@@ -63,7 +63,7 @@ void main() {
     (tester) async {
       await tester.pumpWidget(
         const StackCardApp(
-          initialLocation: '/settings',
+          initialLocation: '/settings/appearance',
           initialThemeMode: ThemeMode.dark,
           initialSettings: AppSettings(
             theme: AppTheme.light,
@@ -91,7 +91,7 @@ void main() {
       final repository = _Settings()..failNext = true;
       await tester.pumpWidget(
         StackCardApp(
-          initialLocation: '/settings',
+          initialLocation: '/settings/appearance',
           settingsRepository: repository,
         ),
       );
@@ -102,7 +102,7 @@ void main() {
       await tester.ensureVisible(find.text('English'));
       await tester.tap(find.text('English'));
       await tester.pumpAndSettle();
-      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(find.byType(SettingsAppearanceScreen), findsOneWidget);
       expect(
         tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig,
         same(router),
@@ -126,8 +126,10 @@ void main() {
   for (final item in [
     (route: '/home', heading: 'Hello, Alex'),
     (route: '/portfolio', heading: 'Editor'),
-    (route: '/projects', heading: 'Made by you'),
-    (route: '/settings', heading: 'Appearance'),
+    (route: '/projects', heading: 'Projects: 4'),
+    (route: '/settings', heading: 'Settings'),
+    (route: '/settings/appearance', heading: 'Appearance'),
+    (route: '/settings/account', heading: 'Account and security'),
   ]) {
     testWidgets('English UI on ${item.route} supports enlarged text', (
       tester,

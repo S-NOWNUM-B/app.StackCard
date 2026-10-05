@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Утверждённая палитра StackCard для обеих тем.
+/// Семантические цвета принятой StackCard Design v2, R3.1–R3.4.
 @immutable
 class StackCardColors extends ThemeExtension<StackCardColors> {
   const StackCardColors({
@@ -16,31 +16,67 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
     required this.accent,
     required this.accentHover,
     required this.accentSoft,
-    this.acid = const Color(0xFFC8FF31),
-    this.cyan = const Color(0xFF79E8F2),
-    this.pink = const Color(0xFFFF79B7),
-    this.ink = const Color(0xFF09090B),
+    this.acid = const Color(0xFFC7FF1A),
+    this.cyan = const Color(0xFF6FE7F2),
+    this.pink = const Color(0xFFFF6AB2),
+    this.ink = const Color(0xFF070708),
     required this.success,
     required this.warning,
     required this.error,
-  });
+    Color? primary,
+    Color? onPrimary,
+    Color? borderStrong,
+    Color? paper,
+    Color? sourceText,
+    Color? focus,
+    Color? textMeta,
+    Color? controlOutline,
+    Color? accentText,
+    Color? successText,
+    Color? primaryOutline,
+  }) : primary = primary ?? accent,
+       onPrimary = onPrimary ?? ink,
+       borderStrong = borderStrong ?? border,
+       paper = paper ?? const Color(0xFFF4F5F7),
+       sourceText = sourceText ?? cyan,
+       focus = focus ?? accent,
+       textMeta = textMeta ?? textSecondary,
+       controlOutline = controlOutline ?? textMuted,
+       accentText = accentText ?? accent,
+       successText = successText ?? success,
+       primaryOutline = primaryOutline ?? onPrimary ?? ink;
 
   static const dark = StackCardColors(
-    background: Color(0xFF09090B),
-    surface: Color(0xFF111113),
-    surfaceElevated: Color(0xFF18181B),
-    surfaceHover: Color(0xFF202024),
-    border: Color(0xFF29292E),
-    borderSubtle: Color(0xFF1F1F23),
-    textPrimary: Color(0xFFF5F5F7),
-    textSecondary: Color(0xFFA1A1AA),
-    textMuted: Color(0xFF71717A),
-    accent: Color(0xFFFF0012),
-    accentHover: Color(0xFFE60010),
-    accentSoft: Color(0xFF351014),
-    success: Color(0xFF22C55E),
-    warning: Color(0xFFF59E0B),
-    error: Color(0xFFEF4444),
+    background: Color(0xFF070708),
+    surface: Color(0xFF0D0E11),
+    surfaceElevated: Color(0xFF14161B),
+    surfaceHover: Color(0xFF1B1E24),
+    border: Color(0xFF272A32),
+    borderSubtle: Color(0xFF20232A),
+    textPrimary: Color(0xFFF4F5F7),
+    textSecondary: Color(0xFFA4A8B3),
+    textMuted: Color(0xFF737884),
+    accent: Color(0xFFC7FF1A),
+    accentHover: Color(0xFFAFDC10),
+    accentSoft: Color(0xFF252F0A),
+    acid: Color(0xFFC7FF1A),
+    cyan: Color(0xFF6FE7F2),
+    pink: Color(0xFFFF6AB2),
+    ink: Color(0xFF070708),
+    success: Color(0xFF41E68A),
+    warning: Color(0xFFFFD166),
+    error: Color(0xFFF06272),
+    primary: Color(0xFFC7FF1A),
+    onPrimary: Color(0xFF070708),
+    borderStrong: Color(0xFF373B46),
+    paper: Color(0xFFF4F5F7),
+    sourceText: Color(0xFF6FE7F2),
+    focus: Color(0xFFC7FF1A),
+    textMeta: Color(0xFFA4A8B3),
+    controlOutline: Color(0xFF737884),
+    accentText: Color(0xFFC7FF1A),
+    successText: Color(0xFF41E68A),
+    primaryOutline: Color(0xFFC7FF1A),
   );
 
   static const light = StackCardColors(
@@ -52,13 +88,28 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
     borderSubtle: Color(0xFFE8E8EC),
     textPrimary: Color(0xFF18181B),
     textSecondary: Color(0xFF52525B),
-    textMuted: Color(0xFFA1A1AA),
-    accent: Color(0xFFFF0012),
-    accentHover: Color(0xFFE60010),
-    accentSoft: Color(0xFFFFE5E7),
-    success: Color(0xFF16A34A),
-    warning: Color(0xFFD97706),
-    error: Color(0xFFDC2626),
+    textMuted: Color(0xFF676C77),
+    accent: Color(0xFFC7FF1A),
+    accentHover: Color(0xFFAFDC10),
+    accentSoft: Color(0xFFEAF6C9),
+    acid: Color(0xFFC7FF1A),
+    cyan: Color(0xFF6FE7F2),
+    pink: Color(0xFFFF6AB2),
+    ink: Color(0xFF070708),
+    success: Color(0xFF168449),
+    warning: Color(0xFF996000),
+    error: Color(0xFFC92D45),
+    primary: Color(0xFFC7FF1A),
+    onPrimary: Color(0xFF070708),
+    borderStrong: Color(0xFFB8BBC4),
+    paper: Color(0xFFF4F5F7),
+    sourceText: Color(0xFF0B6570),
+    focus: Color(0xFF526B00),
+    textMeta: Color(0xFF676C77),
+    controlOutline: Color(0xFF676C77),
+    accentText: Color(0xFF526B00),
+    successText: Color(0xFF147B44),
+    primaryOutline: Color(0xFF070708),
   );
 
   final Color background;
@@ -80,6 +131,17 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
   final Color success;
   final Color warning;
   final Color error;
+  final Color primary;
+  final Color onPrimary;
+  final Color borderStrong;
+  final Color paper;
+  final Color sourceText;
+  final Color focus;
+  final Color textMeta;
+  final Color controlOutline;
+  final Color accentText;
+  final Color successText;
+  final Color primaryOutline;
 
   @override
   StackCardColors copyWith({
@@ -102,6 +164,17 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
     Color? success,
     Color? warning,
     Color? error,
+    Color? primary,
+    Color? onPrimary,
+    Color? borderStrong,
+    Color? paper,
+    Color? sourceText,
+    Color? focus,
+    Color? textMeta,
+    Color? controlOutline,
+    Color? accentText,
+    Color? successText,
+    Color? primaryOutline,
   }) {
     return StackCardColors(
       background: background ?? this.background,
@@ -123,6 +196,17 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
       success: success ?? this.success,
       warning: warning ?? this.warning,
       error: error ?? this.error,
+      primary: primary ?? this.primary,
+      onPrimary: onPrimary ?? this.onPrimary,
+      borderStrong: borderStrong ?? this.borderStrong,
+      paper: paper ?? this.paper,
+      sourceText: sourceText ?? this.sourceText,
+      focus: focus ?? this.focus,
+      textMeta: textMeta ?? this.textMeta,
+      controlOutline: controlOutline ?? this.controlOutline,
+      accentText: accentText ?? this.accentText,
+      successText: successText ?? this.successText,
+      primaryOutline: primaryOutline ?? this.primaryOutline,
     );
   }
 
@@ -149,6 +233,17 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
       success: Color.lerp(success, other.success, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
       error: Color.lerp(error, other.error, t)!,
+      primary: Color.lerp(primary, other.primary, t)!,
+      onPrimary: Color.lerp(onPrimary, other.onPrimary, t)!,
+      borderStrong: Color.lerp(borderStrong, other.borderStrong, t)!,
+      paper: Color.lerp(paper, other.paper, t)!,
+      sourceText: Color.lerp(sourceText, other.sourceText, t)!,
+      focus: Color.lerp(focus, other.focus, t)!,
+      textMeta: Color.lerp(textMeta, other.textMeta, t)!,
+      controlOutline: Color.lerp(controlOutline, other.controlOutline, t)!,
+      accentText: Color.lerp(accentText, other.accentText, t)!,
+      successText: Color.lerp(successText, other.successText, t)!,
+      primaryOutline: Color.lerp(primaryOutline, other.primaryOutline, t)!,
     );
   }
 }

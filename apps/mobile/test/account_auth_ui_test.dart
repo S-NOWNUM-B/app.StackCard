@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
@@ -598,6 +599,67 @@ void main() {
     (name: 'dark', data: StackCardTheme.dark),
     (name: 'light', data: StackCardTheme.light),
   ]) {
+    for (final compact in [false, true]) {
+      testWidgets(
+        'Live Brand A ${theme.name} compact $compact preserves source and semantics',
+        (tester) async {
+          final semantics = tester.ensureSemantics();
+          try {
+            for (final availableWidth in [160.0, 320.0]) {
+              await tester.pumpWidget(
+                MaterialApp(
+                  theme: theme.data,
+                  home: Scaffold(
+                    body: Center(
+                      child: SizedBox(
+                        width: availableWidth,
+                        child: Center(child: StackCardBrand(compact: compact)),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+              await tester.pumpAndSettle();
+              final brand = find.byType(StackCardBrand);
+              final picture = tester.widget<SvgPicture>(
+                find.descendant(of: brand, matching: find.byType(SvgPicture)),
+              );
+              final loader = picture.bytesLoader as SvgAssetLoader;
+              final family = compact ? 'mark' : 'wordmark';
+              final tone = theme.name == 'dark' ? 'paper' : 'ink';
+              expect(
+                loader.assetName,
+                'assets/branding/design_v2/stackcard-v2-$family-$tone.svg',
+              );
+              expect(picture.fit, BoxFit.contain);
+              expect(picture.colorFilter, isNull);
+              expect(loader.colorMapper, isNull);
+              expect(picture.excludeFromSemantics, isTrue);
+              final decoded = await tester.runAsync(
+                () => loader.loadBytes(tester.element(brand)),
+              );
+              expect(decoded!.lengthInBytes, greaterThan(0));
+              expect(find.byType(SvgPicture), findsOneWidget);
+              expect(
+                find.descendant(of: brand, matching: find.byType(Text)),
+                findsNothing,
+              );
+              expect(
+                tester.getSemantics(brand),
+                matchesSemantics(label: 'StackCard', isImage: true),
+              );
+              final size = tester.getSize(brand);
+              expect(size.height, 40);
+              expect(size.width, lessThanOrEqualTo(availableWidth));
+              if (compact) expect(size.width, 40);
+              expect(tester.takeException(), isNull);
+            }
+          } finally {
+            semantics.dispose();
+          }
+        },
+      );
+    }
     for (final mode in ['/sign-in', '/register', '/reset-password']) {
       testWidgets('Account $mode ${theme.name} centered with keyboard', (
         tester,
@@ -616,17 +678,11 @@ void main() {
           );
 
           final brand = find.byType(StackCardBrand);
-          final mark = find.descendant(
-            of: brand,
-            matching: find.byType(CustomPaint),
-          );
           final wordmark = find.descendant(
             of: brand,
-            matching: find.byType(Text),
+            matching: find.byType(SvgPicture),
           );
-          final brandRect = tester
-              .getRect(mark)
-              .expandToInclude(tester.getRect(wordmark));
+          final brandRect = tester.getRect(wordmark);
           final content = brandRect.expandToInclude(
             tester.getRect(find.byType(AccountAuthForm)),
           );

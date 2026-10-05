@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "r9-supported-mobile-ui-2026-10-05",
+  "status": "verified_supported_mobile_scope",
+  "recordedAtUtc": "2026-10-05T15:01:44.655912+00:00",
+  "validatedAtUtc": "2026-10-05T14:51:54.842037+00:00",
+  "branch": "redesign/full-app",
+  "scope": {
+    "phaseCompletionAsserted": false,
+    "fullR9CompletionAsserted": false,
+    "REDESIGN_DONE": false,
+    "description": "Actual headless verification of integrated supported mobile UI; not acceptance of the complete Design v2 product.",
+    "implemented": [
+      "Dark/Light shared theme, Manrope, shared controls/states and pinned icons",
+      "live approved Brand A outlined SVG mark/wordmark",
+      "Projects query-only presentation, import/create entry and real details",
+      "three existing root destinations, standalone Settings and supported appearance/language preferences"
+    ],
+    "deferred": [
+      "new mixed Home library and separate Resume root",
+      "multiple Resume/Portfolio document model and publication lifecycle",
+      "hosted profile/contact/privacy/account management capabilities",
+      "public web runtime and native sharing"
+    ]
+  },
+  "environment": {
+    "platform": "macOS",
+    "shell": "zsh",
+    "workingDirectory": "apps/mobile",
+    "flutter": {
+      "version": "3.47.4",
+      "channel": "stable",
+      "frameworkRevision": "9584c6713b"
+    },
+    "dartVersion": "3.13.3",
+    "executablesUsed": {
+      "flutter": "/opt/homebrew/share/flutter/bin/flutter"
+    },
+    "portableExecution": "Run the command argv below from apps/mobile with the recorded Flutter version and resolved dependencies. Local log locations are not required.",
+    "headless": true,
+    "previewUpdatesEnabled": false
+  },
+  "checks": {
+    "analyze": {
+      "command": [
+        "flutter",
+        "analyze",
+        "--no-pub"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "secondsReported": 3.8,
+      "summary": "No issues found!",
+      "log": {
+        "name": "stackcard-r9-actual-analyze-brand-final.log",
+        "sha256": "66449ac13d74af68867452e9db0e2a6d440843ca9b89d6993b61bd2f9722e9e6",
+        "bytes": 96,
+        "requiredToRunChecks": false
+      }
+    },
+    "fullSuite": {
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "passed": 950,
+      "failed": 0,
+      "secondsReported": 29,
+      "summary": "00:29 +950: All tests passed!",
+      "errorMarkers": 0,
+      "unsupportedSvgWarnings": 0,
+      "log": {
+        "name": "stackcard-r9-actual-tests-brand-final.log",
+        "sha256": "09bb2acdaa475f18fef38c84670e0f704bc8dd0fc781549e3823ac480367191a",
+        "bytes": 171989,
+        "requiredToRunChecks": false
+      }
+    },
+    "focusedBrand": {
+      "reproductionCommand": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/account_auth_ui_test.dart",
+        "--name",
+        "Live Brand A|centered with keyboard"
+      ],
+      "status": "PASS",
+      "exitCode": 0,
+      "passed": 10,
+      "failed": 0,
+      "secondsReported": 2,
+      "sourcePaths": [
+        "apps/mobile/lib/shared/widgets/stackcard_brand.dart",
+        "apps/mobile/test/account_auth_ui_test.dart"
+      ],
+      "assertions": [
+        "four Dark/Light by compact/full cases use exact approved SVG source paths",
+        "six existing keyboard/centering cases preserved",
+        "real SVG decoding, single image semantics, no text/tint replacement, constrained 160/320 width"
+      ],
+      "log": {
+        "name": "stackcard-r8-live-brand-focused.log",
+        "sha256": "f8e1b1e25b0a94486b481d3a28940468bce8b01bd7963ffa9937c61ee181f0a0",
+        "bytes": 836,
+        "requiredToRunChecks": false
+      }
+    },
+    "focusedSvg": {
+      "reproductionCommand": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/stackcard_technology_badge_test.dart"
+      ],
+      "status": "PASS",
+      "exitCode": 0,
+      "passed": 10,
+      "failed": 0,
+      "secondsReported": 1,
+      "sourcePaths": [
+        "apps/mobile/test/stackcard_technology_badge_test.dart",
+        "apps/mobile/lib/shared/widgets/stackcard_icon.dart",
+        "apps/mobile/lib/shared/widgets/stackcard_technology_badge.dart"
+      ],
+      "runtimeSvgDecoded": 32,
+      "unsupportedSvgWarnings": 0,
+      "assertions": [
+        "canonical icon and Brand A byte decoding",
+        "selected Flutter derivative preserves source polygon geometry and inline fill/opacity",
+        "headless in-memory pixel probe verifies white and single/overlapping polygon alpha",
+        "unknown labels, +N keyboard/semantics and action colors"
+      ],
+      "executedBeforeFinalLiveBrandSwitch": true,
+      "subsequentlyCoveredByFinal950Suite": true,
+      "log": {
+        "name": "stackcard-r9-actual-svg-paint-tests.log",
+        "sha256": "81885bfe374aacc82eadbb2e1a000a5a769fbad8f9e207250ea6e53ab56b9546",
+        "bytes": 831,
+        "requiredToRunChecks": false
+      }
+    }
+  },
+  "sourceSnapshot": {
+    "baseDirectory": "apps/mobile",
+    "patterns": [
+      "lib/**/*.dart",
+      "test/**/*.dart"
+    ],
+    "dartFiles": 184,
+    "aggregateSha256": "d51aee259557296fde1a16682973dd03b3c96b5cee614ac536f82bfade2d30e2",
+    "algorithm": "Sort POSIX file paths relative to apps/mobile lexicographically; update SHA-256 with UTF-8 path, NUL byte, complete file bytes, NUL byte for each file.",
+    "unchangedBetweenBeforeAndAfterFinalRun": true,
+    "sampledBeforeAtUtc": "2026-10-05T14:50:44.739353+00:00",
+    "sampledAfterAtUtc": "2026-10-05T14:51:54.842037+00:00",
+    "focusedSourceFiles": [
+      {
+        "path": "apps/mobile/lib/shared/widgets/stackcard_brand.dart",
+        "sha256": "20d3e631ea1e539546c82db49ae86a9b744436176e5f5fe9092b6d385363ba6a"
+      },
+      {
+        "path": "apps/mobile/test/account_auth_ui_test.dart",
+        "sha256": "a7cdf223b03925f65b079fd32fbe014d4798b05089f03f128e0ef219f72684e1"
+      },
+      {
+        "path": "apps/mobile/lib/shared/widgets/stackcard_icon.dart",
+        "sha256": "83af1c97f774c0eb14237d270dc4c754f97ffd27aefe97847ff7158bc8db75c8"
+      },
+      {
+        "path": "apps/mobile/test/stackcard_technology_badge_test.dart",
+        "sha256": "bde913e7e78970aa482895588484ecbc61b5375de9ace84a88db91be9aa262d5"
+      }
+    ],
+    "configuredBy": [
+      "apps/mobile/pubspec.yaml",
+      "apps/mobile/pubspec.lock",
+      "apps/mobile/analysis_options.yaml"
+    ]
+  },
+  "historicalBaseline": {
+    "capturedBeforeRuntimeTransfer": true,
+    "status": "PASS",
+    "passed": 832,
+    "failed": 0,
+    "secondsReported": 27,
+    "analyzeStatus": "PASS",
+    "analyzeSecondsReported": 3.4,
+    "headAtCapture": "f55f017ec263048b3c84a193327a2d5e42348cdf",
+    "artifact": {
+      "name": "stackcard-r9-baseline.md",
+      "sha256": "74716e6fa99da17c0531c4e580baae2c3a5062c264db45b481c700d547a833e5",
+      "bytes": 4561,
+      "requiredToRunChecks": false
+    },
+    "doesNotProvePostTransferAcceptance": true,
+    "newCases": 118,
+    "newCasesByArea": {
+      "buttonAndInput": 52,
+      "compactResponsive": 40,
+      "asyncState": 10,
+      "svgAndBadge": 10,
+      "settingsLocalizationRoutes": 2,
+      "liveBrand": 4
+    },
+    "supersededPreBrandRun": {
+      "passed": 946,
+      "secondsReported": 36,
+      "aggregateSha256": "e6dd81ffb6ee46157b648dab239c3feae1af98482bb8700069f3f5062fe04fa7",
+      "role": "Historical intermediate PASS; predates live Brand A runtime change."
+    }
+  },
+  "importedAssets": {
+    "manifestPath": "apps/mobile/assets/design_v2/source-manifest.json",
+    "manifestSha256": "592c26651b98ecde8e8d0741232234ffe5a10c71b91a1099314c140ff70ddf02",
+    "registeredFiles": 41,
+    "canonicalFiles": 40,
+    "renderDerivatives": 1,
+    "svgFiles": 33,
+    "runtimeSvgDecoded": 32,
+    "fonts": 4,
+    "licensesAndNotices": 4,
+    "canonicalSvg": 23,
+    "brandASvg": 9,
+    "all41AssetHashesAndByteLengthsMatch": true,
+    "flutterDerivative": {
+      "path": "apps/mobile/assets/icons/technology/flutter.render.svg",
+      "sha256": "5e1c9d22047a24928ec93bd67d278fc4e178a56d69d14d3877d5f154760c5532",
+      "sourcePath": "apps/mobile/assets/icons/technology/flutter.svg",
+      "sourceSha256": "e84889cedbe669bf58daa0fc69dcf73a238d4dbc772b8cf1ab48743224690a2e",
+      "sourceBytesPreserved": true,
+      "transformation": "Inline original CSS presentation attributes per polygon; preserve geometry, fill and opacity."
+    },
+    "sourceRegistryPath": "docs/redesign/source/figma-design-v2.json"
+  },
+  "limitations": [
+    "No flutter run, native application/device/emulator/simulator launch, preview, golden generation/update or user image export was performed.",
+    "In-memory test-engine SVG pixels and headless font loading do not prove Android/iOS visual parity.",
+    "Native font/SVG rendering and AppIcon packaging remain unverified.",
+    "No public web runtime/build or live store/download endpoints were verified.",
+    "New Resume/document/publication/shared-profile/contact/privacy/account capabilities remain pending their product contracts.",
+    "Logs are local evidence identified by SHA-256; commands and repository source paths are sufficient to rerun checks without the original temporary directory.",
+    "The JSON records technical checks for supported mobile scope, not full R9 acceptance or REDESIGN_DONE."
+  ]
+}

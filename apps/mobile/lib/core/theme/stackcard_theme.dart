@@ -16,15 +16,11 @@ abstract final class StackCardTheme {
             : StackCardColors.light);
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(StackCardRadius.medium),
-      borderSide: BorderSide(
-        color: base.brightness == Brightness.dark
-            ? colors.textMuted
-            : colors.textSecondary,
-      ),
+      borderSide: BorderSide(color: colors.controlOutline),
     );
     return base.copyWith(
       inputDecorationTheme: base.inputDecorationTheme.copyWith(
-        fillColor: colors.surface,
+        fillColor: colors.surfaceElevated,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 18,
@@ -39,7 +35,7 @@ abstract final class StackCardTheme {
         border: border,
         enabledBorder: border,
         focusedBorder: border.copyWith(
-          borderSide: BorderSide(color: colors.textPrimary, width: 2),
+          borderSide: BorderSide(color: colors.focus, width: 2),
         ),
         errorBorder: border.copyWith(
           borderSide: BorderSide(color: colors.error),
@@ -48,16 +44,20 @@ abstract final class StackCardTheme {
           borderSide: BorderSide(color: colors.error, width: 2),
         ),
         disabledBorder: border.copyWith(
-          borderSide: BorderSide(color: colors.border),
+          borderSide: BorderSide(color: colors.controlOutline),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: ButtonStyle(
-          minimumSize: const WidgetStatePropertyAll(Size(48, 52)),
-          textStyle: WidgetStatePropertyAll(base.textTheme.titleMedium),
-          shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(StackCardRadius.medium),
+        style: (base.filledButtonTheme.style ?? const ButtonStyle()).merge(
+          ButtonStyle(
+            minimumSize: const WidgetStatePropertyAll(
+              Size(StackCardSize.touchTarget, StackCardSize.touchTarget),
+            ),
+            textStyle: WidgetStatePropertyAll(base.textTheme.titleMedium),
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(StackCardRadius.medium),
+              ),
             ),
           ),
         ),
@@ -65,7 +65,7 @@ abstract final class StackCardTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: colors.textPrimary,
-          disabledForegroundColor: colors.textSecondary,
+          disabledForegroundColor: colors.textMeta,
           alignment: Alignment.centerLeft,
           minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -79,11 +79,11 @@ abstract final class StackCardTheme {
       ),
       textSelectionTheme: base.textSelectionTheme.copyWith(
         cursorColor: colors.textPrimary,
-        selectionColor: colors.cyan.withValues(alpha: 0.25),
+        selectionColor: colors.primary.withValues(alpha: 0.25),
         selectionHandleColor: colors.textPrimary,
       ),
       progressIndicatorTheme: base.progressIndicatorTheme.copyWith(
-        color: base.colorScheme.primary,
+        color: colors.accentText,
       ),
     );
   }
@@ -93,26 +93,26 @@ abstract final class StackCardTheme {
     final inverse = isDark ? StackCardColors.light : StackCardColors.dark;
     final scheme = ColorScheme(
       brightness: brightness,
-      // Этот оттенок Signal Red сохраняет AA для белого текста кнопок.
-      primary: colors.accentHover,
-      onPrimary: Colors.white,
+      // Primary fill и ink точно соответствуют обеим Figma modes.
+      primary: colors.primary,
+      onPrimary: colors.onPrimary,
       primaryContainer: colors.accentSoft,
       onPrimaryContainer: colors.textPrimary,
       secondary: colors.textPrimary,
       onSecondary: colors.background,
       secondaryContainer: colors.surfaceHover,
       onSecondaryContainer: colors.textPrimary,
-      tertiary: colors.textSecondary,
+      tertiary: colors.sourceText,
       onTertiary: isDark ? colors.background : colors.surface,
       tertiaryContainer: colors.surfaceElevated,
       onTertiaryContainer: colors.textPrimary,
       error: colors.error,
       onError: isDark ? colors.background : colors.surface,
       errorContainer: colors.surfaceElevated,
-      onErrorContainer: colors.textPrimary,
+      onErrorContainer: colors.error,
       surface: colors.surface,
       onSurface: colors.textPrimary,
-      onSurfaceVariant: isDark ? colors.textSecondary : colors.textPrimary,
+      onSurfaceVariant: colors.textSecondary,
       surfaceDim: colors.background,
       surfaceBright: colors.surfaceHover,
       surfaceContainerLowest: colors.background,
@@ -120,54 +120,80 @@ abstract final class StackCardTheme {
       surfaceContainer: colors.surface,
       surfaceContainerHigh: colors.surfaceElevated,
       surfaceContainerHighest: colors.surfaceHover,
-      outline: colors.textSecondary,
+      outline: colors.controlOutline,
       outlineVariant: colors.border,
       inverseSurface: inverse.surface,
       onInverseSurface: inverse.textPrimary,
-      inversePrimary: colors.accent,
+      inversePrimary: colors.primary,
       shadow: StackCardColors.dark.background,
       scrim: StackCardColors.dark.background,
       surfaceTint: Colors.transparent,
     );
+    // Десять Manrope styles из принятой DS; Flutter roles без новой scale.
     final textTheme = TextTheme(
-      displayLarge: _text(64, FontWeight.w500, 0.98, -3),
-      displayMedium: _text(52, FontWeight.w500, 1.0, -2.4),
-      displaySmall: _text(40, FontWeight.w500, 1.05, -1.8),
-      headlineLarge: _text(36, FontWeight.w500, 1.08, -1.4),
+      displayLarge: _text(40, FontWeight.w800, 1.2, -1),
+      displayMedium: _text(40, FontWeight.w800, 1.2, -1),
+      displaySmall: _text(40, FontWeight.w800, 1.2, -1),
+      headlineLarge: _text(28, FontWeight.w700, 1.2, -0.6),
       headlineMedium: _text(28, FontWeight.w700, 1.2, -0.6),
       headlineSmall: _text(24, FontWeight.w700, 1.25, -0.4),
       titleLarge: _text(20, FontWeight.w700, 1.3, -0.3),
       titleMedium: _text(16, FontWeight.w600, 1.4, -0.1),
-      titleSmall: _text(14, FontWeight.w600, 1.4, 0),
+      titleSmall: _text(14, FontWeight.w700, 1.3, 0),
       bodyLarge: _text(16, FontWeight.w400, 1.5, 0),
       bodyMedium: _text(14, FontWeight.w400, 1.5, 0),
       bodySmall: _text(12, FontWeight.w400, 1.5, 0),
-      labelLarge: _text(14, FontWeight.w700, 1.3, 0),
-      labelMedium: _text(12, FontWeight.w600, 1.3, 0.1),
-      labelSmall: _text(11, FontWeight.w600, 1.3, 0.2),
+      labelLarge: _text(16, FontWeight.w600, 1.4, -0.1),
+      labelMedium: _text(14, FontWeight.w700, 1.3, 0),
+      labelSmall: _text(12, FontWeight.w600, 1.5, 0),
     ).apply(bodyColor: colors.textPrimary, displayColor: colors.textPrimary);
-    final controlBorder = UnderlineInputBorder(
-      borderRadius: BorderRadius.circular(StackCardRadius.small),
-      borderSide: BorderSide(color: colors.textSecondary),
+    final controlBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(StackCardRadius.medium),
+      borderSide: BorderSide(color: colors.controlOutline),
     );
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
-      fontFamily: 'DM Sans',
+      fontFamily: 'Manrope',
       fontFamilyFallback: const ['Noto Sans'],
       textTheme: textTheme,
       extensions: [colors],
       scaffoldBackgroundColor: colors.background,
       canvasColor: colors.background,
       dividerColor: colors.borderSubtle,
-      disabledColor: colors.textSecondary,
+      disabledColor: colors.textMeta,
       splashFactory: NoSplash.splashFactory,
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: colors.primary,
+          foregroundColor: colors.onPrimary,
+          disabledBackgroundColor: colors.surfaceHover,
+          disabledForegroundColor: colors.textMeta,
+          minimumSize: const Size(
+            StackCardSize.touchTarget,
+            StackCardSize.touchTarget,
+          ),
+          padding: const EdgeInsets.all(StackCardSpacing.sm),
+          textStyle: textTheme.labelLarge,
+          side: BorderSide(color: colors.primaryOutline),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(StackCardRadius.medium),
+          ),
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+        ),
+      ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: colors.textPrimary,
-          disabledForegroundColor: colors.textSecondary,
+          disabledForegroundColor: colors.textMeta,
+          minimumSize: const Size(
+            StackCardSize.touchTarget,
+            StackCardSize.touchTarget,
+          ),
+          textStyle: textTheme.labelLarge,
         ),
       ),
       appBarTheme: AppBarTheme(
@@ -184,7 +210,7 @@ abstract final class StackCardTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(StackCardRadius.xlarge),
+          borderRadius: BorderRadius.circular(StackCardRadius.large),
           side: BorderSide(color: colors.border),
         ),
       ),
@@ -192,15 +218,18 @@ abstract final class StackCardTheme {
         filled: true,
         fillColor: colors.surfaceElevated,
         contentPadding: const EdgeInsets.all(StackCardSpacing.lg),
-        labelStyle: textTheme.bodyMedium,
-        hintStyle: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+        labelStyle: textTheme.bodyLarge?.copyWith(color: colors.textSecondary),
+        floatingLabelStyle: textTheme.bodySmall?.copyWith(
+          color: colors.textMeta,
+        ),
+        hintStyle: textTheme.bodyLarge?.copyWith(color: colors.textMeta),
         // Сообщение остаётся читаемым и на фоне страницы в light.
-        errorStyle: textTheme.bodySmall,
+        errorStyle: textTheme.bodySmall?.copyWith(color: colors.error),
         errorMaxLines: 3,
         border: controlBorder,
         enabledBorder: controlBorder,
         focusedBorder: controlBorder.copyWith(
-          borderSide: BorderSide(color: colors.accent, width: 2),
+          borderSide: BorderSide(color: colors.focus, width: 2),
         ),
         errorBorder: controlBorder.copyWith(
           borderSide: BorderSide(color: colors.error),
@@ -209,32 +238,32 @@ abstract final class StackCardTheme {
           borderSide: BorderSide(color: colors.error, width: 2),
         ),
         disabledBorder: controlBorder.copyWith(
-          borderSide: BorderSide(color: colors.border),
+          borderSide: BorderSide(color: colors.controlOutline),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: colors.background,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: colors.acid,
+        indicatorColor: colors.primary,
         labelTextStyle: WidgetStatePropertyAll(textTheme.labelSmall),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           return IconThemeData(
             color: states.contains(WidgetState.selected)
-                ? colors.ink
+                ? colors.onPrimary
                 : colors.textSecondary,
           );
         }),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: colors.surface,
-        indicatorColor: colors.acid,
-        selectedIconTheme: IconThemeData(color: colors.ink),
+        indicatorColor: colors.primary,
+        selectedIconTheme: IconThemeData(color: colors.onPrimary),
         unselectedIconTheme: IconThemeData(color: colors.textPrimary),
         selectedLabelTextStyle: textTheme.labelMedium,
         unselectedLabelTextStyle: textTheme.labelMedium,
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: colors.accent,
+        color: colors.accentText,
         linearTrackColor: colors.surfaceHover,
       ),
       tooltipTheme: TooltipThemeData(
@@ -265,7 +294,7 @@ abstract final class StackCardTheme {
     double letterSpacing,
   ) {
     return TextStyle(
-      fontFamily: 'DM Sans',
+      fontFamily: 'Manrope',
       fontFamilyFallback: const ['Noto Sans'],
       fontSize: size,
       fontWeight: weight,
