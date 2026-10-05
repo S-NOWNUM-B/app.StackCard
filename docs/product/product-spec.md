@@ -486,7 +486,8 @@ web-редактор и публичные портфолио. Этот разд
 **Phase 0–6 завершены:** основа, UI, состояние, архитектура, GitHub Import, offline и Builder проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
 **С 2026-10-05 основная разработка новых функций приостановлена:** активна только
-R3 инициативы [StackCard Design v2](../redesign/README.md). Прямое поручение
+R4 инициативы [StackCard Design v2](../redesign/README.md), весь пакет
+R4.1–R4.7c по прямому разрешению D034. Прямое поручение
 использовать [план R0–R9](../redesign/plan.md) и начать первую фазу приняло R0
 и разрешило R1.1. Поручение «переходи к следующей фазе» приняло
 [три схемы IA](../redesign/screens.md#r11--информационная-архитектура)
@@ -524,9 +525,9 @@ errors/unsaved/public access. Ответом пользователя приня
 содержат10 sets/67 variants, PhotoSourceSheet и6 SVG icons; четыре Dark/Light
 boards показывают keyboard и static ×2 reflow.513 texts/103 strokes, bounds,
 references и touch audit PASS. Фотография — обозначенный generated_demo,
-не пользовательский upload. Последнее поручение продолжить приняло R3.3 и
-разрешило R3.4, работу нескольких агентов и ускорение, D032.
-**R3.4 — awaiting_review D033**:
+не пользовательский upload. Поручение D032 приняло R3.3 и разрешило R3.4,
+работу нескольких агентов и ускорение.
+**R3.4 и полная R3 — done D034**:
 [states/motion/adaptive](../redesign/screens.md#r34--состояния-motion-и-адаптивность)
 содержат2sets/18variants и10Dark/Light fixtures320/390/430/768/844landscape.
 Local Save, server ACK иPublish разделены; unknown publication result честно
@@ -534,6 +535,19 @@ Local Save, server ACK иPublish разделены; unknown publication result 
 reduced — статические specs.393texts/786mode samples,342strokes/96targets,
 geometry/bindings/references/scopes PASS. Native keyboard/media/OS scaling/
 routing/clipboard/icon exports иplayable prototype ещё pending.
+**R4 — awaiting_review D035**: пользователь принял полную R3 и разрешил
+все девять задач R4.1–R4.7c одним пакетом D034. Собраны четыре root-библиотеки
+и Settings/Profile/Contacts/Account/Privacy/App: [61state/122Dark-Light frames,
+9boards](../redesign/screens.md#r4--основные-экраны-и-настройки).
+Metadata/contrast: 2074actual-mode text samples ≥4.739:1,
+1446strokes ≥4.364:1,840targets≥48;17failure categories0.
+70fixed-brand vector fills сохраняют original Flutter/Dart assets; scope
+onPrimary расширен STROKE_COLOR без смены palette values.
+Добавлены три scoped families/6input-composition variants и один pinned Search SVG;
+98variables/50styles сохранены без drift. Визуальный просмотр, preview и запуск
+приложения не выполнялись по прямому запросу D034. Полный пакет ожидает общей
+приёмки; R5.1a и runtime R8 требуют отдельного разрешения. Это Figma target,
+новые screens/routes/backend этим пакетом не реализованы.
 Новая URL route scheme и миграция adapter остаются предпосылкой R8.
 Runtime/schema не изменены. Проверки и ограничения — в
 [результатах R3.4](../redesign/plan.md#фактический-результат-r34-d032d033);

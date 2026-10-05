@@ -22,6 +22,7 @@
 - [Иконки R3.2](#иконки-r32)
 - [Assets R3.3](#assets-r33)
 - [Состояния и motion R3.4](#состояния-и-motion-r34)
+- [Источники экранов R4](#источники-экранов-r4)
 - [Применение в StackCard](#применение-в-stackcard)
 - [Ограничения и следующий шаг](#ограничения-и-следующий-шаг)
 
@@ -33,7 +34,9 @@
 изображения просмотрены, несколько демонстраций проверены в браузере.
 Этот исторический срез предшествовал выбору направления/логотипа R2.
 Теперь бренд A принят D024; fonts review R3.1 добавлен D027. R3.3 принята D032;
-state/adapt/motion specimens R3.4 ожидают review D033.
+state/adapt/motion specimens R3.4 и полная R3 приняты D034 после review D033.
+R4.1–R4.7c собраны одним пакетом и ожидают review D035; визуальный просмотр/preview/run
+пропущены по прямому запросу D034, не считаются пройденной проверкой.
 Результаты исходного исследования ниже не переаттестованы.
 Правила переноса заданы в [требованиях](requirements.md#референсы-и-сохранность-проекта):
 `REQ-REFERENCE-01..02`; применение планируется в [R1–R8](plan.md), экраны
@@ -404,6 +407,35 @@ persistence и publication независимы: local Saved/server Synced не
 existing contentMaxWidth600, четыре bottom tabs и horizontal actions.
 REF-08/09/10 остаются основаниями checks размеров, labels и контраста;
 статические Figma measurements не подменяют native accessibility acceptance.
+
+---
+
+## Источники экранов R4
+
+Scope D034 — все девять задач R4.1–R4.7c одним пакетом; результат ожидает
+review D035. Экраны собраны из принятой DS R3: Manrope/brand A, semantic tokens, shared
+Navigation/Cards/TechnologyBadge/Forms/Photo/CollectionRow/StatePanel и
+LifecycleStatus. Повторное использование сохраняет указанные выше sources
+и license notices; новых icon packs или изображений автоматически не добавляет.
+Единственный дополнительный asset — [Lucide search.svg](https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/search.svg)
+из того же pinned commit500620a2. XML/vector-only/viewBox24 и отсутствие
+scripts/images/href проверены; SHA256
+`283d371c2e433817bb9c0c8310caa6c77fa4177c0f4f1168d9c83b97af7389dc`.
+Source/license notices переиспользуют прежний [Lucide LICENSE](https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/LICENSE)
+и полные ISC/MIT notices в153:6036. SearchIcon184:2762 и отдельный
+SearchField184:2784 (Empty184:2766/Filled184:2772/Focus184:2778) добавлены
+для поиска Projects после отсутствия совместимого local/library компонента.
+Экран поиска не получает дополнительного заголовка; остальные assets
+переиспользованы из R3. Runtime assets/dependencies не добавлялись.
+
+Визуальный просмотр, preview и запуск приложения пропускаются по прямому
+запросу. Metadata/contrast/bindings checks не обозначаются visual review.
+[Фактический реестр и QA R4](screens.md#r4--основные-экраны-и-настройки)
+содержит9boards/61states/122Dark-Light frames; palette values/styles/variable counts сохранены
+без drift; onPrimary расширен STROKE_COLOR scope без смены color values. ProjectListItem185:2771 и PortfolioListItem188:2861 — scoped
+compositions прежних R3 elements; новых media/font sources не добавлено.
+R5 flows, backend/media/schema и native implementation остаются будущими
+отдельно разрешаемыми результатами.
 
 ---
 

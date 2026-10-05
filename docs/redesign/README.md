@@ -4,7 +4,7 @@
 
 **Отдельная инициатива полного редизайна mobile, web и публичных документов**
 
-![Phase R3](https://raster.shields.io/badge/Phase-R3-C7FF1A?style=for-the-badge)
+![Phase R4](https://raster.shields.io/badge/Phase-R4-C7FF1A?style=for-the-badge)
 ![Status awaiting review](https://raster.shields.io/badge/Status-awaiting_review-14161B?style=for-the-badge)
 
 </div>
@@ -28,7 +28,12 @@ StackCard создаёт разные структурированные Resume 
 перепроектирует визуальную систему и сценарии, сохраняя бизнес-логику, данные,
 интеграции и Material 3 как техническую основу Flutter.
 
-На **2026-10-05** активна **R3: дизайн-система**, текущая задача **R3.4**.
+На **2026-10-05** активна **R4: основные экраны и настройки**, весь пакет
+**R4.1–R4.7c — `awaiting_review`**, D035: 61 state / 122 Dark/Light frames
+на девяти boards. Scope всего пакета принят D034. Пользователь принял полную R3 и поручил
+выполнить все девять задач вместе, ускорив работу несколькими агентами.
+Визуальный просмотр, preview и запуск приложения пропускаются по прямому запросу;
+metadata/contrast/bindings и проверка документации сохраняются.
 План R0 и три схемы IA R1.1 приняты прямыми поручениями начать первую фазу
 и перейти к следующему шагу. **R1.1–R1.3 — `done`**: R1.2 принята поручением
 исправить кнопки/поиск и затем продолжить (D015), правки проверены.
@@ -45,8 +50,8 @@ R1.3 принята поручением «переходи к следующе�
 UI foundations обновлены, принятый Wordmark A и палитра сохранены.
 **R3.2 — `done`**, D030: Navigation/cards/TechnologyBadge приняты поручением
 продолжить. **R3.3 — `done`**, D032: формы, stepper, фото и секции приняты
-поручением продолжить. **R3.4 — `awaiting_review`**, D033: states/motion/adaptive
-собраны и проверены. Добавлены2sets/18variants и10Dark/Light fixtures; четыре
+поручением продолжить. **R3.4 и полная R3 — `done`**, D034:
+states/motion/adaptive собраны и проверены в review D033, затем приняты. Добавлены2sets/18variants и10Dark/Light fixtures; четыре
 агента подготовили независимые части, ведущий интегрировал Figma последовательно.
 Постоянный адрес каждого документа принят D019; реализация URL-контракта предстоит.
 
@@ -55,7 +60,7 @@ UI foundations обновлены, принятый Wordmark A и палитра
 | Аудит и план | R0 принята поручением начать R1; исходные результаты и ограничения сохранены в audit/references |
 | IA Design v2 | [Navigation, ownership и lifecycle](screens.md#r11--информационная-архитектура); R1.1 принята поручением продолжить, D013 |
 | Low-fi Design v2 | [24 экрана R1.2](screens.md#r12--low-fi-основных-сценариев), [24 экрана R1.3](screens.md#r13--low-fi-resume-wizard-и-редактора) и [40 экранов R1.4](screens.md#r14--low-fi-projects-portfolio-и-публикации) приняты. Всего 88 phone frames, цветовые правки D020 проверены |
-| Визуальные макеты Design v2 | [Бренд A](screens.md#r23--принятый-бренд-и-направление) принят D024; R3.1 done D028, Manrope. [Navigation/cards/badges R3.2](screens.md#r32--навигация-карточки-и-technologybadge) приняты D030; [Forms/stepper/photo/sections R3.3](screens.md#r33--формы-stepper-фото-и-секции) приняты D032; [States/motion/adaptive R3.4](screens.md#r34--состояния-motion-и-адаптивность) проверены, awaiting_review D033; экраны R4–R6 ещё не начаты |
+| Визуальные макеты Design v2 | [Бренд A](screens.md#r23--принятый-бренд-и-направление) принят D024; R3.1 done D028, Manrope. [Navigation/cards/badges R3.2](screens.md#r32--навигация-карточки-и-technologybadge) приняты D030; [Forms/stepper/photo/sections R3.3](screens.md#r33--формы-stepper-фото-и-секции) приняты D032; [States/motion/adaptive R3.4](screens.md#r34--состояния-motion-и-адаптивность) приняты D034; [все девять задач R4](screens.md#r4--основные-экраны-и-настройки) собраны и ждут review D035; R5–R6 ещё не начаты |
 | Интерактивный прототип Design v2 | Не создан; отдельный результат R7 |
 | Реализованный Design v2 UI | Не перенесён; отдельное разрешение R8 после DESIGN_READY |
 | Backend новых сценариев | Не реализован этим заданием; пробелы и зависимости зафиксированы отдельно |
@@ -124,31 +129,26 @@ Design v2 нельзя честно реализовать. Перед R8 пол
 ## Как продолжать
 
 При следующем запросе сначала прочитать этот README и [plan.md](plan.md).
-Одновременно активна одна фаза и одна согласованная задача; продолжать с первой
-незавершённой, сохраняя предыдущие решения и evidence.
+Одновременно активна одна фаза. Прямое исключение D034 объединяет всю R4
+в один пакет: R4.1 Home, R4.2 Resumes, R4.3 Projects, R4.4 Portfolios,
+R4.5 Settings/Profile, R4.6 Contacts, R4.7a Account, R4.7b Privacy и R4.7c App.
+Промежуточные остановки после отдельного экрана не требуются; каждый срез
+всё равно получает собственные frame IDs и metadata evidence.
 
-Текущая точка приёмки — **R3.4: состояния, motion и адаптивность**, полная DS.
-[Состояния данных](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2036),
-[Save/Sync/Publish](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2110),
-[motion/reduced](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2214)
-и [адаптивные образцы](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2418)
-собраны из shared components и прежних tokens. StatePanel5/LifecycleStatus13
-разделяют dirty/local Save/server ACK/explicit Publish; ошибка или неизвестный
-результат не получают ложного success. Save/Отмена закреплены над bottom tabs.
+R3 принята полностью D034. Текущая R4 использует её Manrope, brand A,
+semantic tokens и shared components; новые backend/schema/media функции
+макетами не реализуются. Независимые части готовят несколько агентов;
+ведущий последовательно интегрировал Figma. [Пакет R4](screens.md#r4--основные-экраны-и-настройки)
+содержит61 state / 122Dark-Light frames / 9boards.
+Metadata/contrast: 2074 actual-mode text samples ≥4.739:1,
+1446 strokes ≥4.364:1,840targets≥48;17failure categories0.
+Прежние variable values/style IDs сохранены; подробные scope/exemption условия —
+[в результатах R4](plan.md#фактический-результат-r4-d034d035).
+Визуальный просмотр, preview и запуск приложения не выполнялись по явному
+запросу D034; metadata/contrast PASS не подменяет render review.
 
-Проверены10Dark/Light fixtures:320,390,430,768 и844landscape, cap600, ru/en/URL
-wrapping. Шесть motion событий180/240/280ms имеют static0ms reduced equivalents
-с тем же feedback. Playable prototype — R7.3, native/runtime — R8.
-Audit393text nodes/786mode samples:minimum4.833:1;342interactive strokes:
-minimum4.365:1;96targets≥48×48. Bounds/overlaps/references/bindings/scopes
-failures0; итоговые renders просмотрены.98variables/50styles сохранены;
-единственная правка прежних values — motion/slow300→280, палитра/Wordmark A прежние.
-
-R3.1–R3.3 done. После приёмки R3.4 следующая отдельная задача — **R4.1**.
-Независимые части дизайна продолжаются несколькими агентами; Figma writes
-интегрирует ведущий последовательно. Полные экраны и финальный DESIGN_READY
-остаются будущими результатами.
-Low-fi сохраняют горизонтальные кнопки и поиск с лупой без заголовка.
-Политика URL принята D019; точная route scheme и миграция adapter остаются
-предпосылкой R8. DESIGN_READY/REDESIGN_DONE не установлены; runtime/backend
-и основная функциональная разработка остаются на прежней точке.
+Весь пакет R4 ожидает пользовательской приёмки D035. Следующий отдельный
+этап — R5.1a; R5 и runtime R8 не разрешены автоматически. DESIGN_READY/
+REDESIGN_DONE ещё не установлены. Политика URL принята D019; точная route
+scheme и миграция adapter остаются предпосылкой R8. Основная функциональная
+разработка сохраняет прежнюю точку перед Phase 11.
