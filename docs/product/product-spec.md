@@ -486,8 +486,8 @@ web-редактор и публичные портфолио. Этот разд
 **Phase 0–6 завершены:** основа, UI, состояние, архитектура, GitHub Import, offline и Builder проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
 **С 2026-10-05 основная разработка новых функций приостановлена:** активна только
-R4 инициативы [StackCard Design v2](../redesign/README.md), весь пакет
-R4.1–R4.7c по прямому разрешению D034. Прямое поручение
+R5 инициативы [StackCard Design v2](../redesign/README.md), весь пакет
+R5.1a–R5.4c в сохранённом full-phase/parallel/no-preview режиме D036. Прямое поручение
 использовать [план R0–R9](../redesign/plan.md) и начать первую фазу приняло R0
 и разрешило R1.1. Поручение «переходи к следующей фазе» приняло
 [три схемы IA](../redesign/screens.md#r11--информационная-архитектура)
@@ -535,7 +535,7 @@ Local Save, server ACK иPublish разделены; unknown publication result 
 reduced — статические specs.393texts/786mode samples,342strokes/96targets,
 geometry/bindings/references/scopes PASS. Native keyboard/media/OS scaling/
 routing/clipboard/icon exports иplayable prototype ещё pending.
-**R4 — awaiting_review D035**: пользователь принял полную R3 и разрешил
+**R4 — done D036**: пользователь принял полную R3 и разрешил
 все девять задач R4.1–R4.7c одним пакетом D034. Собраны четыре root-библиотеки
 и Settings/Profile/Contacts/Account/Privacy/App: [61state/122Dark-Light frames,
 9boards](../redesign/screens.md#r4--основные-экраны-и-настройки).
@@ -545,9 +545,16 @@ Metadata/contrast: 2074actual-mode text samples ≥4.739:1,
 onPrimary расширен STROKE_COLOR без смены palette values.
 Добавлены три scoped families/6input-composition variants и один pinned Search SVG;
 98variables/50styles сохранены без drift. Визуальный просмотр, preview и запуск
-приложения не выполнялись по прямому запросу D034. Полный пакет ожидает общей
-приёмки; R5.1a и runtime R8 требуют отдельного разрешения. Это Figma target,
-новые screens/routes/backend этим пакетом не реализованы.
+приложения не выполнялись по прямому запросу D034. Полный пакет принят
+следующим поручением продолжить, D036. Это Figma target; новые screens/routes/
+backend этим пакетом не реализованы.
+**R5 — in_progress D036**: «переходи к следующему этапу разработки»
+интерпретировано как приёмка всей R4 и переход к следующей R5 с сохранением
+прежнего режима фаза целиком/параллельно/без preview и запуска приложения.
+Пользователь не называл весь набор R5 буквально; в текущем scope выполняются
+все 13 задач R5.1a–R5.4c. Runtime/backend/media/schema не меняются, R6+ и R8
+не начаты. Figma IDs и QA R5 будут записаны после фактической сборки;
+готовность flow/runtime сейчас не заявлена.
 Новая URL route scheme и миграция adapter остаются предпосылкой R8.
 Runtime/schema не изменены. Проверки и ограничения — в
 [результатах R3.4](../redesign/plan.md#фактический-результат-r34-d032d033);

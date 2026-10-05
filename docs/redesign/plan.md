@@ -4,8 +4,8 @@
 
 **Поэтапный редизайн с явными границами, проверками и приёмкой**
 
-![Phase R4](https://raster.shields.io/badge/Phase-R4-C7FF1A?style=for-the-badge)
-![Status awaiting review](https://raster.shields.io/badge/Status-awaiting_review-14161B?style=for-the-badge)
+![Phase R5](https://raster.shields.io/badge/Phase-R5-C7FF1A?style=for-the-badge)
+![Status in progress](https://raster.shields.io/badge/Status-in_progress-14161B?style=for-the-badge)
 
 </div>
 
@@ -35,9 +35,12 @@ R1.4 и R1 — `done`. Поручение «переходи к следующе
 R2.1 и разрешило R2.2 (D022), без выбора A/B. Поручение «вариант бренда мне
 понавился А. приступай к следующей фазе» приняло бренд A и разрешило R3.1,
 D024: R2.2/R2.3/R2 done. Связанные пилоты A служат основой следующей фазы.
-Активна **R4 — `awaiting_review`**, D035: пользователь принял полную R3
-и прямо разрешил выполнить все девять задач R4.1–R4.7c одним пакетом
-с параллельной подготовкой. Визуальный просмотр, preview и запуск приложения
+Активна **R5 — `in_progress`**, D036. Последнее поручение «переходи к
+следующему этапу разработки» принято как приёмка всей R4 и разрешение
+следующей фазы R5. Сохраняется ранее согласованный режим: фаза целиком,
+несколько агентов, без preview/run. Поэтому все 13 задач R5.1a–R5.4c
+выполняются одним пакетом. Это интерпретация продолжения с прежними
+предпочтениями; пользователь не называл R5 или её задачи буквально. Визуальный просмотр, preview и запуск приложения
 пропускаются по его прямому запросу; metadata/contrast/bindings и docs checks
 остаются проверками готовности. R3.4 принята D034; поручение D032 ранее
 приняло R3.3 и разрешило R3.4.
@@ -62,9 +65,10 @@ Google/reset/iOS приёмка Phase 7 сохранена. Подробност
 и [audit](audit.md), основной roadmap остаётся в [product spec](../product/product-spec.md#план-разработки).
 
 Одновременно активна одна фаза и только согласованный scope внутри неё.
-Для R4 принято явное исключение D034: все девять задач R4.1–R4.7c выполняются
-и передаются на review вместе, без остановок после отдельного экрана.
-Это не разрешает R5, R8, runtime/backend или Git mutations.
+Для R4 было принято исключение D034: девять задач выполнены одним пакетом.
+При переходе D036 этот ранее согласованный режим сохранён для текущей R5:
+все13 задач передаются на общее review без промежуточных остановок.
+Это не разрешает R6+, R8, runtime/backend или Git mutations.
 Допустимые статусы: `todo`, `in_progress`, `blocked`, `awaiting_review`, `done`.
 Новый артефакт переводит визуальную задачу в awaiting_review; done требует
 приёмки пользователя. Следующий шаг начинается по явному поручению.
@@ -84,11 +88,10 @@ current paths — [screens](screens.md), GAP-* — [audit](audit.md#продук
 Диапазон IDs означает каждое требование диапазона. Будущие Figma-имена в таблицах
 явно предлагаемые; существующие frame IDs указаны только в проверенном реестре.
 Доказательство в строках todo — требуемый будущий результат, а не уже выполненная проверка.
-Каждый step R5.1/R5.2/R5.3/R5.4 согласуется отдельно.
-R4.7 и R8.2–R8.5 используют буквенные IDs отдельных задач. Для текущей R4
-все девять задач объединены разрешением D034; evidence всё равно перечисляет
-каждый экран и проверку. Для будущих задач сохраняется обычное согласование
-небольших срезов, если пользователь явно не изменит scope.
+Каждый R5.1/R5.2/R5.3/R5.4 получает собственные IDs и evidence, но текущая
+R5 согласуется общим пакетом по D036. R4.7 и R8.2–R8.5 используют буквенные
+IDs отдельных задач. Для будущих R6+ сохраняется обычное согласование scope;
+режим одной фазы не разрешает автоматический переход в следующую.
 
 ---
 
@@ -100,8 +103,8 @@ R4.7 и R8.2–R8.5 используют буквенные IDs отдельны
 | R1 — UX и информационная архитектура | IA и 88 low-fi экранов приняты; цветовые правки D020 выполнены. Постоянные адреса документов приняты D019; URL backend ещё не реализован. | done |
 | R2 — Визуальное направление | Принят бренд A D024; связанные пилоты A / Cyber Editorial — основа R3. A families закреплены с прежними IDs; B сохранён как история. R2.1–R2.3 done. | done |
 | R3 — Дизайн-система | R3.1–R3.4 приняты; полная DS done D034. Manrope, shared controls и state/motion/adapt evidence сохранены; runtime migration не выполнялась. | done |
-| R4 — Основные экраны и настройки | Весь пакет R4.1–R4.7c собран: 61 state / 122 Dark/Light frames / 9 boards, D035. Metadata/contrast проверены; visual preview/run пропущены по D034. Unsupported функции остаются target-design. | awaiting_review |
-| R5 — Создание, редактирование и публикация | Полные hi-fi flows с input/error/back/preview и отдельным Publish. Принять последовательно R5.1 → R5.2 → R5.3 → R5.4; уточнить delete/rename consequences. | todo |
+| R4 — Основные экраны и настройки | Весь пакет R4.1–R4.7c принят D036: 61 state / 122 Dark/Light frames / 9 boards. Metadata/contrast evidence D035 сохранено; visual preview/run пропущены по D034. Unsupported функции остаются target-design. | done |
+| R5 — Создание, редактирование и публикация | Все 13 задач R5.1a–R5.4c выполняются одним пакетом D036 в сохранённом full-phase/parallel/no-preview режиме. Input/error/back/preview-document, отдельный Publish и последствия delete/rename; общее review после готовности. | in_progress |
 | R6 — Web | Полный web design visitor/owner flow, не один hero. Принять web-подачу и доступность CTA/download; URL scheme с GAP-URL-01. | todo |
 | R7 — Прототип, адаптивность и приёмка дизайна | Пакет финальных frames/prototype, результатов и известных ограничений. Принять итоговый дизайн; после явного подтверждения установить DESIGN_READY. | todo |
 | R8 — Перенос согласованного UI | Реальные экраны в согласованном scope; неподдерживаемые действия обозначены честно. Разрешить R8 отдельно, выбрать prerequisite work или явно сузить scope; перенос не разрешает deploy/commit/push. | todo |
@@ -238,25 +241,25 @@ low-fi R1.2/R1.3 приняты, R1.4 принята после цветовых
 
 **Решения пользователя:** Все девять задач R4.1–R4.7c выполняются одним пакетом D034. По завершении принять весь набор; неподдерживаемые функции остаются target-design.
 
-**Статус фазы:** `awaiting_review`, D035. Все девять задач представлены ниже; metadata evidence проверено, visual preview/run пропущены D034.
+**Статус фазы:** `done`, D036. Все девять задач приняты поручением продолжить; metadata evidence D035 сохранено, visual preview/run пропущены D034.
 
 | **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
 |:---|:---|:---|:---|:---|:---|:---|
-| R4.1 | REQ-HOME-01..03, REQ-NAV-01..03 | [186:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=186-7); S-HOME; existing /home | Header+gear, ровно Все/Резюме/Проекты, recent mixed cards и отдельная Copy зона; убрать dashboard элементы. | C01–C04, C09 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | awaiting_review D035 |
-| R4.2 | REQ-RESUME-01, REQ-SHARE-01 | [187:1340](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-1340); S-RESUMES; нового runtime route ещё нет | Create + cards role/preview/date/status/open/copy; без completion percent. | C01, C02, C09, C10 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | awaiting_review D035 |
-| R4.3 | REQ-PROJECT-01..04, REQ-TECH-01..02 | [187:2342](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-2342); S-PROJECTS; existing /projects | Import/Create в компактном горизонтальном ряду → поиск с лупой без внешнего заголовка → List; cover/placeholder, badges, без filters/hero. | C05, C08, C13, C15 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | awaiting_review D035 |
-| R4.4 | REQ-PORTFOLIO-01, REQ-SHARE-01 | [187:11625](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-11625); S-PORTFOLIOS; existing /portfolio пока singleton | Список named Portfolio и доступ к create/edit/duplicate/publish/unpublish/share. | C09, C10, C13 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | awaiting_review D035 |
-| R4.5 | REQ-SETTINGS-01,04, REQ-RESUME-03 | [187:12466](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-12466); S-SETTINGS/S-PROFILE; existing profile editor | Focused profile и photo selector/replace/remove/no-photo, опыт/образование/навыки. | C06, C07, C12, C16 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | awaiting_review D035 |
-| R4.6 | REQ-SETTINGS-02..03 | [187:13712](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-13712); S-CONTACTS; existing /portfolio/builder/links | Отделить contact email от login, custom label+URL, CRUD/reorder и public selection. | C06, C17 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | awaiting_review D035 |
-| R4.7a | REQ-SETTINGS-01,03,04 | [187:14648](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-14648); S-ACCOUNT; existing /settings account actions | Отдельный экран аккаунта: login email/password/provider inventory, reauth/link error/last-provider protection; выход и delete отдельно. | C06, C10, C12, C13 | 9 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | awaiting_review D035 |
-| R4.7b | REQ-SETTINGS-01,03, REQ-SHARE-01 | [187:15400](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-15400); S-PRIVACY; существующего privacy route нет | Экран privacy: selected contacts/location/обращения, не смешивать login email с public contact. | C06, C12, C17 | 5 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | awaiting_review D035 |
-| R4.7c | REQ-SETTINGS-01, REQ-MOTION-02 | [187:16002](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-16002); S-APP; existing /settings preferences | Экран приложения: dark/light/system, ru/en, notifications/reduced motion; unsupported backend обозначен. | C06, C12, C13, C-MOTION | 5 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | awaiting_review D035 |
+| R4.1 | REQ-HOME-01..03, REQ-NAV-01..03 | [186:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=186-7); S-HOME; existing /home | Header+gear, ровно Все/Резюме/Проекты, recent mixed cards и отдельная Copy зона; убрать dashboard элементы. | C01–C04, C09 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | done D036 |
+| R4.2 | REQ-RESUME-01, REQ-SHARE-01 | [187:1340](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-1340); S-RESUMES; нового runtime route ещё нет | Create + cards role/preview/date/status/open/copy; без completion percent. | C01, C02, C09, C10 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | done D036 |
+| R4.3 | REQ-PROJECT-01..04, REQ-TECH-01..02 | [187:2342](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-2342); S-PROJECTS; existing /projects | Import/Create в компактном горизонтальном ряду → поиск с лупой без внешнего заголовка → List; cover/placeholder, badges, без filters/hero. | C05, C08, C13, C15 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | done D036 |
+| R4.4 | REQ-PORTFOLIO-01, REQ-SHARE-01 | [187:11625](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-11625); S-PORTFOLIOS; existing /portfolio пока singleton | Список named Portfolio и доступ к create/edit/duplicate/publish/unpublish/share. | C09, C10, C13 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | done D036 |
+| R4.5 | REQ-SETTINGS-01,04, REQ-RESUME-03 | [187:12466](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-12466); S-SETTINGS/S-PROFILE; existing profile editor | Focused profile и photo selector/replace/remove/no-photo, опыт/образование/навыки. | C06, C07, C12, C16 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | done D036 |
+| R4.6 | REQ-SETTINGS-02..03 | [187:13712](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-13712); S-CONTACTS; existing /portfolio/builder/links | Отделить contact email от login, custom label+URL, CRUD/reorder и public selection. | C06, C17 | 7 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | done D036 |
+| R4.7a | REQ-SETTINGS-01,03,04 | [187:14648](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-14648); S-ACCOUNT; existing /settings account actions | Отдельный экран аккаунта: login email/password/provider inventory, reauth/link error/last-provider protection; выход и delete отдельно. | C06, C10, C12, C13 | 9 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | done D036 |
+| R4.7b | REQ-SETTINGS-01,03, REQ-SHARE-01 | [187:15400](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-15400); S-PRIVACY; существующего privacy route нет | Экран privacy: selected contacts/location/обращения, не смешивать login email с public contact. | C06, C12, C17 | 5 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | done D036 |
+| R4.7c | REQ-SETTINGS-01, REQ-MOTION-02 | [187:16002](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=187-16002); S-APP; existing /settings preferences | Экран приложения: dark/light/system, ru/en, notifications/reduced motion; unsupported backend обозначен. | C06, C12, C13, C-MOTION | 5 states × Dark/Light; [реестр и QA](screens.md#r4--основные-экраны-и-настройки). Metadata/contrast PASS; visual preview/run skipped D034. | done D036 |
 
 ### R5 — Создание, редактирование и публикация
 
 **Цель:** Завершить сценарии документов, проектов и общего sharing.
 
-**Зависимости:** Принятые R3–R4, IA и правила модели; каждый R5.x проверяется отдельно.
+**Зависимости:** Принятые R3–R4, IA и правила модели. Каждая задача получает отдельное evidence, все13 задач проходят общее review пакета D036.
 
 **Входит:** Resume wizard/edit, manual/GitHub Projects, Portfolio builder, shared publish/share/delete.
 
@@ -266,27 +269,27 @@ low-fi R1.2/R1.3 приняты, R1.4 принята после цветовых
 
 **Критерии приёмки:** Нет потери ввода, смешения Save/sync/publish, тихого overwrite, duplicate import или удаления общей работы через attachment.
 
-**Проверка:** Пошаговый walkthrough обычного/пустого/ошибочного flow, сравнение с source contract.
+**Проверка:** Metadata/contrast/bindings и сравнение обычного/пустого/ошибочного flow с source contract. Визуальный просмотр, preview и запуск приложения пропущены в сохранённом режиме D034/D036; static evidence не доказывает playable flow.
 
-**Решения пользователя:** Принять последовательно R5.1 → R5.2 → R5.3 → R5.4; уточнить delete/rename consequences.
+**Решения пользователя:** Поручение перейти к следующему этапу интерпретировано как переход к всей следующей R5 в ранее согласованном режиме, D036. Принять общий пакет; последствия delete/rename проверяются отдельно в его evidence.
 
-**Статус фазы:** `todo`.
+**Статус фазы:** `in_progress`, D036. Пока нет финального ledger/QA, evidence ниже означает требуемый результат; готовность не заявлена.
 
 | **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
 |:---|:---|:---|:---|:---|:---|:---|
-| R5.1a | REQ-RESUME-02..04, REQ-SETTINGS-02 | S-RESUME-WIZARD; предлагаемое Mobile / Resume / Steps 1-2 | Profile/title/role/photo/bio и selected contacts; использовать базу, локальные overrides, no-photo и Skip. | C06, C07, C12, C16 | Steps 1–2 с Back/data retention, photo denied/error. | todo |
-| R5.1b | REQ-RESUME-02,04, REQ-TECH-01..02 | S-RESUME-WIZARD; предлагаемые Steps 3-4 | Выбор опыта/образования/tech/projects, optional skip; не выдумывать факты и skill levels. | C08, C12, C16, C-MODEL | Steps 3–4 с empty/selected/hidden и сохранением ввода. | todo |
-| R5.1c | REQ-RESUME-04, REQ-EDITOR-01..03, REQ-MODEL-07 | S-RESUME-EDITOR; existing plain /portfolio/builder/resume — только legacy | Список секций и focused edit без повторного wizard, local overrides и review изменений профиля. | C10, C12, C-MODEL | Edit section/override/profile-diff frames. | todo |
-| R5.1d | REQ-RESUME-02..03, REQ-SHARE-01 | S-PREVIEW/S-PUBLISH; предлагаемый Resume Step 5 | Структурированный preview с выбранным фото и отдельный переход к Publish. | C07, C09, C10, C17 | Step 5/no-photo/long Resume; публикация связана с R5.4. | todo |
-| R5.2a | REQ-PROJECT-03..04, REQ-TECH-01..02 | S-PROJECT-EDITOR; /projects/new, /projects/:id/edit | Ручной global Project: форма/media placeholder/badges, validation/Save/Cancel. | C08, C12, C13 | Create/edit/error/no-cover frames. | todo |
-| R5.2b | REQ-PROJECT-04, REQ-MODEL-02 | S-GITHUB; /github-import | Выбор repos, already imported, pagination/cache/rate/error, без повторного Project. | C-GITHUB, C13 | Import full/empty/error/duplicate paths. | todo |
-| R5.2c | REQ-PROJECT-04, REQ-MODEL-06 | S-GITHUB-REVIEW; existing GitHub review sheet | Показать diff source/curated, Accept/Ignore/Cancel, stale review и отдельный Save. | C-GITHUB, C10, C13 | Review frames с сохранёнными overrides и retry. | todo |
-| R5.3a | REQ-PORTFOLIO-01..02, REQ-EDITOR-01 | S-PORTFOLIO-EDITOR; /portfolio/builder пока singleton | Создать named Portfolio из предложения Profile, content/appearance/preview отдельно. | C-MODEL, C10, C12 | Create/basic editor frames с draft status. | todo |
-| R5.3b | REQ-PORTFOLIO-03, REQ-MODEL-02, REQ-MODEL-05 | S-PORTFOLIO-EDITOR; предлагаемый Project selector | Add existing или create global+attach; order/visibility/featured association, remove relation. | C-MODEL, C12 | Attach/create/remove/reorder paths; library Project сохраняется. | todo |
-| R5.3c | REQ-EDITOR-01..03, REQ-PORTFOLIO-02 | S-PORTFOLIO-EDITOR/S-PREVIEW; existing /portfolio/preview | Focused sections, show/hide/order, layout/accent/photo visibility, no three narrow mobile panels. | C07, C08, C10, C12 | Sections/appearance/full/no-photo preview frames. | todo |
-| R5.4a | REQ-EDITOR-03, REQ-MODEL-08 | S-PUBLISH; prepared publication adapter, UI отсутствует | Draft/locally saved/pending/synced/published различимы; Publish explicit, dirty published draft не меняет public. | C10, C17 | Status diagram и first/update publish/error states. | todo |
-| R5.4b | REQ-SHARE-01 | S-SHARE + cards/detail | Постоянные Copy/Open/Share у опубликованного; подтверждение Copy; draft предлагает Publish. | C09, C15 | Повторное sharing после re-open, отдельные hit areas. | todo |
-| R5.4c | REQ-SHARE-01, REQ-SETTINGS-04, REQ-PORTFOLIO-01 | S-PUBLISH/S-SHARE/S-ACCOUNT | Unpublish/delete/duplicate/rename confirmations; постоянный адрес документа по D019, сохранность draft и связей; фактическую поддержку URL проверить перед R8. | C-MODEL, C09, C10, C17 | Подтверждения и anonymous unavailable state; URL decision logged. | todo |
+| R5.1a | REQ-RESUME-02..04, REQ-SETTINGS-02 | S-RESUME-WIZARD; предлагаемое Mobile / Resume / Steps 1-2 | Profile/title/role/photo/bio и selected contacts; использовать базу, локальные overrides, no-photo и Skip. | C06, C07, C12, C16 | Steps 1–2 с Back/data retention, photo denied/error. | in_progress |
+| R5.1b | REQ-RESUME-02,04, REQ-TECH-01..02 | S-RESUME-WIZARD; предлагаемые Steps 3-4 | Выбор опыта/образования/tech/projects, optional skip; не выдумывать факты и skill levels. | C08, C12, C16, C-MODEL | Steps 3–4 с empty/selected/hidden и сохранением ввода. | in_progress |
+| R5.1c | REQ-RESUME-04, REQ-EDITOR-01..03, REQ-MODEL-07 | S-RESUME-EDITOR; existing plain /portfolio/builder/resume — только legacy | Список секций и focused edit без повторного wizard, local overrides и review изменений профиля. | C10, C12, C-MODEL | Edit section/override/profile-diff frames. | in_progress |
+| R5.1d | REQ-RESUME-02..03, REQ-SHARE-01 | S-PREVIEW/S-PUBLISH; предлагаемый Resume Step 5 | Структурированный preview с выбранным фото и отдельный переход к Publish. | C07, C09, C10, C17 | Step 5/no-photo/long Resume; публикация связана с R5.4. | in_progress |
+| R5.2a | REQ-PROJECT-03..04, REQ-TECH-01..02 | S-PROJECT-EDITOR; /projects/new, /projects/:id/edit | Ручной global Project: форма/media placeholder/badges, validation/Save/Cancel. | C08, C12, C13 | Create/edit/error/no-cover frames. | in_progress |
+| R5.2b | REQ-PROJECT-04, REQ-MODEL-02 | S-GITHUB; /github-import | Выбор repos, already imported, pagination/cache/rate/error, без повторного Project. | C-GITHUB, C13 | Import full/empty/error/duplicate paths. | in_progress |
+| R5.2c | REQ-PROJECT-04, REQ-MODEL-06 | S-GITHUB-REVIEW; existing GitHub review sheet | Показать diff source/curated, Accept/Ignore/Cancel, stale review и отдельный Save. | C-GITHUB, C10, C13 | Review frames с сохранёнными overrides и retry. | in_progress |
+| R5.3a | REQ-PORTFOLIO-01..02, REQ-EDITOR-01 | S-PORTFOLIO-EDITOR; /portfolio/builder пока singleton | Создать named Portfolio из предложения Profile, content/appearance/preview отдельно. | C-MODEL, C10, C12 | Create/basic editor frames с draft status. | in_progress |
+| R5.3b | REQ-PORTFOLIO-03, REQ-MODEL-02, REQ-MODEL-05 | S-PORTFOLIO-EDITOR; предлагаемый Project selector | Add existing или create global+attach; order/visibility/featured association, remove relation. | C-MODEL, C12 | Attach/create/remove/reorder paths; library Project сохраняется. | in_progress |
+| R5.3c | REQ-EDITOR-01..03, REQ-PORTFOLIO-02 | S-PORTFOLIO-EDITOR/S-PREVIEW; existing /portfolio/preview | Focused sections, show/hide/order, layout/accent/photo visibility, no three narrow mobile panels. | C07, C08, C10, C12 | Sections/appearance/full/no-photo preview frames. | in_progress |
+| R5.4a | REQ-EDITOR-03, REQ-MODEL-08 | S-PUBLISH; prepared publication adapter, UI отсутствует | Draft/locally saved/pending/synced/published различимы; Publish explicit, dirty published draft не меняет public. | C10, C17 | Status diagram и first/update publish/error states. | in_progress |
+| R5.4b | REQ-SHARE-01 | S-SHARE + cards/detail | Постоянные Copy/Open/Share у опубликованного; подтверждение Copy; draft предлагает Publish. | C09, C15 | Повторное sharing после re-open, отдельные hit areas. | in_progress |
+| R5.4c | REQ-SHARE-01, REQ-SETTINGS-04, REQ-PORTFOLIO-01 | S-PUBLISH/S-SHARE/S-ACCOUNT | Unpublish/delete/duplicate/rename confirmations; постоянный адрес документа по D019, сохранность draft и связей; фактическую поддержку URL проверить перед R8. | C-MODEL, C09, C10, C17 | Подтверждения и anonymous unavailable state; URL decision logged. | in_progress |
 
 ### R6 — Web
 
@@ -1116,7 +1119,8 @@ SafeArea остаются статической геометрией; public/so
 prototype — R7, runtime — отдельно разрешаемая R8.
 
 Реестр состояний и IDs: [R4 в screens](screens.md#r4--основные-экраны-и-настройки).
-После приёмки общего пакета R4 следующий отдельный этап — R5.1a.
+На момент D035 следующей задачей предполагалась R5.1a. Поручение продолжить
+D036 приняло всю R4 и сохранило режим всей фазы для пакета R5.1a–R5.4c.
 
 ---
 
@@ -1159,10 +1163,11 @@ prototype — R7, runtime — отдельно разрешаемая R8.
 | D033 / 2026-10-05 | Editable states/motion/adaptive R3.4 | awaiting_review;2sets/18variants,4boards176:2036/2110/2214/2418,10Dark/Light fixtures.393texts/786mode samples,342strokes/96targets PASS;0bounds/refs/bindings/scopes failures.180/240/280ms+reduced0ms — static spec; R7prototype/native pending |
 | D034 / 2026-10-05 | Прямое поручение выполнить всю R4.1–R4.7c параллельно, без visual preview и запуска приложения | Принята полная R3, включая R3.4/D033. Разрешены все девять задач R4 одним пакетом; промежуточные остановки по экранам отменены для этого пакета. R4 in_progress; renders/preview/run пропускаются явно, metadata/contrast/docs checks сохраняются. R5/R8/runtime/backend/Git mutations не разрешены |
 | D035 / 2026-10-05 | Editable hi-fi весь пакет R4.1–R4.7c | awaiting_review; 9boards/61states/122Dark-Light frames на page184:2785. 2074actual-mode text samples ≥4.739:1,1446strokes ≥4.364:1,840targets≥48;17failure categories0.70targeted original-brand fill exemptions. Три scoped families/6variants, один pinned Search SVG;98variable values/50style IDs preserved; onPrimary STROKE_COLOR scope расширен. Visual preview/run пропущены по D034; runtime/backend не менялись, R5/R8 не разрешены |
+| D036 / 2026-10-05 | «переходи к следующему этапу разработки» после результата всей R4 | Принята вся R4/D035. Следующей фазой начата R5, все13 задач одним пакетом с сохранением ранее согласованных full-phase/parallel/no-preview предпочтений. Это интерпретация продолжения; пользователь не называл весь набор R5 буквально. R5 in_progress; R6+/R8/runtime/backend/Git mutations не начаты |
 
 Новый scope change записывается отдельной строкой с причиной, requirement IDs,
 влиянием на задачи/gaps и явным решением пользователя. Исторические результаты
-не переписываются. R3 принята D034; весь пакет R4.1–R4.7c ожидает общей
-приёмки D035. Metadata/contrast проверены; visual preview/run пропущены по запросу.
-После приёмки R4 следующий отдельный этап — R5.1a; DESIGN_READY и итоговые gates
-ещё требуют приёмки.
+не переписываются. R4 принята D036; активна вся R5.1a–R5.4c одним пакетом
+с отдельными IDs/evidence. Metadata/contrast будут проверены после сборки;
+visual preview/run остаются пропущенными по сохранённому запросу. R6+/R8
+не начаты; DESIGN_READY и итоговые gates ещё требуют приёмки.
