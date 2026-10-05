@@ -91,6 +91,16 @@ guest draft переносится только явно из Settings в пус
 Пользователь явно разрешил переход к Phase 8 при открытой приёмке Phase 7;
 это не означает завершения оставшихся auth сценариев. Phase 9 завершена;
 Phase 10 завершена; Phase 11 и последующие этапы требуют отдельного поручения.
+Основная разработка функций приостановлена перед Phase11. По D040 активна
+полная R7.1–R7.4 [Design v2](../redesign/README.md), global graph QA pending;
+R8/R9 прямо разрешены на `redesign/full-app`. Независимые Flutter theme/shared
+controls/assets, live Brand A, Projects и поддерживаемые Settings перенесены
+параллельно R7. Actual headless regression:950/950 PASS29s,analyze0issues3.8s,
+0SVGwarnings. Полная R8/R9 не завершена: Home/Portfolio legacy composition,
+3supported roots, Resume library и новый web отсутствуют. [Конкретные
+prerequisites](../redesign/prerequisites.md) proposed, scope ответа нет.
+DESIGN_READY/REDESIGN_DONE не установлены, commit/push/deploy не запрошены.
+Текущий scope/evidence — в [плане разработки](#план-разработки).
 
 ---
 
@@ -214,8 +224,10 @@ Flutter-приложение и будущий web-кабинет использ
 описанием, изображениями и demo, а затем поделиться одной ссылкой.
 
 Пример адреса: `stackcard.dev/u/snownumb`. **Домен — иллюстрация, не заявка на
-регистрацию и не выбранный production host.** Планируемый путь публичного профиля:
-`/u/[username]`.
+регистрацию и не выбранный production host.** Прежний singleton-план публичного профиля использовал `/u/[username]`.
+Актуальный Design v2 принял D019: постоянный адрес каждого Resume/Portfolio,
+независимый от названия и username. Это target-политика; новая route scheme
+и миграция прежнего adapter ещё не реализованы.
 
 ---
 
@@ -317,8 +329,10 @@ Profile Editor, Location Picker, Resume Editor, Developer Card, Sync Suggestions
 создание и редактирование портфолио → preview → явная публикация → публичная ссылка.
 Мобильное приложение можно скачать отдельно; оно использует тот же аккаунт и draft.
 
-Предлагаемая карта страниц — **план Phase 13, не реализованные маршруты или
-окончательный API-контракт**:
+Предлагаемая карта страниц — **прежний singleton-план Phase 13, не реализованные
+маршруты или окончательный API-контракт**. Design v2/D019 заменяет username-only
+public link на постоянный адрес отдельного Resume/Portfolio; точные paths и
+миграция согласуются до реализации. Карта ниже сохраняет исторический контекст:
 
 <div align="center">
 
@@ -485,9 +499,14 @@ web-редактор и публичные портфолио. Этот разд
 
 **Phase 0–6 завершены:** основа, UI, состояние, архитектура, GitHub Import, offline и Builder проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
-**С 2026-10-05 основная разработка новых функций приостановлена:** активна только
-R5 инициативы [StackCard Design v2](../redesign/README.md), весь пакет
-R5.1a–R5.4c ожидает общей приёмки D037, в сохранённом full-phase/parallel/no-preview режиме D036. Прямое поручение
+**С 2026-10-05 основная разработка новых функций приостановлена:** R7
+[Design v2](../redesign/README.md) in_progress D040, global graph QA pending.
+D040 также разрешило R8/R9 на `redesign/full-app`; независимые поддерживаемые
+slices перенесены параллельно, actual950-case regression PASS. Полная
+implementation/acceptance и prerequisite scope ещё не закрыты; конкретный
+[proposed пакет](../redesign/prerequisites.md) готов для решения пользователя.
+Full-phase/parallel/no-preview/run сохранён; commit/push/deploy не запрошены.
+Прямое поручение
 использовать [план R0–R9](../redesign/plan.md) и начать первую фазу приняло R0
 и разрешило R1.1. Поручение «переходи к следующей фазе» приняло
 [три схемы IA](../redesign/screens.md#r11--информационная-архитектура)
@@ -515,8 +534,8 @@ errors/unsaved/public access. Ответом пользователя приня
 **R3.1 — done D028**: после сравнения Noto Sans / Manrope / Golos Text
 пользователь поручил перейти к следующему этапу. Закреплена рекомендация Manrope;
 [Dark/Light foundations](../redesign/screens.md#закреплённая-типографика-manrope-d028)
-обновлены, исходная палитра/Wordmark A сохранены. Это Figma UI, bundled fonts
-пока прежние. **R3.2 — done D030**:
+обновлены, исходная палитра/Wordmark A сохранены. На момент R3 это было
+Figma UI; subsequent R8 импортировала Manrope в существующий Flutter. **R3.2 — done D030**:
 [Navigation/cards/TechnologyBadge](../redesign/screens.md#r32--навигация-карточки-и-technologybadge)
 содержат9 sets/44variants,4 root labels,3 Home filters, gear/back, отдельное Copy
 и badges icon+text/+N/full wrap. Итоговые410 texts contrast/bounds PASS;
@@ -548,7 +567,7 @@ onPrimary расширен STROKE_COLOR без смены palette values.
 приложения не выполнялись по прямому запросу D034. Полный пакет принят
 следующим поручением продолжить, D036. Это Figma target; новые screens/routes/
 backend этим пакетом не реализованы.
-**R5 — awaiting_review D037**: поручение «переходи к следующему этапу
+**R5 — done D038**, фактический результат D037: поручение «переходи к следующему этапу
 разработки» приняло всю R4 и продолжило следующую R5 в сохранённом режиме
 фаза целиком/параллельно/без preview и запуска. Это интерпретация прежних
 предпочтений; пользователь не называл весь набор R5 буквально.
@@ -564,20 +583,55 @@ retained targeted source exemption,14existing demo imagefills80×80. DS допо
 DocumentIdentity(photo/no-photo), ChangeComparison и ProjectAssociationRow.
 Visual inspection/preview/run пропущены по сохранённому запросу. Это статический
 Figma target, без native input/media/SDK/OAuth/schema/backend/cloud evidence.
-После приёмки R5 и поручения продолжить следующая полная фаза — R6 Web;
-сейчас R6+ и R8 не начаты, основная разработка функций сохраняет freeze.
+Весь пакет R5 принят последним поручением продолжить, D038.
+**R6 — done D040**, evidence D039: следующая полная R6.1–R6.4 начата с сохранением
+прежнего phase-package/parallel/no-preview/run режима. Это интерпретация
+«переходи к следующему этапу разработки»; пользователь не называл все задачи
+R6 буквально. Web target охватывает landing/auth/download, owner workspace
+и public Resume/Portfolio. [24 состояния / 96 wide-narrow Dark-Light frames /
+4boards](../redesign/screens.md#r6--веб-поверхности) собраны на page202:2989.
+Structural QA:2810actual-mode text samples min4.832909811:1,690strokes
+min4.364564811:1,726targets≥48;20failure categories0.116sourceCTA records
+проверены против proposed destinations, без live URL/store/auth execution.
+98values/50styleIDs сохранены точно;28existing demo80×80 imagefills и8actual
+R5 editable document clones.96Noto Wordmark и462originalFlutter/Dart fills —
+targeted preservation exemptions. Landing1440×3475/390×5628; structural PASS
+не доказывает browser rendering/native/cloud/route availability. Visual
+inspection/preview/run пропущены по сохранённому запросу.
+**R7 — in_progress D040**: весь пакет строится на page221:7/board221:8;
+aggregate graph QA ещё pending. **R8/R9 — in_progress D040**, независимая
+часть UI внедрена на `redesign/full-app`: Manrope/semantic Lime/shared
+controls, StackCardIcon/TechnologyBadge, live Brand A, query-only Projects,
+Settings/appearance/account и tablet bottom navigation. Три действующих roots
+сохраняют legacy Home/Portfolio composition; Resume library/multiple-doc storage,
+full profile/contacts/account/media/publication и новый web отсутствуют.
+950/950 headless tests PASS29s,analyze0issues3.8s;118 новых случаев vs832baseline,
+0SVGwarnings;184Dartfiles SHA-256
+`d51aee259557296fde1a16682973dd03b3c96b5cee614ac536f82bfade2d30e2` preserved
+во время финального прогона. 40canonical entries+1explicit SVG derivative
+(41files/33SVG),32runtimeSVGdecoded,9BrandAexports, strict provenance PASS.
+NativeAppIcon packaging не менялось. [Подробный результат](../redesign/plan.md#фактический-перенос-поддерживаемого-ui-r8r9-d040)
+и [переносимый source/result ledger](../redesign/source/r9-supported-ui-validation.json)
+с командами и hashes.
+No-preview/run исключил native launch/playback/visual parity; headless evidence
+не закрывает новые models/web/private-public security или Google/reset/iOS.
+[Proposed prerequisites](../redesign/prerequisites.md) покрывают12GAP,
+ответ о scope pending; нового phase approval R8 не требуется.
+DESIGN_READY/REDESIGN_DONE не установлены; commit/push/deploy не запрошены,
+основной roadmap сохраняет pause перед Phase11.
 
 Новая URL route scheme и миграция adapter остаются предпосылкой R8.
-Runtime/schema не изменены. Проверки и ограничения — в
-[результатах R3.4](../redesign/plan.md#фактический-результат-r34-d032d033);
+Private schema не мигрирована; поддерживаемый UI перенесён частично.
+Проверки и ограничения — в [результатах R8/R9](../redesign/plan.md#фактический-перенос-поддерживаемого-ui-r8r9-d040);
 предыдущие цветовые правки и результаты R2 сохранены отдельно.
 Точка остановки функционального roadmap —
 после Phase 10, перед Phase 11 Media; Google/reset/iOS приёмка Phase 7 остаётся
 открытой. Возврат к roadmap предлагается после пользовательской приёмки
 REDESIGN_DONE и требует отдельного поручения. Новые model/migration/media/account/
 publication/web возможности перечислены как [продуктовые пробелы](../redesign/audit.md#продуктовые-пробелы)
-и [предпосылки R8](../redesign/plan.md#зависимости-реализации); их реализация сейчас
-не разрешена. Последние требования Design v2 имеют приоритет над прежними макетами.
+и [предпосылки R8](../redesign/plan.md#зависимости-реализации). Сам перенос R8
+и R9 уже разрешены D040; состав prerequisite-реализации либо конкретные
+implementation exceptions ещё ждёт ответа. Повторного phase approval нет. Последние требования Design v2 имеют приоритет над прежними макетами.
 
 Phase 10 завершена. Предыдущее прямое поручение — Figma-first refactor:
 audit, IA, design system и ключевые экраны по [redesign plan](../design/redesign-plan.md).
@@ -1387,6 +1441,12 @@ Phase 11 и последующие этапы требуют отдельног�
 публичное портфолио не раскрывает точную геопозицию.
 
 ### Phase 13 — Website и web editor
+
+Ниже сохранён исходный roadmap singleton-модели. До реализации сверить его
+с принятым Design v2: общая база и разные Resume/Portfolio, D019 с постоянными
+адресами документов. `/u/[username]` в прежнем списке не переопределяет D019;
+конкретные routes/schema и миграция adapter согласуются как prerequisite,
+а Figma R6 не означает готовность Phase 13.
 
 Только здесь создать Next.js-приложение в подготовленном `apps/web`, выбрать
 зависимости и реальные format/lint/typecheck/test/build команды. Выполнять

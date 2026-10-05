@@ -32,6 +32,7 @@ dependencies:
     sdk: flutter
   dio: ^5.11.1
   flutter_riverpod: ^3.4.3
+  flutter_svg: ^2.3.0
   go_router: ^18.0.2
   hive: ^2.2.3
   path_provider: ^2.1.6
@@ -67,6 +68,16 @@ flutter:
   uses-material-design: true
 
   fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Manrope-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Manrope-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Manrope-ExtraBold.ttf
+          weight: 800
     - family: DM Sans
       fonts:
         - asset: assets/fonts/DM_Sans.ttf
@@ -75,6 +86,36 @@ flutter:
         - asset: assets/fonts/Noto_Sans.ttf
 
   assets:
+    - assets/fonts/Manrope_OFL.txt
+    - assets/icons/lucide/home.svg
+    - assets/icons/lucide/file-text.svg
+    - assets/icons/lucide/folder.svg
+    - assets/icons/lucide/panels-top-left.svg
+    - assets/icons/lucide/settings.svg
+    - assets/icons/lucide/arrow-left.svg
+    - assets/icons/lucide/copy.svg
+    - assets/icons/lucide/check.svg
+    - assets/icons/lucide/image.svg
+    - assets/icons/lucide/more-horizontal.svg
+    - assets/icons/lucide/camera.svg
+    - assets/icons/lucide/user-round.svg
+    - assets/icons/lucide/chevron-down.svg
+    - assets/icons/lucide/grip-vertical.svg
+    - assets/icons/lucide/arrow-up.svg
+    - assets/icons/lucide/arrow-down.svg
+    - assets/icons/lucide/pencil.svg
+    - assets/icons/lucide/plus.svg
+    - assets/icons/lucide/search.svg
+    - assets/icons/technology/react.svg
+    - assets/icons/technology/typescript.svg
+    - assets/icons/technology/flutter.svg
+    - assets/icons/technology/flutter.render.svg
+    - assets/icons/technology/dart.svg
+    - assets/icons/LICENSE-LUCIDE.txt
+    - assets/icons/LICENSE-SIMPLE-ICONS.txt
+    - assets/icons/TECHNOLOGY-NOTICES.md
+    - assets/design_v2/source-manifest.json
+    - assets/branding/design_v2/
     - assets/fonts/DM_Sans_OFL.txt
     - assets/fonts/Noto_Sans_OFL.txt
 

@@ -7,248 +7,458 @@ import '../../core/localization/app_strings.dart';
 import '../../core/state/app_settings.dart';
 import '../../core/state/appearance_controller.dart';
 import '../../core/theme/stackcard_colors.dart';
+import '../../core/theme/stackcard_tokens.dart';
 import '../../shared/widgets/stackcard_async_view.dart';
 import '../../shared/widgets/stackcard_button.dart';
 import '../../shared/widgets/stackcard_card.dart';
-import '../../shared/widgets/stackcard_poster.dart';
 import '../../shared/widgets/stackcard_states.dart';
 import '../auth/auth.dart';
 import '../portfolio_draft/portfolio_draft.dart';
 import '../profile/profile.dart';
 import 'account_settings_section.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends riverpod.ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  Widget build(BuildContext context, riverpod.WidgetRef ref) {
+    final draft = ref.watch(portfolioDraftControllerProvider);
+    final hasAccountRepository =
+        ref.watch(accountAuthRepositoryProvider) != null;
+    final canEditDraft = draft.canEdit && draft.content != null;
+    final strings = context.strings;
+    final localDraftReason = strings.tr(
+      draft.loading
+          ? 'common.loading'
+          : !draft.canEdit
+          ? 'settings.localDraftUnavailable'
+          : 'settings.localDraftRequired',
+    );
+    return _SettingsPage(
+      titleKey: 'nav.settings',
+      fallbackPath: '/home',
+      children: [
+        _SettingsRow(
+          key: const Key('settings.group.profile'),
+          icon: Icons.person_outline_rounded,
+          title: strings.tr('settings.profile'),
+          subtitle: strings.tr('settings.profileUnavailable'),
+        ),
+        StackCardButton(
+          key: const Key('settings.localProfile'),
+          label: strings.tr('settings.editLocalProfile'),
+          onPressed: canEditDraft
+              ? () => context.push('/portfolio/builder/profile')
+              : null,
+          unavailableReason: localDraftReason,
+        ),
+        const SizedBox(height: StackCardSpacing.lg),
+        _SettingsRow(
+          key: const Key('settings.group.contacts'),
+          icon: Icons.link_rounded,
+          title: strings.tr('settings.contacts'),
+          subtitle: strings.tr('settings.contactsUnavailable'),
+        ),
+        StackCardButton(
+          key: const Key('settings.localLinks'),
+          label: strings.tr('settings.editLocalLinks'),
+          onPressed: canEditDraft
+              ? () => context.push('/portfolio/builder/links')
+              : null,
+          unavailableReason: localDraftReason,
+        ),
+        const SizedBox(height: StackCardSpacing.sm),
+        StackCardButton(
+          key: const Key('settings.shareContacts'),
+          label: strings.tr('settings.shareContacts'),
+          role: StackCardButtonRole.quiet,
+          unavailableReason: strings.tr('settings.shareContactsUnavailable'),
+        ),
+        // В demo режиме ошибка draft уже показана profile AsyncView ниже.
+        if (hasAccountRepository && !draft.loaded && draft.failure != null) ...[
+          const SizedBox(height: StackCardSpacing.md),
+          StackCardStateView(
+            kind: StackCardViewState.error,
+            title: strings.tr('async.errorTitle'),
+            message: strings.tr('async.errorMessage'),
+            onRetry: () =>
+                ref.read(portfolioDraftControllerProvider.notifier).load(),
+          ),
+        ],
+        const SizedBox(height: StackCardSpacing.lg),
+        _SettingsRow(
+          key: const Key('settings.group.account'),
+          icon: Icons.shield_outlined,
+          title: strings.tr('settings.accountSecurity'),
+          subtitle: strings.tr('settings.accountSecurityNote'),
+          onPressed: () => context.push('/settings/account'),
+        ),
+        _SettingsRow(
+          key: const Key('settings.group.privacy'),
+          icon: Icons.lock_outline_rounded,
+          title: strings.tr('settings.privacy'),
+          subtitle: strings.tr('settings.privacyUnavailable'),
+        ),
+        _SettingsRow(
+          key: const Key('settings.group.appearance'),
+          icon: Icons.tune_rounded,
+          title: strings.tr('settings.application'),
+          subtitle: strings.tr('settings.applicationNote'),
+          onPressed: () => context.push('/settings/appearance'),
+        ),
+        const SizedBox(height: StackCardSpacing.xl),
+        _SettingsHeading(title: strings.tr('settings.session')),
+        const SizedBox(height: StackCardSpacing.md),
+        if (hasAccountRepository)
+          const AccountSettingsSection()
+        else
+          const _DemoAccountSection(),
+        const SizedBox(height: StackCardSpacing.xl),
+        StackCardButton(
+          key: const Key('settings.deleteAccount'),
+          label: strings.tr('settings.deleteAccount'),
+          role: StackCardButtonRole.danger,
+          unavailableReason: strings.tr('settings.deleteAccountUnavailable'),
+        ),
+      ],
+    );
+  }
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  StackCardViewState _previewState = StackCardViewState.empty;
+/// Route /settings/appearance: сохраняет только существующий AppSettings.
+class SettingsAppearanceScreen extends StatelessWidget {
+  const SettingsAppearanceScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = context.select<AppearanceController, ThemeMode>(
-      (controller) => controller.themeMode,
+    final appearance = context.watch<AppearanceController>();
+    final strings = context.strings;
+    return _SettingsPage(
+      titleKey: 'settings.application',
+      children: [
+        _SettingsHeading(title: strings.tr('settings.appearance')),
+        const SizedBox(height: StackCardSpacing.md),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final horizontal =
+                constraints.maxWidth >= 340 &&
+                MediaQuery.textScalerOf(context).scale(16) <= 20;
+            return Wrap(
+              spacing: StackCardSpacing.sm,
+              runSpacing: StackCardSpacing.sm,
+              children: [
+                for (final item in [
+                  (
+                    mode: ThemeMode.dark,
+                    title: strings.tr('settings.dark'),
+                    icon: Icons.dark_mode_outlined,
+                  ),
+                  (
+                    mode: ThemeMode.light,
+                    title: strings.tr('settings.light'),
+                    icon: Icons.light_mode_outlined,
+                  ),
+                  (
+                    mode: ThemeMode.system,
+                    title: strings.tr('settings.system'),
+                    icon: Icons.brightness_auto_outlined,
+                  ),
+                ])
+                  SizedBox(
+                    width: horizontal
+                        ? (constraints.maxWidth - StackCardSpacing.sm * 2) / 3
+                        : constraints.maxWidth,
+                    child: _SettingsChoice(
+                      key: Key('settings.theme.${item.mode.name}'),
+                      label: item.title,
+                      icon: item.icon,
+                      selected: appearance.themeMode == item.mode,
+                      onPressed: () => appearance.setThemeMode(item.mode),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: StackCardSpacing.xl),
+        _SettingsHeading(title: strings.tr('settings.language')),
+        const SizedBox(height: StackCardSpacing.md),
+        Wrap(
+          spacing: StackCardSpacing.md,
+          runSpacing: StackCardSpacing.sm,
+          children: [
+            for (final item in [
+              (language: AppLanguage.ru, label: 'Русский'),
+              (language: AppLanguage.en, label: 'English'),
+            ])
+              _SettingsChoice(
+                key: Key('settings.language.${item.language.name}'),
+                label: item.label,
+                selected: appearance.settings.language == item.language,
+                onPressed: () => appearance.setLanguage(item.language),
+              ),
+          ],
+        ),
+        const SizedBox(height: StackCardSpacing.sm),
+        _SettingsNote(text: strings.tr('settings.languageNote')),
+        const SizedBox(height: StackCardSpacing.xl),
+        SwitchListTile.adaptive(
+          key: const Key('settings.sourceDescriptions'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(strings.tr('settings.sourceDescriptions')),
+          subtitle: Text(strings.tr('settings.sourceDescriptionsNote')),
+          value: appearance.showSourceDescriptions,
+          onChanged: appearance.setShowSourceDescriptions,
+        ),
+        const SizedBox(height: StackCardSpacing.lg),
+        _SettingsNote(text: strings.tr('settings.localPreferencesNote')),
+        if (appearance.isSaving) ...[
+          const SizedBox(height: StackCardSpacing.md),
+          Semantics(
+            liveRegion: true,
+            child: Text(strings.tr('settings.saving')),
+          ),
+        ],
+        if (appearance.saveFailure != null) ...[
+          const SizedBox(height: StackCardSpacing.md),
+          StackCardStateView(
+            kind: StackCardViewState.error,
+            title: strings.tr('settings.saveError'),
+            message: strings.tr('settings.saveErrorNote'),
+            onRetry: appearance.retrySave,
+          ),
+        ],
+        const SizedBox(height: StackCardSpacing.xl),
+        _SettingsRow(
+          icon: Icons.notifications_none_rounded,
+          title: strings.tr('settings.notifications'),
+          subtitle: strings.tr('settings.notificationsUnavailable'),
+        ),
+        _SettingsRow(
+          icon: Icons.motion_photos_off_outlined,
+          title: strings.tr('settings.reducedMotion'),
+          subtitle: strings.tr('settings.reducedMotionUnavailable'),
+        ),
+      ],
     );
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(
-        MediaQuery.sizeOf(context).width >= 700 ? 24 : 16,
-      ),
+  }
+}
+
+/// Route /settings/account: account actions без существующего API недоступны.
+class SettingsAccountScreen extends StatelessWidget {
+  const SettingsAccountScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = context.strings;
+    return _SettingsPage(
+      titleKey: 'settings.accountSecurity',
+      children: [
+        StackCardStateView(
+          kind: StackCardViewState.unavailable,
+          title: strings.tr('settings.accountManagementUnavailable'),
+          message: strings.tr('settings.accountManagementReason'),
+        ),
+        _SettingsRow(
+          icon: Icons.email_outlined,
+          title: strings.tr('settings.changeLoginEmail'),
+          subtitle: strings.tr('settings.changeLoginEmailUnavailable'),
+        ),
+        _SettingsRow(
+          icon: Icons.password_rounded,
+          title: strings.tr('settings.changePassword'),
+          subtitle: strings.tr('settings.changePasswordUnavailable'),
+        ),
+        _SettingsRow(
+          icon: Icons.link_rounded,
+          title: strings.tr('settings.manageGoogle'),
+          subtitle: strings.tr('settings.manageGoogleUnavailable'),
+        ),
+        const SizedBox(height: StackCardSpacing.xl),
+        StackCardButton(
+          label: strings.tr('settings.backToSession'),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/settings');
+            }
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _SettingsPage extends StatelessWidget {
+  const _SettingsPage({
+    required this.titleKey,
+    required this.children,
+    this.fallbackPath = '/settings',
+  });
+
+  final String titleKey;
+  final List<Widget> children;
+  final String fallbackPath;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 860),
+          constraints: const BoxConstraints(
+            maxWidth: StackCardSize.contentMaxWidth,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              StackCardPoster(
-                color: context.colors.acid,
-                variant: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              Padding(
+                padding: const EdgeInsets.all(StackCardSpacing.sm),
+                child: Row(
                   children: [
-                    Text(
-                      context.strings.tr('settings.appearance'),
-                      style: Theme.of(context).textTheme.displaySmall
-                          ?.copyWith(color: context.colors.ink),
+                    IconButton(
+                      tooltip: context.strings.tr('common.back'),
+                      constraints: const BoxConstraints(
+                        minWidth: StackCardSize.touchTarget,
+                        minHeight: StackCardSize.touchTarget,
+                      ),
+                      onPressed: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go(fallbackPath);
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_back_rounded),
                     ),
-                    StackCardArtwork(
-                      color: context.colors.ink,
-                      variant: 1,
-                      height: 100,
+                    const SizedBox(width: StackCardSpacing.sm),
+                    Expanded(
+                      child: Semantics(
+                        header: true,
+                        child: Text(
+                          context.strings.tr(titleKey),
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final horizontal =
-                      constraints.maxWidth >= 340 &&
-                      MediaQuery.textScalerOf(context).scale(16) <= 24;
-                  return Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      for (final item in [
-                        (
-                          mode: ThemeMode.dark,
-                          title: context.strings.tr('settings.dark'),
-                          icon: Icons.dark_mode_outlined,
-                        ),
-                        (
-                          mode: ThemeMode.light,
-                          title: context.strings.tr('settings.light'),
-                          icon: Icons.light_mode_outlined,
-                        ),
-                        (
-                          mode: ThemeMode.system,
-                          title: context.strings.tr('settings.system'),
-                          icon: Icons.brightness_auto_outlined,
-                        ),
-                      ])
-                        SizedBox(
-                          width: horizontal
-                              ? (constraints.maxWidth - 16) / 3
-                              : constraints.maxWidth,
-                          child: _SettingsChoice(
-                            key: Key('settings.theme.${item.mode.name}'),
-                            label: item.title,
-                            icon: item.icon,
-                            selected: themeMode == item.mode,
-                            onPressed: () => context
-                                .read<AppearanceController>()
-                                .setThemeMode(item.mode),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 32),
-              const _PreferencesSection(),
-              const SizedBox(height: 24),
-              riverpod.Consumer(
-                builder: (context, ref, _) =>
-                    ref.watch(accountAuthRepositoryProvider) != null
-                    ? const AccountSettingsSection()
-                    : const _DemoAccountSection(),
-              ),
-              const SizedBox(height: 24),
-              ExpansionTile(
-                key: const Key('settings_state_previews'),
-                tilePadding: EdgeInsets.zero,
-                childrenPadding: const EdgeInsets.only(bottom: 16),
-                title: Text(
-                  context.strings.tr('settings.states'),
-                  style: Theme.of(context).textTheme.titleMedium,
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    StackCardSpacing.cardPadding,
+                    StackCardSpacing.md,
+                    StackCardSpacing.cardPadding,
+                    StackCardSpacing.xl,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: children,
+                  ),
                 ),
-                children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final item in [
-                        (
-                          state: StackCardViewState.loading,
-                          label: context.strings.tr('common.loading'),
-                        ),
-                        (
-                          state: StackCardViewState.empty,
-                          label: context.strings.tr('settings.empty'),
-                        ),
-                        (
-                          state: StackCardViewState.error,
-                          label: context.strings.tr('settings.error'),
-                        ),
-                      ])
-                        ChoiceChip(
-                          label: Text(item.label),
-                          selected: _previewState == item.state,
-                          onSelected: (_) =>
-                              setState(() => _previewState = item.state),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  StackCardStateView(
-                    kind: _previewState,
-                    title: switch (_previewState) {
-                      StackCardViewState.loading => context.strings.tr(
-                        'settings.loadingTitle',
-                      ),
-                      StackCardViewState.empty => context.strings.tr(
-                        'settings.emptyTitle',
-                      ),
-                      StackCardViewState.error => context.strings.tr(
-                        'settings.errorTitle',
-                      ),
-                    },
-                    message: switch (_previewState) {
-                      StackCardViewState.loading => context.strings.tr(
-                        'settings.loadingMessage',
-                      ),
-                      StackCardViewState.empty => context.strings.tr(
-                        'settings.emptyMessage',
-                      ),
-                      StackCardViewState.error => context.strings.tr(
-                        'settings.errorMessage',
-                      ),
-                    },
-                    onRetry: _previewState == StackCardViewState.error
-                        ? () => setState(
-                            () => _previewState = StackCardViewState.empty,
-                          )
-                        : null,
-                  ),
-                ],
               ),
             ],
           ),
         ),
       ),
+    ),
+  );
+}
+
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.onPressed,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final content = DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.border)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.lg),
+        child: Row(
+          children: [
+            ExcludeSemantics(
+              child: Icon(icon, size: 24, color: colors.textSecondary),
+            ),
+            const SizedBox(width: StackCardSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: StackCardSpacing.xs),
+                  _SettingsNote(text: subtitle),
+                ],
+              ),
+            ),
+            if (onPressed != null) ...[
+              const SizedBox(width: StackCardSpacing.sm),
+              const ExcludeSemantics(child: Icon(Icons.chevron_right_rounded)),
+            ],
+          ],
+        ),
+      ),
+    );
+    if (onPressed == null) return content;
+    return TextButton(
+      onPressed: onPressed,
+      style:
+          TextButton.styleFrom(
+            minimumSize: const Size.fromHeight(StackCardSize.touchTarget),
+            padding: EdgeInsets.zero,
+            foregroundColor: colors.textPrimary,
+            alignment: Alignment.centerLeft,
+            shape: const RoundedRectangleBorder(),
+          ).copyWith(
+            side: WidgetStateProperty.resolveWith(
+              (states) => BorderSide(
+                color: states.contains(WidgetState.focused)
+                    ? colors.focus
+                    : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+      child: content,
     );
   }
 }
 
-class _PreferencesSection extends StatelessWidget {
-  const _PreferencesSection();
+class _SettingsHeading extends StatelessWidget {
+  const _SettingsHeading({required this.title});
+  final String title;
 
   @override
-  Widget build(BuildContext context) {
-    final appearance = context.watch<AppearanceController>();
-    return StackCardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            context.strings.tr('settings.language'),
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 24,
-            runSpacing: 8,
-            children: [
-              for (final item in [
-                (language: AppLanguage.ru, label: 'Русский'),
-                (language: AppLanguage.en, label: 'English'),
-              ])
-                _SettingsChoice(
-                  label: item.label,
-                  selected: appearance.settings.language == item.language,
-                  onPressed: () => appearance.setLanguage(item.language),
-                ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: Text(context.strings.tr('settings.sourceDescriptions')),
-            value: appearance.showSourceDescriptions,
-            onChanged: appearance.setShowSourceDescriptions,
-          ),
-          if (appearance.isSaving) ...[
-            const SizedBox(height: 8),
-            Semantics(
-              liveRegion: true,
-              child: Text(context.strings.tr('settings.saving')),
-            ),
-          ],
-          if (appearance.saveFailure != null) ...[
-            const SizedBox(height: 8),
-            StackCardStateView(
-              kind: StackCardViewState.error,
-              title: context.strings.tr('settings.saveError'),
-              message: context.strings.tr('settings.saveErrorNote'),
-              onRetry: appearance.retrySave,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Semantics(
+    header: true,
+    child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+  );
+}
+
+class _SettingsNote extends StatelessWidget {
+  const _SettingsNote({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    style: Theme.of(context).textTheme.bodyMedium
+        ?.copyWith(color: context.colors.textSecondary),
+  );
 }
 
 class _DemoAccountSection extends riverpod.ConsumerWidget {
@@ -319,18 +529,36 @@ class _SettingsChoice extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: selected ? context.colors.accent : context.colors.border,
+            color: selected
+                ? context.colors.controlOutline
+                : context.colors.border,
             width: selected ? 2 : 1,
           ),
         ),
       ),
       child: TextButton(
-        style: TextButton.styleFrom(
-          foregroundColor: context.colors.textPrimary,
-          minimumSize: const Size(48, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          shape: const RoundedRectangleBorder(),
-        ),
+        style:
+            TextButton.styleFrom(
+              foregroundColor: context.colors.textPrimary,
+              minimumSize: const Size(
+                StackCardSize.touchTarget,
+                StackCardSize.touchTarget,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              shape: const RoundedRectangleBorder(),
+              backgroundColor: selected
+                  ? context.colors.surfaceElevated
+                  : Colors.transparent,
+            ).copyWith(
+              side: WidgetStateProperty.resolveWith(
+                (states) => BorderSide(
+                  color: states.contains(WidgetState.focused)
+                      ? context.colors.focus
+                      : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+            ),
         onPressed: onPressed,
         child: Row(
           mainAxisSize: MainAxisSize.min,

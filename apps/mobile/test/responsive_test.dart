@@ -6,6 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
+    final manrope = FontLoader('Manrope');
+    for (final weight in ['Regular', 'SemiBold', 'Bold', 'ExtraBold']) {
+      manrope.addFont(rootBundle.load('assets/fonts/Manrope-$weight.ttf'));
+    }
+    await manrope.load();
     for (final entry in [
       ('DM Sans', 'assets/fonts/DM_Sans.ttf'),
       ('Noto Sans', 'assets/fonts/Noto_Sans.ttf'),
@@ -21,6 +26,8 @@ void main() {
     'tablet_portrait': Size(768, 1024),
     'tablet_landscape': Size(1024, 768),
     'small_phone': Size(320, 640),
+    'compact_phone': Size(320, 568),
+    'compact_landscape': Size(568, 320),
   };
   for (final theme in [ThemeMode.dark, ThemeMode.light]) {
     for (final viewport in viewports.entries) {
@@ -57,6 +64,7 @@ void main() {
             }
             if (const bool.fromEnvironment('UPDATE_UI_PREVIEWS') &&
                 scale == 1 &&
+                !viewport.key.startsWith('compact_') &&
                 viewport.key != 'small_phone') {
               await expectLater(
                 find.byType(MaterialApp),

@@ -8,14 +8,15 @@ guides. Этот файл дополняет их только для Flutter-п
 
 ## Источники
 
-Ниже описан действующий Flutter runtime. Новый
-[StackCard Design v2](../../redesign/README.md) и его [план](../../redesign/plan.md)
-задают актуальные требования и порядок редизайна. Прежний
-[Figma-first target](../../design/redesign-plan.md) сохраняется как история;
-Design v2 заменяет визуальное направление
-на neutral/lime и новую IA; код и singleton storage ещё не перенесены. Указания
-ниже о красном CTA, старом shell и plain Resume описывают текущую реализацию,
-а не требования к новым Figma-макетам. Перенос выполняется отдельным этапом.
+Ниже описан действующий Flutter runtime. [Design v2](../../redesign/README.md)
+и его [план](../../redesign/plan.md) задают target и scope. По D040 независимый
+R8 slice перенесён: semantic Dark/Light Lime, Manrope/shared controls, pinned SVG,
+live Brand A, Projects и поддерживаемые Settings. Private singleton storage,
+plain Resume и legacy Home/Portfolio composition сохранены; новый Resume root,
+multiple documents, model/media/account/publication/web ещё не реализованы.
+Конкретный [prerequisite scope](../../redesign/prerequisites.md) — proposed,
+не разрешение backend/migration. Current status хранится в product spec/plan;
+headless950PASS не означает полный REDESIGN_DONE или native visual acceptance.
 
 - SDK constraint и зависимости: [pubspec.yaml](../../../apps/mobile/pubspec.yaml); разрешённые версии:
   [pubspec.lock](../../../apps/mobile/pubspec.lock). Не добавлять неиспользуемые зависимости.
@@ -34,22 +35,37 @@ Design v2 заменяет визуальное направление
 - Цвета, typography и tokens: [core/theme](../../../apps/mobile/lib/core/theme/);
   общие UI-компоненты: [shared/widgets](../../../apps/mobile/lib/shared/widgets/).
   Перед новым widget искать существующий аналог и использовать `context.colors`.
-  Редизайн Electric следует [design guide](../../design/design-system.md):
-  `StackCardCard` — flat section с разделителем; цветовые hero и локальная
-  декоративная геометрия — [StackCardPoster](../../../apps/mobile/lib/shared/widgets/stackcard_poster.dart).
-  На acid/cyan/pink использовать ink; декоративная графика исключается из semantics.
-  Не возвращать nested cards и дублирующие helper paragraphs.
-  Auth использует scoped `StackCardTheme.authentication`: центрированный блок
-  и brand, текст формы слева, матовые controls; poster отсутствует. Во всём UI
-  primary CTA получает красный/белый `ColorScheme.primary/onPrimary`, включая auth,
-  icons и loading. Исходный brand Signal Red сохраняется отдельно.
-  `StackCardButton` учитывает локальный `FilledButtonTheme` без смены остальных UI.
+  Фактический UI contract — [design guide](../../design/design-system.md#действующий-runtime-contract-r8).
+  `core/theme` остаётся единственным механизмом: semantic `primary/onPrimary`
+  — Lime/ink в обеих темах, error/destructive отделён; `textMeta`, `accentText`,
+  `successText`, `controlOutline`, `primaryOutline` задают читаемые пары по состоянию.
+  Manrope и Noto fallback зарегистрированы в pubspec; не возвращать red/white CTA.
+  `StackCardButton` сохраняет loading/disabled/focus/semantics и внешний target48,
+  `StackCardInput` — label/focus/validation/input retention. Auth остаётся scoped
+  `StackCardTheme.authentication`, без poster. Имеющиеся Card/Poster/StateView
+  расширять, не создавать параллельную UI library; декоративная графика исключена
+  из semantics. Legacy композиции не считать target Design v2 parity.
+  [StackCardIcon](../../../apps/mobile/lib/shared/widgets/stackcard_icon.dart)
+  загружает pinned SVG; Lucide допускает semantic tint, технологии — original
+  source fills/зафиксированный React-TypeScript brand mapping. Flutter CSS
+  compatibility — отдельный `flutter.render.svg`, canonical raw не менять.
+  [TechnologyBadge](../../../apps/mobile/lib/shared/widgets/stackcard_technology_badge.dart)
+  сохраняет живой label/wrap; +N — настоящий control с полным списком.
+  [StackCardBrand](../../../apps/mobile/lib/shared/widgets/stackcard_brand.dart)
+  использует один original outlined Wordmark A либо compact Mark, paper/ink,
+  contain/no tint. NativeAppIcon exports не заменяют native packaging.
+  Provenance — [source-manifest.json](../../../apps/mobile/assets/design_v2/source-manifest.json),
+  Figma variables/styles — [figma-design-v2.json](../../redesign/source/figma-design-v2.json),
+  portable strict checker — [check_imports.py](../../../tools/redesign/check_imports.py).
 - ThemeMode/Locale/preferences: [AppearanceController](../../../apps/mobile/lib/core/state/appearance_controller.dart)
   через Provider; pure Dart [AppSettings](../../../apps/mobile/lib/core/state/app_settings.dart)
   и [SettingsRepository](../../../apps/mobile/lib/core/state/settings_repository.dart)
   находятся в нейтральном `core/state`. Query/filter state Projects:
   [project_filters.dart](../../../apps/mobile/lib/features/projects/presentation/project_filters.dart)
-  через Riverpod. Не дублировать эти значения в widget state или router callbacks.
+  через Riverpod. Projects UI применяет только `query`; прежний category/filter
+  provider остаётся совместимым для других callers, не скрывает Projects records.
+  GitHub Import имеет отдельный search/filter contract. Не дублировать state
+  в widget state или router callbacks.
   Provider ограничивается базовыми app settings. UI использует реальные ru/en
   переводы из [core/localization](../../../apps/mobile/lib/core/localization/);
   source content не переводится автоматически. Сравнение и учебные patches — в
@@ -94,6 +110,11 @@ Design v2 заменяет визуальное направление
   Legacy `AuthRepository`/`DemoSession` остаются preview API без native configuration.
   Restoring/error/signedOut без guest access блокируют private routes и draft;
   нельзя читать guest или предыдущий UID как fallback. Error/retry остаётся явным.
+- Shell имеет только три поддерживаемых roots: `/home`, `/portfolio`, `/projects`.
+  Все labels и bottom nav сохраняются на tablet; новая Resume library ждёт model
+  contract, нельзя выдавать plain legacy Resume за неё. Gear≥48 открывает
+  standalone `/settings`; `/settings/appearance` и `/settings/account` находятся
+  вне Shell, Back возвращает origin. Home/Portfolio composition пока legacy.
 - Routes именованы в `app_router.dart`; `/register` и `/reset-password` — auth
   forms, Builder forms вложены в `/portfolio/builder`, project edit получает `id`.
   Home/Portfolio/Projects/Settings/notes/Builder/editor/preview требуют account
@@ -234,6 +255,8 @@ Design v2 заменяет визуальное направление
   счётчики из demo snapshot либо pure вычисления полноты Builder.
 - Loading/error/retry: [StackCardAsyncView](../../../apps/mobile/lib/shared/widgets/stackcard_async_view.dart)
   использует существующий StackCardStateView; empty принадлежит экрану.
+  Manual refresh — opt-in; UID/owner transition не показывает предыдущий owner
+  content, loading/error/retry не выдаются за новую successful data.
   Асинхронные запросы повторяются явно через UI retry; сетевой GitHub Import
   показывает typed failure и сохраняет успешный список при refresh/page failure.
 - UI checks: [widget_test.dart](../../../apps/mobile/test/widget_test.dart),
@@ -284,7 +307,9 @@ Design v2 заменяет визуальное направление
   видимость/тему preview, v1/v2 → v3 migration, stale revision и сохранение новых
   правок во время Save; имена актуальных tests — в `apps/mobile/test`.
 - Локальные шрифты и лицензии: [assets/fonts](../../../apps/mobile/assets/fonts/);
-  регистрация остаётся в pubspec. Logo paths повторяют оригиналы branding.
+  регистрация остаётся в pubspec. Manrope400/600/700/800 и OFL/pinned hashes
+  проверяются manifest; original DM Sans/Noto сохранены. Новые original Brand A
+  SVG находятся в assets/branding/design_v2; legacy assets не удаляются.
 - Native configs находятся в platform directories этого приложения.
   Generated-файлы и `.metadata` вручную не редактировать.
 
@@ -295,3 +320,24 @@ Flutter/Dart-команды выполнять из `apps/mobile`; Git — из 
 [CONTRIBUTING](../../../CONTRIBUTING.md); запуск — в его
 [быстром старте](../../../CONTRIBUTING.md#быстрый-старт).
 Границы mobile и web определены в [architecture](../../architecture/architecture.md).
+
+Для проверки source integrity, macOS zsh/bash, cwd корень monorepo:
+
+```zsh
+python3 tools/redesign/check_imports.py --require-imported --require-brand
+```
+
+Для headless regressions, macOS zsh/bash, cwd `apps/mobile`:
+
+```zsh
+flutter analyze --no-pub
+flutter test --no-pub --reporter expanded
+```
+
+SVG/badge/brand tests — `stackcard_technology_badge_test.dart`,
+`account_auth_ui_test.dart`; focus/buttons/input — `stackcard_button_test.dart`,
+async UID/refresh — `stackcard_async_view_test.dart`. Сравнивать фактически
+выбранный loader path/canonical geometry/opacity; unsupported SVG warnings
+не игнорировать. Headless scale1/2/ru/en/keyboard/viewport checks не подменяют
+native font/SVG/AppIcon, device smoke или live backend acceptance. Результаты
+и no-preview/run ограничения фиксируются в canonical plan/product spec.

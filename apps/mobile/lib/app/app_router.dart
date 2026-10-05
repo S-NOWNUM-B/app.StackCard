@@ -55,6 +55,8 @@ String safeAuthDestination(String? value) {
       path == '/portfolio' ||
       path == '/projects' ||
       path == '/settings' ||
+      path == '/settings/appearance' ||
+      path == '/settings/account' ||
       path == '/portfolio-draft' ||
       path == '/portfolio/preview' ||
       path == '/github-import' ||
@@ -116,6 +118,23 @@ GoRouter createAppRouter({
       name: 'githubImport',
       path: '/github-import',
       builder: (_, _) => const GitHubImportScreen(),
+    ),
+    GoRoute(
+      name: 'settings',
+      path: '/settings',
+      builder: (_, _) => const SettingsScreen(),
+      routes: [
+        GoRoute(
+          name: 'settingsAppearance',
+          path: 'appearance',
+          builder: (_, _) => const SettingsAppearanceScreen(),
+        ),
+        GoRoute(
+          name: 'settingsAccount',
+          path: 'account',
+          builder: (_, _) => const SettingsAccountScreen(),
+        ),
+      ],
     ),
     GoRoute(
       name: 'portfolioDraft',
@@ -194,11 +213,6 @@ GoRouter createAppRouter({
           name: 'projects',
           path: '/projects',
           builder: (_, _) => const ProjectsScreen(),
-        ),
-        GoRoute(
-          name: 'settings',
-          path: '/settings',
-          builder: (_, _) => const SettingsScreen(),
         ),
       ],
     ),

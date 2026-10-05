@@ -124,11 +124,15 @@ void main() {
       );
       await tester.pump();
       expect(find.text('Загрузка данных'), findsOneWidget);
+      expect(find.text('Импорт из GitHub'), findsOneWidget);
+      expect(find.text('Создать проект'), findsOneWidget);
 
       pending.completeError(Exception('Unavailable source'));
       await tester.pumpAndSettle();
       expect(find.text('Не удалось загрузить данные'), findsOneWidget);
       expect(requests, 1);
+      expect(find.text('Импорт из GitHub'), findsOneWidget);
+      expect(find.text('Создать проект'), findsOneWidget);
 
       pending = Completer<List<Project>>();
       await tester.tap(find.text('Повторить'));
@@ -145,7 +149,7 @@ void main() {
   );
 
   testWidgets(
-    'An empty repository reaches the existing empty state and reset action',
+    'An empty repository offers creation without a misleading search reset',
     (tester) async {
       await tester.pumpWidget(
         StackCardApp(
@@ -160,11 +164,20 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Проекты: 0'), findsOneWidget);
+      expect(find.text('Пока нет проектов'), findsOneWidget);
+      expect(find.text('Ничего не найдено'), findsNothing);
+      expect(find.text('Очистить поиск'), findsNothing);
+      expect(find.text('Импорт из GitHub'), findsOneWidget);
+      expect(find.text('Создать проект'), findsOneWidget);
+      await tester.enterText(find.byType(TextFormField), 'missing');
+      await tester.pumpAndSettle();
       expect(find.text('Ничего не найдено'), findsOneWidget);
-      await tester.ensureVisible(find.text('Сбросить фильтры'));
-      await tester.tap(find.text('Сбросить фильтры'));
+      await tester.ensureVisible(find.text('Очистить поиск'));
+      await tester.tap(find.text('Очистить поиск'));
       await tester.pumpAndSettle();
       expect(find.text('Проекты: 0'), findsOneWidget);
+      expect(find.text('Пока нет проектов'), findsOneWidget);
+      expect(find.text('Очистить поиск'), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );

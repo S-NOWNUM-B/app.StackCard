@@ -38,9 +38,15 @@
   читать её README и [план](../redesign/plan.md), продолжать только согласованную
   задачу активной R-фазы. Основная разработка функций приостановлена до приёмки
   редизайна; прежний [Figma-first план](../design/redesign-plan.md) сохраняется
-  как история и не переопределяет последние требования. Lime, четыре root tabs и multiple
-  outputs пока относятся к Figma; текущие runtime/schema контракты не считать
-  автоматически мигрированными. При UI-переносе сверять target и реальный source.
+  как история и не переопределяет последние требования. По D040 Lime/Manrope,
+  shared controls и original Design v2 SVG/Brand A перенесены в существующий
+  runtime через `core/theme`/`shared/widgets`; provenance —
+  `apps/mobile/assets/design_v2/source-manifest.json`, текущий contract —
+  [design guide](../design/design-system.md#действующий-runtime-contract-r8).
+  Четыре target root tabs/multiple outputs остаются Figma: runtime имеет три
+  supported roots, singleton schema и legacy Home/Portfolio composition.
+  Полный перенос и prerequisites не считать выполненными из supported UI checks.
+  При UI-переносе сверять target и реальный source.
   Экраны получают demo/mock и GitHub source data через Repository и Riverpod DI; widgets
   не импортируют concrete sources. Публичные feature APIs и направления
   зависимостей описаны в [architecture](../architecture/architecture.md#mobile-modules--при-реальных-сценариях).

@@ -1,4 +1,5 @@
 import 'package:app_stackcard/main.dart';
+import 'package:app_stackcard/features/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,7 +30,7 @@ void main() {
     await tester.enterText(find.byType(TextFormField), 'alex@example.dev');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
-    expect(find.text('STACKCARD / DEMO'), findsOneWidget);
+    expect(find.text('Привет, Alex'), findsOneWidget);
     expect(find.byType(NavigationBar), findsOneWidget);
   });
 
@@ -50,19 +51,22 @@ void main() {
       await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
       expect(find.text('Привет, Alex'), findsOneWidget);
-      for (final icon in [
-        Icons.badge_outlined,
-        Icons.layers_outlined,
-        Icons.tune_rounded,
-      ]) {
+      for (final icon in [Icons.badge_outlined, Icons.layers_outlined]) {
         await tester.tap(find.byIcon(icon).last);
         await tester.pumpAndSettle();
       }
-      expect(find.text('Внешний вид'), findsOneWidget);
+      expect(find.text('Проекты: 4'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('app.settings')));
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(find.byType(NavigationBar), findsNothing);
       await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
-      expect(find.text('Сделано тобой'), findsOneWidget);
-      await tester.tap(find.byTooltip('Экран входа'));
+      expect(find.text('Проекты: 4'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('app.settings')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Вернуться ко входу'));
+      await tester.tap(find.text('Вернуться ко входу'));
       await tester.pumpAndSettle();
       expect(find.text('Открыть демо'), findsOneWidget);
     },
@@ -81,8 +85,8 @@ void main() {
       await tester.enterText(find.byType(TextFormField), 'no-such-project');
       await tester.pumpAndSettle();
       expect(find.text('Ничего не найдено'), findsOneWidget);
-      await tester.ensureVisible(find.text('Сбросить фильтры'));
-      await tester.tap(find.text('Сбросить фильтры'));
+      await tester.ensureVisible(find.text('Очистить поиск'));
+      await tester.tap(find.text('Очистить поиск'));
       await tester.pumpAndSettle();
       expect(find.text('Проекты: 4'), findsOneWidget);
       final preview = find.byKey(
@@ -98,43 +102,51 @@ void main() {
     },
   );
 
-  testWidgets('Appearance updates app and all state previews work with retry', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const StackCardApp(initialLocation: '/settings'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Светлая'));
-    await tester.pumpAndSettle();
-    expect(
-      Theme.of(tester.element(find.text('Внешний вид'))).brightness,
-      Brightness.light,
-    );
-    await tester.tap(find.text('Тёмная'));
-    await tester.pumpAndSettle();
-    expect(
-      Theme.of(tester.element(find.text('Внешний вид'))).brightness,
-      Brightness.dark,
-    );
-    expect(find.text('Ошибка'), findsNothing);
-    final statePreviews = find.byKey(const Key('settings_state_previews'));
-    await tester.ensureVisible(statePreviews);
-    await tester.tap(statePreviews);
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Ошибка'));
-    await tester.tap(find.text('Ошибка'));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Повторить'));
-    await tester.tap(find.text('Повторить'));
-    await tester.pumpAndSettle();
-    expect(find.text('Здесь появятся ваши проекты'), findsOneWidget);
-    await tester.ensureVisible(find.text('Загрузка'));
-    await tester.tap(find.text('Загрузка'));
-    await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    await tester.tap(find.text('Пусто'));
-    await tester.pumpAndSettle();
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-  });
+  testWidgets(
+    'Settings opens appearance and account routes with working back',
+    (tester) async {
+      await tester.pumpWidget(const StackCardApp(initialLocation: '/settings'));
+      await tester.pumpAndSettle();
+      expect(find.byType(NavigationBar), findsNothing);
+      final router = tester
+          .widget<MaterialApp>(find.byType(MaterialApp))
+          .routerConfig;
+      final appearance = find.byKey(const Key('settings.group.appearance'));
+      await tester.ensureVisible(appearance);
+      await tester.tap(appearance);
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsAppearanceScreen), findsOneWidget);
+      await tester.tap(find.text('Светлая'));
+      await tester.pumpAndSettle();
+      expect(
+        Theme.of(tester.element(find.text('Внешний вид'))).brightness,
+        Brightness.light,
+      );
+      await tester.tap(find.text('Тёмная'));
+      await tester.pumpAndSettle();
+      expect(
+        Theme.of(tester.element(find.text('Внешний вид'))).brightness,
+        Brightness.dark,
+      );
+      expect(
+        tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig,
+        same(router),
+      );
+      await tester.tap(find.byTooltip('Назад'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      final account = find.byKey(const Key('settings.group.account'));
+      await tester.ensureVisible(account);
+      await tester.tap(account);
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsAccountScreen), findsOneWidget);
+      expect(find.byType(NavigationBar), findsNothing);
+      await tester.tap(find.byTooltip('Назад'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets(
     'Keyboard reaches form, submits and activates a navigation control',
@@ -152,18 +164,22 @@ void main() {
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
-      expect(find.text('STACKCARD / DEMO'), findsOneWidget);
-      NavigationDestination? destination;
-      for (var i = 0; i < 12 && destination?.label != 'Проекты'; i++) {
+      expect(find.text('Привет, Alex'), findsOneWidget);
+      final destination = find.widgetWithText(TextButton, 'Проекты');
+      var focused = false;
+      for (var i = 0; i < 24 && !focused; i++) {
         await tester.sendKeyEvent(LogicalKeyboardKey.tab);
         await tester.pump();
-        destination = FocusManager.instance.primaryFocus?.context
-            ?.findAncestorWidgetOfExactType<NavigationDestination>();
+        focused = identical(
+          FocusManager.instance.primaryFocus?.context
+              ?.findAncestorWidgetOfExactType<TextButton>(),
+          tester.widget<TextButton>(destination),
+        );
       }
-      expect(destination?.label, 'Проекты');
+      expect(focused, isTrue, reason: 'Tab reaches the Projects destination');
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
-      expect(find.text('Сделано тобой'), findsOneWidget);
+      expect(find.text('Проекты: 4'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

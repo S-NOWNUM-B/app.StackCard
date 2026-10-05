@@ -2,40 +2,89 @@
 
 # StackCard Design
 
-**Исторический guide от 2026-10-04: editorial cyberpunk, developer tooling и controlled neon**
+**Действующий shared UI contract R8 и история визуального target от 2026-10-04**
 
-![Design historical](https://raster.shields.io/badge/Design-historical-111111?style=for-the-badge)
+![Design partial runtime](https://raster.shields.io/badge/Design-partial_runtime-111111?style=for-the-badge)
 ![Accent Acid Lime](https://raster.shields.io/badge/Accent-Acid_Lime-C7FF1A?style=for-the-badge)
 
 </div>
 
 ---
 
-Этот guide сохраняет **исторический target от 2026-10-04**. Актуальные требования
-Design v2 находятся в [requirements](../redesign/requirements.md), приёмка —
-в [плане](../redesign/plan.md). Бренд A выбран D024; [foundations R3.1](../redesign/screens.md#r31--цвета-типографика-и-метрики)
-ожидают review D025. Ниже сохранены прежние композиции, шрифтовые предложения
-и recolor S как история; они не переопределяют новый знак A или предложенный
-Noto Sans и usage rules Design v2.
-Текущий Flutter пока использует красный primary, одиночный portfolio draft
-и прежнюю навигацию; runtime tokens, schema и assets этим документом не изменены.
-Историческая приёмка прежнего UI сохраняется в [product spec](../product/product-spec.md#редизайн-мобильного-интерфейса).
-
-Порядок и проверяемые результаты — в [redesign plan](redesign-plan.md),
-происхождение решений — в [design contract](design-contract.md),
-граница переноса в код — в [implementation handoff](implementation-handoff.md).
+Этот guide описывает действующий shared Flutter UI после независимого R8
+переноса D040; разделы1–9 ниже сохраняют **исторический target2026-10-04**.
+Актуальные требования — [Design v2](../redesign/requirements.md), scope/acceptance —
+[план](../redesign/plan.md). R3 DS/Manrope приняты; Brand A выбран D024.
+Shared theme/controls/assets, Projects и поддерживаемые Settings перенесены,
+но Home/Portfolio legacy composition, singleton storage/plain Resume и три
+roots сохранены. Full target model/media/publication/web требуют proposed
+[prerequisites](../redesign/prerequisites.md); R7 global graph QA pending,
+DESIGN_READY/REDESIGN_DONE не установлены. Старые recolor S/DM Sans/greeting/
+categories/artwork требования не переопределяют Design v2.
 
 ## Содержание
 
-- [Visual Theme & Atmosphere](#1-visual-theme--atmosphere)
-- [Color](#2-color)
-- [Typography](#3-typography)
-- [Spacing & Grid](#4-spacing--grid)
-- [Layout & Composition](#5-layout--composition)
-- [Components](#6-components)
-- [Motion & Interaction](#7-motion--interaction)
-- [Voice & Brand](#8-voice--brand)
-- [Anti-patterns](#9-anti-patterns)
+- [Действующий runtime contract R8](#действующий-runtime-contract-r8)
+- [1. Visual Theme & Atmosphere](#1-visual-theme--atmosphere)
+- [2. Color](#2-color)
+- [3. Typography](#3-typography)
+- [4. Spacing & Grid](#4-spacing--grid)
+- [5. Layout & Composition](#5-layout--composition)
+- [6. Components](#6-components)
+- [7. Motion & Interaction](#7-motion--interaction)
+- [8. Voice & Brand](#8-voice--brand)
+- [9. Anti-patterns](#9-anti-patterns)
+
+---
+
+## Действующий runtime contract R8
+
+[StackCardColors](../../apps/mobile/lib/core/theme/stackcard_colors.dart),
+[StackCardTheme](../../apps/mobile/lib/core/theme/stackcard_theme.dart) и
+[tokens](../../apps/mobile/lib/core/theme/stackcard_tokens.dart) остаются единым
+source для Material3 и shared widgets. Dark/Light используют semantic Lime/ink
+`primary/onPrimary`; error/destructive отделены от brand. Важный текст получает
+textPrimary/textSecondary/textMeta; accentText/successText и controlOutline/
+primaryOutline/focus проверяются по реальной поверхности и состоянию. Цвета
+брендов технологий не превращаются в цвета UI действий.
+
+Manrope400/600/700/800 — живой UI font с Noto Sans fallback; регистрация/
+исходные TTF/OFL в [pubspec](../../apps/mobile/pubspec.yaml) и [manifest](../../apps/mobile/assets/design_v2/source-manifest.json).
+Оригинальный outlined Wordmark A сохраняет Noto ExtraBold36/44 source geometry:
+[StackCardBrand](../../apps/mobile/lib/shared/widgets/stackcard_brand.dart)
+выбирает один Wordmark (уже содержит Mark) либо compact Mark, Dark paper/
+Light ink, contain/no tint/no дублирующий Text.9BrandA SVG импортированы,
+но native AppIcon packaging не заменено.
+
+[StackCardIcon](../../apps/mobile/lib/shared/widgets/stackcard_icon.dart)
+загружает pinned Lucide/technology SVG; tint применим только к monochrome Lucide.
+React/TypeScript получают зафиксированные brand fills, Flutter/Dart — source
+fills. Отдельный CSS-inline Flutter derivative сохраняет canonical white/.72
+opacity/polygon geometry; raw original не менять. [TechnologyBadge](../../apps/mobile/lib/shared/widgets/stackcard_technology_badge.dart)
+использует живой Text/полный wrap; неизвестное название остаётся полным,
++N открывает реальный список.40canonical records +1explicit derivative имеют
+SHA/provenance; portable [check_imports](../../tools/redesign/check_imports.py)
+проверяет источники независимо от headless SVG paint tests.
+
+Controls используют внешний tap target≥48, input height56 и content max600;
+focus/loading/disabled/error сохраняют доступное имя и input. Timing constants
+180/240/280ms существуют в StackCardMotion; сами константы не доказывают full
+prototype/runtime animations или persisted reduced-motion preference.
+Shell сохраняет bottom navigation на phone/tablet, три supported roots;
+Settings/appearance/account standalone. Projects — Import/Create/Search/List,
+query-only без categories; GitHub Import filter contract отдельно. Home и
+Portfolio composition ещё legacy, их полный target перенос не заявляется.
+
+Фактический supported UI результат:950headless tests PASS/analyze0issues,
+Dark/Light,ru/en,scale1/2,7viewports включая320×568/568×320;32runtime SVGdecoded,
+0unsupported warnings. Это engine/widget evidence. Visual preview/playback/
+native launch/goldens пропущены по запросу, поэтому native font/SVG/AppIcon и
+полная Figma/native visual parity остаются непроверенными. Подробные
+[результаты R8/R9](../redesign/plan.md#фактический-перенос-поддерживаемого-ui-r8r9-d040)
+не означают полный REDESIGN_DONE или backend новых сценариев.
+
+Следующие разделы1–9 — исторический target2026-10-04; при конфликте применяются
+актуальные requirements и текущий shared contract выше.
 
 ---
 

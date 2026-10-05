@@ -70,55 +70,65 @@ void main() {
     view.resetDevicePixelRatio();
   });
 
-  testWidgets('Repository replacements reach Home, Portfolio and preview', (
-    tester,
-  ) async {
-    final profile = TestProfileRepository();
-    final projects = TestProjectsRepository();
-    await tester.pumpWidget(
-      StackCardApp(
-        initialLocation: '/home',
-        providerOverrides: [
-          profileRepositoryProvider.overrideWithValue(profile),
-          projectsRepositoryProvider.overrideWithValue(projects),
-        ],
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Привет, Sam'), findsOneWidget);
-    expect(find.text('40%'), findsOneWidget);
-    expect(find.text('1 проект'), findsOneWidget);
-    expect(find.text('1 навык'), findsOneWidget);
-    expect(find.text('Replacement Project'), findsOneWidget);
-    expect(find.text('Alex Morgan'), findsNothing);
-    await tester.ensureVisible(find.text('Моё портфолио'));
-    await tester.tap(find.text('Моё портфолио'));
-    await tester.pumpAndSettle();
-    expect(find.text('Sam Lee'), findsOneWidget);
-    expect(find.text('Другой профиль из Repository'), findsOneWidget);
-    expect(find.text('Replacement Project'), findsOneWidget);
-    expect(find.text('Frontend Developer'), findsNothing);
-    await tester.ensureVisible(find.text('Предпросмотр'));
-    await tester.tap(find.text('Предпросмотр'));
-    await tester.pumpAndSettle();
-    expect(find.text('Предпросмотр портфолио'), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byType(BottomSheet),
-        matching: find.text('Sam Lee'),
-      ),
-      findsOneWidget,
-    );
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.tune_rounded).last);
-    await tester.pumpAndSettle();
-    expect(find.text('Sam Lee · sam'), findsOneWidget);
-    expect(find.text('Alex Morgan · alex-dev-demo'), findsNothing);
-    expect(profile.calls, 1);
-    expect(projects.calls, 1);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'Repository replacements reach Home, Portfolio, preview and Settings',
+    (tester) async {
+      final profile = TestProfileRepository();
+      final projects = TestProjectsRepository();
+      await tester.pumpWidget(
+        StackCardApp(
+          initialLocation: '/home',
+          providerOverrides: [
+            profileRepositoryProvider.overrideWithValue(profile),
+            projectsRepositoryProvider.overrideWithValue(projects),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Привет, Sam'), findsOneWidget);
+      expect(find.text('40%'), findsOneWidget);
+      expect(find.text('1 проект'), findsOneWidget);
+      expect(find.text('1 навык'), findsOneWidget);
+      expect(find.text('Replacement Project'), findsOneWidget);
+      expect(find.text('Alex Morgan'), findsNothing);
+      await tester.ensureVisible(find.text('Моё портфолио'));
+      await tester.tap(find.text('Моё портфолио'));
+      await tester.pumpAndSettle();
+      expect(find.text('Sam Lee'), findsOneWidget);
+      expect(find.text('Другой профиль из Repository'), findsOneWidget);
+      expect(find.text('Replacement Project'), findsOneWidget);
+      expect(find.text('Frontend Developer'), findsNothing);
+      await tester.ensureVisible(find.text('Предпросмотр'));
+      await tester.tap(find.text('Предпросмотр'));
+      await tester.pumpAndSettle();
+      expect(find.text('Предпросмотр портфолио'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text('Sam Lee'),
+        ),
+        findsOneWidget,
+      );
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('app.settings')));
+      await tester.pumpAndSettle();
+      expect(find.text('Настройки'), findsOneWidget);
+      expect(find.byType(NavigationBar), findsNothing);
+      expect(find.text('Sam Lee · sam'), findsOneWidget);
+      expect(find.text('Alex Morgan · alex-dev-demo'), findsNothing);
+      await tester.tap(find.byTooltip('Назад'));
+      await tester.pumpAndSettle();
+      expect(find.text('Другой профиль из Repository'), findsOneWidget);
+      expect(
+        tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+        1,
+      );
+      expect(profile.calls, 1);
+      expect(projects.calls, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('Pending profile shows loading then the repository result', (
     tester,

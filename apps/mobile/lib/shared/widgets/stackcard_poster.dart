@@ -26,6 +26,23 @@ class StackCardPoster extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final theme = Theme.of(context);
+    // Цветной legacy poster использует Ink/paper для собственных контролов.
+    final posterColors = colors.copyWith(
+      surface: colors.paper,
+      surfaceElevated: colors.paper,
+      surfaceHover: colors.paper,
+      textPrimary: colors.ink,
+      textSecondary: colors.ink.withValues(alpha: 0.8),
+      textMuted: colors.ink.withValues(alpha: 0.8),
+      textMeta: colors.ink.withValues(alpha: 0.8),
+      sourceText: colors.ink,
+      accentText: colors.ink,
+      focus: colors.ink,
+      controlOutline: colors.ink,
+      primaryOutline: colors.ink,
+      error: StackCardColors.light.error,
+      successText: StackCardColors.light.successText,
+    );
     return ClipRRect(
       borderRadius: BorderRadius.circular(StackCardRadius.xlarge),
       child: ColoredBox(
@@ -46,17 +63,19 @@ class StackCardPoster extends StatelessWidget {
               padding: padding,
               child: Theme(
                 data: theme.copyWith(
+                  colorScheme: theme.colorScheme.copyWith(
+                    surface: posterColors.surface,
+                    onSurface: posterColors.textPrimary,
+                    onSurfaceVariant: posterColors.textSecondary,
+                    outline: posterColors.controlOutline,
+                    error: posterColors.error,
+                  ),
                   textTheme: theme.textTheme.apply(
                     bodyColor: colors.ink,
                     displayColor: colors.ink,
                   ),
                   iconTheme: IconThemeData(color: colors.ink),
-                  extensions: [
-                    colors.copyWith(
-                      textPrimary: colors.ink,
-                      textSecondary: colors.ink.withValues(alpha: 0.8),
-                    ),
-                  ],
+                  extensions: [posterColors],
                 ),
                 child: child,
               ),

@@ -1,0 +1,1190 @@
+{
+  "schemaVersion": 1,
+  "sourceFileKey": "3YhNUPDIJJWB39NSBxbRr6",
+  "importedAt": "2026-10-05",
+  "scope": "StackCard Design v2 shared mobile UI: R8.2",
+  "sourceDesign": "docs/redesign/references.md",
+  "canonicalSourceBytesPreserved": true,
+  "rasterAssetsCreated": false,
+  "fontCount": 4,
+  "svgCount": 23,
+  "licenseAndNoticeCount": 4,
+  "brandA": {
+    "status": "imported original editable Figma main SVG exports",
+    "svgCount": 9,
+    "families": {
+      "mark": 3,
+      "wordmark": 3,
+      "app-icon": 3
+    },
+    "exportSourceSha256": "5e4a10ffe981edd20fb7ef1608fc3ef3af8c8fe704a94a43dbd8df81d886e95b",
+    "sourceFileKey": "3YhNUPDIJJWB39NSBxbRr6",
+    "sourcePageId": "99:7",
+    "wordmarkFontException": "Noto Sans ExtraBold36/44; original outlined source, no Manrope substitution",
+    "nativeAppIconPackagingVerified": false,
+    "visualInspection": "omitted by user preference"
+  },
+  "nativeFontRenderingVerified": false,
+  "technologyRendering": {
+    "react": {
+      "defaultBlackFillMapping": "#61DAFB",
+      "source": "Figma VariableID:144:177"
+    },
+    "typescript": {
+      "defaultBlackFillMapping": "#3178C6",
+      "source": "Figma VariableID:144:179"
+    },
+    "flutter": {
+      "sourceFillPreserved": true,
+      "variant": "official white logomark",
+      "renderAssetPath": "assets/icons/technology/flutter.render.svg",
+      "renderingCompatibility": "CSS class fill/opacity inlined per polygon; no global color filter"
+    },
+    "dart": {
+      "sourceFillPreserved": true,
+      "variant": "official knockout logomark"
+    }
+  },
+  "entries": [
+    {
+      "bytes": 143132,
+      "sha256": "2d9a9960fd191a7f1d9060768818074dd2b76ba84a64a35efd2c22bf39030903",
+      "kind": "font",
+      "family": "Manrope",
+      "weight": 400,
+      "sourceUrl": "https://raw.githubusercontent.com/googlefonts/manrope/6f81ebecdf65e4463b798cc07b16a4f8d5216917/fonts/ttf/manrope-regular.ttf",
+      "sourceCommit": "6f81ebecdf65e4463b798cc07b16a4f8d5216917",
+      "license": "SIL-OFL-1.1",
+      "coverageVerified": "Basic Russian with Ё/ё + Latin; hash matches prior OS2/cmap checked bytes",
+      "nativeRenderingVerified": false,
+      "assetPath": "assets/fonts/Manrope-Regular.ttf"
+    },
+    {
+      "bytes": 144976,
+      "sha256": "e80a2c37e47ec09bff5a9960257bf9001e87d5fb7bf35719ef4958763a0c70ac",
+      "kind": "font",
+      "family": "Manrope",
+      "weight": 600,
+      "sourceUrl": "https://raw.githubusercontent.com/googlefonts/manrope/6f81ebecdf65e4463b798cc07b16a4f8d5216917/fonts/ttf/manrope-semibold.ttf",
+      "sourceCommit": "6f81ebecdf65e4463b798cc07b16a4f8d5216917",
+      "license": "SIL-OFL-1.1",
+      "coverageVerified": "Basic Russian with Ё/ё + Latin; hash matches prior OS2/cmap checked bytes",
+      "nativeRenderingVerified": false,
+      "assetPath": "assets/fonts/Manrope-SemiBold.ttf"
+    },
+    {
+      "bytes": 145888,
+      "sha256": "2da33eb378d59e6314ed7afdfa837cdcb60e41ac8b1f5d3c4909471b95fcf7d9",
+      "kind": "font",
+      "family": "Manrope",
+      "weight": 700,
+      "sourceUrl": "https://raw.githubusercontent.com/googlefonts/manrope/6f81ebecdf65e4463b798cc07b16a4f8d5216917/fonts/ttf/manrope-bold.ttf",
+      "sourceCommit": "6f81ebecdf65e4463b798cc07b16a4f8d5216917",
+      "license": "SIL-OFL-1.1",
+      "coverageVerified": "Basic Russian with Ё/ё + Latin; hash matches prior OS2/cmap checked bytes",
+      "nativeRenderingVerified": false,
+      "assetPath": "assets/fonts/Manrope-Bold.ttf"
+    },
+    {
+      "bytes": 145156,
+      "sha256": "2522cd61b754100a42a53024148a134c63efc5d114447474a7f13519966cfad5",
+      "kind": "font",
+      "family": "Manrope",
+      "weight": 800,
+      "sourceUrl": "https://raw.githubusercontent.com/googlefonts/manrope/6f81ebecdf65e4463b798cc07b16a4f8d5216917/fonts/ttf/manrope-extrabold.ttf",
+      "sourceCommit": "6f81ebecdf65e4463b798cc07b16a4f8d5216917",
+      "license": "SIL-OFL-1.1",
+      "coverageVerified": "Basic Russian with Ё/ё + Latin; hash matches prior OS2/cmap checked bytes",
+      "nativeRenderingVerified": false,
+      "assetPath": "assets/fonts/Manrope-ExtraBold.ttf"
+    },
+    {
+      "bytes": 4384,
+      "sha256": "e01b637272e0cbdfb240184dd98ea5cc671556d9894dae2668d92ab2c906787c",
+      "kind": "license",
+      "license": "SIL-OFL-1.1",
+      "sourceUrl": "https://raw.githubusercontent.com/googlefonts/manrope/6f81ebecdf65e4463b798cc07b16a4f8d5216917/OFL.txt",
+      "assetPath": "assets/fonts/Manrope_OFL.txt"
+    },
+    {
+      "bytes": 383,
+      "sha256": "28216c479005731ef5e382e7d8627eda2b129b019eb1f3d9de9f5915576d448e",
+      "kind": "svg",
+      "name": "home",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/house.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:19",
+      "license": "ISC",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/home.svg"
+    },
+    {
+      "bytes": 444,
+      "sha256": "52ca55846c202335fb870c8aa23e9345630ec10489303756d62e750f7109605c",
+      "kind": "svg",
+      "name": "file-text",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/file-text.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:23",
+      "license": "ISC",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/file-text.svg"
+    },
+    {
+      "bytes": 342,
+      "sha256": "f0d92b94b797a8ab7d4c4ae33c3236c47f64068351b4e14bdb5014ee42898a39",
+      "kind": "svg",
+      "name": "folder",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/folder.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:30",
+      "license": "ISC",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/folder.svg"
+    },
+    {
+      "bytes": 307,
+      "sha256": "321a2a5500f2b814a2e62eb73c4b01dc65c7334fe2e6f7d77517239383e26bb1",
+      "kind": "svg",
+      "name": "panels-top-left",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/panels-top-left.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:33",
+      "license": "ISC",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/panels-top-left.svg"
+    },
+    {
+      "bytes": 586,
+      "sha256": "0ae27fd0f81999229e3127ac96c5b32edfea448e291d509e76212b917551d66b",
+      "kind": "svg",
+      "name": "settings",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/settings.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:38",
+      "license": "ISC",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/settings.svg"
+    },
+    {
+      "bytes": 262,
+      "sha256": "c5f4b88076108eb1a0d95336e1aa7e7bb1419a3a92af96f6247d88cd3456f933",
+      "kind": "svg",
+      "name": "arrow-left",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/arrow-left.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:42",
+      "license": "ISC + MIT (Feather-derived)",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/arrow-left.svg"
+    },
+    {
+      "bytes": 339,
+      "sha256": "ea80e566c7a12628a447cb53179b19aea4f60b9143e2becd0d0f20bf260e5718",
+      "kind": "svg",
+      "name": "copy",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/copy.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:46",
+      "license": "ISC",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/copy.svg"
+    },
+    {
+      "bytes": 239,
+      "sha256": "7f33acc9a77a61659531044525fc008edebe215bf4dcf1c789c8674ad3277db0",
+      "kind": "svg",
+      "name": "check",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/check.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:50",
+      "license": "ISC + MIT (Feather-derived)",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/check.svg"
+    },
+    {
+      "bytes": 358,
+      "sha256": "619c9db58c879dce6250376ba67d9c9102ca6dbb3b1efb9294c9f180e22273a5",
+      "kind": "svg",
+      "name": "image",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/image.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:53",
+      "license": "ISC",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/image.svg"
+    },
+    {
+      "bytes": 312,
+      "sha256": "4f495cc72013ffdfec677f03b33a150f7b4dd741979283fd6853a09024bca112",
+      "kind": "svg",
+      "name": "more-horizontal",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/ellipsis.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:58",
+      "license": "ISC + MIT (Feather-derived)",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/more-horizontal.svg"
+    },
+    {
+      "bytes": 437,
+      "sha256": "ebbb3178dd80dfd942770a2237fe7bfc3515c55c7daa9d3666933a656d2790e3",
+      "kind": "svg",
+      "name": "camera",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/camera.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "160:1022",
+      "license": "ISC",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/camera.svg"
+    },
+    {
+      "bytes": 279,
+      "sha256": "84870f26f3faf8da45da84174517519e81b9e8f00319c78954fcbb74f50038a1",
+      "kind": "svg",
+      "name": "user-round",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/user-round.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "160:1026",
+      "license": "ISC",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/user-round.svg"
+    },
+    {
+      "bytes": 236,
+      "sha256": "66ea878e72ed3488bb3b464c39dfdccee8d1f78e560dccea40e5e12da0e87e87",
+      "kind": "svg",
+      "name": "chevron-down",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/chevron-down.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "160:1030",
+      "license": "ISC + MIT (Feather-derived)",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/chevron-down.svg"
+    },
+    {
+      "bytes": 413,
+      "sha256": "ddf3a20c45869614f7b49dd14c5cbaba026d4155382e30b0ae8418f31c1ce2c5",
+      "kind": "svg",
+      "name": "grip-vertical",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/grip-vertical.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "160:1033",
+      "license": "ISC",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/grip-vertical.svg"
+    },
+    {
+      "bytes": 261,
+      "sha256": "8c22c25874c80bb062bef985d207d8f1d4a4d7847237d0a8cf720a3235968518",
+      "kind": "svg",
+      "name": "arrow-up",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/arrow-up.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "160:1041",
+      "license": "ISC + MIT (Feather-derived)",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/arrow-up.svg"
+    },
+    {
+      "bytes": 262,
+      "sha256": "2b641c7a59d39450edfed72067fcc9940a1a316a737346af23b4b9103c0689f2",
+      "kind": "svg",
+      "name": "arrow-down",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/arrow-down.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "160:1045",
+      "license": "ISC + MIT (Feather-derived)",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/arrow-down.svg"
+    },
+    {
+      "bytes": 377,
+      "sha256": "7e1ca7a6f5c1eb949671df762f2baadd32f5bd841d43153c3a15279af7d78d0c",
+      "kind": "svg",
+      "name": "pencil",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/pencil.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "160:1049",
+      "license": "ISC",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/pencil.svg"
+    },
+    {
+      "bytes": 256,
+      "sha256": "7f6af73bf1ff6c4bca3f18351c8d1bdec6749c0c2530c4de5da85d520c21df17",
+      "kind": "svg",
+      "name": "plus",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/plus.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "160:1053",
+      "license": "ISC + MIT (Feather-derived)",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/plus.svg"
+    },
+    {
+      "bytes": 275,
+      "sha256": "283d371c2e433817bb9c0c8310caa6c77fa4177c0f4f1168d9c83b97af7389dc",
+      "kind": "svg",
+      "name": "search",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/icons/search.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "184:2762",
+      "license": "ISC + MIT (Feather-derived)",
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/lucide/search.svg"
+    },
+    {
+      "bytes": 2926,
+      "sha256": "ab9136a1a4a8be72ac6743e1bdd1912d878bd68d57787ea7a6c6838e3b23c01c",
+      "kind": "svg",
+      "name": "react",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/react.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:63",
+      "license": {
+        "project": "CC0-1.0",
+        "icon_metadata": null,
+        "trademark": "CC0 does not waive or license trademark or patent rights",
+        "coverage_caveat": "Simple Icons project CC0 does not establish individual brand rights; per-icon metadata absent at this pinned commit.",
+        "upstream_source_repository": "MIT (verified source repository root LICENSE)"
+      },
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/technology/react.svg"
+    },
+    {
+      "bytes": 1294,
+      "sha256": "7f023e8d1e767370306ec9437d2de5d5af97491d6208dd7799a3808a7c10a36a",
+      "kind": "svg",
+      "name": "typescript",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/typescript.svg",
+      "sourceArchivePath": null,
+      "figmaMainId": "144:66",
+      "license": {
+        "project": "CC0-1.0",
+        "icon_metadata": null,
+        "trademark": "CC0 does not waive or license trademark or patent rights",
+        "coverage_caveat": "Simple Icons project CC0 does not establish individual brand rights; per-icon metadata absent at this pinned commit.",
+        "brand_usage": "Official single-color variant exists; preserve shape and use only to identify the technology."
+      },
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/technology/typescript.svg"
+    },
+    {
+      "bytes": 497,
+      "sha256": "e84889cedbe669bf58daa0fc69dcf73a238d4dbc772b8cf1ab48743224690a2e",
+      "kind": "svg",
+      "name": "flutter",
+      "sourceUrl": "https://flutter.dev/flutter-brand-assets.zip",
+      "sourceArchivePath": "Flutter/icon_flutter/icon_flutter_wht.svg",
+      "figmaMainId": "145:65",
+      "license": {
+        "scope": "Official brand asset; trademark guidelines apply. Separate per-asset permissive copyright license not asserted.",
+        "url": "https://docs.flutter.dev/brand"
+      },
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/technology/flutter.svg",
+      "sourceArchiveSha256": "7dc9d96644f92cb37f014b5b66d88380cfb4de49eb519ee0d868b80d28d01b79"
+    },
+    {
+      "bytes": 1026,
+      "sha256": "6db2db9a19496ee8c0005dd226a24a762c648e82e859afa1b469c3999a6b3e42",
+      "kind": "svg",
+      "name": "dart",
+      "sourceUrl": "https://services.google.com/fh/files/misc/dart_brand_guidelines_assets.zip",
+      "sourceArchivePath": "Dart Brand Guidelines Assets/Logomark (Icon)/icon_dart_knockout.svg",
+      "figmaMainId": "145:70",
+      "license": {
+        "scope": "Official brand asset; trademark guidelines apply. Separate per-asset permissive copyright license not asserted.",
+        "url": "https://dart.dev/brand"
+      },
+      "canonicalSourcePreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "assetPath": "assets/icons/technology/dart.svg",
+      "sourceArchiveSha256": "d0494d71c73c743641b76d3e73757122bcac7f6e91d7e2ff757d9a3ae2a42b73"
+    },
+    {
+      "bytes": 3208,
+      "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57",
+      "kind": "license",
+      "project": "Lucide",
+      "sourceUrl": "https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/LICENSE",
+      "assetPath": "assets/icons/LICENSE-LUCIDE.txt"
+    },
+    {
+      "bytes": 6569,
+      "sha256": "9046848b63a5c92bff14e4accca80bd987e0623b74adf9226ce5198d312b79d5",
+      "kind": "license",
+      "project": "Simple Icons",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/LICENSE.md",
+      "assetPath": "assets/icons/LICENSE-SIMPLE-ICONS.txt"
+    },
+    {
+      "bytes": 1100,
+      "sha256": "c7cd354a776118de0a2e19f0ed9fa60914b3418da4fa47a44c3432d4fead0319",
+      "kind": "notice",
+      "source": "accepted R32 brand asset handoff",
+      "sourceUrls": [
+        "https://docs.flutter.dev/brand",
+        "https://dart.dev/brand",
+        "https://www.typescriptlang.org/branding"
+      ],
+      "assetPath": "assets/icons/TECHNOLOGY-NOTICES.md"
+    },
+    {
+      "kind": "brand-svg",
+      "name": "stackcard-v2-mark-accent.svg",
+      "family": "mark",
+      "variant": "Accent",
+      "assetPath": "assets/branding/design_v2/stackcard-v2-mark-accent.svg",
+      "bytes": 247,
+      "sha256": "58f88e4d403ceec0e196e590db3b03f791d2822c6448d65f200c31d933035484",
+      "figmaMainId": "100:10",
+      "figmaSetId": "110:282",
+      "sourcePageId": "99:7",
+      "sourceUrl": "https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=100-10",
+      "dimensions": {
+        "width": 32,
+        "height": 32
+      },
+      "viewBox": "0 0 32 32",
+      "exportSettings": {
+        "format": "SVG_STRING",
+        "svgOutlineText": true,
+        "svgIdAttribute": true,
+        "svgSimplifyStroke": false,
+        "contentsOnly": true,
+        "colorProfile": "SRGB"
+      },
+      "originalMainComponent": true,
+      "canonicalSourceBytesPreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "raster": false,
+      "license": {
+        "scope": "Accepted project-specific StackCard Brand A Figma design; no third-party artwork license asserted"
+      }
+    },
+    {
+      "kind": "brand-svg",
+      "name": "stackcard-v2-mark-ink.svg",
+      "family": "mark",
+      "variant": "Ink",
+      "assetPath": "assets/branding/design_v2/stackcard-v2-mark-ink.svg",
+      "bytes": 244,
+      "sha256": "1dd7ec27b2030f01e9d61d01968e8e5bcc3d07fb599c4472d704d3f6eef457b1",
+      "figmaMainId": "110:276",
+      "figmaSetId": "110:282",
+      "sourcePageId": "99:7",
+      "sourceUrl": "https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=110-276",
+      "dimensions": {
+        "width": 32,
+        "height": 32
+      },
+      "viewBox": "0 0 32 32",
+      "exportSettings": {
+        "format": "SVG_STRING",
+        "svgOutlineText": true,
+        "svgIdAttribute": true,
+        "svgSimplifyStroke": false,
+        "contentsOnly": true,
+        "colorProfile": "SRGB"
+      },
+      "originalMainComponent": true,
+      "canonicalSourceBytesPreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "raster": false,
+      "license": {
+        "scope": "Accepted project-specific StackCard Brand A Figma design; no third-party artwork license asserted"
+      }
+    },
+    {
+      "kind": "brand-svg",
+      "name": "stackcard-v2-mark-paper.svg",
+      "family": "mark",
+      "variant": "Paper",
+      "assetPath": "assets/branding/design_v2/stackcard-v2-mark-paper.svg",
+      "bytes": 246,
+      "sha256": "039b12deee5669c56bf5084b8fa2e0a506600c3e8260aca714a5db534e8eaef3",
+      "figmaMainId": "110:279",
+      "figmaSetId": "110:282",
+      "sourcePageId": "99:7",
+      "sourceUrl": "https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=110-279",
+      "dimensions": {
+        "width": 32,
+        "height": 32
+      },
+      "viewBox": "0 0 32 32",
+      "exportSettings": {
+        "format": "SVG_STRING",
+        "svgOutlineText": true,
+        "svgIdAttribute": true,
+        "svgSimplifyStroke": false,
+        "contentsOnly": true,
+        "colorProfile": "SRGB"
+      },
+      "originalMainComponent": true,
+      "canonicalSourceBytesPreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "raster": false,
+      "license": {
+        "scope": "Accepted project-specific StackCard Brand A Figma design; no third-party artwork license asserted"
+      }
+    },
+    {
+      "kind": "brand-svg",
+      "name": "stackcard-v2-wordmark-accent.svg",
+      "family": "wordmark",
+      "variant": "Accent",
+      "assetPath": "assets/branding/design_v2/stackcard-v2-wordmark-accent.svg",
+      "bytes": 8216,
+      "sha256": "5d3cd27f3149c295d3a40cce6450772d66852509a0158b22d893a69930adb99b",
+      "figmaMainId": "111:269",
+      "figmaSetId": "111:284",
+      "sourcePageId": "99:7",
+      "sourceUrl": "https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=111-269",
+      "dimensions": {
+        "width": 350,
+        "height": 48
+      },
+      "viewBox": "0 0 350 48",
+      "exportSettings": {
+        "format": "SVG_STRING",
+        "svgOutlineText": true,
+        "svgIdAttribute": true,
+        "svgSimplifyStroke": false,
+        "contentsOnly": true,
+        "colorProfile": "SRGB"
+      },
+      "originalMainComponent": true,
+      "canonicalSourceBytesPreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "raster": false,
+      "license": {
+        "scope": "Accepted project-specific StackCard Brand A Figma design; no third-party artwork license asserted"
+      },
+      "fontSource": {
+        "sourceId": "111:269",
+        "textId": "111:273",
+        "characters": "StackCard",
+        "fontSegments": [
+          {
+            "family": "Noto Sans",
+            "style": "ExtraBold",
+            "variationSettings": {
+              "wght": 800,
+              "wdth": 100,
+              "CTGR": 0
+            }
+          }
+        ],
+        "fontSize": 36,
+        "lineHeight": {
+          "unit": "PIXELS",
+          "value": 44
+        },
+        "letterSpacing": {
+          "unit": "PIXELS",
+          "value": -0.800000011920929
+        }
+      }
+    },
+    {
+      "kind": "brand-svg",
+      "name": "stackcard-v2-wordmark-ink.svg",
+      "family": "wordmark",
+      "variant": "Ink",
+      "assetPath": "assets/branding/design_v2/stackcard-v2-wordmark-ink.svg",
+      "bytes": 8210,
+      "sha256": "8a3f1fbb1794e4ab66d933ffb5dabafd741f0dfea31f64b75fe45bc79583893e",
+      "figmaMainId": "111:274",
+      "figmaSetId": "111:284",
+      "sourcePageId": "99:7",
+      "sourceUrl": "https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=111-274",
+      "dimensions": {
+        "width": 350,
+        "height": 48
+      },
+      "viewBox": "0 0 350 48",
+      "exportSettings": {
+        "format": "SVG_STRING",
+        "svgOutlineText": true,
+        "svgIdAttribute": true,
+        "svgSimplifyStroke": false,
+        "contentsOnly": true,
+        "colorProfile": "SRGB"
+      },
+      "originalMainComponent": true,
+      "canonicalSourceBytesPreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "raster": false,
+      "license": {
+        "scope": "Accepted project-specific StackCard Brand A Figma design; no third-party artwork license asserted"
+      },
+      "fontSource": {
+        "sourceId": "111:274",
+        "textId": "111:278",
+        "characters": "StackCard",
+        "fontSegments": [
+          {
+            "family": "Noto Sans",
+            "style": "ExtraBold",
+            "variationSettings": {
+              "wght": 800,
+              "wdth": 100,
+              "CTGR": 0
+            }
+          }
+        ],
+        "fontSize": 36,
+        "lineHeight": {
+          "unit": "PIXELS",
+          "value": 44
+        },
+        "letterSpacing": {
+          "unit": "PIXELS",
+          "value": -0.800000011920929
+        }
+      }
+    },
+    {
+      "kind": "brand-svg",
+      "name": "stackcard-v2-wordmark-paper.svg",
+      "family": "wordmark",
+      "variant": "Paper",
+      "assetPath": "assets/branding/design_v2/stackcard-v2-wordmark-paper.svg",
+      "bytes": 8214,
+      "sha256": "a11d7fa98ef9c6b9440f4b58b19312c7e0748c0ab3a4ed8d4e2eab289fe2a390",
+      "figmaMainId": "111:279",
+      "figmaSetId": "111:284",
+      "sourcePageId": "99:7",
+      "sourceUrl": "https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=111-279",
+      "dimensions": {
+        "width": 350,
+        "height": 48
+      },
+      "viewBox": "0 0 350 48",
+      "exportSettings": {
+        "format": "SVG_STRING",
+        "svgOutlineText": true,
+        "svgIdAttribute": true,
+        "svgSimplifyStroke": false,
+        "contentsOnly": true,
+        "colorProfile": "SRGB"
+      },
+      "originalMainComponent": true,
+      "canonicalSourceBytesPreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "raster": false,
+      "license": {
+        "scope": "Accepted project-specific StackCard Brand A Figma design; no third-party artwork license asserted"
+      },
+      "fontSource": {
+        "sourceId": "111:279",
+        "textId": "111:283",
+        "characters": "StackCard",
+        "fontSegments": [
+          {
+            "family": "Noto Sans",
+            "style": "ExtraBold",
+            "variationSettings": {
+              "wght": 800,
+              "wdth": 100,
+              "CTGR": 0
+            }
+          }
+        ],
+        "fontSize": 36,
+        "lineHeight": {
+          "unit": "PIXELS",
+          "value": 44
+        },
+        "letterSpacing": {
+          "unit": "PIXELS",
+          "value": -0.800000011920929
+        }
+      }
+    },
+    {
+      "kind": "brand-svg",
+      "name": "stackcard-v2-app-icon-accent.svg",
+      "family": "app-icon",
+      "variant": "Accent",
+      "assetPath": "assets/branding/design_v2/stackcard-v2-app-icon-accent.svg",
+      "bytes": 518,
+      "sha256": "f50ee34fb9070f7debfa69ef6f2f8320d9d9a670198a8543b3654ec2a452a229",
+      "figmaMainId": "111:285",
+      "figmaSetId": "111:297",
+      "sourcePageId": "99:7",
+      "sourceUrl": "https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=111-285",
+      "dimensions": {
+        "width": 108,
+        "height": 108
+      },
+      "viewBox": "0 0 108 108",
+      "exportSettings": {
+        "format": "SVG_STRING",
+        "svgOutlineText": true,
+        "svgIdAttribute": true,
+        "svgSimplifyStroke": false,
+        "contentsOnly": true,
+        "colorProfile": "SRGB"
+      },
+      "originalMainComponent": true,
+      "canonicalSourceBytesPreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "raster": false,
+      "license": {
+        "scope": "Accepted project-specific StackCard Brand A Figma design; no third-party artwork license asserted"
+      }
+    },
+    {
+      "kind": "brand-svg",
+      "name": "stackcard-v2-app-icon-mono-dark.svg",
+      "family": "app-icon",
+      "variant": "MonoDark",
+      "assetPath": "assets/branding/design_v2/stackcard-v2-app-icon-mono-dark.svg",
+      "bytes": 519,
+      "sha256": "1fb1b65463cdc8bde9fecc8b27edbf946dae7ea39ec64b95c4ff0e706115123c",
+      "figmaMainId": "111:289",
+      "figmaSetId": "111:297",
+      "sourcePageId": "99:7",
+      "sourceUrl": "https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=111-289",
+      "dimensions": {
+        "width": 108,
+        "height": 108
+      },
+      "viewBox": "0 0 108 108",
+      "exportSettings": {
+        "format": "SVG_STRING",
+        "svgOutlineText": true,
+        "svgIdAttribute": true,
+        "svgSimplifyStroke": false,
+        "contentsOnly": true,
+        "colorProfile": "SRGB"
+      },
+      "originalMainComponent": true,
+      "canonicalSourceBytesPreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "raster": false,
+      "license": {
+        "scope": "Accepted project-specific StackCard Brand A Figma design; no third-party artwork license asserted"
+      }
+    },
+    {
+      "kind": "brand-svg",
+      "name": "stackcard-v2-app-icon-mono-light.svg",
+      "family": "app-icon",
+      "variant": "MonoLight",
+      "assetPath": "assets/branding/design_v2/stackcard-v2-app-icon-mono-light.svg",
+      "bytes": 518,
+      "sha256": "bac339eb46764f74f405a3e8f63e17b0cf1a30ace36949bce58be47e0ee6ba1a",
+      "figmaMainId": "111:293",
+      "figmaSetId": "111:297",
+      "sourcePageId": "99:7",
+      "sourceUrl": "https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=111-293",
+      "dimensions": {
+        "width": 108,
+        "height": 108
+      },
+      "viewBox": "0 0 108 108",
+      "exportSettings": {
+        "format": "SVG_STRING",
+        "svgOutlineText": true,
+        "svgIdAttribute": true,
+        "svgSimplifyStroke": false,
+        "contentsOnly": true,
+        "colorProfile": "SRGB"
+      },
+      "originalMainComponent": true,
+      "canonicalSourceBytesPreserved": true,
+      "geometryReconstructed": false,
+      "vectorOnly": true,
+      "raster": false,
+      "license": {
+        "scope": "Accepted project-specific StackCard Brand A Figma design; no third-party artwork license asserted"
+      }
+    }
+  ],
+  "designRegistry": {
+    "path": "docs/redesign/source/figma-design-v2.json",
+    "sha256": "017f9cda46ca32c1b5c3cce244b3f1c4a01f83e9fda3485b3df7c532814db251",
+    "sourceExportSha256": "172c3762fcf2f9d55da38e07bcbd74e6175b0ced5b02a96eca1272ecb78046e5",
+    "variableCount": 98,
+    "textStyleCount": 10,
+    "fullBaselineStyleCount": 50,
+    "allBaselineStyleDefinitionsExported": false,
+    "referenceOnly": true,
+    "generatedReferenceCodeImported": false
+  },
+  "runtimeSourceMap": {
+    "colorRoles": [
+      {
+        "sourceId": "VariableID:2:34",
+        "runtimeField": "background"
+      },
+      {
+        "sourceId": "VariableID:2:35",
+        "runtimeField": "surface"
+      },
+      {
+        "sourceId": "VariableID:2:36",
+        "runtimeField": "surfaceElevated"
+      },
+      {
+        "sourceId": "VariableID:2:37",
+        "runtimeField": "surfaceHover"
+      },
+      {
+        "sourceId": "VariableID:2:38",
+        "runtimeField": "border"
+      },
+      {
+        "sourceId": "VariableID:2:39",
+        "runtimeField": "borderSubtle"
+      },
+      {
+        "sourceId": "VariableID:2:40",
+        "runtimeField": "textPrimary"
+      },
+      {
+        "sourceId": "VariableID:2:41",
+        "runtimeField": "textSecondary"
+      },
+      {
+        "sourceId": "VariableID:2:42",
+        "runtimeField": "textMuted"
+      },
+      {
+        "sourceId": "VariableID:2:43",
+        "runtimeField": "accent"
+      },
+      {
+        "sourceId": "VariableID:2:44",
+        "runtimeField": "accentHover"
+      },
+      {
+        "sourceId": "VariableID:2:45",
+        "runtimeField": "accentSoft"
+      },
+      {
+        "sourceId": "VariableID:2:46",
+        "runtimeField": "primary"
+      },
+      {
+        "sourceId": "VariableID:2:47",
+        "runtimeField": "onPrimary"
+      },
+      {
+        "sourceId": "VariableID:2:48",
+        "runtimeField": "acid"
+      },
+      {
+        "sourceId": "VariableID:2:49",
+        "runtimeField": "cyan"
+      },
+      {
+        "sourceId": "VariableID:2:50",
+        "runtimeField": "pink"
+      },
+      {
+        "sourceId": "VariableID:2:51",
+        "runtimeField": "ink"
+      },
+      {
+        "sourceId": "VariableID:2:52",
+        "runtimeField": "success"
+      },
+      {
+        "sourceId": "VariableID:2:53",
+        "runtimeField": "warning"
+      },
+      {
+        "sourceId": "VariableID:2:54",
+        "runtimeField": "error"
+      },
+      {
+        "sourceId": "VariableID:36:8",
+        "runtimeField": "borderStrong"
+      },
+      {
+        "sourceId": "VariableID:41:319",
+        "runtimeField": "paper"
+      },
+      {
+        "sourceId": "VariableID:48:462",
+        "runtimeField": "sourceText"
+      },
+      {
+        "sourceId": "VariableID:48:464",
+        "runtimeField": "focus"
+      },
+      {
+        "sourceId": "VariableID:121:9",
+        "runtimeField": "textMeta"
+      },
+      {
+        "sourceId": "VariableID:121:10",
+        "runtimeField": "controlOutline"
+      },
+      {
+        "sourceId": "VariableID:121:11",
+        "runtimeField": "accentText"
+      },
+      {
+        "sourceId": "VariableID:121:12",
+        "runtimeField": "successText"
+      },
+      {
+        "sourceId": "VariableID:121:13",
+        "runtimeField": "primaryOutline"
+      }
+    ],
+    "textStyles": [
+      {
+        "sourceId": "S:5c69a84cfb6c7f914e5ea7e293e38453da3ed2c2,",
+        "runtimeTextThemeRoles": [
+          "displayLarge",
+          "displayMedium",
+          "displaySmall"
+        ]
+      },
+      {
+        "sourceId": "S:785b7b0fc2e09602baff4f2e94183aaf82c67b77,",
+        "runtimeTextThemeRoles": [
+          "headlineLarge",
+          "headlineMedium"
+        ]
+      },
+      {
+        "sourceId": "S:77eee136a57b096416dfa0af61defa6177e3b44f,",
+        "runtimeTextThemeRoles": [
+          "headlineSmall"
+        ]
+      },
+      {
+        "sourceId": "S:22de2df69b85117637eaa9c3faa12f2f28cc5cc0,",
+        "runtimeTextThemeRoles": [
+          "titleLarge"
+        ]
+      },
+      {
+        "sourceId": "S:69814583b61be40ade874d855f631363121d119e,",
+        "runtimeTextThemeRoles": [
+          "bodyLarge"
+        ]
+      },
+      {
+        "sourceId": "S:4a6ee253646c7d0f3a4662db841d5e13a350367f,",
+        "runtimeTextThemeRoles": [
+          "bodyMedium"
+        ]
+      },
+      {
+        "sourceId": "S:7905b448a5162790854f3c924725c287574c7e0b,",
+        "runtimeTextThemeRoles": [
+          "bodySmall"
+        ]
+      },
+      {
+        "sourceId": "S:8ac920cc9e10d056b3db3e3e0632dd8c4d1bdade,",
+        "runtimeTextThemeRoles": [
+          "titleMedium",
+          "labelLarge"
+        ]
+      },
+      {
+        "sourceId": "S:51cb8df0f776afc4ff9b82937d5fe0d33174b252,",
+        "runtimeTextThemeRoles": [
+          "titleSmall",
+          "labelMedium"
+        ]
+      },
+      {
+        "sourceId": "S:81c4c41a63ec9f51ebb83f17943f6e230e8ee5c8,",
+        "runtimeTextThemeRoles": [
+          "labelSmall"
+        ]
+      }
+    ],
+    "numericTokens": [
+      {
+        "sourceId": "VariableID:2:55",
+        "runtimeSymbol": "StackCardSpacing.xs",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:56",
+        "runtimeSymbol": "StackCardSpacing.sm",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:57",
+        "runtimeSymbol": "StackCardSpacing.md",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:58",
+        "runtimeSymbol": "StackCardSpacing.lg",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:59",
+        "runtimeSymbol": "StackCardSpacing.cardPadding",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:60",
+        "runtimeSymbol": "StackCardSpacing.xl",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:61",
+        "runtimeSymbol": "StackCardSpacing.xxl",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:62",
+        "runtimeSymbol": "StackCardSpacing.xxxl",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:63",
+        "runtimeSymbol": "StackCardRadius.small",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:64",
+        "runtimeSymbol": "StackCardRadius.medium",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:65",
+        "runtimeSymbol": "StackCardRadius.large",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:66",
+        "runtimeSymbol": "StackCardRadius.xlarge",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:2:67",
+        "runtimeSymbol": "StackCardRadius.capsule",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:36:9",
+        "runtimeSymbol": "StackCardSize.touchTarget",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:36:10",
+        "runtimeSymbol": "StackCardSize.contentMaxWidth",
+        "unit": "logicalPixels"
+      },
+      {
+        "sourceId": "VariableID:36:11",
+        "runtimeSymbol": "StackCardMotion.fast",
+        "unit": "milliseconds"
+      },
+      {
+        "sourceId": "VariableID:36:12",
+        "runtimeSymbol": "StackCardMotion.standard",
+        "unit": "milliseconds"
+      },
+      {
+        "sourceId": "VariableID:36:13",
+        "runtimeSymbol": "StackCardMotion.slow",
+        "unit": "milliseconds"
+      },
+      {
+        "sourceId": "VariableID:160:1057",
+        "runtimeSymbol": "StackCardSize.inputHeight",
+        "unit": "logicalPixels"
+      }
+    ],
+    "preservedUnmapped": "44 raw hex variables and5 numeric typography values stay in source; accepted10styles define UI scale"
+  },
+  "totalSvgCount": 33,
+  "renderDerivativeSvgCount": 1,
+  "renderDerivatives": [
+    {
+      "assetPath": "assets/icons/technology/flutter.render.svg",
+      "bytes": 459,
+      "sha256": "5e1c9d22047a24928ec93bd67d278fc4e178a56d69d14d3877d5f154760c5532",
+      "sourceAssetPath": "assets/icons/technology/flutter.svg",
+      "sourceSha256": "e84889cedbe669bf58daa0fc69dcf73a238d4dbc772b8cf1ab48743224690a2e",
+      "sourceUrl": "https://flutter.dev/flutter-brand-assets.zip",
+      "sourceArchivePath": "Flutter/icon_flutter/icon_flutter_wht.svg",
+      "figmaMainId": "145:65",
+      "transformation": "inline-css-presentation-attributes",
+      "cssSelector": ".cls-1",
+      "presentationAttributes": {
+        "fill": "#fff",
+        "opacity": "0.72"
+      },
+      "geometryPreserved": true,
+      "canonicalSourcePreserved": true,
+      "vectorOnly": true,
+      "raster": false,
+      "license": {
+        "scope": "Official brand asset; trademark guidelines apply. Separate per-asset permissive copyright license not asserted.",
+        "url": "https://docs.flutter.dev/brand"
+      },
+      "reason": "flutter_svg 2.3.0/vector_graphics_compiler 1.3.0 does not parse stylesheet elements; original polygon points/order/viewBox unchanged"
+    }
+  ]
+}
