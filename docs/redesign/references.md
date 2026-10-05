@@ -21,6 +21,7 @@
 - [Шрифты R3.1](#шрифты-r31)
 - [Иконки R3.2](#иконки-r32)
 - [Assets R3.3](#assets-r33)
+- [Состояния и motion R3.4](#состояния-и-motion-r34)
 - [Применение в StackCard](#применение-в-stackcard)
 - [Ограничения и следующий шаг](#ограничения-и-следующий-шаг)
 
@@ -31,7 +32,8 @@
 Срез проверки — 2026-10-05. Это результат R0: источники прочитаны, публичные
 изображения просмотрены, несколько демонстраций проверены в браузере.
 Этот исторический срез предшествовал выбору направления/логотипа R2.
-Теперь бренд A принят D024; fonts review R3.1 добавлен D027.
+Теперь бренд A принят D024; fonts review R3.1 добавлен D027. R3.3 принята D032;
+state/adapt/motion specimens R3.4 ожидают review D033.
 Результаты исходного исследования ниже не переаттестованы.
 Правила переноса заданы в [требованиях](requirements.md#референсы-и-сохранность-проекта):
 `REQ-REFERENCE-01..02`; применение планируется в [R1–R8](plan.md), экраны
@@ -355,7 +357,8 @@ images/href/external paints; badges используют настоящее те
 
 ## Assets R3.3
 
-Срез2026-10-05, D031. R3.3 расширяет прежний набор шестью нужными Lucide SVG:
+Срез2026-10-05, D031; компоненты приняты D032. R3.3 расширяет прежний набор
+шестью нужными Lucide SVG:
 camera, user-round, chevron-down, grip-vertical, pencil, plus.
 Источник — тот же [pinned commit500620a2](https://github.com/lucide-icons/lucide/tree/500620a2e8123f8d1db191538886dc0c223f69a9/icons)
 и [LICENSE](https://raw.githubusercontent.com/lucide-icons/lucide/500620a2e8123f8d1db191538886dc0c223f69a9/LICENSE).
@@ -374,6 +377,33 @@ Bytes скопированы без редактирования, raster заг�
 не входит в Flutter assets/pubspec. Реальные camera/gallery/profile media,
 permission/storage/cancel и фотографии конечного пользователя — будущая реализация.
 Generated demo не заменяет подтверждение прав на реальные пользовательские assets.
+
+---
+
+## Состояния и motion R3.4
+
+Срез2026-10-05, D033. R3.4 переиспользует принятые Manrope styles,
+semantic color/metrics и R3.2–R3.3 components/icons. Новые изображения,
+icon sources, fonts или packages не добавлены. Проектные основания —
+[REQ-EDITOR-03](requirements.md#req-editor-03--данные-и-ограниченное-оформление),
+[адаптивность и motion](requirements.md#адаптивность-и-motion):
+REQ-ADAPT-01..03 и REQ-MOTION-01..02. Новый внешний visual source не заявляется.
+
+Шесть событий и обычные180/240/280ms transitions документированы
+[в DS specimens R3.4](screens.md#r34--состояния-motion-и-адаптивность).
+Reduced/static0ms сохраняет те же title/status/selected/check и доступность
+действия. Existing motion/slow исправлен300→280, fast180/standard240
+сохранены; easing `cubic-bezier(0.2, 0, 0, 1)`. Bounce и длительности
+внешних tabs/stepper demos не перенесены. Board задаёт editable контракт;
+проигрываемый motion-прототип R7.3 и native implementations R8 этим шагом
+не проверены.
+
+StatePanel и LifecycleStatus показывают18 variants в Dark/Light. Working,
+persistence и publication независимы: local Saved/server Synced не
+обновляют public snapshot. Адаптивные320/390/430/768/844 fixtures используют
+existing contentMaxWidth600, четыре bottom tabs и horizontal actions.
+REF-08/09/10 остаются основаниями checks размеров, labels и контраста;
+статические Figma measurements не подменяют native accessibility acceptance.
 
 ---
 

@@ -28,7 +28,7 @@ StackCard создаёт разные структурированные Resume 
 перепроектирует визуальную систему и сценарии, сохраняя бизнес-логику, данные,
 интеграции и Material 3 как техническую основу Flutter.
 
-На **2026-10-05** активна **R3: дизайн-система**, текущая задача **R3.3**.
+На **2026-10-05** активна **R3: дизайн-система**, текущая задача **R3.4**.
 План R0 и три схемы IA R1.1 приняты прямыми поручениями начать первую фазу
 и перейти к следующему шагу. **R1.1–R1.3 — `done`**: R1.2 принята поручением
 исправить кнопки/поиск и затем продолжить (D015), правки проверены.
@@ -44,9 +44,10 @@ R1.3 принята поручением «переходи к следующе�
 к следующему этапу. Для продолжения закреплён рекомендованный Manrope;
 UI foundations обновлены, принятый Wordmark A и палитра сохранены.
 **R3.2 — `done`**, D030: Navigation/cards/TechnologyBadge приняты поручением
-продолжить. **R3.3 — `awaiting_review`**, D031: формы, stepper, фото и секции
-собраны в Dark/Light, включая keyboard и static ×2 specimens. Добавлены
-10 sets/67 variants, PhotoSourceSheet и6 vector icons. R3.4 ещё не начата.
+продолжить. **R3.3 — `done`**, D032: формы, stepper, фото и секции приняты
+поручением продолжить. **R3.4 — `awaiting_review`**, D033: states/motion/adaptive
+собраны и проверены. Добавлены2sets/18variants и10Dark/Light fixtures; четыре
+агента подготовили независимые части, ведущий интегрировал Figma последовательно.
 Постоянный адрес каждого документа принят D019; реализация URL-контракта предстоит.
 
 | **Состояние** | **Что подтверждено** |
@@ -54,7 +55,7 @@ UI foundations обновлены, принятый Wordmark A и палитра
 | Аудит и план | R0 принята поручением начать R1; исходные результаты и ограничения сохранены в audit/references |
 | IA Design v2 | [Navigation, ownership и lifecycle](screens.md#r11--информационная-архитектура); R1.1 принята поручением продолжить, D013 |
 | Low-fi Design v2 | [24 экрана R1.2](screens.md#r12--low-fi-основных-сценариев), [24 экрана R1.3](screens.md#r13--low-fi-resume-wizard-и-редактора) и [40 экранов R1.4](screens.md#r14--low-fi-projects-portfolio-и-публикации) приняты. Всего 88 phone frames, цветовые правки D020 проверены |
-| Визуальные макеты Design v2 | [Бренд A](screens.md#r23--принятый-бренд-и-направление) принят D024; R3.1 done D028, Manrope. [Navigation/cards/badges R3.2](screens.md#r32--навигация-карточки-и-technologybadge) приняты D030; [Forms/stepper/photo/sections R3.3](screens.md#r33--формы-stepper-фото-и-секции) проверены, awaiting_review D031; R3.4 и экраны R4–R6 не начаты |
+| Визуальные макеты Design v2 | [Бренд A](screens.md#r23--принятый-бренд-и-направление) принят D024; R3.1 done D028, Manrope. [Navigation/cards/badges R3.2](screens.md#r32--навигация-карточки-и-technologybadge) приняты D030; [Forms/stepper/photo/sections R3.3](screens.md#r33--формы-stepper-фото-и-секции) приняты D032; [States/motion/adaptive R3.4](screens.md#r34--состояния-motion-и-адаптивность) проверены, awaiting_review D033; экраны R4–R6 ещё не начаты |
 | Интерактивный прототип Design v2 | Не создан; отдельный результат R7 |
 | Реализованный Design v2 UI | Не перенесён; отдельное разрешение R8 после DESIGN_READY |
 | Backend новых сценариев | Не реализован этим заданием; пробелы и зависимости зафиксированы отдельно |
@@ -126,26 +127,27 @@ Design v2 нельзя честно реализовать. Перед R8 пол
 Одновременно активна одна фаза и одна согласованная задача; продолжать с первой
 незавершённой, сохраняя предыдущие решения и evidence.
 
-Текущая точка приёмки — **R3.3: формы, stepper, фото и секции**.
-[Поля и выбор](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1334),
-[создание и редактирование](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-1576),
-[Save над клавиатурой](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=163-2060)
-и [статический текст ×2](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=166-1988)
-собраны из существующих токенов и shared instances; masters отдельно на DS121:7.
-10 sets/67 variants, один sheet и6 Lucide icons добавляют доступные controls,
-drag+«Выше/Ниже», обязательные Label/Helper и optional photo/no-photo.
-Демопортрет явно обозначен и сохранён с [metadata](assets/r33-demo-portrait.json).
+Текущая точка приёмки — **R3.4: состояния, motion и адаптивность**, полная DS.
+[Состояния данных](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2036),
+[Save/Sync/Publish](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2110),
+[motion/reduced](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2214)
+и [адаптивные образцы](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=176-2418)
+собраны из shared components и прежних tokens. StatePanel5/LifecycleStatus13
+разделяют dirty/local Save/server ACK/explicit Publish; ошибка или неизвестный
+результат не получают ложного success. Save/Отмена закреплены над bottom tabs.
 
-Финальный audit513 texts: minimum4.833:1;103 control strokes: minimum4.365:1.
-Bounds/overlaps/property refs/unbound paints/touch failures0. Все четыре итоговых
-renders просмотрены. В static ×2 Save остаётся целым словом и над клавиатурой;
-это Figma reflow, native keyboard/media/OS scaling проверяются отдельно.
-Палитра и Wordmark A сохранены;50 styles прежние, новый Metrics/inputHeight56
-доводит variables до98. R3.1 done D028, R3.2 done D030.
+Проверены10Dark/Light fixtures:320,390,430,768 и844landscape, cap600, ru/en/URL
+wrapping. Шесть motion событий180/240/280ms имеют static0ms reduced equivalents
+с тем же feedback. Playable prototype — R7.3, native/runtime — R8.
+Audit393text nodes/786mode samples:minimum4.833:1;342interactive strokes:
+minimum4.365:1;96targets≥48×48. Bounds/overlaps/references/bindings/scopes
+failures0; итоговые renders просмотрены.98variables/50styles сохранены;
+единственная правка прежних values — motion/slow300→280, палитра/Wordmark A прежние.
 
-Следующая отдельная задача после приёмки R3.3 — **R3.4: состояния и motion**.
-Полная DS, native icons/clipboard/Back и runtime handoff остаются открытыми.
-R3.4 и перенос во Flutter не разрешены этим шагом.
+R3.1–R3.3 done. После приёмки R3.4 следующая отдельная задача — **R4.1**.
+Независимые части дизайна продолжаются несколькими агентами; Figma writes
+интегрирует ведущий последовательно. Полные экраны и финальный DESIGN_READY
+остаются будущими результатами.
 Low-fi сохраняют горизонтальные кнопки и поиск с лупой без заголовка.
 Политика URL принята D019; точная route scheme и миграция adapter остаются
 предпосылкой R8. DESIGN_READY/REDESIGN_DONE не установлены; runtime/backend

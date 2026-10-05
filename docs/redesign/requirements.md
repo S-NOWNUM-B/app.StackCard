@@ -64,7 +64,8 @@
 После Font Review D027 поручение продолжить закрыло R3.1, D028. Закреплён
 рекомендованный Manrope; [компоненты R3.2](screens.md#r32--навигация-карточки-и-technologybadge)
 приняты D030. [Формы/stepper/фото/секции R3.3](screens.md#r33--формы-stepper-фото-и-секции)
-проверены и ожидают review D031; R3.4 todo. Цвета/Wordmark A сохранены.
+приняты D032. [Состояния/motion/adaptive R3.4](screens.md#r34--состояния-motion-и-адаптивность) проверены,
+awaiting_review D033. Цвета/Wordmark A сохранены.
 Новый макет,
 интерактивный прототип, реализованный интерфейс и работающая backend-функция
 учитываются отдельно. Действующий Flutter содержит единый `PortfolioContent`
@@ -107,7 +108,7 @@ R2.1 и разрешило R2.2 (D022), без выбора A/B. Brand specimens
 Связанные пилоты A / Cyber Editorial — основа R3; B сохранён как история.
 Foundations созданы D025, пересмотрены D027 и приняты поручением продолжить
 D028: R3.1 done, закреплён рекомендованный Manrope. Полная DS и runtime ещё
-не приняты; R3.2 done D030, компоненты R3.3 awaiting_review D031.
+не приняты; R3.2 done D030, R3.3 done D032, R3.4 awaiting_review D033.
 
 ### REQ-SCOPE-02 — Отдельная инициатива
 
@@ -861,20 +862,20 @@ prototype/runtime evidence ещё не создавалось. История и
 | `REQ-PROJECT-03` | `R1.4`, `R3.2`, `R4.3` | `S-PROJECTS` | `C08`, `C13`, `C-ASSET` | R3.2 ProjectCard146:696/148:894: cover placeholder/title/description/source/icon badges, PASS; fixture без фото, user asset/runtime pending |
 | `REQ-PROJECT-04` | `R1.4`, `R5.2a`, `R5.2b`, `R5.2c` | `S-PROJECTS`, `S-PROJECT-EDITOR`, `S-GITHUB`, `S-GITHUB-REVIEW` | `C13`, `C-GITHUB` | H01–H16 R1.4: manual/import/loading/empty/error/review/stale, принято D020; runtime не проверен |
 | `REQ-RESUME-01` | `R1.2`, `R1.3`, `R4.2` | `S-RESUMES`; сохранённый Resume | `C09`, `C10`, `C13` | список R1.2 принят; переход к saved Resume R1.3 принят D017; UI не проверен |
-| `REQ-RESUME-02` | `R1.3`, `R3.3`, `R5.1a`, `R5.1b`, `R5.1c` | `S-RESUME-WIZARD`, `S-RESUME-EDITOR` | `C04`, `C10`, `C12` | R3.3 WizardStepper161:1462/163:1576: пять шагов, caption из Active, Skip/Back contract; static PASS, awaiting_review D031; сохранение ввода/full flow/native pending |
-| `REQ-RESUME-03` | `R1.3`, `R3.3`, `R4.5`, `R5.1a`, `R5.1c`, `R5.1d` | `S-PROFILE`, `S-RESUME-WIZARD`, `S-RESUME-EDITOR`, `S-PREVIEW`, `S-PUBLIC-RESUME` | `C07`, `C-ASSET` | R3.3 PhotoControl161:1564/PhotoSourceSheet161:1565: optional no-photo/selected demo/replace/delete/show; Dark/Light PASS, awaiting_review D031; real camera/gallery/storage/native pending |
+| `REQ-RESUME-02` | `R1.3`, `R3.3`, `R5.1a`, `R5.1b`, `R5.1c` | `S-RESUME-WIZARD`, `S-RESUME-EDITOR` | `C04`, `C10`, `C12` | R3.3 WizardStepper161:1462/163:1576: пять шагов, caption из Active, Skip/Back contract; static PASS, done D032; сохранение ввода/full flow/native pending |
+| `REQ-RESUME-03` | `R1.3`, `R3.3`, `R4.5`, `R5.1a`, `R5.1c`, `R5.1d` | `S-PROFILE`, `S-RESUME-WIZARD`, `S-RESUME-EDITOR`, `S-PREVIEW`, `S-PUBLIC-RESUME` | `C07`, `C-ASSET` | R3.3 PhotoControl161:1564/PhotoSourceSheet161:1565: optional no-photo/selected demo/replace/delete/show; Dark/Light PASS, done D032; real camera/gallery/storage/native pending |
 | `REQ-RESUME-04` | `R1.3`, `R5.1a`, `R5.1b`, `R5.1c`, `R5.1d` | `S-RESUME-WIZARD`, `S-RESUME-EDITOR`, `S-PREVIEW` | `C-MODEL`, `C08` | low-fi R1.3 принят D017; UI не проверен |
 | `REQ-PORTFOLIO-01` | `R1.4`, `R4.4`, `R5.3a`, `R5.4a`, `R5.4b`, `R5.4c` | `S-PORTFOLIOS`, `S-PORTFOLIO-EDITOR`, `S-PUBLISH`, `S-SHARE` | `C09`, `C10`, `C-MODEL` | H17/H18/H25–H31/H35/H36/H40 R1.4: create/edit/publish/unpublish/duplicate, принято D020; runtime не проверен |
 | `REQ-PORTFOLIO-02` | `R1.4`, `R5.3c`, `R6.4` | `S-PREVIEW`, `S-PUBLIC-PORTFOLIO` | `C07`, `C08`, `C17` | H24/H32/H37/H38 R1.4: preview/public link selection/access, принято D020; real photo/anonymous runtime не проверены |
 | `REQ-PORTFOLIO-03` | `R1.4`, `R5.3b` | `S-PORTFOLIO-EDITOR`, `S-PROJECT-EDITOR` | `C-MODEL`, `C12` | H19–H23 R1.4: create+attach и remove relation сохраняют library, принято D020; runtime не проверен |
 | `REQ-SHARE-01` | `R1.4`, `R5.4a`, `R5.4b`, `R5.4c`, `R6.4` | `S-HOME`, `S-RESUMES`, `S-PORTFOLIOS`, `S-PUBLISH`, `S-SHARE`, PUBLIC | `C09`, `C10`, `C17` | H25–H39 R1.4: explicit publication/Copy/Open/Share/unavailable, принято D020; URL политика принята D019; native share/backend не проверены |
 | `REQ-SETTINGS-01` | `R1.2`, `R4.5`, `R4.6`, `R4.7a`, `R4.7b`, `R4.7c` | `S-SETTINGS`, `S-PROFILE`, `S-CONTACTS`, `S-ACCOUNT`, `S-PRIVACY`, `S-APP` | `C02`, `C06`, `C13` | low-fi R1.2 приняты, D015; UI не проверен |
-| `REQ-SETTINGS-02` | `R1.2`, `R3.3`, `R4.6`, `R5.1a`, `R5.1c`, `R5.3a` | `S-CONTACTS`, `S-RESUME-EDITOR`, `S-PORTFOLIO-EDITOR` | `C06`, `C-MODEL` | R3.3 fields/selectors, Add link/CollectionRow161:1850: label+URL, document selection/reorder; public contacts отделены от login. Static PASS, awaiting_review D031; CRUD persistence/native pending |
+| `REQ-SETTINGS-02` | `R1.2`, `R3.3`, `R4.6`, `R5.1a`, `R5.1c`, `R5.3a` | `S-CONTACTS`, `S-RESUME-EDITOR`, `S-PORTFOLIO-EDITOR` | `C06`, `C-MODEL` | R3.3 fields/selectors, Add link/CollectionRow161:1850: label+URL, document selection/reorder; public contacts отделены от login. Static PASS, done D032; CRUD persistence/native pending |
 | `REQ-SETTINGS-03` | `R1.2`, `R0.1`, `R0.4`, `R4.6`, `R4.7a`, `R4.7b`, `R4.7c` | `S-CONTACTS`, `S-ACCOUNT` | `C06`, `C-SCOPE` | low-fi R1.2 приняты, D015; UI не проверен |
 | `REQ-SETTINGS-04` | `R1.2`, `R4.5`, `R4.7a`, `R4.7b`, `R4.7c`, `R5.4a`, `R5.4c` | `S-PROFILE`, `S-ACCOUNT`, `S-PUBLISH` | `C06`, `C09`, `C13` | R1.2 принят; F20/H39 обновлены по D019: постоянные ссылки при rename; ошибки account/runtime не проверены |
 | `REQ-EDITOR-01` | `R1.3`, `R1.4`, `R3.3`, `R5.1c`, `R5.2a`, `R5.3a`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C10`, `C12`, `C16` | R3.3 CollectionRow/EditorActionBar161:1872: focused edit/visibility/reorder, Save над keyboard264 и отдельные working/sync/Publish contracts; static PASS D031, full editor/runtime pending |
 | `REQ-EDITOR-02` | `R1.3`, `R1.4`, `R3.3`, `R5.1c`, `R5.2a`, `R5.3b`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C12`, `C15`, `C16` | R3.3 horizontal actions≥48, drag+Выше/Ниже, disabled first/last reason, long labels/static ×2 без сломанного Save; metadata/render PASS D031. Native/OS scaling pending |
-| `REQ-EDITOR-03` | `R1.3`, `R1.4`, `R3.3`, `R5.1c`, `R5.3a`, `R5.4a`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C10`, `C12`, `C-MODEL` | R3.3 EditorActionBar: Save local отдельно от Apply/Sync/Publish, owner Status TEXT, fixtures163:2060/166:1988 PASS D031; lifecycle states R3.4, persistence/native pending |
+| `REQ-EDITOR-03` | `R1.3`, `R1.4`, `R3.3`, `R3.4`, `R5.1c`, `R5.3a`, `R5.4a`, `R6.3` | EDITORS; `S-WEB-WORKSPACE` | `C10`, `C12`, `C-MODEL` | R3.3 EditorActionBar accepted D032; R3.4 LifecycleStatus175:2101:13states, local Save/ACK/explicit Publish иunknown outcome разделены;176:2110 static PASS D033. Actual persistence/native pending |
 | `REQ-TECH-01` | `R3.2`, `R4.3`, `R5.1b`, `R5.3c`, `R6.4` | `S-PROJECTS`, `S-RESUME-EDITOR`, `S-PREVIEW`, PUBLIC | `C08`, `C16` | R3.2 TechnologyBadge144:180/MoreTechnologies144:198: icon+Name TEXT, compact+N48/full wrap,148:894 PASS; integration pending |
 | `REQ-TECH-02` | `R3.2`, `R3.4` | `S-PROJECTS`, EDITORS; PUBLIC | `C08`, `C14`, `C-ASSET` | Lucide/Simple Icons и official Flutter/Dart sources/license caveats проверены; editable vectors+liveName, Dark/Light render PASS; native exports pending |
 | `REQ-VISUAL-01` | `R2.1`, `R2.2`, `R2.3`, `R3.4` | ВСЕ | `C01`, `C04`, `C05`, `C-PALETTE` | Бренд A D024; R3.1 done D028, Manrope; R3.2 components148:340/148:894 done D030; полный продукт pending |
@@ -887,13 +888,13 @@ prototype/runtime evidence ещё не создавалось. История и
 | `REQ-TYPE-02` | `R2.1`, `R2.2`, `R3.1`, `R3.4` | ВСЕ | `C14`, `C16`, `C-ASSET` | D027 OFL/subsets3кандидатов проверены; D028 продолжение закрепило рекомендованный Manrope. 244 foundation texts обновлены; Wordmark A сохранён, native shaping pending |
 | `REQ-LOGO-01` | `R2.1`, `R2.2`, `R2.3` | `S-HOME`, `S-SETTINGS`, `S-PUBLIC-RESUME`; app icon | `C-ASSET` | Бренд A принят D024: Mark110:282/Wordmark111:284/AppIcon111:297, прежние IDs/variants сохранены в StackCard / v2. B и legacy — история; native exports pending |
 | `REQ-LOGO-02` | `R2.1`, `R2.2`, `R2.3`, `R3.4` | `S-HOME`, `S-SETTINGS`, `S-PUBLIC-RESUME`; app icon | `C-ASSET`, `C14` | R2.2 small-size/восемь UI contexts проверены, A принят D024; cleaner16/UI32, Light Ink. Foundations используют Wordmark A; native exports pending |
-| `REQ-FIGMA-01` | `R3.1`, `R3.2`, `R3.3`, `R3.4` | Figma components; ВСЕ | `C-ASSET`, `C-SCOPE` | DS121:7: R3.2 done D030; R3.3 добавляет10 sets/67 variants,1 sheet/6icons,98 vars/50 прежних styles. TEXT/SWAP/BOOLEAN/bindings audit PASS,12 intentional static scale overrides; awaiting_review D031, R3.4 todo |
+| `REQ-FIGMA-01` | `R3.1`, `R3.2`, `R3.3`, `R3.4` | Figma components; ВСЕ | `C-ASSET`, `C-SCOPE` | DS121:7: R3.2/R3.3 done; R3.4 StatePanel175:2056(5)/LifecycleStatus175:2101(13),State-only props,instances/bindings/styles/scopes PASS.98vars/50styles; awaiting_review D033, runtime pending |
 | `REQ-FIGMA-02` | `R0.2`, `R0.3`, `R1.1`, `R7.4` | Документы; Figma v2 | `C-SCOPE` | зафиксировано R0 |
-| `REQ-ADAPT-01` | `R7.2` | ВСЕ | `C11`, `C15`, `C16` | целевое; не проверено в UI |
-| `REQ-ADAPT-02` | `R1.2`, `R4.1`, `R4.2`, `R4.3`, `R4.4`, `R7.2` | ROOT; tablet Flutter | `C11`, `C16` | целевое; не проверено в UI |
-| `REQ-ADAPT-03` | `R7.2`, `R7.3` | ВСЕ | `C12`, `C13`, `C16` | целевое; не проверено в UI |
-| `REQ-MOTION-01` | `R3.4`, `R7.3` | ROOT; EDITORS; `S-SHARE` | `C-MOTION` | целевое; не проверено в UI |
-| `REQ-MOTION-02` | `R4.7c`, `R7.3` | `S-APP`; ВСЕ | `C-MOTION`, `C16` | целевое; не проверено в UI |
+| `REQ-ADAPT-01` | `R3.4`, `R7.2` | ВСЕ | `C11`, `C15`, `C16` | R3.4 Adaptive176:2418:10Dark/Light component fixtures320/390/430/768/844landscape; width reflow, cap600, bounds PASS D033. Full screens R7.2/native pending |
+| `REQ-ADAPT-02` | `R1.2`, `R3.4`, `R4.1`, `R4.2`, `R4.3`, `R4.4`, `R7.2` | ROOT; tablet Flutter | `C11`, `C16` | R3.4 tablet768/landscape844 retain4bottom tabs and centered max600content, no rail; static geometry/render PASS D033. Full roots R4/R7.2/native pending |
+| `REQ-ADAPT-03` | `R3.4`, `R7.2`, `R7.3` | ВСЕ | `C12`, `C13`, `C16` | R3.4 long ru/en/URL wrap, pinned Save/Cancel≥48, clipped scroll viewport/reserved SafeArea PASS D033; R3.3 static keyboard/×2 accepted D032. Native scrolling/keyboard/OS scale pending |
+| `REQ-MOTION-01` | `R3.4`, `R7.3` | ROOT; EDITORS; `S-SHARE` | `C-MOTION` | R3.4 Motion176:2214:6events press/tab/content/wizard/editor/copy;180/240/280ms,easing cubic-bezier(0.2,0,0,1),input not blocked contract. Static specs PASS D033; playable prototype R7.3/runtime pending |
+| `REQ-MOTION-02` | `R3.4`, `R4.7c`, `R7.3` | `S-APP`; ВСЕ | `C-MOTION`, `C16` | R3.4 Motion176:2214:all6events reduced0ms with identical final feedback,Copy confirmed text retained. Static specimens PASS D033; actual app setting R4.7c/prototype R7.3/runtime pending |
 | `REQ-WEB-01` | `R6.1`, `R6.2`, `R6.3`, `R6.4` | `S-WEB-LANDING`, `S-WEB-AUTH`, `S-WEB-DOWNLOAD`, `S-WEB-WORKSPACE`, PUBLIC | `C-WEB` | целевое; не проверено в UI |
 | `REQ-WEB-02` | `R6.1`, `R6.2` | `S-WEB-LANDING`, `S-WEB-DOWNLOAD` | `C-WEB`, `C-ASSET` | целевое; не проверено в UI |
 | `REQ-WEB-03` | `R6.3`, `R7.2` | `S-WEB-WORKSPACE` | `C12`, `C16`, `C-WEB` | целевое; не проверено в UI |
