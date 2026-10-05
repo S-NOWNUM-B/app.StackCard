@@ -23,6 +23,7 @@
 - [Assets R3.3](#assets-r33)
 - [Состояния и motion R3.4](#состояния-и-motion-r34)
 - [Источники экранов R4](#источники-экранов-r4)
+- [Источники сценариев R5](#источники-сценариев-r5)
 - [Применение в StackCard](#применение-в-stackcard)
 - [Ограничения и следующий шаг](#ограничения-и-следующий-шаг)
 
@@ -35,7 +36,8 @@
 Этот исторический срез предшествовал выбору направления/логотипа R2.
 Теперь бренд A принят D024; fonts review R3.1 добавлен D027. R3.3 принята D032;
 state/adapt/motion specimens R3.4 и полная R3 приняты D034 после review D033.
-R4.1–R4.7c собраны одним пакетом и ожидают review D035; визуальный просмотр/preview/run
+R4.1–R4.7c приняты D036 после review D035; вся следующая R5 в работе
+по интерпретации продолжения с прежним full-phase/parallel/no-preview режимом; визуальный просмотр/preview/run
 пропущены по прямому запросу D034, не считаются пройденной проверкой.
 Результаты исходного исследования ниже не переаттестованы.
 Правила переноса заданы в [требованиях](requirements.md#референсы-и-сохранность-проекта):
@@ -412,8 +414,8 @@ REF-08/09/10 остаются основаниями checks размеров, la
 
 ## Источники экранов R4
 
-Scope D034 — все девять задач R4.1–R4.7c одним пакетом; результат ожидает
-review D035. Экраны собраны из принятой DS R3: Manrope/brand A, semantic tokens, shared
+Scope D034 — все девять задач R4.1–R4.7c одним пакетом; результат D035
+принят D036. Экраны собраны из принятой DS R3: Manrope/brand A, semantic tokens, shared
 Navigation/Cards/TechnologyBadge/Forms/Photo/CollectionRow/StatePanel и
 LifecycleStatus. Повторное использование сохраняет указанные выше sources
 и license notices; новых icon packs или изображений автоматически не добавляет.
@@ -434,8 +436,27 @@ SearchField184:2784 (Empty184:2766/Filled184:2772/Focus184:2778) добавле�
 содержит9boards/61states/122Dark-Light frames; palette values/styles/variable counts сохранены
 без drift; onPrimary расширен STROKE_COLOR scope без смены color values. ProjectListItem185:2771 и PortfolioListItem188:2861 — scoped
 compositions прежних R3 elements; новых media/font sources не добавлено.
-R5 flows, backend/media/schema и native implementation остаются будущими
-отдельно разрешаемыми результатами.
+R5 flows теперь проектируются отдельно в scope D036; backend/media/schema
+и native implementation остаются будущими отдельно разрешаемыми результатами.
+
+---
+
+## Источники сценариев R5
+
+Следующая R5 начата D036 после приёмки всего пакета R4. Поручение продолжить
+интерпретировано в сохранённом full-phase/parallel/no-preview режиме;
+пользователь не перечислял все 13 задач R5 буквально. Wizard/edit/import/review/
+attachments/publication используют принятые fonts/tokens/assets R3–R4:
+Manrope, brand A, Lucide/Simple Icons/official Flutter-Dart и помеченный
+R3.3 generated_demo Portrait. Новые external visual sources или media
+не заявляются до фактического появления и проверки.
+
+Save, private sync ACK и explicit Publish остаются отдельными результатами;
+import/source review не перезаписывают curated/public данные автоматически.
+R5 static specimens не доказывают работу native camera/gallery, SDK/OAuth,
+cloud publication или реального sharing. Визуальный просмотр/preview/run
+остаются пропущенными по сохранённому запросу; actual IDs и metadata/contrast
+QA будут добавлены после сборки. R6+ и runtime R8 не начаты.
 
 ---
 

@@ -28,6 +28,7 @@
 - [R3.3 — Формы, stepper, фото и секции](#r33--формы-stepper-фото-и-секции)
 - [R3.4 — Состояния, motion и адаптивность](#r34--состояния-motion-и-адаптивность)
 - [R4 — Основные экраны и настройки](#r4--основные-экраны-и-настройки)
+- [R5 — Создание, редактирование и публикация](#r5--создание-редактирование-и-публикация)
 - [Переходы и действия](#переходы-и-действия)
 - [Состояния и компоненты](#состояния-и-компоненты)
 - [Реестр Figma](#реестр-figma)
@@ -38,7 +39,8 @@
 
 Срез R0 — 2026-10-05, статический аудит; далее добавлены результаты R1.1–R1.4
 и шесть визуальных пилотов R2.1, brand specimens R2.2, выбор A в R2.3
-и Dark/Light foundations R3.1, components R3.2–R3.4, state/motion/adapt specimens и R4 roots/settings.
+и Dark/Light foundations R3.1, components R3.2–R3.4, state/motion/adapt specimens,
+R4 roots/settings и согласованный пакет R5 editors/wizard/publication.
 `S-*` — ID целевого экрана, а не реализованный route. Новые route paths и
 runtime screen IDs не назначены; созданные IA и low-fi frames перечислены отдельно. Конкретные
 paths согласуются вместе с guards/deep links перед переносом. Существующие пути
@@ -1380,6 +1382,87 @@ search с лупой сохраняются в обеих темах; первы
 Save/sync/Publish/provider/delete/OS behavior ими не доказаны. Playable prototype
 и DESIGN_READY остаются R7. **R4.1–R4.7c и вся R4 — `awaiting_review`, D035**;
 следующая R5 требует отдельного поручения.
+
+---
+
+## R5 — Создание, редактирование и публикация
+
+Поручение продолжить после R4 принято как её приёмка и разрешение **всей
+R5.1a–R5.4c**, D036. Пакет сохраняет Manrope, принятый бренд A и editable
+instances общей DS. Текущий статус — `in_progress`: реальные node IDs,
+числа и результаты проверки публикуются только после завершённой сборки.
+Прежний срез R4/D035 и его 122 phone IDs выше сохранён как история.
+
+Сценарии предусматривают nested 390×844 screens с Back и возвращением к
+captured origin, без bottom navigation. Поля, selection, section controls и
+fixed footer отделены от прокручиваемого содержимого. Демонстрационные данные
+и runtime-пробелы отмечаются в captions **вне продуктового viewport**.
+Визуальный просмотр, preview и запуск приложения пропускаются в сохранённом
+режиме D034/D036; static frames не считаются playable prototype.
+
+### Состав и границы R5
+
+| **Задача** | **Контракт и обязательные состояния** |
+|:---|:---|
+| R5.1a / Resume: профиль и контакты | Wizard Steps1–2, предложения базового Profile и документные overrides; optional photo/no-photo, selected public contacts, Back/Skip, denied/retry без потери ввода |
+| R5.1b / Resume: опыт, технологии и проекты | Steps3–4: опыт/образование/technologies/global Project selection, empty и optional skip; icon+label/wrap без вымышленных достижений или skill levels |
+| R5.1c / Resume: focused editor | Список секций, отдельная правка без повторного wizard, document-local overrides и явный review Profile diff; Save/Cancel и сохранность текущего ввода |
+| R5.1d / Resume: preview | Step5 и структурированный одно-column preview с выбранным фото, no-photo и длинным содержимым; пустые секции скрыты, переход к отдельному Publish |
+| R5.2a / Ручной Project | Global create/edit со stable ID, no-cover placeholder, icon+text technologies; blank title/URL validation, media failure, local Save error и unsaved exit; без association-owned featured/visible в global форме |
+| R5.2b / GitHub Import | Выбор repositories, already imported и dedup по stable repository ID; pagination/cache/rate/empty/error с удержанием selection, explicit Add и отдельный Save |
+| R5.2c / GitHub Review | Source/curated diff, сохранённые ручные overrides, explicit Accept/Ignore/Cancel; stale source/owner блокирует старый apply, после mutation нужен отдельный Save |
+| R5.3a / Portfolio: создание и editor | Named private Portfolio из предложения Profile; content/appearance/preview раздельны, validation/Save/Cancel, несколько outputs вместо singleton preview |
+| R5.3b / Portfolio: Project attachments | Add existing либо create global+attach; порядок, visible/featured принадлежат связи; remove relation сохраняет global Project, drag имеет альтернативы Выше/Ниже |
+| R5.3c / Portfolio: секции и оформление | Focused section edit, show/hide/order, ограниченные layout/accent/photo controls; full/no-photo readable preview, без трёх узких панелей или свободного canvas |
+| R5.4a / Публикация | Working/Unsaved, durable local Save, pending/error, matching server ACK и Published различимы; first/update Publish explicit, unknown result требует status reconciliation |
+| R5.4b / Ссылка и sharing | Постоянные Copy/Open/Share после re-open опубликованного документа; отдельные hit areas и Copied только после clipboard write, draft предлагает Publish без фиктивной ссылки |
+| R5.4c / Опасные действия и адреса | Unpublish/delete/duplicate/rename confirmations, unknown outcomes без ложного success; stable document URL при rename, duplicate новый private ID без inherited publication/link, сохранность общей библиотеки и связей |
+
+**Сохранение и публикация:** изменение формы/Apply не равно durable Save.
+Local Save завершает запись captured revision; Synced требует matching server
+ACK этой же версии. Старый ACK не подтверждает новый ввод. Publish доступен
+только для текущей сохранённой и подтверждённой версии и обновляет public
+snapshot отдельным явным действием. Редактирование, local Save и sync не
+изменяют уже опубликованный snapshot. Неизвестный Publish/Unpublish/delete
+outcome требует сверки статуса до утверждения результата.
+
+**База и документы:** Profile suggestions не перезаписывают существующие
+outputs без review; локальные overrides сохраняются. Resume/Portfolio используют
+selected public contacts, не login email, providers или private notes. Project
+живёт в общей библиотеке; order/visible/featured и remove из Portfolio относятся
+к attachment. Включённое Resume может быть частным в owner preview, но его
+public link требует собственной публикации.
+
+**Постоянные ссылки:** демонстрационные `example.com/d/r_7f4c` и
+`example.com/d/p_8a2e` показывают document-owned адрес по D019. Rename документа
+или username не меняет его адрес; republish использует прежний адрес.
+Duplicate создаёт новый private документ и не наследует public URL/status.
+Макеты не утверждают, что текущий username adapter уже поддерживает эту схему.
+
+### Реестр экранов R5
+
+Реальные ссылки на boards и пары Dark/Light будут добавлены из фактического
+ledger завершённой сборки. До этого node IDs, количество созданных screens и
+успешная проверка здесь не заявлены.
+
+### Проверки и ограничения R5
+
+Финальная структурная проверка должна подтвердить requirement coverage,
+Dark/Light pairing, Manrope/styles, semantic paints, contrast, bounds/overlap,
+≥48×48 interactive areas, fixed Save/Cancel/step footer, отсутствие вымышленных
+фактов и разделение global/association/publication. Пока результат не получен,
+PASS и пользовательская готовность не установлены.
+
+Current runtime сохраняет singleton content, plain-text Resume, legacy global
+Project flags и username-based publication adapter. Multiple-output/contact/URL
+migration, document-local overrides/attachments, Project cover/media,
+provider/storage/controller integration и реальные anonymous pages остаются
+предпосылками переноса R8. GitHub source/cache/review и local/sync contracts
+существуют отдельно от нового Figma UI; их наличие не подтверждает новый
+end-to-end flow. Native keyboard/SafeArea, caret/scroll-to-focus, OS text scale,
+TalkBack/VoiceOver, clipboard/share/browser/permissions и unknown-outcome
+recovery требуют реальной приёмки. Playable prototype и DESIGN_READY — R7;
+web R6, runtime R8 и Git mutations этим пакетом не выполняются.
 
 ---
 
