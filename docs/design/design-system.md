@@ -2,18 +2,21 @@
 
 # StackCard Design
 
-**Целевая дизайн-система Figma: editorial cyberpunk, developer tooling и controlled neon**
+**Исторический guide от 2026-10-04: editorial cyberpunk, developer tooling и controlled neon**
 
-![Design target Figma](https://raster.shields.io/badge/Design-Figma_target-111111?style=for-the-badge)
+![Design historical](https://raster.shields.io/badge/Design-historical-111111?style=for-the-badge)
 ![Accent Acid Lime](https://raster.shields.io/badge/Accent-Acid_Lime-C7FF1A?style=for-the-badge)
 
 </div>
 
 ---
 
-Этот guide определяет **целевой дизайн**, принятый по новым требованиям
-2026-10-04. Он заменяет прежнее направление Obsidian / Signal Red / Electric
-для новой работы в [Figma StackCard](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard).
+Этот guide сохраняет **исторический target от 2026-10-04**. Актуальные требования
+Design v2 находятся в [requirements](../redesign/requirements.md), приёмка —
+в [плане](../redesign/plan.md). Бренд A выбран D024; [foundations R3.1](../redesign/screens.md#r31--цвета-типографика-и-метрики)
+ожидают review D025. Ниже сохранены прежние композиции, шрифтовые предложения
+и recolor S как история; они не переопределяют новый знак A или предложенный
+Noto Sans и usage rules Design v2.
 Текущий Flutter пока использует красный primary, одиночный portfolio draft
 и прежнюю навигацию; runtime tokens, schema и assets этим документом не изменены.
 Историческая приёмка прежнего UI сохраняется в [product spec](../product/product-spec.md#редизайн-мобильного-интерфейса).
