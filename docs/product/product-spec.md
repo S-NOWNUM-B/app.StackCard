@@ -92,7 +92,8 @@ guest draft переносится только явно из Settings в пус
 это не означает завершения оставшихся auth сценариев. Phase 9 завершена;
 Phase 10 завершена; Phase 11 и последующие этапы требуют отдельного поручения.
 Основная разработка функций приостановлена перед Phase11. По D040 активна
-полная R7.1–R7.4 [Design v2](../redesign/README.md), global graph QA pending;
+полная R7.1–R7.4 [Design v2](../redesign/README.md), source build/structural QA
+PASS D041, package awaiting_review;явная приёмка/DESIGN_READY pending;
 R8/R9 прямо разрешены на `redesign/full-app`. Независимые Flutter theme/shared
 controls/assets, live Brand A, Projects и поддерживаемые Settings перенесены
 параллельно R7. Actual headless regression:950/950 PASS29s,analyze0issues3.8s,
@@ -500,7 +501,8 @@ web-редактор и публичные портфолио. Этот разд
 **Phase 0–6 завершены:** основа, UI, состояние, архитектура, GitHub Import, offline и Builder проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
 **С 2026-10-05 основная разработка новых функций приостановлена:** R7
-[Design v2](../redesign/README.md) in_progress D040, global graph QA pending.
+[Design v2](../redesign/README.md) awaiting_reviewD041:source package/graphQA
+PASS,явная приёмка/DESIGN_READY pending.
 D040 также разрешило R8/R9 на `redesign/full-app`; независимые поддерживаемые
 slices перенесены параллельно, actual950-case regression PASS. Полная
 implementation/acceptance и prerequisite scope ещё не закрыты; конкретный
@@ -598,8 +600,14 @@ R5 editable document clones.96Noto Wordmark и462originalFlutter/Dart fills —
 targeted preservation exemptions. Landing1440×3475/390×5628; structural PASS
 не доказывает browser rendering/native/cloud/route availability. Visual
 inspection/preview/run пропущены по сохранённому запросу.
-**R7 — in_progress D040**: весь пакет строится на page221:7/board221:8;
-aggregate graph QA ещё pending. **R8/R9 — in_progress D040**, независимая
+**R7 — awaiting_review D041**: source package/structural QA завершены;
+[portable handoff](../redesign/source/r7-handoff.json) фиксирует2736 actualbindings
+(1758mobile/978web),879 mobile / 946 web contracts,974 web controls;723 roots / 52255 nodes /
+15822 TEXT,328 unique starts.22 contract chunks+topology PASS,11 failure categories0;
+6 standard/reduced motionpairs same targets,noTIMERS/noSET_VARIABLE;
+98values/50 style IDs exact.12 new adaptive+10 reused+2 keyboard sources,180 static ×2
+texts/contrast PASS;native keyboard/OS scaling не доказаны. Preview/playback/run
+omitted; R7.4 явная приёмка/DESIGN_READY pending. **R8/R9 — in_progress D040**, независимая
 часть UI внедрена на `redesign/full-app`: Manrope/semantic Lime/shared
 controls, StackCardIcon/TechnologyBadge, live Brand A, query-only Projects,
 Settings/appearance/account и tablet bottom navigation. Три действующих roots

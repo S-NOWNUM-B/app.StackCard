@@ -5,7 +5,7 @@
 **Поэтапный редизайн с явными границами, проверками и приёмкой**
 
 ![Phase R7](https://raster.shields.io/badge/Phase-R7-C7FF1A?style=for-the-badge)
-![Status in progress](https://raster.shields.io/badge/Status-in_progress-14161B?style=for-the-badge)
+![Status awaiting review](https://raster.shields.io/badge/Status-awaiting_review-14161B?style=for-the-badge)
 
 </div>
 
@@ -35,16 +35,18 @@ R1.4 и R1 — `done`. Поручение «переходи к следующе
 R2.1 и разрешило R2.2 (D022), без выбора A/B. Поручение «вариант бренда мне
 понавился А. приступай к следующей фазе» приняло бренд A и разрешило R3.1,
 D024: R2.2/R2.3/R2 done. Связанные пилоты A служат основой следующей фазы.
-R7 — `in_progress`, D040; весь пакет R6 принят после D039. Последнее прямое
+R7 — `awaiting_review`, D041: source package/structural QA завершены;
+явная пользовательская приёмка/DESIGN_READY pending. Пакет R6 принят D040 после D039. Последнее прямое
 поручение завершить R7/R8/R9, увеличить число агентов и применить результат на
 `redesign/full-app` разрешает перенос и регрессию; повторного phase approval нет.
 Все четыре задачи R7 выполняются одним пакетом. В том же разрешённом parallel
 режиме независимые R8 theme/controls/assets, Projects и поддерживаемые Settings
 уже перенесены, R9 проверила существующий slice:950/950 tests PASS/analyze0issues.
 Полная R8/R9 остаётся `in_progress`, зависимые capabilities ждут prerequisite
-scope; Home/Portfolio не объявляются полностью перенесёнными. R7 global graph
-QA ещё pending, DESIGN_READY/REDESIGN_DONE не установлены. No-preview/run сохранён,
-commit/push/deploy не запрошены. [Конкретное proposed scope](prerequisites.md)
+scope; Home/Portfolio не объявляются полностью перенесёнными. R7 graph QA PASS
+D041; явная приёмка и DESIGN_READY/REDESIGN_DONE не установлены. No-preview/run сохранён.
+Перенос `redesign/full-app` в `dev` и commit/push разрешены D042;
+deployment не запрошен. [Конкретное proposed scope](prerequisites.md)
 подготовлено для решения пользователя, а не автоматического запуска roadmap.
 R3.4 принята D034; поручение D032 ранее
 приняло R3.3 и разрешило R3.4.
@@ -114,7 +116,7 @@ IDs; R8/R9 уже разрешены D040. Независимая parallel ин�
 | R4 — Основные экраны и настройки | Весь пакет R4.1–R4.7c принят D036: 61 state / 122 Dark/Light frames / 9 boards. Metadata/contrast evidence D035 сохранено; visual preview/run пропущены по D034. Unsupported функции остаются target-design. | done |
 | R5 — Создание, редактирование и публикация | Все 13 задач R5.1a–R5.4c приняты одним пакетом D038; evidence D037: 83 состояния / 166 Dark/Light frames / 13 boards. Structural/contrast/bindings PASS; visual preview/run omitted D034/D036. Отдельные Save/sync/Publish и ownership сохранены. | done |
 | R6 — Web | Все четыре задачи R6.1–R6.4 приняты D040; evidence D039: 24 состояния / 96 wide-narrow Dark-Light frames / 4 boards. Structural/contrast/CTA PASS; visual preview/run omitted. Только Figma target, Next.js/runtime не создан. | done |
-| R7 — Прототип, адаптивность и приёмка дизайна | Весь пакет R7.1–R7.4 начат D040; page221:7/board221:8 и первые восемь fixtures созданы. Graph QA/actual итог ещё pending, DESIGN_READY не установлен. | in_progress |
+| R7 — Прототип, адаптивность и приёмка дизайна | D041: source build/structural QA завершены,2736 expected bindings,723roots,328starts,6 motion pairs PASS. Package awaiting_review; visual/playback omitted, DESIGN_READY требует явной приёмки. | awaiting_review |
 | R8 — Перенос согласованного UI | D040: partial runtime — semantic Lime/Manrope/shared controls/SVG/Brand A, Projects и поддерживаемые Settings. Home/Portfolio legacy composition, 3 roots; Resume/model/media/account/publication/web ждут prerequisite scope. | in_progress |
 | R9 — Регрессия и завершение | Существующий Flutter slice:950/950 PASS, analyze0issues, 0SVGwarnings. Полная acceptance матрица, native/web и prerequisite scope не закрыты; REDESIGN_DONE не установлен. | in_progress |
 
@@ -344,20 +346,21 @@ low-fi R1.2/R1.3 приняты, R1.4 принята после цветовых
 
 **Решения пользователя:** D040 разрешило завершить всю R7 и далее R8/R9. DESIGN_READY фиксируется только по actual итоговому пакету, без повторного запроса авторизации R8; пропущенные checks и limitations остаются явными.
 
-**Статус фазы:** `in_progress`, D040. Все четыре задачи выполняются вместе; graph QA/финальный пакет ещё не готовы.
+**Статус фазы:** `awaiting_review`, D041. Source build/структурная QA R7.1–R7.3 завершены; R7.4 и явная пользовательская приёмка/DESIGN_READY pending.
 
 | **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
 |:---|:---|:---|:---|:---|:---|:---|
-| R7.1 | REQ-WORKFLOW-04, REQ-FIGMA-02 | Все S-*; реальные frame IDs появятся в screens.md | Связать root/settings/create/edit/preview/publish/share и error/back paths. | C01–C13, C17 | Prototype link + выполненный сценарий и зафиксированные ошибки. | in_progress |
-| R7.2 | REQ-ADAPT-01..03, REQ-NAV-01,05 | Mobile frames 320/390/large phone/tablet/landscape (контрольный набор предлагаемый) | SafeArea, centered max width, без rail, keyboard-safe/long content, scale1/2. | C11, C12, C15, C16 | Сравнимые renders dark/light ru/en; landscape/tablet evidence. | in_progress |
-| R7.3 | REQ-CHECK-01..02, REQ-MOTION-01..02 | DS + все critical states | Контраст/targets/focus/semantics specs; reduced-motion 180–280/static, empty/error/offline. | C13–C17, C-MOTION, C-ASSET | Таблица contrast и state/motion review; native semantics остаются runtime check. | in_progress |
-| R7.4 | REQ-WORKFLOW-04..05, REQ-WORKFLOW-07, REQ-FIGMA-02 | screens.md финальный реестр, этот журнал | Свести requirements→frames→checks→results; явная приёмка пользователя. | C-SCOPE, C01–C17 | Принятый пакет + решение DESIGN_READY; до решения awaiting_review. | in_progress |
+| R7.1 | REQ-WORKFLOW-04, REQ-FIGMA-02 | Все S-*; реальные frame IDs появятся в screens.md | Связать root/settings/create/edit/preview/publish/share и error/back paths. | C01–C13, C17 | Source graph2736bindings/723roots/328starts;22contract chunks+topology PASS. Mobile879semantic contracts/1758themed edges;web946contracts/978bindings. Playback omitted. | awaiting_review |
+| R7.2 | REQ-ADAPT-01..03, REQ-NAV-01,05 | Mobile frames 320/390/large phone/tablet/landscape (контрольный набор предлагаемый) | SafeArea, centered max width, без rail, keyboard-safe/long content, scale1/2. | C11, C12, C15, C16 | 12 новых adaptive fixtures+10существующих+2 keyboard sources;1876nodes/490texts/170targets/314strokes,180 static ×2texts;16failure categories0. Native keyboard/OS scaling omitted. | awaiting_review |
+| R7.3 | REQ-CHECK-01..02, REQ-MOTION-01..02 | DS + все critical states | Контраст/targets/focus/semantics specs; reduced-motion 180–280/static, empty/error/offline. | C13–C17, C-MOTION, C-ASSET | Text contrast min4.832909811:1/strokes min4.364564811:1;6motion pairs180/240/280ms+reduced0ms,same targets,noTIMERS/noSET_VARIABLE. Native semantics/playback omitted. | awaiting_review |
+| R7.4 | REQ-WORKFLOW-04..05, REQ-WORKFLOW-07, REQ-FIGMA-02 | screens.md финальный реестр, этот журнал | Свести requirements→frames→checks→results; явная приёмка пользователя. | C-SCOPE, C01–C17 | Portable r7-handoff.json +screens/results +D041 source package ready;explicit user acceptance pending. DESIGN_READY не установлен. | awaiting_review |
 
 **Фактическое начало R7, D040:** создана page [R7, 221:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-7) и
 adaptive board [221:8](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-8). Первые восемь fixtures:
 [221:11](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-11), [221:274](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-274), [221:412](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-412), [221:601](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-601), [221:760](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-760), [221:890](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-890), [221:987](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-987), [221:1150](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-1150). Это partial construction;
-final coverage/graph QA и итоговый пакет ещё не готовы. Размеры, runtime keyboard
-и DESIGN_READY этим списком не подтверждаются.
+на момент D040 final coverage/graph QA ещё не были готовы. Итоговый
+[source handoff D041](source/r7-handoff.json) фиксирует структурно проверенный пакет;
+runtime keyboard иDESIGN_READY одним этим списком не подтверждаются.
 
 **Исходный regression baseline до R8:** на `redesign/full-app`, HEAD
 `f55f017ec263048b3c84a193327a2d5e42348cdf`, Flutter3.47.4/Dart3.13.3:
@@ -392,7 +395,7 @@ Baseline не является результатом новых R8 измене
 | R8.1 | REQ-SCOPE-01..04, REQ-PRESERVE-01..04 | audit.md gaps; actual domain/Hive/Firestore/Rules; apps/web/README.md | Сопоставить каждый action с реальным contract. Несовместимые gaps block соответствующий slice; миграцию здесь не выполнять. | C-SCOPE, C-MODEL, C-WEB | Read-only contract audit и конкретный proposed список PR-* в prerequisites.md; ответ о scope pending, schema/migration/backend не выполнены. | in_progress |
 | R8.2a | REQ-PALETTE-01..03, REQ-TYPE-01..02 | apps/mobile/lib/core/theme/stackcard_colors.dart, stackcard_theme.dart, stackcard_tokens.dart | Перенести semantic colors/type/spacing, сохранив единый theme mechanism и Material 3. | C14, C16, C-PALETTE | Semantic Dark/Light colors, Manrope400/600/700/800+Noto fallback и tokens в существующем core/theme; focused/full headless950 PASS, native preview omitted. | awaiting_review |
 | R8.2b | REQ-NAV-01..05, REQ-EDITOR-02..03 | apps/mobile/lib/shared/widgets; actual component files по approved DS | По одному shared control: button/input/back/gear/navigation/state; сохранить loading/semantics/retry. | C12, C13, C15, C16 | Existing shared button/input/state controls обновлены; focus/loading/disabled/retry/48px/scale2 headless checks PASS. Визуальный/native acceptance omitted. | awaiting_review |
-| R8.2c | REQ-TECH-01..02, REQ-PROJECT-03 | apps/mobile/lib/shared/widgets; новые TechnologyBadge/card paths предлагаемые до выбора source placement | Ввести badge icon+text/+N/wrap и entity-card presentation; проверять по одному компоненту. | C08, C14, C15, C-ASSET | StackCardIcon + StackCardTechnologyBadge/MoreTechnologies;40canonical entries+1explicit render derivative;32runtime SVG decoded, provenance strict check PASS. Native parity pending. | awaiting_review |
+| R8.2c | REQ-TECH-01..02, REQ-PROJECT-03 | apps/mobile/lib/shared/widgets/stackcard_icon.dart, stackcard_technology_badge.dart, stackcard_brand.dart | Ввести badge icon+text/+N/wrap и entity-card presentation; проверять по одному компоненту. | C08, C14, C15, C-ASSET | StackCardIcon + StackCardTechnologyBadge/MoreTechnologies;40canonical entries+1explicit render derivative;32runtime SVG decoded, provenance strict check PASS. Native parity pending. | awaiting_review |
 | R8.3a | REQ-NAV-01..05 | apps/mobile/lib/app/app_router.dart, apps/mobile/lib/app/app_shell.dart | Shell/routes: четыре permanent labels, gear/settings nested, origin Back, guards/deep links, tablet bottom nav. | C01, C02, C11, C12, C16 | Gear≥48, standalone/settings/{appearance,account}, tablet bottom nav внедрены; только3supported roots, Resume root blocked GAP-DATA-01. | in_progress |
 | R8.3b | REQ-HOME-01..03 | apps/mobile/lib/features/home/home_screen.dart; S-HOME | Перенести только Home: три фильтра/recent mixed list и separate Copy, после готовности library модели. | C03, C04, C09, C13 | Home остаётся legacy composition; mixed library/3filters/multiple outputs требуют предложенной модели, scope pending. | blocked |
 | R8.3c | REQ-RESUME-01, REQ-SHARE-01 | S-RESUMES; новые source/route пути предлагаются после GAP-DATA-01 | Перенести Resume list/create entry/status/link presentation только при настоящем Resume contract. | C09, C10, C13 | Resume library/runtime отсутствуют; GAP-DATA-01 и publication contracts ждут prerequisite scope. | blocked |
@@ -506,8 +509,8 @@ S-* в screens → C-* ниже → фактический результат/ev
 | C-ASSET | License/provenance fonts/icons/photos; настоящий текст badges, editable Figma | R2.2, R3.2, R7.3 | 40canonical records+1explicit Flutter derivative,9originalBrandASVG,4ManropeTTF imported; strict provenance PASS. Native font/AppIcon acceptance pending |
 | C-PALETTE | Exact dark HEX/semantic roles, lime primary, error red; light actual pairs | R2.1, R3.1, R8.2 | Semantic Lime/ink Dark-Light и Manrope перенесены в единый core/theme; focused controls contrast PASS, full target/native parity pending |
 | C-WEB | Полный visitor/owner/public path, реальные CTA и download availability | R6.1..4, R8.5 | Web source отсутствует; legacy concepts не runtime |
-| C-MOTION | 180–280 ms, ввод доступен, reduced/static variants и Copy feedback | R3.4, R7.3, R9.2 | R3.4 шесть180/240/280ms событий и0ms статических equivalents PASS; playable prototype/runtime pending |
-| C-SCOPE | Изменения только разрешённой фазы; сохранены user edits/assets/history/stack | R0.5, R8.1, R9.3 | R7/R8/R9 авторизованы D040; supported UI partial перенесён/950tests PASS; prerequisites proposed, backend/model/web/Git не выполнены |
+| C-MOTION | 180–280 ms, ввод доступен, reduced/static variants и Copy feedback | R3.4, R7.3, R9.2 | R3.4 static spec и R7 шесть standard/reduced graph pairs с одинаковыми targets PASS; prototype playback/native motion pending |
+| C-SCOPE | Изменения только разрешённой фазы; сохранены user edits/assets/history/stack | R0.5, R8.1, R9.3 | R7/R8/R9 авторизованы D040; supported UI partial перенесён/950tests PASS; prerequisites proposed, backend/model/web не выполнены; Git delivery в dev разрешена D042 |
 
 Обычный текст проверяется по 4.5:1 даже при небольших metadata размерах.
 48 logical px — критерий этого проекта. WCAG web target-size и Flutter logical
@@ -1316,6 +1319,46 @@ package/DESIGN_READY и prerequisite scope ещё не готовы.
 
 Реестр, geometry и IDs: [R6 в screens](screens.md#r6--веб-поверхности).
 
+### Фактический source package R7 (D040/D041)
+
+Сборка R7 и структурная QA завершены. Все четыре задачи и весь пакет —
+**awaiting_review**: явная приёмка R7.4/DESIGN_READY ещё отсутствует.
+[r7-handoff.json](source/r7-handoff.json) содержит переносимый реестр frames,
+transitions, проверок, hashes и ограничений. Авторизация R8 уже получена D040.
+Отказ от preview/playback/native run учтён как пропущенные проверки.
+
+Проверены 22 expected-contract chunks и один topology call — PASS.
+Все 2736 expected bindings совпали: 1758 mobile (879 contracts × Dark/Light)
+и 978 web. Web содержит 946 contracts и 974 уникальных control nodes.
+Общий scope: 723 root frames, 52255 nodes, 15822 TEXT, 328 flow starts;
+все 11 failure categories равны нулю. Destinations принадлежат реальным roots.
+Проверены validity и уникальность фактических start IDs/names; точный expected
+набор start names не предоставлен. Journey walkthrough не выполнялся
+(checked=0, omitted); `fullR7Pass` остаётся null. Эти результаты не заменяют
+исторические QA R4–R6 и не доказывают исполнение маршрута пользователем.
+
+Шесть standard/reduced motion pairs используют одинаковые source/targets:
+180/240/280 ms и статическую альтернативу без transition (эквивалент 0 ms).
+Timers и SET_VARIABLE отсутствуют. Значения 98 variables и IDs 50 styles
+сохранены точно по baseline fingerprints. Snapshot свойств styles не
+предоставлен, сохранность самих свойств не проверялась. Преобразование 380 host
+copies в Page сохранило explicit Dark/Light и backup/audit/rollback; это
+операция Figma source, а не миграция пользовательских данных.
+
+Adaptive scope: 12 новых fixtures, 10 повторно использованных R3.4 adaptive
+и два R3.3 keyboard sources. Проверены 1876 nodes, 490 texts, 170 targets,
+314 stroke samples; все 16 failure categories равны нулю. Минимумы контраста:
+text 4.832909811:1, stroke 4.364564811:1. 180 static ×2 text samples подтверждают
+source reflow; native OS text scaling и input/IME не проверены.
+
+Visual inspection, preview, prototype playback/native app launch и golden
+updates пропущены по запросу. Public web/media/SDK/auth и новая model/schema
+не реализованы graph-проверкой. R7 — awaiting_review, DESIGN_READY pending.
+Частичный R8 и [R9 supported UI validation](source/r9-supported-ui-validation.json)
+с 950 тестами подтверждены отдельно; полный REDESIGN_DONE не установлен.
+[Prerequisite scope](prerequisites.md) — proposed, ответа пользователя ещё нет;
+Phase 11 автоматически не начата.
+
 ### Фактический перенос поддерживаемого UI R8/R9 (D040)
 
 На `redesign/full-app` внедрён независимый существующий Flutter slice:
@@ -1369,8 +1412,8 @@ widget/engine evidence. No-preview/run запрос исключил native laun
 emulator smoke, Figma playback, golden creation/update и визуальное сопоставление.
 Нативные font/SVG/AppIcon, live Google/reset/iOS и весь новый web/security не
 подтверждены. Новые model/media/account/publication prerequisites предложены
-в [отдельном scope](prerequisites.md), ответ pending. R7 full graph QA,
-полная R8/R9 и пользовательская приёмка не завершены;
+в [отдельном scope](prerequisites.md), ответ pending. R7 full graph QA PASS D041,
+пакет awaiting_review; полная R8/R9 и пользовательская приёмка не завершены;
 DESIGN_READY/REDESIGN_DONE не установлены, Phase11 автоматически не начата.
 
 ---
@@ -1419,12 +1462,15 @@ DESIGN_READY/REDESIGN_DONE не установлены, Phase11 автомати
 | D038 / 2026-10-05 | «переходи к следующему этапу разработки» после общего результата R5/D037 | Принята вся R5. Следующей начата полная R6.1–R6.4 одним пакетом с сохранением phase-package/parallel/no-preview/run предпочтений. Это интерпретация next-stage context; пользователь не называл весь набор R6 буквально. R6 in_progress; R7+/R8/runtime/backend/Git не начаты |
 | D039 / 2026-10-05 | Editable hi-fi весь пакет R6.1–R6.4 | awaiting_review; 4 boards / 24 states / 96 wide-narrow Dark-Light frames, page202:2989. 8962 nodes;2810text samples min4.832909811:1;690strokes min4.364564811:1;726targets≥48;20failure categories0.116sourceCTA records checked against proposed destinations.98values/50styleIDs exact preserved;28existing demo80×80 imagefills,8actualR5 editable preview clones.96targeted Noto Wordmark exceptions and462canonicalFlutter/Dart originalfills preserved. Landing1440×3475/390×5628. Visual inspection/preview/runtime omitted by request; R7todo/R8closed, apps/web README-only |
 | D040 / 2026-10-05 | Прямое поручение завершить R7/R8/R9, увеличить число агентов и применить результат на redesign/full-app | Принята R6/D039. R7 full graph QA pending; independent R8 shared UI/Projects/supported Settings/Brand A перенесены параллельно, R9 existing slice950/950 PASS/analyze0issues. Full product prerequisites предложены, scope ответа нет; повторного phase approval нет. DESIGN_READY/REDESIGN_DONE не установлены; no-preview/run сохранён, commit/push/deploy/Phase11 не запрошены |
+| D041 / 2026-10-05 | Завершённый R7 source package и структурная QA | awaiting_review: 2736 matched bindings (1758 mobile / 978 web), 879 mobile / 946 web contracts, 974 web controls; 723 roots / 52255 nodes / 15822 TEXT, 328 unique starts. 22 contract chunks + topology PASS, 11 failure categories = 0. 6 motion pairs same targets, 180/240/280 ms + static/reduced, no timers/SET_VARIABLE. 12 new adaptive + 10 reused + 2 keyboard; 180 static ×2 texts, 16 adaptive failure categories = 0. 98 variable values / 50 style IDs exact; style properties not checked. Portable r7-handoff.json, fullR7Pass=null. Visual/playback/native omitted; R7.4 explicit acceptance/DESIGN_READY pending. Partial R8/R9 supported 950 PASS не означает полный REDESIGN_DONE; prerequisites proposed, scope pending |
+| D042 / 2026-10-05 | «теперь всё из ветки redesign/full-app перенеси в dev. закомментируй все изменения и отправь в гитхаб» | Разрешены commit всех изменений редизайна, исправление сообщения неопубликованного коммита, линейный перенос всей ветки в dev и push origin/dev. «Закомментируй» интерпретировано как «закоммить». Это Git delivery; R7 acceptance/DESIGN_READY, prerequisite scope, deployment и Phase11 этим поручением не подтверждены; no-preview/run сохранён |
 
 Новый scope change записывается отдельной строкой с причиной, requirement IDs,
 влиянием на задачи/gaps и явным решением пользователя. Исторические результаты
-не переписываются. R6 принята D040; R7 global graph QA pending.
+не переписываются. R6 принята D040; R7 source/graph QA PASS D041,
+весь пакет awaiting_review, явная приёмка/DESIGN_READY pending.
 Независимые R8 slices внедрены, R9 existing Flutter950/analyze проверены;
 полная приёмка и prerequisite scope остаются открытыми. Конкретный proposed
 пакет доступен в [prerequisites](prerequisites.md), не запускает roadmap.
-No-preview/run сохранён. DESIGN_READY/REDESIGN_DONE не установлены;
-commit/push/deploy и Phase11 не запрошены.
+No-preview/run сохранён. DESIGN_READY/REDESIGN_DONE не установлены.
+Перенос в `dev` и commit/push разрешены D042; deployment и Phase11 не запрошены.

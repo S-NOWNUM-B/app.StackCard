@@ -36,7 +36,8 @@ Resume/Portfolio. Это второй редактор общей професс
 Structural/contrast/CTA checks PASS; visual inspection/preview/run пропущены
 по запросу. Next.js scaffold, зависимости, routes и deployment не созданы;
 Figma target не означает работающую веб-функцию.
-R7 global graph QA ещё pending. D040 уже разрешило R8/R9 на
+R7 source graph/structural QA PASS D041; [пакет](../../docs/redesign/source/r7-handoff.json)
+awaiting_review, явная пользовательская приёмка/DESIGN_READY pending. D040 уже разрешило R8/R9 на
 `redesign/full-app`; независимый существующий Flutter slice перенесён и
 проверен950headless tests/analyze, но это не создаёт web runtime. Новый
 Next.js, workspace model и trusted public projection предложены в
