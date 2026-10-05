@@ -5,7 +5,7 @@
 **Отдельная инициатива полного редизайна mobile, web и публичных документов**
 
 ![Phase R5](https://raster.shields.io/badge/Phase-R5-C7FF1A?style=for-the-badge)
-![Status in progress](https://raster.shields.io/badge/Status-in_progress-14161B?style=for-the-badge)
+![Status awaiting review](https://raster.shields.io/badge/Status-awaiting_review-14161B?style=for-the-badge)
 
 </div>
 
@@ -29,13 +29,19 @@ StackCard создаёт разные структурированные Resume 
 интеграции и Material 3 как техническую основу Flutter.
 
 На **2026-10-05** активна **R5: создание, редактирование и публикация**,
-**все 13 задач R5.1a–R5.4c — `in_progress`**, D036. Поручение «переходи к
+**все 13 задач R5.1a–R5.4c — `awaiting_review`**, D037:
+[83 состояния / 166 Dark/Light frames / 13 boards](screens.md#r5--создание-редактирование-и-публикация). Поручение «переходи к
 следующему этапу разработки» приняло весь пакет R4 и продолжило следующую
 R5 в сохранённом режиме: фаза целиком, несколько агентов, без preview/run.
 Это интерпретация прежних предпочтений; пользователь не перечислял R5 буквально.
 R4 принята D036: 61 state / 122 Dark/Light frames на девяти boards.
 Визуальный просмотр, preview и запуск приложения пропускаются по прямому запросу;
-metadata/contrast/bindings и проверка документации сохраняются.
+Structural/contrast/bindings PASS: 3474 actual-mode text samples
+(min4.832909811:1), 1280 strokes(min4.364564811:1), 966 targets≥48;
+все18 failure categories0. Wizard1–5/16preview/84forms/152fixedfooter проверены
+структурно;98values/50style IDs сохранены,48identity checks PASS.
+Три DS families переиспользуют прежние assets;14image fills — прежний demo80×80.
+274 original Flutter/Dart fills сохранены отдельным source-brand exemption.
 План R0 и три схемы IA R1.1 приняты прямыми поручениями начать первую фазу
 и перейти к следующему шагу. **R1.1–R1.3 — `done`**: R1.2 принята поручением
 исправить кнопки/поиск и затем продолжить (D015), правки проверены.
@@ -62,7 +68,7 @@ states/motion/adaptive собраны и проверены в review D033, за
 | Аудит и план | R0 принята поручением начать R1; исходные результаты и ограничения сохранены в audit/references |
 | IA Design v2 | [Navigation, ownership и lifecycle](screens.md#r11--информационная-архитектура); R1.1 принята поручением продолжить, D013 |
 | Low-fi Design v2 | [24 экрана R1.2](screens.md#r12--low-fi-основных-сценариев), [24 экрана R1.3](screens.md#r13--low-fi-resume-wizard-и-редактора) и [40 экранов R1.4](screens.md#r14--low-fi-projects-portfolio-и-публикации) приняты. Всего 88 phone frames, цветовые правки D020 проверены |
-| Визуальные макеты Design v2 | [Бренд A](screens.md#r23--принятый-бренд-и-направление) принят D024; R3.1 done D028, Manrope. [Navigation/cards/badges R3.2](screens.md#r32--навигация-карточки-и-technologybadge) приняты D030; [Forms/stepper/photo/sections R3.3](screens.md#r33--формы-stepper-фото-и-секции) приняты D032; [States/motion/adaptive R3.4](screens.md#r34--состояния-motion-и-адаптивность) приняты D034; [все девять задач R4](screens.md#r4--основные-экраны-и-настройки) приняты D036; весь пакет R5 в работе, R6 ещё не начата |
+| Визуальные макеты Design v2 | [Бренд A](screens.md#r23--принятый-бренд-и-направление) принят D024; R3.1 done D028, Manrope. [Navigation/cards/badges R3.2](screens.md#r32--навигация-карточки-и-technologybadge) приняты D030; [Forms/stepper/photo/sections R3.3](screens.md#r33--формы-stepper-фото-и-секции) приняты D032; [States/motion/adaptive R3.4](screens.md#r34--состояния-motion-и-адаптивность) приняты D034; [все девять задач R4](screens.md#r4--основные-экраны-и-настройки) приняты D036; [весь пакет R5](screens.md#r5--создание-редактирование-и-публикация) ждёт общей приёмки D037, R6 ещё не начата |
 | Интерактивный прототип Design v2 | Не создан; отдельный результат R7 |
 | Реализованный Design v2 UI | Не перенесён; отдельное разрешение R8 после DESIGN_READY |
 | Backend новых сценариев | Не реализован этим заданием; пробелы и зависимости зафиксированы отдельно |
@@ -131,20 +137,20 @@ Design v2 нельзя честно реализовать. Перед R8 пол
 ## Как продолжать
 
 При следующем запросе сначала прочитать этот README и [plan.md](plan.md).
-Одновременно активна одна фаза. Весь пакет R4 принят D036; продолжение
-интерпретировано как следующая R5 с сохранением режима фаза целиком,
-параллельно и без preview/run. Все 13 задач R5.1a–R5.4c выполняются вместе:
-Resume wizard/edit/preview, manual и GitHub Projects/review, Portfolio
-builder/attachments/appearance и отдельные Publish/Share/Unpublish/delete.
-После отдельного экрана остановка не требуется; каждому остаются свои IDs/evidence.
+Одновременно активна одна фаза. Весь пакет R4 принят D036; все 13 задач
+R5.1a–R5.4c собраны и ожидают общей приёмки D037. Продолжение D036 было
+интерпретировано в сохранённом режиме фаза целиком/параллельно/без preview/run;
+пользователь не называл весь набор R5 буквально.
 
-R5 использует принятые R3–R4 fonts/tokens/assets и shared components.
-Формы, photo selection, import/review и publication — target-design,
-backend/schema/media/OAuth этим пакетом не реализуются. Визуальный просмотр,
-preview и запуск приложения остаются пропущенными по сохранённому запросу;
-metadata/contrast/bindings и docs checks выполняются после фактической сборки.
+[R5](screens.md#r5--создание-редактирование-и-публикация) содержит Resume
+wizard/edit/preview, manual и GitHub Projects/review, Portfolio content/
+attachments/appearance и отдельные Publish/Share/Unpublish/delete последствия.
+Structural/contrast/bindings PASS относятся к static Figma. Визуальный просмотр,
+preview и запуск приложения пропущены по запросу; native input/media,
+SDK/OAuth, schema/backend/cloud publication/sharing этим пакетом не реализованы.
 
-Общая приёмка R5 требуется после готовности; R6+ и runtime R8 не начаты.
-DESIGN_READY/REDESIGN_DONE ещё не установлены. Постоянный адрес документов
-принят D019; новая route scheme и миграция adapter остаются предпосылкой R8.
-Основная функциональная разработка сохраняет точку перед Phase 11.
+После пользовательской приёмки R5 и поручения продолжить следующая полная
+фаза — R6 Web. Сейчас R6+ и runtime R8 не начаты; DESIGN_READY/REDESIGN_DONE
+ещё не установлены. Постоянный адрес документов принят D019; новая route scheme
+и миграция adapter остаются предпосылкой R8. Основная функциональная разработка
+сохраняет точку перед Phase 11.
