@@ -124,8 +124,9 @@ void main() {
   );
 
   for (final item in [
-    (route: '/home', heading: 'Hello, Alex'),
-    (route: '/portfolio', heading: 'Editor'),
+    (route: '/home', heading: 'Your work will appear here'),
+    (route: '/resumes', heading: 'No resumes yet'),
+    (route: '/portfolio', heading: 'No portfolios yet'),
     (route: '/projects', heading: 'Projects: 4'),
     (route: '/settings', heading: 'Settings'),
     (route: '/settings/appearance', heading: 'Appearance'),

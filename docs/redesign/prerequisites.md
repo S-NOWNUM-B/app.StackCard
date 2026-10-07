@@ -4,8 +4,8 @@
 
 **Конкретный scope модели, миграции, публикации, media и web для решения пользователя**
 
-![Status proposed](https://raster.shields.io/badge/Status-proposed-111111?style=for-the-badge)
-![Scope not authorized](https://raster.shields.io/badge/Scope-not_authorized-14161B?style=for-the-badge)
+![Status partial implementation](https://raster.shields.io/badge/Status-partial_implementation-111111?style=for-the-badge)
+![Scope private mobile](https://raster.shields.io/badge/Scope-private_mobile-14161B?style=for-the-badge)
 
 </div>
 
@@ -14,6 +14,7 @@
 ## Содержание
 
 - [Рекомендация и границы решения](#рекомендация-и-границы-решения)
+- [Действующий private slice 2026-10-07](#действующий-private-slice-2026-10-07)
 - [Проверенный источник и пригодный механизм](#проверенный-источник-и-пригодный-механизм)
 - [Предлагаемая модель](#предлагаемая-модель)
 - [Migration PR-MIG-01 — один recoverable переход, без потерь](#migration-pr-mig-01--один-recoverable-переход-без-потерь)
@@ -27,22 +28,59 @@
 
 ## Рекомендация и границы решения
 
-Статус — **proposed**: это конкретное предложение prerequisite scope, а не
-разрешение PR-* задач, выполненная модель/миграция или новый roadmap. R7/R8/R9
-уже разрешены D040; independent supported Flutter slice внедрён и проверен
-950headless tests. Полная target модель, media/account/publication/web ещё не
-готовы, ответ о составе prerequisite work/исключениях ожидается. Этот документ
-не запускает Phase11/13, не меняет runtime/schema/Rules и не разрешает deploy.
-[План R0–R9](plan.md) владеет статусами, [product spec](../product/product-spec.md#план-разработки)
-владеет основным roadmap. Proposal-сценарии и проверки ниже пока не выполнены.
+С 2026-10-07 D045 пользователь разрешил functional mobile capabilities по
+Figma/концепции и поставил последовательную очередь фаз на паузу. Private
+модель/навигация/документы развиваются через existing aggregate; принятый ниже
+subset отличается от полного proposal. Это не полная приёмка PR-* пакета:
+trusted publication/URL, full account/privacy, web и advanced migration/lifecycle
+остаются proposed/pending. Deploy/commit/push этим документом не разрешены.
+[Product status](../product/product-spec.md#статус-и-границы-текущей-работы)
+владеет actual scope и проверками; [R0–R9](plan.md) сохраняет историю acceptance.
 
 Рекомендую полную целевую модель с одним UID workspace aggregate: DeveloperProfile, Projects Library и несколько независимых Resume/Portfolio. Сохранить имеющиеся Riverpod composition, Hive очередь и UID namespaces, outbox, server-commit whole-document LWW. Public snapshots хранить отдельно по постоянному opaque public document ID. Никаких CRDT, event bus, нового sync framework, per-screen write stores или второго mobile runtime.
 
-Цена этого варианта: отдельная миграция модели, новые schema/Rules/publication contracts, account/media/native adapters и настоящий Next.js runtime. Сама R8/R9 уже разрешена D040; вопрос касается только этих дополнений к paused product roadmap. По [gate плана](plan.md#зависимости-реализации): «До R8.1 для каждого GAP пользователь согласует отдельную продуктовую задачу или явное ограничение implementation scope». Ответ ещё ожидается; зависимые изменения сейчас не выполняются.
+Полный вариант ниже остаётся proposal для remaining capabilities. D045 разрешает
+private mobile subset; его реализация не ждёт повторного phase approval. Новый
+public lifecycle, trusted handler и actual Next.js runtime требуют конкретного
+контракта/реализации; их нельзя считать существующими из private schema update.
 
-Альтернатива UI-only: перенести foundations/shared controls, поддерживаемые auth/forms/settings/GitHub и оформление существующих singleton screens. Multiple documents, structured Resume, relation semantics, full Account, real media, permanent publications и web остаются blocked либо явно исключаются пользователем. Это не завершение полной R8/R9.
+Историческая альтернатива UI-only до D045: перенести foundations/shared controls, поддерживаемые auth/forms/settings/GitHub и оформление существующих singleton screens. Multiple documents, structured Resume, relation semantics, full Account, real media, permanent publications и web остаются blocked либо явно исключаются пользователем. Это не завершение полной R8/R9.
 
-Ниже IDs PR-* только предлагаются для включения в основной product-spec/ADR после решения пользователя. Они не заменяют R8 UI IDs.
+Ниже PR-* IDs описывают полный proposal. Реализованный subset указан отдельно;
+наличие subset не делает весь PR-* критерий выполненным и не заменяет R8 UI IDs.
+
+---
+
+## Действующий private slice 2026-10-07
+
+Реализация расширяет `PortfolioContent`, не вводит новый WorkspaceContent/repository:
+общая база в root, одна Projects Library и `documents` со snapshot секций,
+ordered projectId/visible/featured relations и optional private attachedResumeId.
+Максимум 20 документов; doc snapshot не содержит projects/documents/Ignore.
+Новый документ предлагает base values, существующий не обновляется от base edits.
+Atomic create-and-attach реализован через document local buffer и один
+`saveDocument(newProjects: ...)`/revision; Cancel не пишет Library. Review
+captured baseline/local project presentation overrides пока pending.
+
+Hive writer5/readers1–5 и private cloud4/readers1–4 читают старые версии без rewrite;
+Save/ACK сохраняет raw owner backup v1–v4 до upgrade. Старые UID namespaces,
+Box queue, guest transfer journal/generation, outbox/exact ACK и whole-document
+server-order LWW сохранены. Явный legacy import создаёт stable legacy-portfolio/
+legacy-resume, сохраняя source content/resumeText/notes. Новый migration CAS/
+нормализованные entity stores/public lifecycle generations из proposal не вводятся.
+
+Четыре stateful mobile roots, Home filters и private Resume/Portfolio libraries
+используют actual workspace. Scoped saveDocument/saveProject/saveDeveloperProfile
+проверяют captured repository/expected entity/revision и сохраняют соседний
+несохранённый ввод. Resume creation — пять шагов, изменение — focused sections.
+Legacy Builder остаётся доступен. Подробные sources и contract — в
+[architecture](../architecture/architecture.md#общая-база-и-независимые-документы).
+
+Public schema1/username-addressed prepared adapter остаются прежними; documents
+не попадают в public projection. Нет new Publish/Unpublish/permanent URL/trusted
+public renderer. Full contacts/privacy/auth management, web/native sharing и
+final native visual acceptance остаются pending. Media/location используют
+прежние features и открытые проверки; карта исключена.
 
 ---
 
@@ -52,11 +90,11 @@
 
 | **Сейчас** | **Файл и проверенный контракт** |
 |:---|:---|
-| PortfolioContent singleton | apps/mobile/lib/features/portfolio_draft/domain/portfolio_content.dart: profile, skills, projects, experience, education, links, blocks, theme, resumeText, GitHub ignore registry |
-| Private envelope | domain/portfolio_draft.dart и data/hive_portfolio_draft_repository.dart: notes вне content, local revision, pendingSync; writer3 / readers1,2,3; read не делает eager migration; corrupt/unknown не перезаписываются |
+| PortfolioContent aggregate | domain/portfolio_content.dart и portfolio_document.dart: общая база/Library, independent documents snapshots/relations, legacy blocks/theme/resumeText и Ignore |
+| Private envelope | domain/portfolio_draft.dart и data/hive_portfolio_draft_repository.dart: notes вне content, local revision, pendingSync; writer5 / readers1–5; read не делает eager migration; corrupt/unknown не перезаписываются |
 | Local owner boundary | data/local_draft_accounts.dart: guest generation, UID key, shared Box queue, reserved transfer journal, raw backup, metadata-first ACK, syncPrepared, exact retry payload, committed-before-cleanup |
 | Outbox / ACK | data/synced_portfolio_draft_repository.dart и data/hive_portfolio_sync_metadata_store.dart: mutation + captured snapshot, cache-before-metadata recovery; older ACK не подтверждает newer Save; metadata version1 |
-| Cloud | data/firestore_portfolio_draft_repository.dart: accounts/UID/drafts/current, writer2/readers1,2; server timestamp, captured UID, online create-if-absent transfer claim |
+| Cloud | data/firestore_portfolio_draft_repository.dart: accounts/UID/drafts/current, writer4/readers1–4; server timestamp, captured UID, online create-if-absent transfer claim |
 | Prepared publication | data/firestore_portfolio_publication_repository.dart: username-based transaction; domain API publish(username, content)/unpublish; нет UI/DI или stable document inventory |
 | Source review | domain/portfolio_project.dart / portfolio_github_sync.dart; github_portfolio_providers.dart: acceptedSource, manual overrideFields, Ignore fingerprints, stale owner/read checks; cache отдельный |
 | Ownership / Rules | firebase/firestore.rules: own UID draft get, no list; atomic username/account/public transitions; nested lists проверяются контейнером |
@@ -104,7 +142,11 @@ Public projections для Publish разрешаются из сохранённ
 
 ### Минимальный storage и его ограничения
 
-Предложение: сохранить accounts/UID/drafts/current для private aggregate и существующие guest/UID Hive keys. Следующие свободные версии: Hive envelope4, private cloud3, sync metadata2, public schema2 — proposed, окончательно фиксируются после inventory/ADR, а не объявляются существующими. Новый private payload имеет workspace вместо legacy content; legacy readers явно branch по schema. Old writers не могут downgrade upgraded cloud schema.
+Полный proposal первоначально предлагал отдельный workspace payload. D045
+реализует совместимое расширение существующего content: paths/keys прежние,
+Hive5/private cloud4 уже используются, metadata/public schemas прежние.
+Версии будущего workspace/public lifecycle не назначаются здесь заранее.
+Old writers не могут downgrade upgraded private cloud schema.
 
 Один aggregate дешевле per-entity sync и позволяет atomic create+attach. Компромисс: одновременные edits с разных устройств по-прежнему могут заменить целый workspace в server commit order. Не обещать merge отдельных документов. Включить current remote-change review/unsaved preservation.
 
@@ -113,6 +155,10 @@ Firestore ограничивает документ 1 MiB. Проверять en
 ---
 
 ## Migration PR-MIG-01 — один recoverable переход, без потерь
+
+Ниже — **оставшийся полный migration proposal**, не описание выполненного
+private compatibility slice. Действующий механизм описан выше и в architecture;
+он не обещает CAS/journal/two-client entity merge из пунктов ниже.
 
 Не запускать migration на read. Reader создаёт in-memory legacy projection; durable upgrade происходит при явно разрешённом первом Save/upgrade. Notes-only legacy content=null остаётся notes-only: не создавать фальшивое Portfolio или Resume.
 
@@ -205,7 +251,8 @@ Publish/update/unpublish/delete имеют request operation identity и read-re
 4. Web13a →13b →13c по фактическим dependency contracts; handler/SSR используют те же JSON fixtures и payload policy.
 5. Dependent R8 flows подключаются к реальным providers и honest states; R9 unit/widget/Rules/contract checks, затем только отдельно разрешённое runtime/native evidence. Ни один mock/Figma/structural pass не объявляет live media/auth/sharing/web backend working.
 
-No commit/push/deploy/user messaging другим людям. Ответ пользователя о prerequisite scope ещё ожидается; этот proposal не запускает paused prerequisites и не повторяет phase approval.
+No commit/push/deploy/user messaging другим людям. Private mobile subset D045
+разрешён; оставшийся proposal не считается реализованным или принятым по этому факту.
 
 ---
 
@@ -217,4 +264,7 @@ Tests перечислены по actual source inventory, не объявляю
 
 Обычные checks после разрешённого diff: macOS zsh/bash, cwd apps/mobile: dart format --output=none --set-exit-if-changed lib test integration_test, flutter analyze, flutter test; cwd firebase: npm run test:rules по actual manifest. Web commands задаются только новым actual manifest. Native Google/reset/iOS/media/share/device acceptance сейчас pending из-за no-launch; headless tests этого не доказывают.
 
-Этот document проверяется только как proposal: каждый GAP имеет task/owner/dependency, existing paths реальны, proposed paths явно обозначены, версии proposed, нет falsely completed runtime/tasks. После решения пользователя canonical roadmap/status обновляются по фактическим проверкам; этот документ остаётся proposed до отдельного согласования состава PR-* задач.
+Документ проверяется как actual private subset плюс remaining proposal: existing
+paths/schema версии сверены с source, proposed paths отмечены отдельно, нет
+falsely completed PR-* tasks. Проверки и дальнейший scope отражаются по фактам
+в product status; полная приёмка требований не возникает из наличия private slice.

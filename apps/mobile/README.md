@@ -23,6 +23,16 @@
 
 ## Назначение
 
+С 2026-10-07 последовательная очередь фаз поставлена на паузу по поручению
+пользователя. Mobile развивается по Figma/концепции: общая профессиональная база,
+одна Projects Library и несколько независимых Resume/Portfolio.
+Четыре stateful вкладки сохраняют состояние; Home показывает mixed library
+с фильтрами Все/Резюме/Проекты, Settings открывается через gear.
+Новые документные библиотеки используют actual workspace; пустая база остаётся
+пустой, демонстрационные данные не копируются при создании документа.
+Текущий scope/оставшаяся работа — в
+[product status](../../docs/product/product-spec.md#статус-и-границы-текущей-работы).
+
 Phase 12 добавляет ручной город/страну и опциональное определение города по
 нажатию, с подтверждением перед Apply/Save. Карта и Google Maps исключены;
 координаты/адрес не сохраняются. Отказ permissions не блокирует ручной ввод.
@@ -45,8 +55,9 @@ Hive сохраняет response cache с offline fallback и отдельный
 SharedPreferences — настройки приложения, UI переведён на ru/en.
 Локальный Builder позволяет собрать профиль, ручные проекты и разделы,
 выбрать порядок, видимость и тему блоков и посмотреть рабочий результат.
-Home, Portfolio, Projects и Settings читают проекции этого draft; до начала
-Builder показываются demo-данные. Общий app shell и Material 3 light/dark сохранены.
+Общая база и документы читаются через прежний draft API; legacy Builder остаётся
+редактором базы. Demo сохранён для изолированного preview/read-model сценария.
+Общий stateful app shell и Material 3 light/dark сохранены.
 Phase 7 добавила Firebase Auth, защищённые именованные routes и изоляцию draft
 по guest/UID. Native entry настраивает настоящий account adapter; локальный guest
 доступ выбирается явно. Google flow, полный password reset и iOS приёмка остаются
@@ -58,7 +69,7 @@ source metadata и ручные overrides сохраняются раздель�
 Phase 10 завершена: read-only подсказки объясняют новый repository, обновления,
 недостающие description/demo и кандидатов для featured. Владелец открывает
 Preview или редактор и применяет изменения отдельно.
-Последующие функции развиваются по roadmap;
+Дальнейший scope развивается по последнему поручению и product status;
 статус и результаты проверок — в
 [product spec](../../docs/product/product-spec.md#phase-10--portfolio-suggestions).
 ThemeMode/Locale/preferences управляются Provider; product state, repository
@@ -216,44 +227,39 @@ notes в том же draft, отдельно от показываемого в 
 synced — подтверждение сервера конкретной записи; error сохраняет draft и даёт
 retry. Guest остаётся local-only. Cache recovery не изменяет portfolio draft.
 
-### Редактировать портфолио
+### Создать и редактировать документ
 
-Из Portfolio открой Builder (`/portfolio/builder`). Начало создаёт пустое
-портфолио без копирования demo/GitHub source. Заполни профиль, добавь навыки,
-опыт, образование, ссылки и Resume; Resume — обычный текст с переносами строк.
-Форма применяет изменения целиком, отмена оставляет прежние значения.
-Ручной проект можно создать из Builder или Projects, изменить или удалить,
-выбрать featured и видимость.
+Resumes (`/resumes`) и Portfolios (`/portfolio`) показывают собственные списки.
+Создание открывает `/resumes/new` или `/portfolio/new`, изменение — путь с ID.
+Resume creation состоит из пяти шагов: профиль, контакты/ссылки, опыт/образование,
+технологии/проекты, preview. После создания можно открыть отдельную секцию.
+Формы сохраняют input при ошибке/конфликте и спрашивают о unsaved при выходе.
 
-В Builder перемещай десять блоков вверх/вниз и включай нужные разделы.
-Пустые блоки пропускаются; Featured Projects показывает видимые проекты с отметкой
-featured, а Builder/Projects сохраняют все ручные записи для редактирования.
-Тема портфолио dark/light применяется к отображению Portfolio/preview отдельно
-от темы приложения.
-Полнота вычисляется по профилю, About, навыкам, видимому проекту и ссылкам;
-опциональные разделы не обязательны, скрытие блока не увеличивает процент.
-Preview (`/portfolio/preview`) показывает рабочие изменения до Save и их статус.
+Начальные значения берутся из общей базы Settings (`/settings/profile`,
+`/settings/contacts`). Документ хранит свой snapshot секций: изменение роли в
+Resume не меняет базу, а изменение базы не обновляет уже созданный Resume.
+Проекты выбираются по ID из одной Library; порядок/visible/featured принадлежат
+документу. Удаление связи сохраняет Project. Удаление Project убирает его связи;
+удаление Resume очищает ссылку из Portfolio. Документы можно дублировать и
+удалять после подтверждения. «Создать проект» внутри документа держит запись
+локально до Save; Project и attachment сохраняются одной revision, Cancel не
+меняет Library. Публичной ссылки у private draft пока нет.
 
-Явный Save сохраняет весь draft. Ошибка оставляет ввод доступным; новые правки
-во время записи остаются несохранёнными. Сохранённое портфолио открывается
-после перезапуска и без сети. Прежний draft заметок v1 читается без перезаписи;
-первая явная запись v3 сохраняет backup исходной записи. V2 читается без eager
-migration, явный Save/ACK пишет v3. Неизвестный или
-повреждённый формат блокирует перезапись. Conflict revision разрешается явным
-действием перечитать сохранённую версию, которое отбрасывает несохранённые правки.
+Save документа/проекта/базы сохраняет выбранный scope, сохраняя соседний unsaved
+ввод и notes. Account Save завершается в Hive до cloud send; outbox и ACK
+используют прежние UID/revision границы. Whole-document server-order LWW может
+заменить aggregate другого устройства; scoped Save не обещает multi-device merge.
 
-Account Save завершается в Hive до cloud send. Pending outbox переживает restart;
-reconnect подтверждает отправку, а server update не отбрасывает unsaved ввод.
-Whole-document LWW выбирает поздний server commit: offline Save или retry может
-заменить draft другого устройства целиком, изменения не сливаются. Local revision
-не определяет порядок между устройствами. Последствия — в
-[ADR 0001](../../docs/decisions/0001-firestore-sync-and-publication.md).
+Legacy Builder (`/portfolio/builder`) и plain `resumeText` остаются доступны.
+Явный импорт старого draft из document library создаёт legacy-portfolio и, при
+непустом Resume text, legacy-resume; текст/notes/source metadata сохраняются.
+Hive writer5 читает1–5, cloud writer4 —1–4 без eager rewrite. Save/ACK пишет текущую
+версию после raw owner backup; corrupt/unknown блокирует перезапись.
+Подробный [контракт](../../docs/architecture/architecture.md#общая-база-и-независимые-документы).
 
-Sync не меняет public snapshot. Prepared publication repository использует
-отдельную online transaction и public projection; скрытые проекты/поля блоков
-и private notes/source metadata не раскрываются public payload. GitHub import
-явно меняет curated draft на Phase 9; Publish UI и web вводятся по
-[roadmap](../../docs/product/product-spec.md#roadmap).
+Public schema1 и username-addressed prepared publication repository остаются
+прежними. Новые multiple-document Publish/Unpublish/URL, trusted projection,
+публичный renderer/web и native sharing пока не реализованы.
 
 ### Использовать общий backend и функции устройства
 

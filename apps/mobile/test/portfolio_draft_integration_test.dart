@@ -165,7 +165,14 @@ void main() {
     },
   );
 
-  for (final route in ['/home', '/portfolio', '/projects', '/settings']) {
+  for (final route in [
+    '/home',
+    '/resumes',
+    '/portfolio',
+    '/projects',
+    '/settings',
+    '/settings/profile',
+  ]) {
     testWidgets(
       'Draft read failure on $route is visible and retry reads the draft',
       (tester) async {
@@ -180,12 +187,16 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.text('Alex Morgan'), findsNothing);
-        expect(find.text('Не удалось загрузить данные'), findsOneWidget);
+        final failureTitle = route == '/projects' || route == '/settings'
+            ? 'Не удалось загрузить данные'
+            : 'Не удалось открыть черновик';
+        expect(find.text(failureTitle), findsOneWidget);
         repository.failRead = false;
         await tester.ensureVisible(find.text('Повторить'));
         await tester.tap(find.text('Повторить'));
         await tester.pumpAndSettle();
-        expect(find.text('Не удалось загрузить данные'), findsNothing);
+        expect(find.text(failureTitle), findsNothing);
+        expect(repository.readCalls, 2);
         expect(tester.takeException(), isNull);
       },
     );
@@ -247,7 +258,14 @@ void main() {
     expect((await repository.read())!.revision, 1);
   });
 
-  for (final route in ['/home', '/portfolio', '/projects', '/settings']) {
+  for (final route in [
+    '/home',
+    '/resumes',
+    '/portfolio',
+    '/projects',
+    '/settings',
+    '/settings/profile',
+  ]) {
     for (final language in AppLanguage.values) {
       testWidgets(
         'Local draft on $route, ${language.name}, narrow enlarged text',
@@ -276,7 +294,13 @@ void main() {
           expect(find.text('Private notebook'), findsNothing);
           expect(tester.takeException(), isNull);
           await tester.drag(
-            find.byType(SingleChildScrollView).last,
+            find
+                .byWidgetPredicate(
+                  (widget) =>
+                      widget is Scrollable &&
+                      widget.axisDirection == AxisDirection.down,
+                )
+                .last,
             const Offset(0, -2500),
           );
           await tester.pumpAndSettle();

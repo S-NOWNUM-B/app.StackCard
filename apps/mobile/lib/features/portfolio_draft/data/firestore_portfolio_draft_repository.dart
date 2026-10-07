@@ -118,7 +118,7 @@ Map<String, dynamic> encodeCloudPortfolioDraft(CloudPortfolioDraft draft) {
   }
   _validateMediaOwner(draft.content, draft.ownerUid);
   return {
-    'schemaVersion': 3,
+    'schemaVersion': 4,
     'ownerUid': draft.ownerUid,
     'mutationId': draft.mutationId,
     'localRevision': draft.localRevision,
@@ -151,7 +151,10 @@ CloudPortfolioDraft decodeCloudPortfolioDraft(
   if (data.length != fields.length ||
       !fields.containsAll(data.keys) ||
       schemaVersion is! int ||
-      (schemaVersion != 1 && schemaVersion != 2 && schemaVersion != 3) ||
+      (schemaVersion != 1 &&
+          schemaVersion != 2 &&
+          schemaVersion != 3 &&
+          schemaVersion != 4) ||
       ownerUid.isEmpty ||
       ownerUid.contains('/') ||
       data['ownerUid'] != ownerUid ||
@@ -171,6 +174,7 @@ CloudPortfolioDraft decodeCloudPortfolioDraft(
         : decodePortfolioContent(
             data['content'],
             allowMedia: schemaVersion >= 3,
+            allowDocuments: schemaVersion >= 4,
           );
     _validateMediaOwner(content, ownerUid);
     return CloudPortfolioDraft(
@@ -193,6 +197,11 @@ void _validateMediaOwner(PortfolioContent? content, String ownerUid) {
   if ((avatarPath.isNotEmpty && !avatarPath.startsWith(prefix)) ||
       content.projects.any(
         (project) => project.imagePaths.any((path) => !path.startsWith(prefix)),
+      ) ||
+      content.documents.any(
+        (document) =>
+            document.content.profile.avatarPath.isNotEmpty &&
+            !document.content.profile.avatarPath.startsWith(prefix),
       )) {
     throw const PortfolioSyncFailure(PortfolioSyncFailureKind.invalidData);
   }

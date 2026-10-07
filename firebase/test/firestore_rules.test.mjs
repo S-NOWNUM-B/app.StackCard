@@ -79,6 +79,34 @@ function draft(uid = 'alice', overrides = {}) {
   };
 }
 
+function documentContent(uid = 'alice', index = 0) {
+  return {
+    id: `resume-${index}`,
+    title: `Resume ${index}`,
+    kind: 'resume',
+    createdAt: '2026-10-07T00:00:00.000Z',
+    updatedAt: '2026-10-07T00:00:00.000Z',
+    content: {
+      ...content(),
+      profile: {
+        ...content().profile,
+        avatarPath: `accounts/${uid}/media/0123456789abcdef0123456789abcdef.jpg`,
+      },
+      ignoredGitHubRepositories: [],
+    },
+    projects: [],
+    attachedResumeId: null,
+  };
+}
+
+function workspaceDocuments(count = 1) {
+  return {
+    ...content(),
+    ignoredGitHubRepositories: [],
+    documents: Array.from({ length: count }, (_, index) => documentContent('alice', index)),
+  };
+}
+
 async function saveDraft(db, uid = 'alice', overrides = {}) {
   await setDoc(doc(db, `accounts/${uid}/drafts/current`), draft(uid, overrides));
 }
@@ -164,6 +192,68 @@ test('draft schema rejects spoofed owner, client timestamp, extra fields and unk
 
 test('notes-only draft with null content is valid', async () => {
   await assertSucceeds(saveDraft(database(), 'alice', { content: null }));
+});
+
+test('private document schema 4 accepts owner snapshots and blocks every downgrade', async () => {
+  const alice = database();
+  await assertSucceeds(saveDraft(alice, 'alice', {
+    schemaVersion: 4, mutationId: 'documents-save', content: workspaceDocuments(),
+  }));
+  const stored = (await getDoc(doc(alice, 'accounts/alice/drafts/current'))).data();
+  assert.equal(stored.content.documents[0].title, 'Resume 0');
+  for (const schemaVersion of [1, 2, 3]) {
+    await assertFails(saveDraft(alice, 'alice', { schemaVersion }));
+  }
+  await assertFails(getDoc(doc(database('bob'), 'accounts/alice/drafts/current')));
+  await assertFails(getDoc(doc(database(null), 'accounts/alice/drafts/current')));
+});
+
+test('old private and public schemas reject documents even when the list is empty', async () => {
+  const alice = database();
+  for (const schemaVersion of [1, 2, 3]) {
+    await assertFails(saveDraft(alice, 'alice', {
+      schemaVersion, content: { ...content(), documents: [] },
+    }));
+  }
+  await saveDraft(alice);
+  await assertFails(publishBatch(alice, 'alice', 'alice', 1, {
+    content: { ...content(), documents: [] },
+  }).commit());
+});
+
+test('all 20 document snapshots validate their media owner, including final index', async () => {
+  const alice = database();
+  const emptyAvatars = workspaceDocuments(20);
+  for (const document of emptyAvatars.documents) document.content.profile.avatarPath = '';
+  await assertSucceeds(saveDraft(alice, 'alice', {
+    schemaVersion: 4, content: emptyAvatars,
+  }));
+  await assertSucceeds(saveDraft(alice, 'alice', {
+    schemaVersion: 4, content: workspaceDocuments(20),
+  }));
+  const foreign = workspaceDocuments(20);
+  foreign.documents[19] = documentContent('bob', 19);
+  await assertFails(saveDraft(alice, 'alice', { schemaVersion: 4, content: foreign }));
+  await assertFails(saveDraft(alice, 'alice', {
+    schemaVersion: 4, content: workspaceDocuments(21),
+  }));
+});
+
+test('document Rules reject foreign snapshot media', async () => {
+  const alice = database();
+  const mutations = [
+    (document) => { document.content.profile.avatarPath = 'accounts/bob/media/0123456789abcdef0123456789abcdef.jpg'; },
+    (document) => { document.content.profile.avatarPath = 42; },
+    (document) => { delete document.content.profile.avatarPath; },
+  ];
+  for (const mutate of mutations) {
+    const workspace = workspaceDocuments();
+    mutate(workspace.documents[0]);
+    await assertFails(saveDraft(alice, 'alice', { schemaVersion: 4, content: workspace }));
+  }
+  await assertSucceeds(saveDraft(alice, 'alice', {
+    schemaVersion: 4, content: workspaceDocuments(),
+  }));
 });
 
 test('an existing unknown-schema or mismatched-owner draft cannot be overwritten', async () => {

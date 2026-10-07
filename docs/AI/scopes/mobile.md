@@ -9,18 +9,15 @@ guides. Этот файл дополняет их только для Flutter-п
 ## Источники
 
 Ниже описан действующий Flutter runtime. [Design v2](../../redesign/README.md)
-и его [план](../../redesign/plan.md) задают target и scope. По D040 независимый
-R8 slice перенесён: semantic Dark/Light Lime, Manrope/shared controls, pinned SVG,
-live Brand A, Projects и поддерживаемые Settings. Private singleton storage,
-plain Resume и legacy Home/Portfolio composition сохранены; новый Resume root,
-multiple documents, новая model/account/publication/web ещё не реализованы.
-Phase 11 разрешена 2026-10-07: private media добавляются в текущий singleton draft;
-это не завершение полной Design v2 acceptance.
-Следующая Phase 12 разрешена с ручным городом/страной и optional geolocation;
-карта и Google Maps исключены по прямому решению пользователя.
-Конкретный [prerequisite scope](../../redesign/prerequisites.md) — proposed,
-не разрешение backend/migration. Current status хранится в product spec/plan;
-headless950PASS не означает полный REDESIGN_DONE или native visual acceptance.
+задаёт target; [product status](../../product/product-spec.md#статус-и-границы-текущей-работы)
+задаёт разрешённый scope. С 2026-10-07 очередь фаз на паузе, разрешено развитие
+mobile capabilities: четыре root tabs, смешанная Home library, независимые
+Resume/Portfolio и общая база. Механизм сохраняет existing draft repository,
+UID boundaries, Hive queue и outbox, без второго runtime/write store.
+Media и location используют прежние features; карта/Maps исключены.
+[Prerequisites](../../redesign/prerequisites.md) разделяет фактически реализованный
+private slice и оставшийся proposal. R7 остаётся awaiting_review;
+headless проверки не закрывают native visual, public/web или auth acceptance.
 
 - SDK constraint и зависимости: [pubspec.yaml](../../../apps/mobile/pubspec.yaml); разрешённые версии:
   [pubspec.lock](../../../apps/mobile/pubspec.lock). Не добавлять неиспользуемые зависимости.
@@ -114,11 +111,12 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   Legacy `AuthRepository`/`DemoSession` остаются preview API без native configuration.
   Restoring/error/signedOut без guest access блокируют private routes и draft;
   нельзя читать guest или предыдущий UID как fallback. Error/retry остаётся явным.
-- Shell имеет только три поддерживаемых roots: `/home`, `/portfolio`, `/projects`.
-  Все labels и bottom nav сохраняются на tablet; новая Resume library ждёт model
-  contract, нельзя выдавать plain legacy Resume за неё. Gear≥48 открывает
-  standalone `/settings`; `/settings/appearance` и `/settings/account` находятся
-  вне Shell, Back возвращает origin. Home/Portfolio composition пока legacy.
+- Stateful Shell имеет четыре roots: `/home`, `/resumes`, `/projects`, `/portfolio`.
+  Labels и bottom nav сохраняются на tablet; branch state сохраняется при смене
+  вкладки. Home фильтрует Все/Резюме/Проекты и включает Portfolio в «Все».
+  Resume/Portfolio roots показывают private document libraries. Gear≥48 открывает
+  standalone `/settings`; `/settings/appearance` и `/settings/account` вне Shell.
+  Back возвращает origin; UID/access boundary сбрасывает private branch state.
 - Routes именованы в `app_router.dart`; `/register` и `/reset-password` — auth
   forms, Builder forms вложены в `/portfolio/builder`, project edit получает `id`.
   Home/Portfolio/Projects/Settings/notes/Builder/editor/preview требуют account
@@ -153,12 +151,12 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   не меняет content. Save сохраняет захваченный snapshot, более новый ввод
   остаётся unsaved; повторная запись одновременно не выполняется.
   [HivePortfolioDraftRepository](../../../apps/mobile/lib/features/portfolio_draft/data/hive_portfolio_draft_repository.dart)
-  последовательно проверяет expected revision и пишет envelope v4; v1/v2/v3 читаются
+  последовательно проверяет expected revision и пишет envelope v5; v1/v2/v3/v4 читаются
   без eager migration, explicit Save/ACK пишет текущую версию. Conflict
   сохраняет несохранённые правки и требует явного решения перечитать durable draft.
   `saveNotes` изменяет только notes, сохраняя content. Чтение v1 не пишет migration:
   точные notes/metadata возвращаются с content null; первая явная запись сохраняет
-  raw v1 backup перед заменой. Ошибка backup/write сохраняет прежний durable draft;
+  raw owner-scoped backup исходной версии перед заменой. Ошибка backup/write сохраняет прежний durable draft;
   corrupted/unsupported draft блокирует перезапись. Draft не имеет TTL.
   [LocalDraftAccounts](../../../apps/mobile/lib/features/portfolio_draft/data/local_draft_accounts.dart)
   сохраняет прежние guest keys и отдельные UID namespaces через base64url UTF-8.
@@ -168,8 +166,8 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   в Settings; configured runtime требует online claim и пустой local/cloud target,
   offline cache miss не означает cloud emptiness. LocalRuntime server-only preflight
   пропускается только для своего pending journal; transaction закрывает race.
-  Source envelope/revision/notes/content и существующий raw v1 backup сохраняются;
-  v1 не мигрируется при чтении, ACK после явного transfer может создать v4.
+  Source envelope/revision/notes/content и raw backups v1–v4 сохраняются;
+  v1 не мигрируется при чтении, ACK после явного transfer может создать v5.
   Durable journal резервирует source одному UID до online create-if-absent claim;
   retry допускает только тот же mutation ID/notes/content. Remote ACK metadata
   сохраняется до local destination/cleanup; durable syncPrepared не позволяет
@@ -200,8 +198,16 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   Пустые блоки пропускаются; Featured Projects показывает visible/featured проекты,
   Builder/Projects — все ручные записи для редактирования.
   `PortfolioTheme` dark/light использует существующую StackCardTheme при отображении
-  content на Portfolio/preview отдельно от app ThemeMode. Resume — обычный текст
-  с переносами строк, без Markdown/файлов.
+  content на preview отдельно от app ThemeMode. Legacy `resumeText` — обычный
+  текст с переносами строк, без Markdown/файлов. Private документы создаются/
+  редактируются по `/resumes/new`, `/resumes/:id/edit`, `/portfolio/new`,
+  `/portfolio/:id/edit`; Resume creation — пять шагов, существующий документ —
+  focused sections с собственным buffer. Scoped saveDocument/saveProject/
+  saveDeveloperProfile используют captured repository/expected entity/revision;
+  соседние unsaved slices/notes не отправляются этим Save. New Project в документе
+  остаётся local buffer до `saveDocument(newProjects: ...)`: Library+relation
+  пишутся одной revision, Cancel не создаёт Project. Полный контракт —
+  в [architecture](../../architecture/architecture.md#общая-база-и-независимые-документы).
   Pure domain validation/completion живут в `features/portfolio_draft/domain`;
   процент вычисляется, скрытие блоков его не увеличивает. Remote sync и prepared
   publication принадлежат Phase 8; public UI/web остаются отдельными фазами.
@@ -242,8 +248,8 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   Private bytes cache memory-only и исчезает при UID transition; external public
   avatars используют cached_network_image. Не удалять прежние durable paths
   при замене/ACK: offline/LWW может ещё ссылаться на них. Public projection
-  исключает media fields, publication не вызывается. Hive writer v4/private
-  cloud writer3 читают legacy versions без read-time rewrite; downgrade запрещён.
+  исключает media fields, publication не вызывается. Hive writer v5/private
+  cloud writer4 читают legacy versions без read-time rewrite; downgrade запрещён.
 - Location: [public API](../../../apps/mobile/lib/features/location/location.dart) и
   [контракт](../../architecture/architecture.md#выбор-города-и-страны--phase-12).
   Picker подтверждает город/страну, manual input работает без permissions.
@@ -275,7 +281,7 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   объединяет profile/projects для Home и demo Portfolio; query/filter Projects
   не влияет на полный или featured список других экранов. Это presentation read model,
   не draft/published domain. `Profile`/`Project` также остаются read models;
-  Home/Portfolio/Projects/Settings читают проекции единого Builder content через
+  Home/document libraries/Projects/Settings читают единый workspace через
   публичные feature APIs, без отдельных write stores. `ProfileReadiness` получает
   счётчики из demo snapshot либо pure вычисления полноты Builder.
 - Loading/error/retry: [StackCardAsyncView](../../../apps/mobile/lib/shared/widgets/stackcard_async_view.dart)
@@ -329,7 +335,7 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   `test/portfolio_draft_controller_test.dart`, `test/portfolio_draft_widget_test.dart`:
   revision, input retention, unknown schema, Save failures и навигация.
   Builder checks дополнительно проверяют validation/completion, CRUD, порядок/
-  видимость/тему preview, v1/v2/v3 → v4 migration, stale revision и сохранение новых
+  видимость/тему preview, v1/v2/v3/v4 → v5 compatibility, stale revision и сохранение новых
   правок во время Save; имена актуальных tests — в `apps/mobile/test`.
 - Локальные шрифты и лицензии: [assets/fonts](../../../apps/mobile/assets/fonts/);
   регистрация остаётся в pubspec. Manrope400/600/700/800 и OFL/pinned hashes

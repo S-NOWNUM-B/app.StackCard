@@ -221,7 +221,7 @@ void main() {
       );
       expect(project.title, 'Manually edited');
       expect(project.lastGitHubSyncAt, _validatedAt);
-      expect(local.writes, 0);
+      expect(local.writes, 1);
     },
   );
 

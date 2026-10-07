@@ -1,5 +1,6 @@
 export 'domain/portfolio_draft.dart';
 export 'domain/portfolio_content.dart';
+export 'domain/portfolio_document.dart';
 export 'domain/portfolio_completion.dart';
 export 'domain/portfolio_validation.dart';
 export 'domain/portfolio_draft_repository.dart';
@@ -21,3 +22,5 @@ export 'presentation/portfolio_education_editor_screen.dart';
 export 'presentation/portfolio_links_editor_screen.dart';
 export 'presentation/portfolio_resume_editor_screen.dart';
 export 'presentation/portfolio_project_editor_screen.dart';
+export 'presentation/portfolio_document_editor_screen.dart';
+export 'presentation/portfolio_document_library_screen.dart';

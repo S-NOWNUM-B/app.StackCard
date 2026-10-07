@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_stackcard/core/localization/app_strings.dart';
 import 'package:app_stackcard/core/localization/builder_form_strings.dart';
 import 'package:app_stackcard/core/theme/stackcard_theme.dart';
@@ -21,6 +23,37 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
+  testWidgets(
+    'Project Save retains newer input and blocks closing until captured write completes',
+    (tester) async {
+      final h = await _pumpEditor(tester, const PortfolioProjectEditorScreen());
+      await _enter(tester, 'title', 'Submitted project');
+      h.repository.saveGate = Completer<void>();
+      await tester.tap(find.byKey(const ValueKey('builder_form_apply')));
+      await tester.pump();
+      expect(h.state.saving, isTrue);
+      await _enter(tester, 'title', 'Newer project');
+      await tester.tap(find.byKey(const ValueKey('builder_form_cancel')));
+      await tester.pump();
+      expect(find.text('Back destination'), findsNothing);
+      h.repository.saveGate!.complete();
+      await tester.pumpAndSettle();
+      expect(
+        h.repository.draft.content!.projects.single.title,
+        'Submitted project',
+      );
+      expect(_textController(tester, 'title').text, 'Newer project');
+      expect(find.text('Back destination'), findsNothing);
+      await _tap(tester, const ValueKey('builder_form_apply'));
+      expect(
+        h.repository.draft.content!.projects.single.title,
+        'Newer project',
+      );
+      expect(h.repository.draft.content!.projects, hasLength(1));
+      expect(find.text('Back destination'), findsOneWidget);
+    },
+  );
+
   test('Form translations have matching keys and reach the real catalogue', () {
     expect(
       builderFormRussianStrings.keys.toSet(),
@@ -149,7 +182,7 @@ void main() {
   });
 
   testWidgets(
-    'Manual project create validates and stores flags, technologies and URLs',
+    'Manual project create validates, saves Library content and leaves document flags to attachments',
     (tester) async {
       final h = await _pumpEditor(tester, const PortfolioProjectEditorScreen());
       await _tap(tester, const ValueKey('builder_form_apply'));
@@ -176,8 +209,8 @@ void main() {
         'https://github.com/example/project',
       );
       await _enter(tester, 'liveUrl', 'https://example.com/demo');
-      await _tap(tester, const ValueKey('builder_form_featured'));
-      await _tap(tester, const ValueKey('builder_form_visible'));
+      expect(find.byKey(const ValueKey('builder_form_featured')), findsNothing);
+      expect(find.byKey(const ValueKey('builder_form_visible')), findsNothing);
       await _tap(tester, const ValueKey('builder_form_apply'));
       final project = h.content.projects.single;
       expect(project.id, isNotEmpty);
@@ -186,9 +219,9 @@ void main() {
       expect(project.technologies, ['Flutter', 'Dart']);
       expect(project.repositoryUrl, 'https://github.com/example/project');
       expect(project.liveUrl, 'https://example.com/demo');
-      expect(project.featured, isTrue);
-      expect(project.visible, isFalse);
-      expect(h.repository.saves, 0);
+      expect(project.featured, isFalse);
+      expect(project.visible, isTrue);
+      expect(h.repository.saves, 1);
     },
   );
 
@@ -681,6 +714,7 @@ class _Repository implements PortfolioDraftRepository {
   PortfolioDraft draft;
   final PortfolioDraftFailureKind? failure;
   int saves = 0;
+  Completer<void>? saveGate;
 
   @override
   Future<PortfolioDraft?> read() async {
@@ -707,6 +741,7 @@ class _Repository implements PortfolioDraftRepository {
     required int expectedRevision,
     required String notes,
   }) async {
+    await saveGate?.future;
     if (draft.revision != expectedRevision) {
       throw const PortfolioDraftFailure(PortfolioDraftFailureKind.conflict);
     }

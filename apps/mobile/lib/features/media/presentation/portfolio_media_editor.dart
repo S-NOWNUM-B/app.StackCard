@@ -20,6 +20,8 @@ class PortfolioMediaEditor extends ConsumerStatefulWidget {
     required this.onBusyChanged,
     this.maxImages = 6,
     this.titleKey = 'media.projectImages',
+    this.enabled = true,
+    this.formNoteKey = 'media.formNote',
   });
 
   final List<String> paths;
@@ -27,6 +29,8 @@ class PortfolioMediaEditor extends ConsumerStatefulWidget {
   final ValueChanged<bool> onBusyChanged;
   final int maxImages;
   final String titleKey;
+  final bool enabled;
+  final String formNoteKey;
 
   @override
   ConsumerState<PortfolioMediaEditor> createState() =>
@@ -40,20 +44,25 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
   PortfolioMediaRepository? _operationRepository;
   bool _busy = false;
   bool _picking = false;
-  bool _retained = false;
   double _progress = 0;
   int _generation = 0;
 
   /// Родитель вызывает только после успешного применения paths к working draft.
-  void retainUploads() => _retained = true;
+  void retainUploads({Iterable<String>? paths}) {
+    if (paths == null) {
+      _created.clear();
+    } else {
+      for (final path in paths) {
+        _created.remove(path);
+      }
+    }
+  }
 
   @override
   void dispose() {
     _generation++;
-    if (!_retained) {
-      for (final entry in _created.entries) {
-        entry.value.delete(entry.key).ignore();
-      }
+    for (final entry in _created.entries) {
+      entry.value.delete(entry.key).ignore();
     }
     super.dispose();
   }
@@ -73,7 +82,7 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
 
   Future<void> _pick(PortfolioImageSource source) async {
     final repository = ref.read(portfolioMediaRepositoryProvider);
-    if (repository == null || _busy) return;
+    if (repository == null || _busy || !widget.enabled) return;
     final generation = ++_generation;
     _operationRepository = repository;
     _setBusy(true, picking: true);
@@ -104,7 +113,8 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
 
   Future<void> _retry() async {
     final repository = _operationRepository;
-    if (repository == null ||
+    if (!widget.enabled ||
+        repository == null ||
         _prepared == null ||
         _busy ||
         !identical(repository, ref.read(portfolioMediaRepositoryProvider))) {
@@ -169,7 +179,7 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
   }
 
   void _remove(String path) {
-    if (_busy) return;
+    if (_busy || !widget.enabled) return;
     widget.onChanged(
       List.unmodifiable(widget.paths.where((item) => item != path)),
     );
@@ -192,6 +202,7 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
       widget.onBusyChanged(false);
     });
     final canAdd =
+        widget.enabled &&
         repository != null &&
         !_busy &&
         (widget.maxImages == 1 || widget.paths.length < widget.maxImages);
@@ -224,7 +235,9 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
                       key: ValueKey('media_remove_$path'),
                       tooltip: context.strings.tr('media.remove'),
                       icon: const Icon(Icons.close_rounded),
-                      onPressed: _busy ? null : () => _remove(path),
+                      onPressed: _busy || !widget.enabled
+                          ? null
+                          : () => _remove(path),
                     ),
                   ],
                 ),
@@ -277,7 +290,7 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
                 ? isGuest
                       ? 'media.guest'
                       : 'media.unconfigured'
-                : 'media.formNote',
+                : widget.formNoteKey,
           ),
           style: text.bodySmall?.copyWith(color: context.colors.textMeta),
         ),
@@ -319,7 +332,7 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
               child: StackCardButton(
                 key: const ValueKey('media_retry'),
                 label: context.strings.tr('common.retry'),
-                onPressed: _busy ? null : _retry,
+                onPressed: _busy || !widget.enabled ? null : _retry,
               ),
             ),
         ],

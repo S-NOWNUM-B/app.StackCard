@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
+import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/profile/profile.dart';
 import 'package:app_stackcard/features/projects/projects.dart';
 import 'package:app_stackcard/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Profile sampleProfile() => Profile(
@@ -71,13 +74,13 @@ void main() {
   });
 
   testWidgets(
-    'Repository replacements reach Home, Portfolio, preview and Settings',
+    'Repository replacements reach Settings and Projects without filling private libraries',
     (tester) async {
       final profile = TestProfileRepository();
       final projects = TestProjectsRepository();
       await tester.pumpWidget(
         StackCardApp(
-          initialLocation: '/home',
+          initialLocation: '/settings',
           providerOverrides: [
             profileRepositoryProvider.overrideWithValue(profile),
             projectsRepositoryProvider.overrideWithValue(projects),
@@ -85,47 +88,75 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Привет, Sam'), findsOneWidget);
-      expect(find.text('40%'), findsOneWidget);
-      expect(find.text('1 проект'), findsOneWidget);
-      expect(find.text('1 навык'), findsOneWidget);
-      expect(find.text('Replacement Project'), findsOneWidget);
-      expect(find.text('Alex Morgan'), findsNothing);
-      await tester.ensureVisible(find.text('Моё портфолио'));
-      await tester.tap(find.text('Моё портфолио'));
-      await tester.pumpAndSettle();
-      expect(find.text('Sam Lee'), findsOneWidget);
-      expect(find.text('Другой профиль из Repository'), findsOneWidget);
-      expect(find.text('Replacement Project'), findsOneWidget);
-      expect(find.text('Frontend Developer'), findsNothing);
-      await tester.ensureVisible(find.text('Предпросмотр'));
-      await tester.tap(find.text('Предпросмотр'));
-      await tester.pumpAndSettle();
-      expect(find.text('Предпросмотр портфолио'), findsOneWidget);
-      expect(
-        find.descendant(
-          of: find.byType(BottomSheet),
-          matching: find.text('Sam Lee'),
-        ),
-        findsOneWidget,
-      );
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('app.settings')));
-      await tester.pumpAndSettle();
-      expect(find.text('Настройки'), findsOneWidget);
-      expect(find.byType(NavigationBar), findsNothing);
       expect(find.text('Sam Lee · sam'), findsOneWidget);
       expect(find.text('Alex Morgan · alex-dev-demo'), findsNothing);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MaterialApp)),
+      );
+      final model = await container.read(profileProvider.future);
+      expect(model.name, 'Sam Lee');
+      expect(model.readiness.percent, 40);
+      expect(model.skills, ['Dart']);
       await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
-      expect(find.text('Другой профиль из Repository'), findsOneWidget);
+      expect(find.text('Здесь появятся твои работы'), findsOneWidget);
+      expect(find.text('Replacement Project'), findsNothing);
+      await tester.tap(_destination('Портфолио'));
+      await tester.pumpAndSettle();
+      expect(find.text('Пока нет портфолио'), findsOneWidget);
+      expect(find.text('Sam Lee'), findsNothing);
+      await tester.tap(_destination('Проекты'));
+      await tester.pumpAndSettle();
+      expect(find.text('Replacement Project'), findsOneWidget);
+      expect(find.text('Проекты: 1'), findsOneWidget);
       expect(
-        tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
-        1,
+        container.read(featuredProjectsProvider).requireValue.single.title,
+        'Replacement Project',
       );
       expect(profile.calls, 1);
       expect(projects.calls, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Developer Profile uses the overridden draft and never reads a demo profile',
+    (tester) async {
+      final repository = MemoryPortfolioDraftRepository();
+      final demo = TestProfileRepository();
+      await repository.save(
+        PortfolioContent(
+          profile: const PortfolioProfile(
+            name: 'Private owner',
+            headline: 'Dart engineer',
+          ),
+          skills: const [Skill(id: 'skill-dart', name: 'Dart')],
+        ),
+        expectedRevision: 0,
+        notes: 'Private notes',
+      );
+      await tester.pumpWidget(
+        StackCardApp(
+          initialLocation: '/settings/profile',
+          providerOverrides: [
+            portfolioDraftRepositoryProvider.overrideWithValue(repository),
+            profileRepositoryProvider.overrideWithValue(demo),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Private owner'), findsOneWidget);
+      expect(find.text('Sam Lee'), findsNothing);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MaterialApp)),
+      );
+      final model = await container.read(profileProvider.future);
+      expect(model.name, 'Private owner');
+      expect(model.role, 'Dart engineer');
+      expect(model.skills, ['Dart']);
+      expect(demo.calls, 0);
+      expect((await repository.read())!.revision, 1);
+      expect(find.text('Private notes'), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
@@ -136,7 +167,7 @@ void main() {
     final pending = Completer<Profile>();
     await tester.pumpWidget(
       StackCardApp(
-        initialLocation: '/portfolio',
+        initialLocation: '/settings',
         providerOverrides: [
           profileRepositoryProvider.overrideWithValue(
             TestProfileRepository(pending: pending.future),
@@ -148,7 +179,7 @@ void main() {
     expect(find.text('Загрузка данных'), findsOneWidget);
     pending.complete(sampleProfile());
     await tester.pumpAndSettle();
-    expect(find.text('Sam Lee'), findsOneWidget);
+    expect(find.text('Sam Lee · sam'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
@@ -158,7 +189,7 @@ void main() {
       final profile = TestProfileRepository(failFirst: true);
       await tester.pumpWidget(
         StackCardApp(
-          initialLocation: '/home',
+          initialLocation: '/settings',
           providerOverrides: [
             profileRepositoryProvider.overrideWithValue(profile),
           ],
@@ -168,9 +199,10 @@ void main() {
       expect(find.text('Не удалось загрузить данные'), findsOneWidget);
       expect(find.textContaining('test failure'), findsNothing);
       expect(profile.calls, 1);
+      await tester.ensureVisible(find.text('Повторить'));
       await tester.tap(find.text('Повторить'));
       await tester.pumpAndSettle();
-      expect(find.text('Привет, Sam'), findsOneWidget);
+      expect(find.text('Sam Lee · sam'), findsOneWidget);
       expect(profile.calls, 2);
     },
   );
@@ -185,13 +217,14 @@ void main() {
     );
     await tester.pumpWidget(
       StackCardApp(
-        initialLocation: '/portfolio',
+        initialLocation: '/settings',
         providerOverrides: [
           profileRepositoryProvider.overrideWithValue(repository),
         ],
       ),
     );
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Повторить'));
     await tester.tap(find.text('Повторить'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
@@ -200,26 +233,35 @@ void main() {
     expect(repository.calls, 2);
     pending.complete(sampleProfile());
     await tester.pumpAndSettle();
-    expect(find.text('Sam Lee'), findsOneWidget);
+    expect(find.text('Sam Lee · sam'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Home handles a repository with no featured projects', (
+  testWidgets('Home empty state does not consume a demo projects repository', (
     tester,
   ) async {
+    final repository = TestProjectsRepository(empty: true);
     await tester.pumpWidget(
       StackCardApp(
         initialLocation: '/home',
         providerOverrides: [
-          projectsRepositoryProvider.overrideWithValue(
-            TestProjectsRepository(empty: true),
-          ),
+          projectsRepositoryProvider.overrideWithValue(repository),
         ],
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Нет избранных проектов'), findsOneWidget);
-    expect(find.text('0 проектов'), findsOneWidget);
+    expect(find.text('Здесь появятся твои работы'), findsOneWidget);
+    expect(find.text('Нет избранных проектов'), findsNothing);
+    expect(repository.calls, 0);
+    await tester.tap(_destination('Проекты'));
+    await tester.pumpAndSettle();
+    expect(find.text('Проекты: 0'), findsOneWidget);
+    expect(repository.calls, 1);
     expect(tester.takeException(), isNull);
   });
 }
+
+Finder _destination(String label) => find.descendant(
+  of: find.byType(NavigationBar),
+  matching: find.widgetWithText(TextButton, label),
+);

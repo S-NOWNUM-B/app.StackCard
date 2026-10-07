@@ -54,12 +54,14 @@ PortfolioContent projectPublicPortfolioContent(PortfolioContent content) {
     }).toList(),
     resumeText: includes(PortfolioBlockKind.resume) ? content.resumeText : '',
     ignoredGitHubRepositories: const [],
+    documents: const [],
   );
 }
 
 Map<String, Object?> encodePublicPortfolioContent(PortfolioContent content) {
   final encoded = encodePortfolioContent(
     projectPublicPortfolioContent(content),
+    includeDocuments: false,
   );
   encoded.remove('ignoredGitHubRepositories');
   (encoded['profile']! as Map).remove('avatarPath');

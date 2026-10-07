@@ -37,15 +37,12 @@ Phase 11 реализована с открытой device/live приёмкой
 с ручным городом/страной и optional geolocation.
 статус и результаты проверок находятся в
 [product spec](docs/product/product-spec.md#статус-и-границы-текущей-работы).
-Продуктовые функции вводятся последовательно по
-[roadmap](docs/product/product-spec.md#roadmap),
-переход к следующей фазе требует подтверждения пользователя.
-
-[План разработки](docs/product/product-spec.md#план-разработки) обязателен
-для дальнейшей работы над продуктом. Он задаёт задачи, последовательность
-и критерии готовности; текущая фаза и прогресс хранятся в product spec.
-Общие [правила выполнения фаз](docs/AI/AGENTS.md#разработка-по-плану)
-применяются к mobile, web и backend.
+С 2026-10-07 пользователь поставил последовательную очередь фаз на паузу и
+разрешил функциональную mobile работу по Figma/концепции общей базы и документов.
+[План](docs/product/product-spec.md#план-разработки) сохраняет историю и acceptance;
+действующий scope — в product status и
+[исключении общих правил](docs/AI/AGENTS.md#разработка-по-плану).
+Web/publication/deploy/commit/push не стартуют автоматически.
 
 <div align="center">
 
@@ -66,9 +63,10 @@ Phase 11 реализована с открытой device/live приёмкой
 GitHub Import читает public API через Dio и сохраняет ответы с ETag/Link в Hive.
 Cache имеет hard TTL 7 дней и проверяется сетью при каждом чтении; fallback
 доступен при network/timeout/server failure с явной датой последней проверки.
-Отдельный draft хранит PortfolioContent и приватные заметки. Home/Projects/Settings
-читают проекции working content; Portfolio/preview учитывают порядок и видимость блоков.
-Resume редактируется как plain text; ручные изменения сохраняются явным Save;
+Отдельный draft хранит PortfolioContent и приватные заметки. Home/document libraries/Projects/Settings
+читают working aggregate. Независимые Resume/Portfolio хранят snapshots секций
+и Library relations; plain `resumeText` остаётся legacy-compatible. Scoped Save
+сохраняет документ/проект/базу без соседнего unsaved ввода;
 прочитанные данные не добавляются автоматически в curated-портфолио.
 В `apps/web` подготовлен README; Next.js-приложение появится на Phase 13.
 Firebase Auth остаётся account boundary; Firestore sync относится к Phase 8.
@@ -85,8 +83,8 @@ public UI и web dependencies вводятся на своих фазах.
 [AI router](docs/AI/README.md). Для mobile прочитай
 [scope rules](docs/AI/scopes/mobile.md), для Rules/emulators —
 [Firebase scope](docs/AI/scopes/firebase.md). Затем прочитай
-[план разработки](docs/product/product-spec.md#план-разработки) и раздел нужной
-фазы. Соотнеси задачу с её критериями готовности, установи текущий статус,
+[план разработки](docs/product/product-spec.md#план-разработки) и действующий
+capability scope. Соотнеси задачу с её критериями готовности, установи статус,
 владельца контракта и конкретный проверяемый результат.
 
 ### 2. Изучить источники и сделать локальное изменение
@@ -339,7 +337,7 @@ flutter test
 `test/widget_test.dart` проверяет legacy preview-вход без native configuration,
 переходы и возврат, поиск проектов,
 предпросмотр, смену темы, UI states и клавиатуру. `test/responsive_test.dart`
-проверяет пять экранов в двух темах на размерах телефона и планшета, portrait/landscape,
+проверяет шесть экранов в двух темах на размерах телефона и планшета, portrait/landscape,
 включая узкий экран и удвоенный текст. При обычном масштабе проверяются контраст
 текста и touch targets; это автоматические проверки, не полный accessibility audit.
 `test/appearance_controller_test.dart` проверяет начальную тему и уведомления,
@@ -349,7 +347,8 @@ flutter test
 `test/auth_repository_test.dart`, `test/profile_repository_test.dart` и
 `test/projects_repository_test.dart` проверяют contracts, чистые правила и
 immutable данные. Соответствующие `auth_di_test.dart`, `profile_di_test.dart`,
-`projects_di_test.dart` подменяют источник в реальных экранах через
+`projects_di_test.dart` подменяют источник в Settings, DeveloperProfile и проекциях
+рабочей базы через
 `StackCardApp.providerOverrides`, проверяют loading/error/empty и явный retry.
 `test/github_data_test.dart` проверяет DTO, HTTP failures, Link pagination и
 условные ETag-запросы; `test/github_import_controller_test.dart` — debounce,
@@ -367,8 +366,8 @@ snapshot restore, очередь записей/retry, ru/en UI и увелич�
 `test/portfolio_draft_repository_test.dart`, `test/portfolio_draft_controller_test.dart`
 и `test/portfolio_draft_widget_test.dart` проверяют saved notes, revisions,
 сохранность ввода при ошибках, unknown schema и экран локального draft.
-Builder domain/repository tests проверяют validation/completion, schema v1/v2→v3
-и сохранность private notes; controller/forms/preview/integration tests проверяют
+Builder domain/repository tests проверяют validation/completion, schema v1/v2/v3/v4→v5
+и сохранность private notes/documents; controller/forms/preview/integration tests проверяют
 CRUD, рабочее состояние, сохранение и единые проекции. Визуальные проверки
 Builder находятся в `test/portfolio_builder_visual_test.dart`.
 `test/portfolio_suggestions_test.dart` проверяет pure rules с заданным временем,
@@ -542,7 +541,7 @@ Phase 11 использует `features/media`, Storage paths в private draft �
 bucket, но это само по себе не доказывает его существование. Billing upgrade
 и deployment не выполняются автоматически. Перед live запуском после отдельного
 разрешения должны быть deployed и Storage Rules, и обновлённые Firestore Rules
-(private schema 3). Старые writers после нового schema update получат отказ.
+(private schema 4). Старые writers после нового schema update получат отказ.
 
 macOS — zsh/bash, cwd `firebase`, для локальной проверки без billing:
 

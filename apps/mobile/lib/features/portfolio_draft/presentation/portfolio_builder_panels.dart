@@ -203,6 +203,14 @@ Future<void> _deleteProject(
   controller.updateContent(
     content.copyWith(
       projects: content.projects.where((project) => project.id != id).toList(),
+      documents: [
+        for (final document in content.documents)
+          document.copyWith(
+            projects: document.projects
+                .where((item) => item.projectId != id)
+                .toList(),
+          ),
+      ],
     ),
   );
 }

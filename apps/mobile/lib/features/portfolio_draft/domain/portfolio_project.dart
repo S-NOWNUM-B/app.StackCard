@@ -15,6 +15,7 @@ final class PortfolioProject {
     this.visible = true,
     this.source = PortfolioProjectSource.manual,
     this.githubMetadata,
+    this.updatedAt,
     List<String> imagePaths = const [],
   }) : technologies = List.unmodifiable(technologies),
        imagePaths = List.unmodifiable(imagePaths);
@@ -30,6 +31,7 @@ final class PortfolioProject {
   final PortfolioProjectSource source;
   final GitHubProjectMetadata? githubMetadata;
   final List<String> imagePaths;
+  final DateTime? updatedAt;
 
   int? get githubRepositoryId => githubMetadata?.acceptedSource.repositoryId;
   DateTime? get lastGitHubSyncAt => githubMetadata?.lastGitHubSyncAt;
@@ -46,6 +48,7 @@ final class PortfolioProject {
     PortfolioProjectSource? source,
     GitHubProjectMetadata? githubMetadata,
     List<String>? imagePaths,
+    DateTime? updatedAt,
   }) => PortfolioProject(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -58,6 +61,7 @@ final class PortfolioProject {
     source: source ?? this.source,
     githubMetadata: githubMetadata ?? this.githubMetadata,
     imagePaths: imagePaths ?? this.imagePaths,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
 
   /// Track changed source-backed fields, while retaining the accepted snapshot.
@@ -96,6 +100,7 @@ final class PortfolioProject {
       source: source,
       githubMetadata: metadata?.copyWith(overrideFields: overrides),
       imagePaths: imagePaths,
+      updatedAt: edited.updatedAt ?? updatedAt,
     );
   }
 
@@ -109,6 +114,7 @@ final class PortfolioProject {
     visible,
     source,
     githubMetadata,
+    updatedAt,
   );
 
   @override

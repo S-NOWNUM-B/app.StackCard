@@ -23,11 +23,19 @@
 
 ## Цель и статус
 
-**Обновление 2026-10-07:** отдельным прямым поручением разрешена Phase 11 Media
-на `dev`; перенос `redesign/full-app` подтверждён совпадением Git refs.
-Следующим поручением разрешена Phase 12 Location без карты: ручной город/страна
-и опциональное определение города. Функциональный roadmap возобновлён для этих фаз. DESIGN_READY/REDESIGN_DONE
-и приёмка полного редизайна не изменены; прежняя пауза ниже описывает историю.
+**Действующее поручение 2026-10-07 (D045):** последовательная разработка по
+фазам поставлена на паузу; разрешено функциональное развитие mobile по Figma
+и концепции общей базы/нескольких документов. Private slice включает четыре
+stateful roots, mixed Home library, независимые Resume/Portfolio, scoped Save
+и совместимые Hive5/cloud4 adapters. Публичные documents/URL, web и full account
+пока отсутствуют; подробный scope/проверки — в
+[product status](../product/product-spec.md#статус-и-границы-текущей-работы).
+R7 остаётся awaiting_review; DESIGN_READY/REDESIGN_DONE не установлены.
+No-preview/run ограничение сохраняется; headless evidence не означает native parity.
+
+Дальнейшие записи о состоянии 2026-10-05 — история переноса D040–D042.
+Последующие Phase 11 Media и Phase 12 Location без карты сохраняют свои
+открытые device/live проверки; последнее поручение не закрывает их автоматически.
 
 StackCard создаёт разные структурированные Resume и публичные Portfolio из
 общей профессиональной базы DeveloperProfile и библиотеки Project. Design v2
@@ -53,16 +61,17 @@ R8 остаётся частично выполненной; R9 проверил
 `flutter analyze --no-pub` — 0 issues, 3.8s; полный
 `flutter test --no-pub --reporter expanded` — 950/950 PASS, 29s,
 118 новых случаев относительно baseline832, 0 SVG warnings.
-Home/Portfolio сохраняют прежнюю композицию; Shell имеет три поддерживаемых
-root routes, Resume library и новый web отсутствуют. Полные model/media/account/
-publication/web prerequisites ещё ждут решения scope по
-[конкретному предложению](prerequisites.md). Это не повторное разрешение R8.
+На момент D040 Home/Portfolio сохраняли прежнюю композицию; Shell имел три
+roots, Resume library/web отсутствовали. Это baseline history; D045 private
+mobile scope и remaining public/account/web предложение разделены в
+[prerequisites](prerequisites.md).
 R7 graph QA PASS D041; явная пользовательская приёмка/DESIGN_READY pending.
 Полный R8/R9 и REDESIGN_DONE не закрыты.
 Visual preview/playback/native launch пропущены по запросу; headless tests не
 подтверждают native visual parity, live Google/iOS или backend новых сценариев.
 Перенос `redesign/full-app` в `dev` и commit/push разрешены D042.
-Deployment и автоматический старт Phase11 не разрешены.
+D042 не разрешало deployment/автоматический старт Phase11; поздние поручения
+Phase11/12 и D045 отражены в текущем статусе.
 R7 пакет создан на [page221:7](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-7)
 и [board221:8](https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=221-8).
 Подробные результаты — в [плане](plan.md#фактический-перенос-поддерживаемого-ui-r8r9-d040)
@@ -118,8 +127,8 @@ states/motion/adaptive собраны и проверены в review D033, за
 | Low-fi Design v2 | [24 экрана R1.2](screens.md#r12--low-fi-основных-сценариев), [24 экрана R1.3](screens.md#r13--low-fi-resume-wizard-и-редактора) и [40 экранов R1.4](screens.md#r14--low-fi-projects-portfolio-и-публикации) приняты. Всего 88 phone frames, цветовые правки D020 проверены |
 | Визуальные макеты Design v2 | [Бренд A](screens.md#r23--принятый-бренд-и-направление) принят D024; R3.1 done D028, Manrope. [Navigation/cards/badges R3.2](screens.md#r32--навигация-карточки-и-technologybadge) приняты D030; [Forms/stepper/photo/sections R3.3](screens.md#r33--формы-stepper-фото-и-секции) приняты D032; [States/motion/adaptive R3.4](screens.md#r34--состояния-motion-и-адаптивность) приняты D034; [все девять задач R4](screens.md#r4--основные-экраны-и-настройки) приняты D036; [весь пакет R5](screens.md#r5--создание-редактирование-и-публикация) принят D038; [весь пакет R6](screens.md#r6--веб-поверхности) принят D040; R7 awaiting_review D041, R8/R9 partial авторизованы D040 |
 | Интерактивный прототип Design v2 | R7 source graph/structural QA завершены D041; package awaiting_review. Playback/visual omitted, DESIGN_READY pending |
-| Реализованный Design v2 UI | R8 partial: shared theme/controls/assets, Projects и поддерживаемые Settings; 950 headless tests PASS. Полные Home/Portfolio/Resume/web не перенесены |
-| Backend новых сценариев | Не реализован этим заданием; пробелы и зависимости зафиксированы отдельно |
+| Реализованный Design v2 UI | D040 shared slice сохранён; D045 private mobile navigation/libraries/editor реализуются на той же DS. Полная Figma/native/public/web parity не подтверждена |
+| Backend новых сценариев | Private documents schema4 расширяет прежний draft sync; новый public-document backend/URL/web отсутствует |
 
 ---
 
@@ -130,7 +139,7 @@ states/motion/adaptive собраны и проверены в review D033, за
 - [references.md](references.md) — изученные источники, конкретные компоненты, применимые приёмы и условия переноса.
 - [plan.md](plan.md) — главный поэтапный план R0–R9, задачи, проверки, зависимости и журнал решений.
 - [screens.md](screens.md) — текущие и предлагаемые экраны, переходы, состояния и компоненты.
-- [prerequisites.md](prerequisites.md) — конкретный proposed scope модели, миграции, публикации, media/account/web; не разрешение выполнять эти задачи.
+- [prerequisites.md](prerequisites.md) — действующий private slice и оставшийся proposal модели/publication/account/web; статус каждого дополнения разделён.
 
 Основной продуктовый roadmap остаётся в
 [product-spec.md](../product/product-spec.md#план-разработки), устройство действующей
@@ -139,6 +148,10 @@ states/motion/adaptive собраны и проверены в review D033, за
 ---
 
 ## Остановка основной разработки
+
+**Действующий режим D045:** очередь фаз на паузе, функциональный mobile scope
+по концепции/Figma разрешён. История ниже описывает первоначальную остановку
+2026-10-05 перед Phase11, а не запрет нынешних mobile changes.
 
 Последняя завершённая функциональная фаза по сохранённой приёмке — **Phase 10:
 Portfolio Suggestions**. Phase 0–6 и 8–10 отмечены завершёнными в основном roadmap;
@@ -185,18 +198,16 @@ Design v2 нельзя честно реализовать. Перед R8 пол
 
 ## Как продолжать
 
-Сначала прочитать этот README и [plan.md](plan.md). R7 source package/QA
-завершены и ожидают явной приёмки; DESIGN_READY pending. Независимый supported
-UI перенос R8 и его R9 checks выполнены в разрешённом D040 parallel режиме.
-Перенос всей ветки в `dev` и commit/push разрешены D042; deployment не запрошен.
+Сначала прочитать этот README, [plan.md](plan.md) и
+[текущий product scope](../product/product-spec.md#статус-и-границы-текущей-работы).
+Последнее поручение D045 разрешает mobile навигацию, документы, базу и
+совместимую private migration без повторного phase approval. Existing contracts
+описаны в [architecture](../architecture/architecture.md#общая-база-и-независимые-документы);
+[prerequisites](prerequisites.md) показывает реализованный subset и remaining
+public/account/web proposal. Работа ведётся по проверяемым capabilities.
 
-Для новых capabilities подготовлено [конкретное предложение prerequisites](prerequisites.md).
-[Gate плана](plan.md#зависимости-реализации): «До R8.1 для каждого GAP
-пользователь согласует отдельную продуктовую задачу или явное ограничение
-implementation scope». Ответ о составе реализации ещё ожидается. Предложение
-не запускает roadmap, migration, backend, media или Next.js автоматически.
-
-Фактическая [950-case регрессия](plan.md#фактический-перенос-поддерживаемого-ui-r8r9-d040)
-проверяет существующий Flutter slice. Graph R7 PASS D041; dependent R8 flows,
-публичный web/security и пользовательская итоговая приёмка ещё не завершены.
-DESIGN_READY/REDESIGN_DONE не установлены; no-preview/run предпочтение сохранено.
+Результаты D040/D041/R9-supported остаются историческими; проверки новой модели
+фиксируются по фактам в product spec. R7 awaiting_review/DESIGN_READY pending,
+полная R8/R9/public web/security/native visual parity и итоговая пользовательская
+приёмка ещё открыты. No-preview/run сохраняется. Commit/push/deploy не выполнены
+последним поручением; D042 относится к прежней Git delivery.

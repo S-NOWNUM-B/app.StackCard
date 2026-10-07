@@ -6,18 +6,26 @@ import 'package:go_router/go_router.dart';
 import '../core/localization/app_strings.dart';
 import '../core/theme/stackcard_colors.dart';
 import '../core/theme/stackcard_tokens.dart';
+import '../shared/widgets/stackcard_icon.dart';
 
-// Только существующие root routes: Resume ждёт отдельного data contract.
+// Четыре библиотеки сохраняют состояние при переключении вкладок.
 const _destinations = [
-  (path: '/home', label: 'nav.home', icon: Icons.space_dashboard_outlined),
-  (path: '/portfolio', label: 'nav.portfolio', icon: Icons.badge_outlined),
-  (path: '/projects', label: 'nav.projects', icon: Icons.layers_outlined),
+  (path: '/home', label: 'nav.home', icon: 'home'),
+  (path: '/resumes', label: 'nav.resumes', icon: 'file-text'),
+  (path: '/projects', label: 'nav.projects', icon: 'folder'),
+  (path: '/portfolio', label: 'nav.portfolio', icon: 'panels-top-left'),
 ];
 
 class AppShell extends StatelessWidget {
-  const AppShell({super.key, required this.location, required this.child});
+  const AppShell({
+    super.key,
+    required this.location,
+    required this.child,
+    this.onNavigate,
+  });
   final String location;
   final Widget child;
+  final void Function(int)? onNavigate;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +33,11 @@ class AppShell extends StatelessWidget {
     final index = selected < 0 ? 0 : selected;
     void navigate(int destination) {
       if (_destinations[destination].path != location) {
-        context.push(_destinations[destination].path);
+        if (onNavigate != null) {
+          onNavigate!(destination);
+        } else {
+          context.go(_destinations[destination].path);
+        }
       }
     }
 
@@ -47,23 +59,15 @@ class AppShell extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      if (location != '/home' || context.canPop())
-                        IconButton(
-                          tooltip: context.strings.tr('common.back'),
-                          constraints: const BoxConstraints(
-                            minWidth: StackCardSize.touchTarget,
-                            minHeight: StackCardSize.touchTarget,
+                      Expanded(
+                        child: Semantics(
+                          header: true,
+                          child: Text(
+                            context.strings.tr(_destinations[index].label),
+                            style: Theme.of(context).textTheme.headlineSmall,
                           ),
-                          onPressed: () {
-                            if (context.canPop()) {
-                              context.pop();
-                            } else {
-                              context.go('/home');
-                            }
-                          },
-                          icon: const Icon(Icons.arrow_back_rounded),
                         ),
-                      const Spacer(),
+                      ),
                       IconButton(
                         key: const Key('app.settings'),
                         style: ButtonStyle(
@@ -82,7 +86,7 @@ class AppShell extends StatelessWidget {
                           minHeight: StackCardSize.touchTarget,
                         ),
                         onPressed: () => context.push('/settings'),
-                        icon: const Icon(Icons.settings_outlined),
+                        icon: const StackCardIcon(name: 'settings'),
                       ),
                     ],
                   ),
@@ -156,7 +160,7 @@ class _RootDestination extends StatelessWidget {
   });
 
   final String label;
-  final IconData icon;
+  final String icon;
   final bool selected;
   final VoidCallback onPressed;
 
@@ -181,7 +185,7 @@ class _RootDestination extends StatelessWidget {
                   ? context.colors.accentText
                   : context.colors.textSecondary,
               backgroundColor: selected
-                  ? context.colors.accentSoft
+                  ? context.colors.surfaceHover
                   : Colors.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(StackCardRadius.medium),
@@ -199,7 +203,15 @@ class _RootDestination extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ExcludeSemantics(child: Icon(icon, size: 24)),
+            ExcludeSemantics(
+              child: StackCardIcon(
+                name: icon,
+                size: 24,
+                color: selected
+                    ? context.colors.textPrimary
+                    : context.colors.textSecondary,
+              ),
+            ),
             const SizedBox(height: StackCardSpacing.xs),
             Text(
               label,

@@ -5,7 +5,7 @@
 **Текущая Flutter-основа и целевые границы mobile, web и общего backend**
 
 ![Architecture guide](https://raster.shields.io/badge/Architecture-guide-09090B?style=for-the-badge)
-![Stage Phase 12 in progress](https://raster.shields.io/badge/Stage-Phase_12_in_progress-FF0012?style=for-the-badge)
+![Stage mobile capabilities](https://raster.shields.io/badge/Stage-mobile_capabilities-C7FF1A?style=for-the-badge)
 
 </div>
 
@@ -13,7 +13,7 @@
 
 ## Содержание
 
-- [Текущее состояние — Phase 12](#текущее-состояние--phase-12)
+- [Текущее состояние — mobile capabilities](#текущее-состояние--mobile-capabilities)
 - [Схема системы](#схема-системы)
 - [Зоны ответственности](#зоны-ответственности)
 - [Целевые границы — ещё не реализованы](#целевые-границы--ещё-не-реализованы)
@@ -25,6 +25,7 @@
 - [Portfolio Suggestions](#portfolio-suggestions)
 - [Локальные настройки и draft на Phase 5](#локальные-настройки-и-draft-на-phase-5)
 - [Portfolio domain и локальный Builder](#portfolio-domain-и-локальный-builder)
+- [Общая база и независимые документы](#общая-база-и-независимые-документы)
 - [Приватные изображения — Phase 11](#приватные-изображения--phase-11)
 - [Source, draft и публикация](#source-draft-и-публикация)
 - [Ключевые потоки](#ключевые-потоки)
@@ -35,13 +36,14 @@
 
 ---
 
-## Текущее состояние — Phase 12
+## Текущее состояние — mobile capabilities
 
-Phase 10 завершена. На 2026-10-07 реализована Phase 11 Media с открытой приёмкой;
-контракт и ограничения описаны в [media](#приватные-изображения--phase-11),
-приёмка — в [product spec](../product/product-spec.md#phase-11--media).
-По следующему поручению развивается Phase 12: ручной город/страна и
-опциональное определение города без карты. Контракт — [ниже](#выбор-города-и-страны--phase-12).
+С 2026-10-07 последовательная очередь фаз на паузе по поручению пользователя.
+Mobile развивается по capabilities общей базы и независимых Resume/Portfolio;
+действующий scope/открытые проверки — в [product status](../product/product-spec.md#статус-и-границы-текущей-работы).
+Phase 11 Media и Phase 12 Location сохраняются в прежних features; карта исключена.
+Private multiple-document модель расширяет существующий aggregate/repository,
+без нового storage слоя. Публикация отдельных документов и web пока отсутствуют.
 
 В monorepo есть одно Flutter-приложение в `apps/mobile`. Код Architecture
 Phase 3 реализован поверх UI foundation и basic state management;
@@ -61,9 +63,10 @@ content и известным GitHub snapshots; UI предлагает явны
 Непроверенные сценарии Phase 7 остаются открытыми.
 Приёмка и фактические результаты проверок ведутся в
 [product spec](../product/product-spec.md#phase-10--portfolio-suggestions).
-Sign In, Home, Portfolio, Projects и Settings сохраняют общий app shell,
-Material 3 light/dark. До начала Builder они показывают демонстрационный контент;
-после начала — проекции единого рабочего draft через Riverpod. Данные сохраняются
+Home, Resumes, Projects и Portfolios используют stateful app shell и Material 3
+light/dark; Settings, Sign In и редакторы открываются отдельно. Home/document
+libraries читают actual draft через Riverpod и сохраняют пустую базу пустой.
+Legacy preview/read models остаются отдельными демонстрационными сценариями. Данные сохраняются
 через Repository contracts. Firebase Auth работает через отдельный account API;
 Firestore adapter синхронизирует account draft поверх Hive. Publish/unpublish
 подготовлены отдельным transaction repository, без публичного экрана или web.
@@ -92,7 +95,7 @@ apps/mobile/
 │       ├── portfolio_draft/  # Builder, Hive/Firestore sync, publication и controller
 │       ├── media/            # picker/preprocessing, private Storage, UID-scoped DI
 │       ├── location/         # ручной город/страна, optional native geolocation
-│       ├── home/             # экран на PortfolioOverview
+│       ├── home/             # mixed document/project library
 │       └── settings/         # настройки, SharedPreferences adapter и preview состояний
 └── test/                     # contracts, DI, состояние, UI и responsive
 ```
@@ -100,12 +103,14 @@ apps/mobile/
 Маршруты заданы в
 [`app_router.dart`](../../apps/mobile/lib/app/app_router.dart): `/sign-in`,
 `/register`, `/reset-password`,
-`/home`, `/portfolio`, `/projects`, `/settings`, `/github-import`, `/portfolio-draft`,
+`/home`, `/resumes`, `/portfolio`, `/projects`, `/settings`, `/github-import`, `/portfolio-draft`,
 `/portfolio/builder`, `/portfolio/preview`, `/projects/new` и `/projects/:id/edit`.
 Формы Builder используют дочерние пути `profile`, `skills`, `experience`,
 `education`, `links`, `resume`. `/` перенаправляет на `/home`. Четыре основных
-экрана используют app shell; формы, preview, Sign In, GitHub Import и локальные
-заметки открываются отдельно. Маршруты именованы, формы Builder вложены в
+root библиотеки используют `StatefulShellRoute.indexedStack`; формы, preview,
+Sign In, GitHub Import и notes открываются отдельно. Создание/редактирование
+документа: `/resumes/new`, `/resumes/:id/edit`, `/portfolio/new`, `/portfolio/:id/edit`.
+База доступна по `/settings/profile` и `/settings/contacts` с existing sections. Маршруты именованы, формы Builder вложены в
 `portfolioBuilder`, `editProject` получает параметр `id`. Private routes требуют
 активного account либо явно выбранного локального guest-режима;
 GitHub Import и auth forms публичны. `from` возвращает к разрешённому локальному
@@ -147,8 +152,8 @@ release target. Desktop и Flutter web targets в `apps/mobile` отсутств
 Next.js-приложение, его зависимости и команды запуска ещё не созданы.
 
 Цветовая система и эскизы описаны в [design guide](../design/design-system.md).
-Local DM Sans и Noto Sans fallback зарегистрированы в pubspec. Знак в
-`StackCardBrand` повторяет paths оригинальных SVG через `CustomPainter`;
+Local Manrope и Noto Sans fallback зарегистрированы в pubspec. `StackCardBrand`
+загружает pinned оригинальные Brand A SVG;
 logo originals в `assets/branding` сохранены без изменения.
 
 ---
@@ -385,7 +390,7 @@ FlutterFire-generated sources обновляются генератором, run
 
 [`LocalDraftAccounts`](../../apps/mobile/lib/features/portfolio_draft/data/local_draft_accounts.dart)
 сохраняет guest в прежних keys `draft`/`draft.v1.backup`, а каждый account — в
-namespace по base64url UTF-8 UID со своим v1 backup. Notes, content, revision и
+namespace по base64url UTF-8 UID с owner-scoped backups исходных versions. Notes, content, revision и
 metadata сохраняются в прежнем envelope; app settings и public GitHub cache
 не зависят от UID и сохраняются после sign out. Shared serial queue Box
 исключает гонки между repository instances и transfer. In-flight save всегда
@@ -398,7 +403,7 @@ Firestore; пустой offline cache не доказывает, что cloud dr
 проверяет server-only read перед новым переносом; при своём pending journal
 продолжает recovery. Corrupt/unsupported source, target или sync metadata
 блокируют перенос без перезаписи. V1 читается без migration; при явном переносе
-raw envelope/backup сохраняются, последующая ACK migration может создать v4.
+raw envelope/backups сохраняются, последующая ACK migration может создать v5.
 
 Durable owner journal записывается до online cloud claim. Transaction создаёт
 private current draft только при отсутствии записи; повтор разрешён только для
@@ -594,7 +599,7 @@ Corrupt preferences дают безопасные defaults; locale не пере
 [`portfolio_draft`](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart)
 на Phase 5 сохранял предварительные заметки в envelope v1: notes, revision,
 UTC updatedAt, pendingSync. Phase 6 сохраняет полный portfolio draft в той же
-отдельной Hive box; совместимый переход к v4 описан ниже. Успешная запись увеличивает
+отдельной Hive box; совместимый переход к v5 описан ниже. Успешная запись увеличивает
 revision; на Phase 5–7 pendingSync обозначал локальные изменения без remote sync.
 На Phase 8 account repository связывает этот draft с durable outbox и реальным
 server ACK; guest остаётся local-only.
@@ -653,12 +658,13 @@ snapshot, увеличивает revision один раз и ставит pendin
 поскольку отбрасывает несохранённые правки. `saveNotes` изменяет только notes,
 сохраняя остальной content.
 
-Hive envelope v4 допускает nullable content, private GitHub metadata и media paths.
-Чтение v1/v2/v3 не мигрирует запись; v2 projects становятся manual;
-legacy content получает пустые media поля. Версии до v4 отвергают media keys.
+Hive envelope v5 допускает nullable content, private GitHub metadata, media paths
+и documents. Чтение v1/v2/v3/v4 не мигрирует запись; v2 projects становятся manual;
+legacy content получает пустые media/documents поля. Версии до v4 отвергают media
+keys, до v5 — documents. Действующий контракт документов описан ниже.
 Чтение v1 сохраняет точные notes
 и metadata, возвращая content null, и само не переписывает запись. Первая явная
-запись сохраняет raw v1 backup в той же box перед заменой. Ошибка backup или записи
+запись сохраняет raw owner-scoped backup исходной версии в той же box перед заменой. Ошибка backup или записи
 оставляет прежний durable draft. Повреждённый и unknown-version формат блокирует
 перезапись; draft не имеет TTL и не удаляется при cache eviction.
 
@@ -668,6 +674,78 @@ Pure domain validation проверяет поля, URL, ID коллекций �
 Education, GitHub, Resume и Location опциональны; скрытие блока не повышает
 процент. Число полноты не хранится отдельным mutable полем.
 Приёмка и ограничения — в [Phase 6](../product/product-spec.md#phase-6--portfolio-domain-и-локальный-builder).
+
+---
+
+## Общая база и независимые документы
+
+Действующий контракт 2026-10-07 расширяет прежний
+[`PortfolioContent`](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_content.dart).
+Root profile/skills/experience/education/links — общая база; root projects —
+единственная Library, GitHub ignore registry принадлежит owner aggregate.
+Root legacy blocks/theme/resumeText сохраняются для обратной совместимости
+старого Builder; их наличие не означает один выходной документ.
+
+[`PortfolioDocument`](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_document.dart)
+имеет stable ID, title, kind resume/portfolio, UTC createdAt/updatedAt,
+собственный snapshot профиля/секций/blocks/theme/resumeText, ordered project
+attachments и optional attachedResumeId для Portfolio. Snapshot не содержит
+documents, projects или ignore registry. В текущем private контракте максимум
+20 документов: ограничение согласовано между domain, codec и Rules.
+
+Наличие cloud schema4/Rules в repository не доказывает их deployment или live
+SDK sync; текущая задача не выполняет deploy/native launch. В подключённом
+окружении может потребоваться отдельно разрешённое обновление Rules.
+
+`seedDocumentContent` предлагает значения базы при явном создании документа.
+Позднее изменение базы не переписывает уже созданные snapshots; отдельного
+captured-baseline review с выборочным обновлением пока нет. `resumeText` сохраняет
+старый plain text посимвольно; structured editor не выводит факты из этого текста.
+
+Каждый `PortfolioProjectAttachment` содержит projectId/visible/featured;
+порядок задаётся порядком immutable списка. `resolveDocumentContent` соединяет
+snapshot с актуальной Library для preview. Поэтому проект существует один раз,
+а роль featured/visible относится к документу. Изменение Library отражается в
+private preview использующих её документов; опубликованный snapshot не меняется
+автоматически. Detach удаляет связь, delete Project очищает связи всех документов;
+delete Resume очищает attachedResumeId, сохраняя Portfolio и Library.
+Новый Project внутри document editor остаётся в локальном buffer до Save.
+`saveDocument(newProjects: ...)` проверяет ID collision и записывает global
+Library Project + document relation одной repository save/revision; Cancel не
+создаёт запись. Public withdrawal/delete generation пока не реализованы.
+
+[`PortfolioDraftController`](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_draft_controller.dart)
+сохраняет workspace через прежний repository. `saveDocument`/`saveProject`/
+`saveDeveloperProfile` захватывают owner repository, читают durable aggregate,
+проверяют expected entity/revision и изменяют только выбранный scope. Unsaved
+соседние slices и notes остаются рабочими. Конфликт/ошибка оставляет ввод;
+смена UID не применяет captured action к новому repository. Эти scope операции
+не являются merge протоколом между устройствами: Firestore остаётся whole-document
+LWW по server commit order.
+
+[`Private codec`](../../apps/mobile/lib/features/portfolio_draft/data/portfolio_content_codec.dart)
+проверяет IDs, UTC даты, kind, snapshot nesting и существование relations.
+Hive writer **5** читает **1–5**, cloud writer **4** читает **1–4**;
+read-time rewrite отсутствует. До замены старой Hive записи Save/ACK сохраняет
+raw backup v1 через прежний ключ, v2–v4 — через owner storageKey.vN.backup с flush.
+Transfer journal переносит эти backups и использует прежние generation/claim/ACK
+границы. Unknown/corrupt формат блокирует перезапись. Metadata/outbox сохраняют
+прежний captured-payload ACK contract; отдельный migration CAS/journal из proposal
+не вводится этим совместимым расширением.
+
+`importLegacyDocuments` запускается явно из document libraries; legacy-portfolio
+и непустой legacy-resume получают stable owner-relative IDs, старые featured/
+visible переходят на relations. Legacy content/notes остаются доступны;
+notes-only/пустая база не создаёт документов при чтении. Импорт — отдельное
+действие сохранения, а не автоматическая миграция startup.
+
+[`Rules`](../../firebase/firestore.rules) сохраняют UID и no-downgrade boundary,
+проверяют ограниченный documents list и owner media path каждого snapshot;
+client codec выполняет подробную relation validation. Это не доверенная public
+projection или безопасность нового public-document API. Public schema **1**,
+username-addressed prepared publication и web не превращаются в multiple-output
+Publish от private migration. Полный дальнейший scope — в
+[prerequisites](../redesign/prerequisites.md).
 
 ---
 
@@ -765,8 +843,8 @@ Unpublish удаляет snapshot/reservation и обнуляет pointer, со�
 [`Public projection`](../../apps/mobile/lib/features/portfolio_draft/data/portfolio_public_content_codec.dart)
 исключает hidden projects и очищает поля скрытых блоков перед записью snapshot.
 Accepted source/override fields и ignore registry удаляются из public payload.
-Private writer schema 3 читает 1/2/3, Rules запрещают downgrade; public schema 1
-сохраняет прежний curated contract и физически исключает private media keys. Миграция — в [ADR 0002](../decisions/0002-github-import-and-review.md).
+Private writer schema 4 читает 1/2/3/4, Rules запрещают downgrade; public schema 1
+сохраняет прежний curated contract и физически исключает private media keys и documents. Миграция — в [ADR 0002](../decisions/0002-github-import-and-review.md).
 Private notes не входят в content и не отправляются в public collection.
 [`Firestore Rules`](../../firebase/firestore.rules) проверяют owner, field allowlists
 и связанные post-write records через `getAfter`/`existsAfter`: частичный
@@ -793,10 +871,10 @@ Suggestions вычисляются pure deterministic rules, описанным�
    разрешает локальный редактор без аккаунта. Восстановление/ошибка session
    блокируют private routes. Legacy `AuthRepository.openDemo` относится только
    к preview/tests без native account configuration.
-4. Profile и Projects читают рабочий content через проекции либо загружаются
-   из заменяемых demo repositories через Riverpod. `PortfolioOverview` объединяет
-   их для Home и demo Portfolio; поиск Projects не меняет полный список
-   или featured на других экранах.
+4. Stateful Shell открывает Home/Resumes/Projects/Portfolios. Home читает общую
+   Library и документы; три фильтра меняют только Home. Documents libraries
+   читают свою kind; query Projects не меняет полный список других экранов.
+   Пустой workspace не копирует demo автоматически.
 5. Settings меняет AppearanceController и сохраняет цельный snapshot preferences,
    читает profile provider и держит preview loading/empty/error в session.
    Account controls выполняют sign out и явный guest transfer; смена владельца

@@ -6,6 +6,7 @@ import 'domain/project_filters.dart';
 import 'domain/projects_repository.dart';
 import 'presentation/project_filters.dart';
 import '../portfolio_draft/portfolio_draft.dart';
+import '../auth/auth.dart';
 import 'presentation/portfolio_projects_projection.dart';
 
 /// Composition feature: widgets зависят от контракта, реализация заменяется в DI.
@@ -42,6 +43,7 @@ final projectsProvider = FutureProvider<List<Project>>((ref) async {
     ),
   );
   if (content != null) return projectPortfolioProjects(content);
+  if (ref.read(accountAuthRepositoryProvider) != null) return const [];
   return List.unmodifiable(await repository.getProjects());
 }, retry: (_, _) => null);
 
