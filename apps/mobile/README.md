@@ -5,7 +5,7 @@
 **Flutter-клиент для Android и iOS с мобильным редактором общего портфолио**
 
 ![Mobile Android + iOS](https://raster.shields.io/badge/Mobile-Android_%2B_iOS-09090B?style=for-the-badge)
-![Stage Phase 11 in progress](https://raster.shields.io/badge/Stage-Phase_11_in_progress-FF0012?style=for-the-badge)
+![Stage Phase 12 in progress](https://raster.shields.io/badge/Stage-Phase_12_in_progress-FF0012?style=for-the-badge)
 
 </div>
 
@@ -22,6 +22,12 @@
 ---
 
 ## Назначение
+
+Phase 12 добавляет ручной город/страну и опциональное определение города по
+нажатию, с подтверждением перед Apply/Save. Карта и Google Maps исключены;
+координаты/адрес не сохраняются. Отказ permissions не блокирует ручной ввод.
+Контракт — в [architecture](../../docs/architecture/architecture.md#выбор-города-и-страны--phase-12),
+приёмка — в [Phase 12](../../docs/product/product-spec.md#phase-12--location).
 
 Phase 11 добавляет приватные avatar/project images: camera/gallery, validation,
 resize/compression, upload progress/retry и отображение по Storage path.

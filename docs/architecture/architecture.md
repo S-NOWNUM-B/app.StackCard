@@ -5,7 +5,7 @@
 **Текущая Flutter-основа и целевые границы mobile, web и общего backend**
 
 ![Architecture guide](https://raster.shields.io/badge/Architecture-guide-09090B?style=for-the-badge)
-![Stage Phase 11 in progress](https://raster.shields.io/badge/Stage-Phase_11_in_progress-FF0012?style=for-the-badge)
+![Stage Phase 12 in progress](https://raster.shields.io/badge/Stage-Phase_12_in_progress-FF0012?style=for-the-badge)
 
 </div>
 
@@ -13,7 +13,7 @@
 
 ## Содержание
 
-- [Текущее состояние — Phase 10](#текущее-состояние--phase-10)
+- [Текущее состояние — Phase 12](#текущее-состояние--phase-12)
 - [Схема системы](#схема-системы)
 - [Зоны ответственности](#зоны-ответственности)
 - [Целевые границы — ещё не реализованы](#целевые-границы--ещё-не-реализованы)
@@ -28,17 +28,20 @@
 - [Приватные изображения — Phase 11](#приватные-изображения--phase-11)
 - [Source, draft и публикация](#source-draft-и-публикация)
 - [Ключевые потоки](#ключевые-потоки)
+- [Выбор города и страны — Phase 12](#выбор-города-и-страны--phase-12)
 - [Границы расширения](#границы-расширения)
 - [Нефункциональные требования](#нефункциональные-требования)
 - [Завершение Phase 0](#завершение-phase-0)
 
 ---
 
-## Текущее состояние — Phase 10
+## Текущее состояние — Phase 12
 
-Phase 10 завершена. На 2026-10-07 разрешена и реализуется Phase 11 Media;
+Phase 10 завершена. На 2026-10-07 реализована Phase 11 Media с открытой приёмкой;
 контракт и ограничения описаны в [media](#приватные-изображения--phase-11),
 приёмка — в [product spec](../product/product-spec.md#phase-11--media).
+По следующему поручению развивается Phase 12: ручной город/страна и
+опциональное определение города без карты. Контракт — [ниже](#выбор-города-и-страны--phase-12).
 
 В monorepo есть одно Flutter-приложение в `apps/mobile`. Код Architecture
 Phase 3 реализован поверх UI foundation и basic state management;
@@ -88,6 +91,7 @@ apps/mobile/
 │       ├── portfolio/        # public API и presentation read model
 │       ├── portfolio_draft/  # Builder, Hive/Firestore sync, publication и controller
 │       ├── media/            # picker/preprocessing, private Storage, UID-scoped DI
+│       ├── location/         # ручной город/страна, optional native geolocation
 │       ├── home/             # экран на PortfolioOverview
 │       └── settings/         # настройки, SharedPreferences adapter и preview состояний
 └── test/                     # contracts, DI, состояние, UI и responsive
@@ -308,6 +312,7 @@ features/<feature>/
 | [portfolio](../../apps/mobile/lib/features/portfolio/portfolio.dart) | `PortfolioOverview` объединяет публичные profile/projects states для Home и demo Portfolio; это presentation read model |
 | [portfolio_draft](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart) | Pure Dart portfolio content, validation/completion/suggestions, draft/sync/publication contracts; working controller, Builder/preview, Hive cache/outbox и UID-bound Firestore adapters |
 | [media](../../apps/mobile/lib/features/media/media.dart) | Pure picker/repository contracts, MIME/resize preprocessing, UID-bound Storage adapter; editor/image widgets используют публичный API |
+| [location](../../apps/mobile/lib/features/location/location.dart) | Pure `PortfolioPlace` и repository; geolocator/native geocoding в data, picker подтверждает только город/страну, без карты |
 | Home и Settings | Рендерят данные публичных feature APIs; Home использует overview, Settings — profile state и AppSettings через Provider |
 
 </div>
@@ -821,6 +826,31 @@ Detection изменений GitHub и синхронизация draft не в�
 
 ---
 
+## Выбор города и страны — Phase 12
+
+Пользователь вручную вводит город и страну в Profile Location Picker или
+нажимает «Определить мой город». Открытие picker не запрашивает разрешения.
+`PortfolioLocationRepository.currentPlace()` возвращает только `PortfolioPlace`;
+geolocator и native reverse geocoding принадлежат `features/location/data`.
+В adapter одно определение с ограниченным временем ожидания; Android запрашивает
+только approximate/coarse location, iOS — When In Use, без background updates.
+Из placemark используются только locality и country, без улицы, дома или адреса.
+
+Полученный город/страна — предложение: пользователь может исправить его и явно
+подтвердить. Picker возвращает только текстовый результат; Profile меняет свой
+form controller, Apply обновляет working draft, Save отдельно сохраняет его.
+Cancel, поздний ответ после ручного ввода и смена UID/repository не изменяют draft.
+Denied/permanently denied/service disabled/timeout и ошибка reverse geocoding
+оставляют ручной ввод доступным; переход в настройки и повтор выполняются явно.
+
+Координаты остаются временными локальными переменными adapter и не передаются
+presentation, Hive, Firestore, логам или public snapshot. Существующее поле
+`PortfolioProfile.locationText` хранит выбранный город/страну; schema не меняется,
+прежние ручные значения сохраняются. Public projection удаляет скрытый Location.
+Google Maps SDK, карта и marker исключены по решению пользователя 2026-10-07.
+Ключ Maps API, billing и новая web-интеграция этому сценарию не нужны.
+Проверки и фактическая приёмка — в [Phase 12](../product/product-spec.md#phase-12--location).
+
 ## Границы расширения
 
 <div align="center">
@@ -869,12 +899,12 @@ Package, UseCase или DataSource выделяется под существу�
   Hive offline cache сохраняется отдельно от portfolio draft.
 - Private writes ограничены owner; посторонние читают только опубликованные данные.
   Firestore/Storage Rules тестируются при интеграции. Secrets и signing data не в Git.
-- Location публикуется как город/страна, без точных GPS; denied/permanently denied/
-  service disabled обрабатываются отдельно.
+- Location публикуется как город/страна, без GPS/адреса; ручной ввод и
+  опциональное определение города описаны в [Phase 12](#выбор-города-и-страны--phase-12).
 - Media проходит MIME/size validation, compression и cleanup по спроектированным
   правилам; camera/gallery включаются по реальному сценарию.
 - Web использует подходящий browser UX для файлов, location и sharing. Camera,
-  maps и permissions проверяются по каждой платформе; одинаковая data model
+  location permissions проверяются по каждой платформе; одинаковая data model
   не обещает полного равенства нативных возможностей.
 - Contact form требует validation и spam/rate-limit strategy; FCM отправляется на
   доверенной стороне, server credentials не помещаются в клиент.

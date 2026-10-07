@@ -181,7 +181,7 @@ Publish/update/unpublish/delete имеют request operation identity и read-re
 
 </div>
 
-Все12canonical GAP IDs из [audit](audit.md#продуктовые-пробелы) покрыты; native sharing выделен отдельно. Location GPS/maps Phase12, PDF/uploaded Resume, Inbox/FCM, QR/DeveloperCard, release/store URL/production domain/deploy/billing не появляются из общего разрешения UI. Для notifications connected state и иных невыбранных функций нельзя заявить full runtime completion.
+Все12canonical GAP IDs из [audit](audit.md#продуктовые-пробелы) покрыты; native sharing выделен отдельно. Location Phase12 разрешена отдельно 2026-10-07 как город/страна с optional geolocation; карта и Maps SDK исключены D044. PDF/uploaded Resume, Inbox/FCM, QR/DeveloperCard, release/store URL/production domain/deploy/billing не появляются из общего разрешения UI. Для notifications connected state и иных невыбранных функций нельзя заявить full runtime completion.
 
 ---
 

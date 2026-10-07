@@ -212,6 +212,15 @@ Hive v4/private cloud schema 3 и политика сохранения заме
 описаны в [ADR 0003](0003-private-portfolio-media.md).
 Публикация media и автоматическая garbage collection не входят в этот scope.
 
+## Принято для Phase 12
+
+Для Phase 12 принято 2026-10-07: убрать карту, marker и Maps SDK/API configuration.
+Ручной город/страна и опциональное определение города остаются в scope;
+координаты не выходят из native adapter и не сохраняются. Existing `locationText`
+не требует migration; Apply, Save и Publish остаются отдельными действиями.
+Контракт — в [architecture](../architecture/architecture.md#выбор-города-и-страны--phase-12),
+задачи и приёмка — в [product spec](../product/product-spec.md#phase-12--location).
+
 ## Решить перед соответствующими фазами
 
 - Перед Phase 13 проверить совместимость web с принятыми Firestore envelope,
