@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import '../core/state/app_settings.dart';
 import '../core/state/settings_repository.dart';
@@ -18,6 +19,7 @@ import '../features/portfolio_draft/domain/portfolio_draft_repository.dart';
 import '../features/portfolio_draft/domain/portfolio_draft.dart';
 import '../features/portfolio_draft/domain/portfolio_sync.dart';
 import '../features/auth/auth.dart';
+import '../features/media/media.dart';
 import '../firebase_options.dart';
 import '../features/settings/data/shared_preferences_settings_repository.dart';
 
@@ -30,6 +32,7 @@ final class LocalRuntime {
     this.authRepository,
     this.firestore,
     this.accountAuth,
+    this.mediaStorage,
   });
 
   final AppSettings settings;
@@ -38,6 +41,21 @@ final class LocalRuntime {
   final AccountAuthRepository? authRepository;
   final FirebaseFirestore? firestore;
   final FirebaseAuth? accountAuth;
+  final FirebaseStorage? mediaStorage;
+
+  PortfolioMediaRepository? mediaRepositoryForUser(String uid) {
+    final images = mediaStorage;
+    final auth = accountAuth;
+    if (images == null || auth == null || auth.currentUser?.uid != uid) {
+      return null;
+    }
+    return FirebasePortfolioMediaRepository(
+      storage: images,
+      ownerUid: uid,
+      isActive: () =>
+          storage.portfolioDraft.isOpen && auth.currentUser?.uid == uid,
+    );
+  }
 
   late final githubCache = HiveGitHubResponseCache(storage.githubResponses);
   late final draftAccounts = LocalDraftAccounts(storage.portfolioDraft);
@@ -136,6 +154,7 @@ final class LocalRuntime {
       AccountAuthRepository? authRepository;
       FirebaseFirestore? firestore;
       FirebaseAuth? accountAuth;
+      FirebaseStorage? mediaStorage;
       if (configureAuth) {
         final app = Firebase.apps.isEmpty
             ? await Firebase.initializeApp(
@@ -161,6 +180,15 @@ final class LocalRuntime {
               : null,
         );
         firestore = FirebaseFirestore.instanceFor(app: app);
+        mediaStorage = FirebaseStorage.instanceFor(app: app);
+        const storageHost = String.fromEnvironment('STORAGE_EMULATOR_HOST');
+        if (storageHost.isNotEmpty) {
+          const storagePort = int.fromEnvironment(
+            'STORAGE_EMULATOR_PORT',
+            defaultValue: 9199,
+          );
+          await mediaStorage.useStorageEmulator(storageHost, storagePort);
+        }
         const firestoreHost = String.fromEnvironment('FIRESTORE_EMULATOR_HOST');
         if (firestoreHost.isNotEmpty) {
           const firestorePort = int.fromEnvironment(
@@ -177,6 +205,7 @@ final class LocalRuntime {
         authRepository: authRepository,
         firestore: firestore,
         accountAuth: accountAuth,
+        mediaStorage: mediaStorage,
       );
     } catch (_) {
       await storage.close();

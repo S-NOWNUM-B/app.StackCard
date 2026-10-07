@@ -15,7 +15,9 @@ final class PortfolioProject {
     this.visible = true,
     this.source = PortfolioProjectSource.manual,
     this.githubMetadata,
-  }) : technologies = List.unmodifiable(technologies);
+    List<String> imagePaths = const [],
+  }) : technologies = List.unmodifiable(technologies),
+       imagePaths = List.unmodifiable(imagePaths);
 
   final String id;
   final String title;
@@ -27,6 +29,7 @@ final class PortfolioProject {
   final bool visible;
   final PortfolioProjectSource source;
   final GitHubProjectMetadata? githubMetadata;
+  final List<String> imagePaths;
 
   int? get githubRepositoryId => githubMetadata?.acceptedSource.repositoryId;
   DateTime? get lastGitHubSyncAt => githubMetadata?.lastGitHubSyncAt;
@@ -42,6 +45,7 @@ final class PortfolioProject {
     bool? visible,
     PortfolioProjectSource? source,
     GitHubProjectMetadata? githubMetadata,
+    List<String>? imagePaths,
   }) => PortfolioProject(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -53,6 +57,7 @@ final class PortfolioProject {
     visible: visible ?? this.visible,
     source: source ?? this.source,
     githubMetadata: githubMetadata ?? this.githubMetadata,
+    imagePaths: imagePaths ?? this.imagePaths,
   );
 
   /// Track changed source-backed fields, while retaining the accepted snapshot.
@@ -90,6 +95,7 @@ final class PortfolioProject {
       visible: edited.visible,
       source: source,
       githubMetadata: metadata?.copyWith(overrideFields: overrides),
+      imagePaths: imagePaths,
     );
   }
 
@@ -109,8 +115,13 @@ final class PortfolioProject {
   bool operator ==(Object other) =>
       other is PortfolioProject &&
       other._fields == _fields &&
-      portfolioListEquals(other.technologies, technologies);
+      portfolioListEquals(other.technologies, technologies) &&
+      portfolioListEquals(other.imagePaths, imagePaths);
 
   @override
-  int get hashCode => Object.hash(_fields, Object.hashAll(technologies));
+  int get hashCode => Object.hash(
+    _fields,
+    Object.hashAll(technologies),
+    Object.hashAll(imagePaths),
+  );
 }

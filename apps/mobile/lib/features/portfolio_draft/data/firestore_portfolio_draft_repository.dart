@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../domain/portfolio_draft_repository.dart';
+import '../domain/portfolio_content.dart';
 import '../domain/portfolio_sync.dart';
 import '../domain/portfolio_validation.dart';
 import 'portfolio_content_codec.dart';
@@ -107,6 +108,7 @@ final class FirestorePortfolioDraftRepository
 
 Map<String, dynamic> encodeCloudPortfolioDraft(CloudPortfolioDraft draft) {
   if (draft.ownerUid.isEmpty ||
+      draft.ownerUid.contains('/') ||
       draft.mutationId.isEmpty ||
       draft.mutationId.length > 200 ||
       draft.localRevision < 1 ||
@@ -114,8 +116,9 @@ Map<String, dynamic> encodeCloudPortfolioDraft(CloudPortfolioDraft draft) {
           validatePortfolioContent(draft.content!).isNotEmpty)) {
     throw const PortfolioSyncFailure(PortfolioSyncFailureKind.invalidData);
   }
+  _validateMediaOwner(draft.content, draft.ownerUid);
   return {
-    'schemaVersion': 2,
+    'schemaVersion': 3,
     'ownerUid': draft.ownerUid,
     'mutationId': draft.mutationId,
     'localRevision': draft.localRevision,
@@ -148,7 +151,9 @@ CloudPortfolioDraft decodeCloudPortfolioDraft(
   if (data.length != fields.length ||
       !fields.containsAll(data.keys) ||
       schemaVersion is! int ||
-      (schemaVersion != 1 && schemaVersion != 2) ||
+      (schemaVersion != 1 && schemaVersion != 2 && schemaVersion != 3) ||
+      ownerUid.isEmpty ||
+      ownerUid.contains('/') ||
       data['ownerUid'] != ownerUid ||
       mutationId is! String ||
       mutationId.isEmpty ||
@@ -161,17 +166,34 @@ CloudPortfolioDraft decodeCloudPortfolioDraft(
     throw const PortfolioSyncFailure(PortfolioSyncFailureKind.invalidData);
   }
   try {
+    final content = data['content'] == null
+        ? null
+        : decodePortfolioContent(
+            data['content'],
+            allowMedia: schemaVersion >= 3,
+          );
+    _validateMediaOwner(content, ownerUid);
     return CloudPortfolioDraft(
       ownerUid: ownerUid,
       mutationId: mutationId,
       localRevision: localRevision,
       notes: data['notes'] as String,
-      content: data['content'] == null
-          ? null
-          : decodePortfolioContent(data['content']),
+      content: content,
       updatedAt: updatedAt is Timestamp ? updatedAt.toDate() : null,
     );
   } on FormatException {
+    throw const PortfolioSyncFailure(PortfolioSyncFailureKind.invalidData);
+  }
+}
+
+void _validateMediaOwner(PortfolioContent? content, String ownerUid) {
+  if (content == null) return;
+  final prefix = 'accounts/$ownerUid/media/';
+  final avatarPath = content.profile.avatarPath;
+  if ((avatarPath.isNotEmpty && !avatarPath.startsWith(prefix)) ||
+      content.projects.any(
+        (project) => project.imagePaths.any((path) => !path.startsWith(prefix)),
+      )) {
     throw const PortfolioSyncFailure(PortfolioSyncFailureKind.invalidData);
   }
 }

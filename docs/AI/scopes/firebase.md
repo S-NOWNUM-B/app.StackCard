@@ -19,15 +19,21 @@ Scope и фактическая приёмка остаются в [product spec
 - Pure Dart contracts, UID-bound Firestore adapters и Hive outbox принадлежат
   `apps/mobile/lib/features/portfolio_draft`. Runtime composition — LocalRuntime.
   Не переносить SDK в domain или widgets и не дублировать cloud schema.
+- [storage.rules](../../../firebase/storage.rules) и `features/media` владеют
+  Phase 11 private image доступом. Path `accounts/{uid}/media/{32hex}.jpg`:
+  owner get/create/delete, immutable objects, JPEG до 2 MiB; list/public paths
+  закрыты. App читает SDK bytes без download tokens. Bearer URL при раскрытии
+  владельцем Rules не защищают. Контракт/cleanup —
+  [ADR 0003](../../decisions/0003-private-portfolio-media.md).
 
 ## Изменение и проверка
 
 - Private notes/account data не смешивать с public snapshot; hidden content
   удаляется public projection перед записью, а не только скрывается renderer.
   Source snapshots, override flags и Ignore registry также private и удаляются
-  public codec. Private writer schema 2 читает 1/2; Rules запрещают downgrade 2→1,
-  public schema 1 сохраняется. Контракт миграции — в
-  [ADR 0002](../../decisions/0002-github-import-and-review.md).
+  public codec. Private writer schema 3 читает 1/2/3; Rules запрещают downgrade,
+  public schema 1 сохраняется и исключает media paths. GitHub миграция — в
+  [ADR 0002](../../decisions/0002-github-import-and-review.md), media — в ADR 0003.
 - Publish/rename/unpublish меняют account pointer, username reservation и public
   snapshot атомарно. Проверять linked post-write state через `getAfter`/`existsAfter`
   и отклонение partial writes; sync не вызывает publication repository.
@@ -46,6 +52,11 @@ Scope и фактическая приёмка остаются в [product spec
 - Rules tests выполняются на demo project через Emulator Suite; owner,
   foreign/anonymous denial, username race и partial transitions проверяются
   через client SDK с Rules, не Admin SDK bypass.
+- `test:all-rules` запускает Firestore + Storage, `test:storage` — Storage,
+  `test:rules` сохраняет Firestore-only contract. Native media SDK acceptance
+  использует Auth/Storage emulators и отдельные named apps; системный picker,
+  отказ permissions и live bucket требуют отдельной приёмки. Billing/deploy
+  автоматически не выполняются.
 - Native acceptance имеет explicit opt-in, отдельный test storage/disposable
   accounts и `--no-uninstall`; обычный app draft/session не очищаются.
 - Команды и предусловия находятся в

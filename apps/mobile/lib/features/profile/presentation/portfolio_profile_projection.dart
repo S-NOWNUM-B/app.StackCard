@@ -21,6 +21,8 @@ Profile projectPortfolioProfile(PortfolioContent content) {
     role: profile.headline,
     location: profile.locationText,
     initials: initials.isEmpty ? '?' : initials,
+    avatarPath: profile.avatarPath,
+    avatarUrl: profile.avatarUrl,
     about: profile.bio,
     skills: content.skills.map((skill) => skill.name).toList(),
     readiness: ProfileReadiness(

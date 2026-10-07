@@ -5,7 +5,7 @@
 **Flutter-клиент для Android и iOS с мобильным редактором общего портфолио**
 
 ![Mobile Android + iOS](https://raster.shields.io/badge/Mobile-Android_%2B_iOS-09090B?style=for-the-badge)
-![Stage Phase 10 complete](https://raster.shields.io/badge/Stage-Phase_10_complete-FF0012?style=for-the-badge)
+![Stage Phase 11 in progress](https://raster.shields.io/badge/Stage-Phase_11_in_progress-FF0012?style=for-the-badge)
 
 </div>
 
@@ -22,6 +22,13 @@
 ---
 
 ## Назначение
+
+Phase 11 добавляет приватные avatar/project images: camera/gallery, validation,
+resize/compression, upload progress/retry и отображение по Storage path.
+Guest остаётся local-only; Apply и Save отдельны. Контракт —
+[ADR 0003](../../docs/decisions/0003-private-portfolio-media.md), setup и проверка —
+[CONTRIBUTING](../../CONTRIBUTING.md#media-storage-и-native-acceptance);
+фактическая приёмка — в product spec.
 
 Мобильное приложение StackCard — самостоятельный редактор портфолио, который
 будет использовать тот же аккаунт, draft и правила публикации, что и web.

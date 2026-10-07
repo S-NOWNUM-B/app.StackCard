@@ -1,0 +1,51 @@
+const russianMediaStrings = <String, String>{
+  'media.avatar': 'Фото профиля',
+  'media.projectImages': 'Изображения проекта',
+  'media.gallery': 'Галерея',
+  'media.camera': 'Камера',
+  'media.remove': 'Убрать изображение',
+  'media.uploading': 'Загрузка: {percent}%',
+  'media.preparing': 'Подготовка изображения',
+  'media.formNote': 'Примените изменения формы, затем сохраните портфолио.',
+  'media.limit': 'Не более {limit} изображений.',
+  'media.guest': 'Войдите в аккаунт, чтобы загружать изображения. Текстовые поля доступны в гостевом режиме.',
+  'media.unconfigured': 'Загрузка изображений сейчас недоступна. Текстовые поля можно редактировать.',
+  'media.permissionDenied': 'Нет доступа к камере или фотографиям. Разрешите доступ в настройках устройства и попробуйте снова.',
+  'media.invalidType': 'Выберите изображение JPEG, PNG или WebP.',
+  'media.tooLarge': 'Изображение слишком большое. Выберите файл меньшего размера или разрешения.',
+  'media.invalidImage':
+      'Не удалось прочитать изображение. Выберите другой файл.',
+  'media.unavailable': 'Не удалось загрузить изображение. Повторите попытку.',
+  'media.unauthenticated': 'Войдите в аккаунт, чтобы продолжить загрузку.',
+  'media.ownerChanged': 'Аккаунт изменился. Откройте редактор заново.',
+  'media.imageError': 'Изображение недоступно',
+  'media.imageLabel': 'Изображение',
+  'media.noAvatar': 'Фото профиля не добавлено',
+};
+
+const englishMediaStrings = <String, String>{
+  'media.avatar': 'Profile photo',
+  'media.projectImages': 'Project images',
+  'media.gallery': 'Gallery',
+  'media.camera': 'Camera',
+  'media.remove': 'Remove image',
+  'media.uploading': 'Uploading: {percent}%',
+  'media.preparing': 'Preparing image',
+  'media.formNote': 'Apply the form changes, then save your portfolio.',
+  'media.limit': 'Up to {limit} images.',
+  'media.guest':
+      'Sign in to upload images. Text fields are available in guest mode.',
+  'media.unconfigured':
+      'Image upload is currently unavailable. Text fields can still be edited.',
+  'media.permissionDenied': 'Camera or photo access was denied. Allow access in device settings and try again.',
+  'media.invalidType': 'Choose a JPEG, PNG or WebP image.',
+  'media.tooLarge':
+      'The image is too large. Choose a smaller file or a lower resolution.',
+  'media.invalidImage': 'The image could not be read. Choose another file.',
+  'media.unavailable': 'The image could not be uploaded. Try again.',
+  'media.unauthenticated': 'Sign in to continue uploading.',
+  'media.ownerChanged': 'Your account changed. Open the editor again.',
+  'media.imageError': 'Image unavailable',
+  'media.imageLabel': 'Image',
+  'media.noAvatar': 'No profile photo added',
+};

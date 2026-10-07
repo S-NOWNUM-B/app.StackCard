@@ -30,7 +30,7 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  test('V2 read is pure; explicit Save upgrades to V3 and metadata survives reopen', () async {
+  test('V2 read is pure; explicit Save upgrades to V4 and metadata survives reopen', () async {
     final legacy = jsonEncode(_legacyEnvelope(now));
     final originalBackup = jsonEncode({
       'schemaVersion': 1,
@@ -57,7 +57,7 @@ void main() {
     final content = _importedContent(now);
     await repository.save(content, expectedRevision: 7, notes: read.notes);
     final upgraded = jsonDecode(box.get('draft') as String) as Map;
-    expect(upgraded['schemaVersion'], 3);
+    expect(upgraded['schemaVersion'], 4);
     expect(
       box.get(HivePortfolioDraftRepository.legacyBackupKey),
       originalBackup,
@@ -80,7 +80,7 @@ void main() {
   });
 
   test(
-    'Old outbox snapshot reads without migration; next metadata write uses V3',
+    'Old outbox snapshot reads without migration; next metadata write uses V4',
     () async {
       final key = HivePortfolioSyncMetadataStore.storageKeyForUser('owner');
       final legacy = jsonEncode({
@@ -113,7 +113,7 @@ void main() {
         ),
       );
       final encoded = jsonDecode(box.get(key) as String) as Map;
-      expect((encoded['snapshot'] as Map)['schemaVersion'], 3);
+      expect((encoded['snapshot'] as Map)['schemaVersion'], 4);
       await box.close();
       box = await Hive.openBox<dynamic>('schema_upgrade', path: directory.path);
       final restored = (await HivePortfolioSyncMetadataStore(
@@ -126,7 +126,7 @@ void main() {
     },
   );
 
-  test('Cloud V1 reads unchanged and V2 carries source, overrides and ignored decisions', () {
+  test('Cloud V1 reads unchanged and V3 carries source, overrides and ignored decisions', () {
     final rawLegacy = {
       'schemaVersion': 1,
       'ownerUid': 'owner',
@@ -152,7 +152,7 @@ void main() {
         content: content,
       ),
     );
-    expect(encoded['schemaVersion'], 2);
+    expect(encoded['schemaVersion'], 3);
     final restored = decodeCloudPortfolioDraft({
       ...encoded,
       'updatedAt': Timestamp.fromDate(now),
@@ -164,7 +164,7 @@ void main() {
   test(
     'Unsupported future Hive schema blocks reads and Save without losing bytes',
     () async {
-      final raw = jsonEncode({..._legacyEnvelope(now), 'schemaVersion': 4});
+      final raw = jsonEncode({..._legacyEnvelope(now), 'schemaVersion': 5});
       await box.put('draft', raw);
       final repository = HivePortfolioDraftRepository(box);
       final failure = isA<PortfolioDraftFailure>().having(
@@ -177,7 +177,116 @@ void main() {
       expect(box.get('draft'), raw);
     },
   );
+
+  test('V3 content reads without eager migration and V4 media survives reopen and ACK', () async {
+    final legacyContent = encodePortfolioContent(_importedContent(now));
+    (legacyContent['profile'] as Map).remove('avatarPath');
+    for (final item in legacyContent['projects'] as List) {
+      (item as Map).remove('imagePaths');
+    }
+    final raw = jsonEncode({
+      ..._legacyEnvelope(now),
+      'schemaVersion': 3,
+      'content': legacyContent,
+    });
+    await box.put('draft', raw);
+    final repository = HivePortfolioDraftRepository(box, clock: () => now);
+    final previous = (await repository.read())!;
+    expect(previous.content, _importedContent(now));
+    expect(previous.content!.profile.avatarPath, isEmpty);
+    expect(previous.content!.projects.single.imagePaths, isEmpty);
+    expect(box.get('draft'), raw);
+    final content = previous.content!.copyWith(
+      profile: previous.content!.profile.copyWith(avatarPath: _avatar),
+      projects: [
+        previous.content!.projects.single.copyWith(imagePaths: [_image]),
+      ],
+    );
+    final saved = await repository.save(
+      content,
+      expectedRevision: 7,
+      notes: previous.notes,
+    );
+    expect((jsonDecode(box.get('draft') as String) as Map)['schemaVersion'], 4);
+    final metadata = HivePortfolioSyncMetadataStore(box, ownerUid: 'owner');
+    await metadata.write(
+      PortfolioSyncRecord(
+        mutationId: 'media-save',
+        pending: true,
+        draft: saved,
+      ),
+    );
+    await box.close();
+    box = await Hive.openBox<dynamic>('schema_upgrade', path: directory.path);
+    final reopened = HivePortfolioDraftRepository(box);
+    expect((await reopened.read())!.content, content);
+    expect(
+      (await HivePortfolioSyncMetadataStore(
+        box,
+        ownerUid: 'owner',
+      ).read())!.draft.content,
+      content,
+    );
+    await reopened.acknowledgeRevision(saved.revision);
+    expect((await reopened.read())!.content, content);
+    expect((await reopened.read())!.pendingSync, isFalse);
+  });
+
+  for (final version in [2, 3]) {
+    test(
+      'Legacy Hive V$version rejects media fields and preserves bytes',
+      () async {
+        final raw = jsonEncode({
+          ..._legacyEnvelope(now),
+          'schemaVersion': version,
+          'content': encodePortfolioContent(
+            _importedContent(now)
+                .copyWith(profile: const PortfolioProfile(avatarPath: _avatar)),
+          ),
+        });
+        await box.put('draft', raw);
+        final repository = HivePortfolioDraftRepository(box);
+        final failure = isA<PortfolioDraftFailure>().having(
+          (failure) => failure.kind,
+          'kind',
+          PortfolioDraftFailureKind.corrupted,
+        );
+        await expectLater(repository.read(), throwsA(failure));
+        await expectLater(repository.saveNotes('Overwrite'), throwsA(failure));
+        expect(box.get('draft'), raw);
+      },
+    );
+  }
+
+  test(
+    'Malformed V4 paths block overwrite without removing the previous record',
+    () async {
+      final content = _importedContent(now).copyWith(
+        profile: const PortfolioProfile(
+          avatarPath: 'https://example.com/download?token=secret',
+        ),
+      );
+      final raw = jsonEncode({
+        ..._legacyEnvelope(now),
+        'schemaVersion': 4,
+        'content': encodePortfolioContent(content),
+      });
+      await box.put('draft', raw);
+      final repository = HivePortfolioDraftRepository(box);
+      final failure = isA<PortfolioDraftFailure>().having(
+        (failure) => failure.kind,
+        'kind',
+        PortfolioDraftFailureKind.corrupted,
+      );
+      await expectLater(repository.read(), throwsA(failure));
+      await expectLater(repository.saveNotes('Overwrite'), throwsA(failure));
+      expect(box.get('draft'), raw);
+    },
+  );
 }
+
+const _avatar = 'accounts/owner/media/0123456789abcdef0123456789abcdef.jpg';
+const _image = 'accounts/owner/media/abcdef0123456789abcdef0123456789.jpg';
 
 Map<String, Object?> _legacyEnvelope(DateTime now) => {
   'schemaVersion': 2,
@@ -203,9 +312,11 @@ Map<String, Object?> _legacyContent() {
     ),
   );
   encoded.remove('ignoredGitHubRepositories');
+  (encoded['profile'] as Map).remove('avatarPath');
   for (final item in encoded['projects']! as List) {
     (item as Map).remove('source');
     item.remove('githubMetadata');
+    item.remove('imagePaths');
   }
   return encoded;
 }

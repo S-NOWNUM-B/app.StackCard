@@ -6,6 +6,8 @@ import '../../../core/theme/stackcard_theme.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_poster.dart';
 import '../../../shared/widgets/stackcard_states.dart';
+import '../../../shared/widgets/stackcard_avatar.dart';
+import '../../media/media.dart';
 import '../domain/portfolio_content.dart';
 
 /// Общий renderer рабочего content. Private notes не входят в его контракт.
@@ -95,6 +97,22 @@ class PortfolioContentView extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return switch (kind) {
       PortfolioBlockKind.profile => [
+        if (profile.avatarPath.isNotEmpty || profile.avatarUrl.isNotEmpty) ...[
+          Align(
+            alignment: Alignment.centerLeft,
+            child: StackCardAvatar(
+              url: profile.avatarUrl,
+              image: profile.avatarPath.isEmpty
+                  ? null
+                  : PortfolioMediaImage(
+                      path: profile.avatarPath,
+                      width: 80,
+                      height: 80,
+                    ),
+            ),
+          ),
+          const SizedBox(height: StackCardSpacing.lg),
+        ],
         if (profile.username.isNotEmpty)
           Text(
             '@${profile.username}',
@@ -145,6 +163,21 @@ class PortfolioContentView extends StatelessWidget {
                     style: text.labelLarge?.copyWith(color: context.colors.ink),
                   ),
                   const SizedBox(height: StackCardSpacing.xxl),
+                  if (project.imagePaths.isNotEmpty) ...[
+                    Wrap(
+                      spacing: StackCardSpacing.sm,
+                      runSpacing: StackCardSpacing.sm,
+                      children: [
+                        for (final path in project.imagePaths)
+                          PortfolioMediaImage(
+                            path: path,
+                            width: 160,
+                            height: 120,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: StackCardSpacing.lg),
+                  ],
                   Text(
                     project.title,
                     style: text.headlineLarge?.copyWith(

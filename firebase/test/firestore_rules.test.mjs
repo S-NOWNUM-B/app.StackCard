@@ -226,6 +226,92 @@ test('legacy schema cannot write ignore metadata and schema 2 validates its list
   await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 2, content: null }));
 });
 
+test('private schema 3 accepts owner media paths after legacy migration and forbids downgrades', async () => {
+  const alice = database();
+  await assertSucceeds(saveDraft(alice));
+  await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 2 }));
+  const mediaPath = 'accounts/alice/media/0123456789abcdef0123456789abcdef.jpg';
+  const mediaContent = {
+    ...content(),
+    profile: { ...content().profile, avatarPath: mediaPath },
+    projects: [{ id: 'project-1', imagePaths: [mediaPath] }],
+    ignoredGitHubRepositories: [],
+  };
+  await assertSucceeds(saveDraft(alice, 'alice', {
+    schemaVersion: 3, mutationId: 'media-v3', content: mediaContent,
+  }));
+  const ref = doc(alice, 'accounts/alice/drafts/current');
+  const before = (await getDoc(ref)).data();
+  assert.equal(before.content.profile.avatarPath, mediaPath);
+  for (const schemaVersion of [1, 2]) {
+    await assertFails(saveDraft(alice, 'alice', { schemaVersion }));
+  }
+  assert.deepEqual((await getDoc(ref)).data(), before);
+});
+
+test('schema 3 allows absent or empty avatar path and notes-only content', async () => {
+  const alice = database();
+  await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 3 }));
+  await assertSucceeds(saveDraft(alice, 'alice', {
+    schemaVersion: 3,
+    content: { ...content(), profile: { ...content().profile, avatarPath: '' } },
+  }));
+  await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 3, content: null }));
+});
+
+test('legacy schemas reject the media profile field even when it is empty', async () => {
+  for (const schemaVersion of [1, 2]) {
+    await assertFails(saveDraft(database(), 'alice', {
+      schemaVersion,
+      content: { ...content(), profile: { ...content().profile, avatarPath: '' } },
+    }));
+    await assertSucceeds(saveDraft(database(), 'alice', { schemaVersion }));
+  }
+});
+
+test('schema 3 rejects malformed, foreign and non-string avatar paths', async () => {
+  for (const avatarPath of [
+    null, 1, [], {},
+    'accounts/bob/media/0123456789abcdef0123456789abcdef.jpg',
+    'accounts/alice/media/0123456789abcdef0123456789abcdef.png',
+    'accounts/alice/media/0123456789ABCDEF0123456789ABCDEF.jpg',
+    'accounts/alice/media/short.jpg',
+    'accounts/alice/media/0123456789abcdef0123456789abcdef.jpg/other',
+    'publicPortfolios/alice/media/0123456789abcdef0123456789abcdef.jpg',
+    'https://example.invalid/avatar.jpg',
+  ]) {
+    await assertFails(saveDraft(database(), 'alice', {
+      schemaVersion: 3,
+      content: { ...content(), profile: { ...content().profile, avatarPath } },
+    }));
+  }
+});
+
+test('schema 3 sync preserves publication and the public profile refuses private media paths', async () => {
+  const alice = database();
+  await publish(alice);
+  const publicRef = doc(database(null), 'publicPortfolios/alice');
+  const initialPublic = (await getDoc(publicRef)).data();
+  const privateContent = {
+    ...content('Private media owner'),
+    profile: {
+      ...content('Private media owner').profile,
+      avatarPath: 'accounts/alice/media/0123456789abcdef0123456789abcdef.jpg',
+    },
+  };
+  await assertSucceeds(saveDraft(alice, 'alice', {
+    schemaVersion: 3, mutationId: 'media-v3', content: privateContent,
+  }));
+  assert.deepEqual((await getDoc(publicRef)).data(), initialPublic);
+  await assertFails(publishBatch(alice, 'alice', 'alice', 2, {
+    content: privateContent, sourceMutationId: 'media-v3',
+  }).commit());
+  await assertSucceeds(publishBatch(alice, 'alice', 'alice', 2, {
+    content: content('Explicit legacy public projection'), sourceMutationId: 'media-v3',
+  }).commit());
+  assert.equal(Object.hasOwn((await getDoc(publicRef)).data().content.profile, 'avatarPath'), false);
+});
+
 test('atomic publish exposes only public snapshot; account and private draft stay owner-only', async () => {
   const alice = database();
   await assertSucceeds(publish(alice));

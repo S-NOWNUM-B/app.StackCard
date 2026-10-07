@@ -14,6 +14,7 @@ import 'core/state/settings_repository.dart';
 import 'core/theme/stackcard_theme.dart';
 import 'features/github_import/github_import.dart';
 import 'features/auth/auth.dart';
+import 'features/media/media.dart';
 import 'features/portfolio_draft/portfolio_draft.dart';
 import 'features/projects/projects.dart';
 import 'shared/widgets/stackcard_states.dart';
@@ -77,6 +78,9 @@ class _StackCardBootstrapState extends State<StackCardBootstrap> {
             ),
             portfolioDraftRepositoryFactoryProvider.overrideWithValue(
               runtime.repositoryForUser,
+            ),
+            portfolioMediaRepositoryFactoryProvider.overrideWithValue(
+              runtime.mediaRepositoryForUser,
             ),
             guestDraftTransferProvider.overrideWithValue(
               runtime.transferGuestToUser,

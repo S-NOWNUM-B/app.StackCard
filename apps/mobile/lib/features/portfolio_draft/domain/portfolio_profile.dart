@@ -6,6 +6,7 @@ final class PortfolioProfile {
     this.bio = '',
     this.locationText = '',
     this.avatarUrl = '',
+    this.avatarPath = '',
   });
 
   final String name;
@@ -14,6 +15,7 @@ final class PortfolioProfile {
   final String bio;
   final String locationText;
   final String avatarUrl;
+  final String avatarPath;
 
   PortfolioProfile copyWith({
     String? name,
@@ -22,6 +24,7 @@ final class PortfolioProfile {
     String? bio,
     String? locationText,
     String? avatarUrl,
+    String? avatarPath,
   }) => PortfolioProfile(
     name: name ?? this.name,
     username: username ?? this.username,
@@ -29,10 +32,11 @@ final class PortfolioProfile {
     bio: bio ?? this.bio,
     locationText: locationText ?? this.locationText,
     avatarUrl: avatarUrl ?? this.avatarUrl,
+    avatarPath: avatarPath ?? this.avatarPath,
   );
 
   Object get _fields =>
-      (name, username, headline, bio, locationText, avatarUrl);
+      (name, username, headline, bio, locationText, avatarUrl, avatarPath);
 
   @override
   bool operator ==(Object other) =>

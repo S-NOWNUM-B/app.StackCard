@@ -17,6 +17,7 @@ List<Project> projectPortfolioProjects(PortfolioContent content) =>
               : ProjectSource.manual,
           featured: project.featured,
           visible: project.visible,
+          imagePaths: project.imagePaths,
           details: [
             project.description,
             project.repositoryUrl,

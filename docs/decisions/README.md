@@ -205,6 +205,13 @@ snapshot. Preview означает demo-ссылку; изображения о�
 [architecture](../architecture/architecture.md#portfolio-suggestions),
 приёмка — в [Phase 10](../product/product-spec.md#phase-10--portfolio-suggestions).
 
+## Принято для Phase 11
+
+Приватные avatar/project images, validation, UID-scoped Storage,
+Hive v4/private cloud schema 3 и политика сохранения заменённых файлов
+описаны в [ADR 0003](0003-private-portfolio-media.md).
+Публикация media и автоматическая garbage collection не входят в этот scope.
+
 ## Решить перед соответствующими фазами
 
 - Перед Phase 13 проверить совместимость web с принятыми Firestore envelope,

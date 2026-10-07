@@ -13,7 +13,9 @@ guides. Этот файл дополняет их только для Flutter-п
 R8 slice перенесён: semantic Dark/Light Lime, Manrope/shared controls, pinned SVG,
 live Brand A, Projects и поддерживаемые Settings. Private singleton storage,
 plain Resume и legacy Home/Portfolio composition сохранены; новый Resume root,
-multiple documents, model/media/account/publication/web ещё не реализованы.
+multiple documents, новая model/account/publication/web ещё не реализованы.
+Phase 11 разрешена 2026-10-07: private media добавляются в текущий singleton draft;
+это не завершение полной Design v2 acceptance.
 Конкретный [prerequisite scope](../../redesign/prerequisites.md) — proposed,
 не разрешение backend/migration. Current status хранится в product spec/plan;
 headless950PASS не означает полный REDESIGN_DONE или native visual acceptance.
@@ -149,7 +151,7 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   не меняет content. Save сохраняет захваченный snapshot, более новый ввод
   остаётся unsaved; повторная запись одновременно не выполняется.
   [HivePortfolioDraftRepository](../../../apps/mobile/lib/features/portfolio_draft/data/hive_portfolio_draft_repository.dart)
-  последовательно проверяет expected revision и пишет envelope v3; v1/v2 читаются
+  последовательно проверяет expected revision и пишет envelope v4; v1/v2/v3 читаются
   без eager migration, explicit Save/ACK пишет текущую версию. Conflict
   сохраняет несохранённые правки и требует явного решения перечитать durable draft.
   `saveNotes` изменяет только notes, сохраняя content. Чтение v1 не пишет migration:
@@ -165,7 +167,7 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   offline cache miss не означает cloud emptiness. LocalRuntime server-only preflight
   пропускается только для своего pending journal; transaction закрывает race.
   Source envelope/revision/notes/content и существующий raw v1 backup сохраняются;
-  v1 не мигрируется при чтении, ACK после явного transfer может создать v3.
+  v1 не мигрируется при чтении, ACK после явного transfer может создать v4.
   Durable journal резервирует source одному UID до online create-if-absent claim;
   retry допускает только тот же mutation ID/notes/content. Remote ACK metadata
   сохраняется до local destination/cleanup; durable syncPrepared не позволяет
@@ -218,7 +220,8 @@ headless950PASS не означает полный REDESIGN_DONE или native v
 - Suggestions: [pure rules](../../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_suggestions.dart)
   принимают content/source и явное время, возвращают immutable/stable advice.
   Числовые пороги принадлежат PortfolioSuggestionThresholds, UI не дублирует их.
-  Preview означает demo link (`liveUrl`), media не вводится до своей фазы.
+  Preview suggestion по-прежнему открывает demo link (`liveUrl`);
+  отдельные private images принадлежат media Phase 11.
   Projects использует accepted source offline, source cards — загруженную версию;
   updatedAt не выдавать за commit history. Ignore/version и hidden/featured
   учитываются, curated overrides сохраняются. Provider проверяет account/guest
@@ -227,6 +230,18 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   показывает ru/en причину и ведёт к прежним Preview/editor actions без записи.
   Domain, provider и widget tests — `test/portfolio_suggestions*_test.dart`;
   контракт — в [architecture](../../architecture/architecture.md#portfolio-suggestions).
+- Media: [public API](../../../apps/mobile/lib/features/media/media.dart),
+  [ADR 0003](../../decisions/0003-private-portfolio-media.md) и
+  [Storage Rules](../../../firebase/storage.rules). SDK принадлежит media data;
+  widgets читают public APIs. Camera/gallery вызываются явно; MIME/magic/size,
+  resize/compression и EXIF cleanup происходят до upload. Private paths
+  принадлежат UID, не download URLs. Progress/retry не меняют другой owner;
+  Apply и Save отдельны, cancel не меняет draft. Guest не загружает изображения.
+  Private bytes cache memory-only и исчезает при UID transition; external public
+  avatars используют cached_network_image. Не удалять прежние durable paths
+  при замене/ACK: offline/LWW может ещё ссылаться на них. Public projection
+  исключает media fields, publication не вызывается. Hive writer v4/private
+  cloud writer3 читают legacy versions без read-time rewrite; downgrade запрещён.
 - Account sync: [pure contracts](../../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_sync.dart),
   [local-first repository](../../../apps/mobile/lib/features/portfolio_draft/data/synced_portfolio_draft_repository.dart),
   [Hive metadata](../../../apps/mobile/lib/features/portfolio_draft/data/hive_portfolio_sync_metadata_store.dart)
@@ -304,7 +319,7 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   `test/portfolio_draft_controller_test.dart`, `test/portfolio_draft_widget_test.dart`:
   revision, input retention, unknown schema, Save failures и навигация.
   Builder checks дополнительно проверяют validation/completion, CRUD, порядок/
-  видимость/тему preview, v1/v2 → v3 migration, stale revision и сохранение новых
+  видимость/тему preview, v1/v2/v3 → v4 migration, stale revision и сохранение новых
   правок во время Save; имена актуальных tests — в `apps/mobile/test`.
 - Локальные шрифты и лицензии: [assets/fonts](../../../apps/mobile/assets/fonts/);
   регистрация остаётся в pubspec. Manrope400/600/700/800 и OFL/pinned hashes
