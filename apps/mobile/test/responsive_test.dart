@@ -35,6 +35,7 @@ void main() {
         for (final route in [
           'sign-in',
           'home',
+          'resumes',
           'portfolio',
           'projects',
           'settings',
@@ -73,7 +74,7 @@ void main() {
                 ),
               );
             }
-            final scroll = find.byType(SingleChildScrollView).last;
+            final scroll = _verticalScroll();
             await tester.drag(scroll, const Offset(0, -3000));
             await tester.pumpAndSettle();
             expect(
@@ -93,14 +94,7 @@ Future<void> _checkAccessibility(WidgetTester tester) async {
   // элементами. Проверяем весь rendered content при исходной ширине экрана,
   // как в portfolio_builder_visual_test; overflow и goldens остаются отдельно.
   final size = tester.view.physicalSize;
-  final scroll = tester.state<ScrollableState>(
-    find
-        .descendant(
-          of: find.byType(SingleChildScrollView).last,
-          matching: find.byType(Scrollable),
-        )
-        .first,
-  );
+  final scroll = tester.state<ScrollableState>(_verticalScroll());
   final extraHeight = scroll.position.maxScrollExtent.ceilToDouble();
   tester.view.physicalSize = Size(size.width, size.height + extraHeight + 16);
   await tester.pumpAndSettle();
@@ -114,3 +108,10 @@ Future<void> _checkAccessibility(WidgetTester tester) async {
     await tester.pumpAndSettle();
   }
 }
+
+Finder _verticalScroll() => find
+    .byWidgetPredicate(
+      (widget) =>
+          widget is Scrollable && widget.axisDirection == AxisDirection.down,
+    )
+    .last;

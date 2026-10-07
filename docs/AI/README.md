@@ -6,12 +6,14 @@
 Перед любой задачей по разработке продукта обязательно прочитай
 [план разработки](../product/product-spec.md#план-разработки),
 [текущий статус](../product/product-spec.md#статус-и-границы-текущей-работы)
-и раздел выполняемой фазы. Порядок работы и переходов задают
-[общие правила выполнения плана](AGENTS.md#разработка-по-плану).
+и действующий scope. С 2026-10-07 очередь фаз поставлена на паузу прямым
+поручением пользователя: mobile capabilities по Figma/концепции разрешены
+в границах product status. Исторические задачи и открытые проверки сохраняются.
+Порядок задают [общие правила выполнения плана](AGENTS.md#разработка-по-плану).
 
 | Задача | Читать | Canonical source |
 | --- | --- | --- |
-| Разработка продукта: scope, фазы, задачи и сценарии | [План разработки](../product/product-spec.md#план-разработки), [Product spec](../product/product-spec.md), [правила фаз](AGENTS.md#разработка-по-плану) | Статус и критерии фазы в product spec, подтверждение пользователя и фактическая реализация |
+| Разработка продукта: scope, capabilities, история фаз и сценарии | [План разработки](../product/product-spec.md#план-разработки), [Product spec](../product/product-spec.md), [правила фаз](AGENTS.md#разработка-по-плану) | Действующий scope и открытые критерии в product spec, последнее поручение пользователя и фактическая реализация |
 | Структура/зависимости mobile | [Mobile rules](scopes/mobile.md), [architecture](../architecture/architecture.md), [решения](../decisions/README.md) | `apps/mobile/pubspec.yaml`, `apps/mobile/pubspec.lock`, `apps/mobile/lib`, platform configs |
 | Структура и scope web | [Web README](../../apps/web/README.md), [architecture](../architecture/architecture.md) | `apps/web/README.md`; configs/code появятся при создании Next.js-приложения |
 | Repository, DI и feature boundaries | [Architecture](../architecture/architecture.md#mobile-modules--при-реальных-сценариях), [Mobile rules](scopes/mobile.md), [решения](../decisions/README.md) | Public feature APIs, domain contracts, feature-root providers/dependencies, data implementations |
@@ -25,7 +27,7 @@
 | Bootstrap, local storage и portfolio Builder | [Local persistence contract](../architecture/architecture.md#локальные-настройки-и-draft-на-phase-5), [Builder contract](../architecture/architecture.md#portfolio-domain-и-локальный-builder), [Mobile rules](scopes/mobile.md), [решения Phase 6](../decisions/README.md#принято-для-phase-6) | [LocalRuntime](../../apps/mobile/lib/app/local_runtime.dart), [LocalStorage](../../apps/mobile/lib/core/storage/local_storage.dart) и public [portfolio_draft.dart](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart) |
 | AppSettings, ThemeMode/Locale и ru/en UI | [Mobile rules](scopes/mobile.md), [Local persistence contract](../architecture/architecture.md#локальные-настройки-и-draft-на-phase-5), [Design system](../design/design-system.md) | [core/state](../../apps/mobile/lib/core/state/), [core/localization](../../apps/mobile/lib/core/localization/) и [SharedPreferences adapter](../../apps/mobile/lib/features/settings/data/shared_preferences_settings_repository.dart) |
 | UI и branding | [Design system](../design/design-system.md) | `assets/branding/stackcard-link-brand-kit.json`, SVG; существующие widgets |
-| StackCard Design v2: аудит, дизайн и перенос UI | Сначала [Redesign README](../redesign/README.md) и [план R0–R9](../redesign/plan.md), затем [требования](../redesign/requirements.md), [аудит](../redesign/audit.md), [экраны](../redesign/screens.md), [референсы](../redesign/references.md) | Последние решения пользователя, активная согласованная R-задача и проверенные source/Figma IDs; прежние docs/design сохраняются как история; R8 требует DESIGN_READY и отдельного разрешения |
+| StackCard Design v2: аудит, дизайн и перенос UI | Сначала [Redesign README](../redesign/README.md) и [план R0–R9](../redesign/plan.md), затем [требования](../redesign/requirements.md), [аудит](../redesign/audit.md), [экраны](../redesign/screens.md), [референсы](../redesign/references.md) | Последние решения пользователя, активная согласованная R-задача и проверенные source/Figma IDs; прежние docs/design сохраняются как история; R7/DESIGN_READY acceptance остаётся открытой; mobile capability scope разрешён 2026-10-07 |
 | Запуск, lint, tests | [CONTRIBUTING](../../CONTRIBUTING.md#быстрый-старт), [Mobile README](../../apps/mobile/README.md) | `apps/mobile/analysis_options.yaml`, `test`, Flutter SDK |
 | State management и учебные этапы | [Mobile rules](scopes/mobile.md), [state management](../learning/state-management.md) | AppearanceController для AppSettings; публичные feature APIs и Riverpod DI; учебные patches вне runtime |
 | Публичное описание проекта | [Root README](../../README.md), [Product spec](../product/product-spec.md) | Назначение, подтверждённые сценарии и фактическая доступность продукта |
@@ -37,7 +39,7 @@ skills из доступного каталога → минимальные и�
 `project-documentation` — единый skill для текста, визуального оформления и
 синхронизации docs с реализацией; `project-context-bootstrapper` — для
 устойчивых placement/check rules; `codex-subagent-orchestrator` — для независимых
-частей при разрешённой делегации. Skill не меняет scope фазы и не добавляет
+частей при разрешённой делегации. Skill не меняет действующий scope и не добавляет
 неиспользуемые зависимости. Новые guides создаются только при реальной необходимости.
 
 Корневой README — публичный обзор StackCard: назначение, аудитория, возможности,

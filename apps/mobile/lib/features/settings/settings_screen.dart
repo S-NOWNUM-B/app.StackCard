@@ -25,15 +25,7 @@ class SettingsScreen extends riverpod.ConsumerWidget {
     final draft = ref.watch(portfolioDraftControllerProvider);
     final hasAccountRepository =
         ref.watch(accountAuthRepositoryProvider) != null;
-    final canEditDraft = draft.canEdit && draft.content != null;
     final strings = context.strings;
-    final localDraftReason = strings.tr(
-      draft.loading
-          ? 'common.loading'
-          : !draft.canEdit
-          ? 'settings.localDraftUnavailable'
-          : 'settings.localDraftRequired',
-    );
     return _SettingsPage(
       titleKey: 'nav.settings',
       fallbackPath: '/home',
@@ -41,38 +33,16 @@ class SettingsScreen extends riverpod.ConsumerWidget {
         _SettingsRow(
           key: const Key('settings.group.profile'),
           icon: Icons.person_outline_rounded,
-          title: strings.tr('settings.profile'),
-          subtitle: strings.tr('settings.profileUnavailable'),
+          title: strings.tr('workspace.profile'),
+          subtitle: strings.tr('workspace.profileHint'),
+          onPressed: () => context.push('/settings/profile'),
         ),
-        StackCardButton(
-          key: const Key('settings.localProfile'),
-          label: strings.tr('settings.editLocalProfile'),
-          onPressed: canEditDraft
-              ? () => context.push('/portfolio/builder/profile')
-              : null,
-          unavailableReason: localDraftReason,
-        ),
-        const SizedBox(height: StackCardSpacing.lg),
         _SettingsRow(
           key: const Key('settings.group.contacts'),
           icon: Icons.link_rounded,
           title: strings.tr('settings.contacts'),
-          subtitle: strings.tr('settings.contactsUnavailable'),
-        ),
-        StackCardButton(
-          key: const Key('settings.localLinks'),
-          label: strings.tr('settings.editLocalLinks'),
-          onPressed: canEditDraft
-              ? () => context.push('/portfolio/builder/links')
-              : null,
-          unavailableReason: localDraftReason,
-        ),
-        const SizedBox(height: StackCardSpacing.sm),
-        StackCardButton(
-          key: const Key('settings.shareContacts'),
-          label: strings.tr('settings.shareContacts'),
-          role: StackCardButtonRole.quiet,
-          unavailableReason: strings.tr('settings.shareContactsUnavailable'),
+          subtitle: strings.tr('workspace.contactsHint'),
+          onPressed: () => context.push('/settings/contacts'),
         ),
         // В demo режиме ошибка draft уже показана profile AsyncView ниже.
         if (hasAccountRepository && !draft.loaded && draft.failure != null) ...[

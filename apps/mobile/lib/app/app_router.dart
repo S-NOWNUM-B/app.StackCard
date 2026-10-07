@@ -5,10 +5,10 @@ import '../core/localization/app_strings.dart';
 import '../features/auth/auth.dart';
 import '../features/github_import/github_import.dart';
 import '../features/home/home_screen.dart';
-import '../features/portfolio/portfolio.dart';
 import '../features/portfolio_draft/portfolio_draft.dart';
 import '../features/projects/projects.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/settings/developer_profile_screen.dart';
 import '../shared/widgets/stackcard_states.dart';
 import 'app_shell.dart';
 
@@ -53,10 +53,20 @@ String safeAuthDestination(String? value) {
   final path = uri.path;
   if (path == '/home' ||
       path == '/portfolio' ||
+      path == '/resumes' ||
+      path == '/resumes/new' ||
+      path == '/portfolio/new' ||
+      RegExp(r'^/(resumes|portfolio)/[^/]+/edit$').hasMatch(path) ||
       path == '/projects' ||
       path == '/settings' ||
       path == '/settings/appearance' ||
       path == '/settings/account' ||
+      path == '/settings/profile' ||
+      path == '/settings/contacts' ||
+      path == '/settings/contacts/links' ||
+      RegExp(
+        r'^/settings/profile/(identity|skills|experience|education|links)$',
+      ).hasMatch(path) ||
       path == '/portfolio-draft' ||
       path == '/portfolio/preview' ||
       path == '/github-import' ||
@@ -124,6 +134,50 @@ GoRouter createAppRouter({
       path: '/settings',
       builder: (_, _) => const SettingsScreen(),
       routes: [
+        GoRoute(
+          name: 'developerProfile',
+          path: 'profile',
+          builder: (_, _) => const DeveloperProfileScreen(),
+          routes: [
+            GoRoute(
+              name: 'developerIdentity',
+              path: 'identity',
+              builder: (_, _) => const PortfolioProfileEditorScreen(),
+            ),
+            GoRoute(
+              name: 'developerSkills',
+              path: 'skills',
+              builder: (_, _) => const PortfolioSkillsEditorScreen(),
+            ),
+            GoRoute(
+              name: 'developerExperience',
+              path: 'experience',
+              builder: (_, _) => const PortfolioExperienceEditorScreen(),
+            ),
+            GoRoute(
+              name: 'developerEducation',
+              path: 'education',
+              builder: (_, _) => const PortfolioEducationEditorScreen(),
+            ),
+            GoRoute(
+              name: 'developerLinks',
+              path: 'links',
+              builder: (_, _) => const PortfolioLinksEditorScreen(),
+            ),
+          ],
+        ),
+        GoRoute(
+          name: 'developerContacts',
+          path: 'contacts',
+          builder: (_, _) => const DeveloperProfileScreen(contactsOnly: true),
+          routes: [
+            GoRoute(
+              name: 'developerContactsLinks',
+              path: 'links',
+              builder: (_, _) => const PortfolioLinksEditorScreen(),
+            ),
+          ],
+        ),
         GoRoute(
           name: 'settingsAppearance',
           path: 'appearance',
@@ -195,24 +249,82 @@ GoRouter createAppRouter({
           PortfolioProjectEditorScreen(projectId: state.pathParameters['id']!),
     ),
     GoRoute(path: '/', redirect: (_, _) => '/home'),
-    ShellRoute(
-      builder: (context, state, child) =>
-          AppShell(location: state.uri.path, child: child),
-      routes: [
-        GoRoute(
-          name: 'home',
-          path: '/home',
-          builder: (_, _) => const HomeScreen(),
+    GoRoute(
+      name: 'newResume',
+      path: '/resumes/new',
+      builder: (_, _) => const PortfolioDocumentEditorScreen(
+        kind: PortfolioDocumentKind.resume,
+      ),
+    ),
+    GoRoute(
+      name: 'editResumeDocument',
+      path: '/resumes/:id/edit',
+      builder: (_, state) => PortfolioDocumentEditorScreen(
+        kind: PortfolioDocumentKind.resume,
+        documentId: state.pathParameters['id']!,
+      ),
+    ),
+    GoRoute(
+      name: 'newPortfolioDocument',
+      path: '/portfolio/new',
+      builder: (_, _) => const PortfolioDocumentEditorScreen(
+        kind: PortfolioDocumentKind.portfolio,
+      ),
+    ),
+    GoRoute(
+      name: 'editPortfolioDocument',
+      path: '/portfolio/:id/edit',
+      builder: (_, state) => PortfolioDocumentEditorScreen(
+        kind: PortfolioDocumentKind.portfolio,
+        documentId: state.pathParameters['id']!,
+      ),
+    ),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, shell) => AppShell(
+        location: state.uri.path,
+        child: shell,
+        onNavigate: (index) => shell.goBranch(index),
+      ),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              name: 'home',
+              path: '/home',
+              builder: (_, _) => const HomeScreen(),
+            ),
+          ],
         ),
-        GoRoute(
-          name: 'portfolio',
-          path: '/portfolio',
-          builder: (_, _) => const PortfolioScreen(),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              name: 'resumes',
+              path: '/resumes',
+              builder: (_, _) => const PortfolioDocumentLibraryScreen(
+                kind: PortfolioDocumentKind.resume,
+              ),
+            ),
+          ],
         ),
-        GoRoute(
-          name: 'projects',
-          path: '/projects',
-          builder: (_, _) => const ProjectsScreen(),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              name: 'projects',
+              path: '/projects',
+              builder: (_, _) => const ProjectsScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              name: 'portfolio',
+              path: '/portfolio',
+              builder: (_, _) => const PortfolioDocumentLibraryScreen(
+                kind: PortfolioDocumentKind.portfolio,
+              ),
+            ),
+          ],
         ),
       ],
     ),

@@ -5,294 +5,213 @@ import 'package:go_router/go_router.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
-import '../../shared/widgets/stackcard_async_view.dart';
-import '../../shared/widgets/stackcard_button.dart';
 import '../../shared/widgets/stackcard_card.dart';
-import '../../shared/widgets/stackcard_poster.dart';
+import '../../shared/widgets/stackcard_icon.dart';
 import '../../shared/widgets/stackcard_states.dart';
-import '../portfolio/portfolio.dart';
+import '../../shared/widgets/stackcard_technology_badge.dart';
 import '../portfolio_draft/portfolio_draft.dart';
-import '../profile/profile.dart';
-import '../projects/projects.dart';
+import '../media/media.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) => StackCardAsyncView(
-    state: ref.watch(portfolioOverviewProvider),
-    onRetry: () {
-      ref.read(portfolioDraftControllerProvider.notifier).load();
-      ref.invalidate(profileProvider);
-      ref.invalidate(projectsProvider);
-    },
-    data: (overview) => _HomeContent(overview: overview),
-  );
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeContent extends StatelessWidget {
-  const _HomeContent({required this.overview});
-  final PortfolioOverview overview;
-
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  int _filter = 0;
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final wide =
-          constraints.maxWidth >= 760 &&
-          MediaQuery.textScalerOf(context).scale(1) < 1.7;
-      final profile = overview.profile;
-      final hero = _ProfilePoster(
-        profile: profile,
-        hasDraft: overview.hasDraft,
-      );
-      final featured = _FeaturedProject(project: overview.highlightedProject);
-      return SingleChildScrollView(
-        padding: EdgeInsets.all(
-          constraints.maxWidth >= 700
-              ? StackCardSpacing.xl
-              : StackCardSpacing.lg,
-        ),
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1160),
+  Widget build(BuildContext context) {
+    ref.listen(portfolioDraftRepositoryProvider, (previous, next) {
+      if (previous != null && !identical(previous, next)) {
+        setState(() => _filter = 0);
+      }
+    });
+    return WorkspaceReadGate(
+      data: (content) {
+        final entries =
+            <({DateTime? date, String id, Widget card})>[
+              if (_filter != 2)
+                for (final document in content.documents)
+                  if (_filter == 0 ||
+                      document.kind == PortfolioDocumentKind.resume)
+                    (
+                      date: document.updatedAt,
+                      id: document.id,
+                      card: PortfolioDocumentCard(document: document),
+                    ),
+              if (_filter != 1)
+                for (final project in content.projects)
+                  (
+                    date: project.updatedAt,
+                    id: project.id,
+                    card: _HomeProjectCard(project: project),
+                  ),
+            ]..sort((a, b) {
+              if (a.date == null && b.date == null) return a.id.compareTo(b.id);
+              if (a.date == null) return 1;
+              if (b.date == null) return -1;
+              final dateOrder = b.date!.compareTo(a.date!);
+              return dateOrder == 0 ? a.id.compareTo(b.id) : dateOrder;
+            });
+        return ListView(
+          padding: const EdgeInsets.all(StackCardSpacing.cardPadding),
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final item in [
+                  (0, 'workspace.all'),
+                  (1, 'nav.resumes'),
+                  (2, 'nav.projects'),
+                ])
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Semantics(
+                        selected: _filter == item.$1,
+                        child: TextButton(
+                          key: ValueKey('home.filter.${item.$1}'),
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(48, 48),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 8,
+                            ),
+                            foregroundColor: context.colors.textPrimary,
+                            backgroundColor: _filter == item.$1
+                                ? context.colors.surfaceHover
+                                : Colors.transparent,
+                            side: _filter == item.$1
+                                ? BorderSide(
+                                    color: context.colors.controlOutline,
+                                  )
+                                : null,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                StackCardRadius.medium,
+                              ),
+                            ),
+                          ),
+                          onPressed: () => setState(() => _filter = item.$1),
+                          child: Text(
+                            context.strings.tr(item.$2),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: StackCardSpacing.lg),
+            if (entries.isEmpty)
+              StackCardStateView(
+                kind: StackCardViewState.empty,
+                title: context.strings.tr('workspace.emptyHome'),
+                message: context.strings.tr('workspace.emptyHomeHint'),
+              ),
+            for (final entry in entries) ...[
+              entry.card,
+              const SizedBox(height: StackCardSpacing.lg),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _HomeProjectCard extends StatelessWidget {
+  const _HomeProjectCard({required this.project});
+  final PortfolioProject project;
+  @override
+  Widget build(BuildContext context) => StackCardCard(
+    outlined: true,
+    padding: EdgeInsets.zero,
+    child: InkWell(
+      key: ValueKey('home.project.${project.id}'),
+      borderRadius: BorderRadius.circular(StackCardRadius.large),
+      onTap: () =>
+          context.push('/projects/${Uri.encodeComponent(project.id)}/edit'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(StackCardRadius.large),
+            ),
+            child: project.imagePaths.isEmpty
+                ? Container(
+                    height: 100,
+                    color: context.colors.surfaceElevated,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        StackCardIcon(
+                          name: 'image',
+                          color: context.colors.textSecondary,
+                        ),
+                        const SizedBox(width: StackCardSpacing.sm),
+                        Flexible(
+                          child: Text(
+                            context.strings.tr('project.noImage'),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : SizedBox(
+                    height: 140,
+                    child: PortfolioMediaImage(
+                      path: project.imagePaths.first,
+                      width: double.infinity,
+                      height: 140,
+                    ),
+                  ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(StackCardSpacing.cardPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  overview.hasDraft && profile.firstName.isEmpty
-                      ? context.strings.tr('builderIntegration.welcome')
-                      : context.strings.tr('home.greeting', {
-                          'name': profile.firstName,
-                        }),
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  project.title,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: StackCardSpacing.xl),
-                if (wide)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: hero),
-                      const SizedBox(width: StackCardSpacing.xl),
-                      Expanded(child: featured),
-                    ],
-                  )
-                else
-                  hero,
-                const SizedBox(height: StackCardSpacing.xl),
-                _ReadinessStrip(
-                  readiness: profile.readiness,
-                  hasDraft: overview.hasDraft,
-                ),
-                const SizedBox(height: StackCardSpacing.xxl),
-                if (!wide) ...[
-                  featured,
-                  const SizedBox(height: StackCardSpacing.xxl),
+                if (project.description.isNotEmpty) ...[
+                  const SizedBox(height: StackCardSpacing.md),
+                  Text(
+                    project.description,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: context.colors.textSecondary),
+                  ),
                 ],
-                StackCardCard(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: StackCardSpacing.xl,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                if (project.technologies.isNotEmpty) ...[
+                  const SizedBox(height: StackCardSpacing.md),
+                  Wrap(
+                    spacing: StackCardSpacing.sm,
+                    runSpacing: StackCardSpacing.sm,
                     children: [
-                      Wrap(
-                        spacing: StackCardSpacing.xl,
-                        runSpacing: StackCardSpacing.sm,
-                        children: [
-                          Text(
-                            context.strings.projectCount(
-                              overview.projects.length,
-                            ),
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          Text(
-                            context.strings.skillCount(profile.skills.length),
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(color: context.colors.textSecondary),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: StackCardSpacing.lg),
-                      Wrap(
-                        spacing: StackCardSpacing.sm,
-                        runSpacing: StackCardSpacing.sm,
-                        children: [
-                          StackCardButton(
-                            label: context.strings.tr('nav.projects'),
-                            icon: Icons.arrow_outward_rounded,
-                            onPressed: () => context.push('/projects'),
-                          ),
-                          StackCardButton(
-                            label: context.strings.tr('home.githubTitle'),
-                            icon: Icons.code_rounded,
-                            onPressed: () => context.push('/github-import'),
-                          ),
-                        ],
-                      ),
+                      for (final technology in project.technologies)
+                        StackCardTechnologyBadge(label: technology),
                     ],
                   ),
+                ],
+                const SizedBox(height: StackCardSpacing.md),
+                Text(
+                  workspaceDate(context, project.updatedAt),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: context.colors.textMeta),
                 ),
               ],
             ),
           ),
-        ),
-      );
-    },
+        ],
+      ),
+    ),
   );
-}
-
-class _ProfilePoster extends StatelessWidget {
-  const _ProfilePoster({required this.profile, required this.hasDraft});
-  final Profile profile;
-  final bool hasDraft;
-
-  @override
-  Widget build(BuildContext context) {
-    final ink = context.colors.ink;
-    final text = Theme.of(context).textTheme;
-    return StackCardPoster(
-      color: context.colors.acid,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  profile.handle.isEmpty ? 'STACKCARD' : profile.handle,
-                  style: text.labelLarge?.copyWith(color: ink),
-                ),
-              ),
-              Icon(Icons.north_east_rounded, color: ink),
-            ],
-          ),
-          StackCardArtwork(color: ink, height: 155),
-          Text(
-            profile.name.isEmpty
-                ? context.strings.tr('builderIntegration.emptyProfile')
-                : profile.name,
-            style: text.displaySmall?.copyWith(color: ink),
-          ),
-          if (profile.role.isNotEmpty) ...[
-            const SizedBox(height: StackCardSpacing.sm),
-            Text(profile.role, style: text.bodyLarge?.copyWith(color: ink)),
-          ],
-          const SizedBox(height: StackCardSpacing.xl),
-          Wrap(
-            spacing: StackCardSpacing.sm,
-            runSpacing: StackCardSpacing.sm,
-            children: [
-              StackCardButton(
-                label: context.strings.tr('home.myPortfolio'),
-                icon: Icons.arrow_outward_rounded,
-                onPressed: () => context.push('/portfolio'),
-              ),
-              if (hasDraft)
-                StackCardButton(
-                  label: context.strings.tr('builderIntegration.edit'),
-                  icon: Icons.edit_outlined,
-                  onPressed: () => context.push('/portfolio/builder'),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ReadinessStrip extends StatelessWidget {
-  const _ReadinessStrip({required this.readiness, required this.hasDraft});
-  final ProfileReadiness readiness;
-  final bool hasDraft;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Text(
-              context.strings.tr('home.readiness'),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-          const SizedBox(width: StackCardSpacing.lg),
-          Text(
-            '${readiness.percent}%',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-        ],
-      ),
-      const SizedBox(height: StackCardSpacing.md),
-      LinearProgressIndicator(
-        value: readiness.fraction,
-        minHeight: 2,
-        color: context.colors.acid,
-        semanticsLabel: context.strings.tr(
-          hasDraft
-              ? 'builderIntegration.readinessSemantics'
-              : 'home.readinessSemantics',
-          {'percent': readiness.percent},
-        ),
-      ),
-    ],
-  );
-}
-
-class _FeaturedProject extends StatelessWidget {
-  const _FeaturedProject({required this.project});
-  final Project? project;
-
-  @override
-  Widget build(BuildContext context) {
-    final item = project;
-    if (item == null) {
-      return StackCardStateView(
-        kind: StackCardViewState.empty,
-        title: context.strings.tr('home.noFeatured'),
-        message: context.strings.tr('home.noFeaturedMessage'),
-      );
-    }
-    final ink = context.colors.ink;
-    final text = Theme.of(context).textTheme;
-    return StackCardPoster(
-      color: context.colors.pink,
-      variant: 1,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '01 / ${context.strings.tr('home.featured')}',
-            style: text.labelMedium?.copyWith(color: ink),
-          ),
-          StackCardArtwork(color: ink, variant: 1, height: 130),
-          Text(item.title, style: text.headlineLarge?.copyWith(color: ink)),
-          if (item.description.isNotEmpty) ...[
-            const SizedBox(height: StackCardSpacing.md),
-            Text(
-              item.description,
-              style: text.bodyMedium?.copyWith(color: ink),
-            ),
-          ],
-          if (item.technologies.isNotEmpty) ...[
-            const SizedBox(height: StackCardSpacing.lg),
-            Text(
-              item.technologies.join(' / '),
-              style: text.labelMedium?.copyWith(color: ink),
-            ),
-          ],
-          const SizedBox(height: StackCardSpacing.xl),
-          StackCardButton(
-            label: context.strings.tr('home.viewProjects'),
-            icon: Icons.arrow_outward_rounded,
-            onPressed: () => context.push('/projects'),
-          ),
-        ],
-      ),
-    );
-  }
 }

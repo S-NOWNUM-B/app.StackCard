@@ -20,7 +20,7 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
   }) : _clock = clock ?? DateTime.now;
 
   static const storageKey = 'draft';
-  static const schemaVersion = 4;
+  static const schemaVersion = 5;
   static const legacyBackupKey = 'draft.v1.backup';
 
   final Box<dynamic> _box;
@@ -128,13 +128,18 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
       'pendingSync': draft.pendingSync,
       'content': content == null ? null : encodePortfolioContent(content),
     });
-    if (previous.version == 1) {
-      if (_box.containsKey(_backupKey)) {
-        if (_box.get(_backupKey) != previous.raw) throw _corrupted;
+    final previousVersion = previous.version;
+    if (previousVersion != null && previousVersion < schemaVersion) {
+      final key = previousVersion == 1
+          ? _backupKey
+          : '$_storageKey.v$previousVersion.backup';
+      if (_box.containsKey(key)) {
+        if (_box.get(key) != previous.raw) throw _corrupted;
       } else {
-        // Backup завершается до замены: сбой оставляет исходный v1 нетронутым.
-        await _box.put(_backupKey, previous.raw);
+        // Backup завершается до замены: сбой сохраняет исходный envelope.
+        await _box.put(key, previous.raw);
       }
+      await _box.flush();
     }
     // Future put завершается после записи backend; при сбое Hive откатывает её.
     await _box.put(_storageKey, envelope);
@@ -163,10 +168,16 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
     if (version != 1 &&
         version != 2 &&
         version != 3 &&
+        version != 4 &&
         version != schemaVersion) {
       throw const PortfolioDraftFailure(
         PortfolioDraftFailureKind.unsupportedVersion,
       );
+    }
+    if (version < schemaVersion &&
+        decoded['content'] is Map &&
+        (decoded['content'] as Map).containsKey('documents')) {
+      throw _corrupted;
     }
     final notes = decoded['notes'];
     final revision = decoded['revision'];
@@ -195,6 +206,7 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
           content = decodePortfolioContent(
             decoded['content'],
             allowMedia: version >= 4,
+            allowDocuments: version >= 5,
           );
         } on FormatException {
           throw _corrupted;

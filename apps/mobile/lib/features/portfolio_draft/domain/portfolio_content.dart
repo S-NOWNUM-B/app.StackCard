@@ -3,10 +3,12 @@ import 'portfolio_profile.dart';
 import 'portfolio_project.dart';
 import 'portfolio_sections.dart';
 import 'portfolio_github_sync.dart';
+import 'portfolio_document.dart';
 
 export 'portfolio_profile.dart';
 export 'portfolio_project.dart';
 export 'portfolio_sections.dart';
+export 'portfolio_document.dart';
 
 /// Редактируемый контент портфолио; private notes остаются в PortfolioDraft.
 final class PortfolioContent {
@@ -20,6 +22,7 @@ final class PortfolioContent {
     this.resumeText = '',
     List<PortfolioBlock>? blocks,
     List<GitHubIgnoredRepository> ignoredGitHubRepositories = const [],
+    List<PortfolioDocument> documents = const [],
     this.theme = PortfolioTheme.dark,
   }) : skills = List.unmodifiable(skills),
        projects = List.unmodifiable(projects),
@@ -27,6 +30,7 @@ final class PortfolioContent {
        education = List.unmodifiable(education),
        links = List.unmodifiable(links),
        ignoredGitHubRepositories = List.unmodifiable(ignoredGitHubRepositories),
+       documents = List.unmodifiable(documents),
        blocks = List.unmodifiable(
          blocks ??
              PortfolioBlockKind.values.map(
@@ -44,6 +48,7 @@ final class PortfolioContent {
   final String resumeText;
   final PortfolioTheme theme;
   final List<GitHubIgnoredRepository> ignoredGitHubRepositories;
+  final List<PortfolioDocument> documents;
 
   PortfolioContent copyWith({
     PortfolioProfile? profile,
@@ -56,6 +61,7 @@ final class PortfolioContent {
     String? resumeText,
     PortfolioTheme? theme,
     List<GitHubIgnoredRepository>? ignoredGitHubRepositories,
+    List<PortfolioDocument>? documents,
   }) => PortfolioContent(
     profile: profile ?? this.profile,
     skills: skills ?? this.skills,
@@ -68,6 +74,7 @@ final class PortfolioContent {
     theme: theme ?? this.theme,
     ignoredGitHubRepositories:
         ignoredGitHubRepositories ?? this.ignoredGitHubRepositories,
+    documents: documents ?? this.documents,
   );
 
   @override
@@ -80,6 +87,7 @@ final class PortfolioContent {
       portfolioListEquals(other.projects, projects) &&
       portfolioListEquals(other.experience, experience) &&
       portfolioListEquals(other.education, education) &&
+      portfolioListEquals(other.documents, documents) &&
       portfolioListEquals(other.links, links) &&
       portfolioListEquals(
         other.ignoredGitHubRepositories,
@@ -96,8 +104,19 @@ final class PortfolioContent {
     Object.hashAll(projects),
     Object.hashAll(experience),
     Object.hashAll(education),
+    Object.hashAll(documents),
     Object.hashAll(links),
     Object.hashAll(ignoredGitHubRepositories),
     Object.hashAll(blocks),
   );
 }
+
+/// Поля общей базы человека без legacy оформления и содержимого документов.
+PortfolioContent developerProfileData(PortfolioContent workspace) =>
+    PortfolioContent(
+      profile: workspace.profile,
+      skills: workspace.skills,
+      experience: workspace.experience,
+      education: workspace.education,
+      links: workspace.links,
+    );

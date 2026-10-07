@@ -1,8 +1,13 @@
-import 'package:app_stackcard/main.dart';
+import 'package:app_stackcard/features/home/home_screen.dart';
+import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
+import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/settings/settings_screen.dart';
+import 'package:app_stackcard/main.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_poster.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   setUp(() {
@@ -30,45 +35,168 @@ void main() {
     await tester.enterText(find.byType(TextFormField), 'alex@example.dev');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
-    expect(find.text('Привет, Alex'), findsOneWidget);
+    expect(find.text('Здесь появятся твои работы'), findsOneWidget);
+    expect(find.text('Привет, Alex'), findsNothing);
     expect(find.byType(NavigationBar), findsOneWidget);
   });
 
   testWidgets(
-    'Shell visits all destinations and back restores previous screen',
+    'Four root branches keep Settings origin and do not push tab history',
     (tester) async {
       await tester.pumpWidget(const StackCardApp(initialLocation: '/home'));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Моё портфолио'));
-      await tester.tap(find.text('Моё портфолио'));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Предпросмотр'));
-      await tester.tap(find.text('Предпросмотр'));
-      await tester.pumpAndSettle();
-      expect(find.text('Предпросмотр портфолио'), findsOneWidget);
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Назад'));
-      await tester.pumpAndSettle();
-      expect(find.text('Привет, Alex'), findsOneWidget);
-      for (final icon in [Icons.badge_outlined, Icons.layers_outlined]) {
-        await tester.tap(find.byIcon(icon).last);
-        await tester.pumpAndSettle();
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.byType(StackCardPoster), findsNothing);
+      for (final filter in [0, 1, 2]) {
+        expect(find.byKey(ValueKey('home.filter.$filter')), findsOneWidget);
       }
-      expect(find.text('Проекты: 4'), findsOneWidget);
-      await tester.tap(find.byKey(const Key('app.settings')));
-      await tester.pumpAndSettle();
-      expect(find.byType(SettingsScreen), findsOneWidget);
-      expect(find.byType(NavigationBar), findsNothing);
-      await tester.tap(find.byTooltip('Назад'));
-      await tester.pumpAndSettle();
-      expect(find.text('Проекты: 4'), findsOneWidget);
+      expect(find.textContaining('%'), findsNothing);
+      final router =
+          tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig!
+              as GoRouter;
+      for (final item in [
+        (index: 1, label: 'Резюме', path: '/resumes', title: 'Пока нет резюме'),
+        (index: 2, label: 'Проекты', path: '/projects', title: 'Проекты: 4'),
+        (
+          index: 3,
+          label: 'Портфолио',
+          path: '/portfolio',
+          title: 'Пока нет портфолио',
+        ),
+        (
+          index: 0,
+          label: 'Главная',
+          path: '/home',
+          title: 'Здесь появятся твои работы',
+        ),
+      ]) {
+        await tester.tap(_destination(item.label));
+        await tester.pumpAndSettle();
+        expect(router.routeInformationProvider.value.uri.path, item.path);
+        expect(find.text(item.title), findsOneWidget);
+        expect(
+          tester
+              .widget<NavigationBar>(find.byType(NavigationBar))
+              .selectedIndex,
+          item.index,
+        );
+        expect(
+          router.canPop(),
+          isFalse,
+          reason: 'Switching a root branch must not push another root',
+        );
+        await tester.tap(find.byKey(const Key('app.settings')));
+        await tester.pumpAndSettle();
+        expect(find.byType(SettingsScreen), findsOneWidget);
+        expect(find.byType(NavigationBar), findsNothing);
+        await tester.tap(find.byTooltip('Назад'));
+        await tester.pumpAndSettle();
+        expect(router.routeInformationProvider.value.uri.path, item.path);
+        expect(
+          tester
+              .widget<NavigationBar>(find.byType(NavigationBar))
+              .selectedIndex,
+          item.index,
+        );
+      }
       await tester.tap(find.byKey(const Key('app.settings')));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Вернуться ко входу'));
       await tester.tap(find.text('Вернуться ко входу'));
       await tester.pumpAndSettle();
       expect(find.text('Открыть демо'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Document libraries open the selected document in its standalone editor',
+    (tester) async {
+      final repository = MemoryPortfolioDraftRepository();
+      final date = DateTime.utc(2026, 10, 7);
+      final resume = PortfolioDocument(
+        id: 'resume-a',
+        title: 'Backend role',
+        kind: PortfolioDocumentKind.resume,
+        createdAt: date,
+        updatedAt: date,
+        content: PortfolioContent(
+          profile: const PortfolioProfile(name: 'Resume name'),
+        ),
+      );
+      final portfolio = PortfolioDocument(
+        id: 'portfolio-a',
+        title: 'Selected work',
+        kind: PortfolioDocumentKind.portfolio,
+        createdAt: date,
+        updatedAt: date,
+        content: PortfolioContent(
+          profile: const PortfolioProfile(name: 'Portfolio name'),
+        ),
+      );
+      await repository.save(
+        PortfolioContent(
+          profile: const PortfolioProfile(name: 'Shared name'),
+          documents: [resume, portfolio],
+        ),
+        expectedRevision: 0,
+        notes: 'Private notes',
+      );
+      await tester.pumpWidget(
+        StackCardApp(
+          initialLocation: '/resumes',
+          providerOverrides: [
+            portfolioDraftRepositoryProvider.overrideWithValue(repository),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      for (final document in [resume, portfolio]) {
+        if (document.kind == PortfolioDocumentKind.portfolio) {
+          await tester.tap(_destination('Портфолио'));
+          await tester.pumpAndSettle();
+        }
+        final card = find.byKey(ValueKey('document.open.${document.id}'));
+        expect(card, findsOneWidget);
+        final other = document.id == resume.id ? portfolio : resume;
+        expect(find.byKey(ValueKey('document.open.${other.id}')), findsNothing);
+        await tester.ensureVisible(card);
+        await tester.tap(card);
+        await tester.pumpAndSettle();
+        final editor = tester.widget<PortfolioDocumentEditorScreen>(
+          find.byType(PortfolioDocumentEditorScreen),
+        );
+        expect(editor.documentId, document.id);
+        expect(editor.kind, document.kind);
+        expect(find.byType(NavigationBar), findsNothing);
+        expect(find.text(document.title), findsOneWidget);
+        await tester.tap(find.byKey(const Key('document.section.profile')));
+        await tester.pumpAndSettle();
+        for (final field in [
+          (name: 'title', value: document.title),
+          (name: 'name', value: document.content.profile.name),
+        ]) {
+          final input = find.descendant(
+            of: find.byKey(ValueKey('builder_form_${field.name}')),
+            matching: find.byType(TextFormField),
+          );
+          expect(
+            tester.widget<TextFormField>(input).controller!.text,
+            field.value,
+          );
+        }
+        await tester.tap(find.byKey(const Key('document.back')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('document.back')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(ValueKey('document.open.${document.id}')),
+          findsOneWidget,
+        );
+        expect((await repository.read())!.revision, 1);
+        expect((await repository.read())!.content!.profile.name, 'Shared name');
+      }
+      expect(tester.takeException(), isNull);
     },
   );
 
@@ -164,8 +292,9 @@ void main() {
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
-      expect(find.text('Привет, Alex'), findsOneWidget);
-      final destination = find.widgetWithText(TextButton, 'Проекты');
+      expect(find.text('Здесь появятся твои работы'), findsOneWidget);
+      expect(find.text('Привет, Alex'), findsNothing);
+      final destination = _destination('Проекты');
       var focused = false;
       for (var i = 0; i < 24 && !focused; i++) {
         await tester.sendKeyEvent(LogicalKeyboardKey.tab);
@@ -184,3 +313,8 @@ void main() {
     },
   );
 }
+
+Finder _destination(String label) => find.descendant(
+  of: find.byType(NavigationBar),
+  matching: find.widgetWithText(TextButton, label),
+);

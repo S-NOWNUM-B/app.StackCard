@@ -43,7 +43,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.layers_outlined).last);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.widgetWithText(TextButton, 'Проекты'),
+        ),
+      );
       await tester.pumpAndSettle();
       final container = ProviderScope.containerOf(
         tester.element(find.byType(ProjectsScreen)),
@@ -60,11 +65,21 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Ничего не найдено'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Назад'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.widgetWithText(TextButton, 'Главная'),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(ProjectsScreen), findsNothing);
-      expect(find.text('Привет, Alex'), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.layers_outlined).last);
+      expect(find.text('Здесь появятся твои работы'), findsOneWidget);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.widgetWithText(TextButton, 'Проекты'),
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(
@@ -173,7 +188,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.layers_outlined).last);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.widgetWithText(TextButton, 'Проекты'),
+        ),
+      );
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextFormField), 'Atlas');
       await tester.pumpAndSettle();

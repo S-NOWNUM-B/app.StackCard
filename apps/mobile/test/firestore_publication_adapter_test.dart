@@ -316,7 +316,7 @@ Map<String, dynamic> _draft(PortfolioContent content) => {
   'mutationId': 'saved-mutation',
   'localRevision': 4,
   'notes': 'Private notes',
-  'content': encodePortfolioContent(content),
+  'content': encodePortfolioContent(content, includeDocuments: false),
   'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 10, 4)),
 };
 

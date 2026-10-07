@@ -15,10 +15,12 @@
 переноса D040; разделы1–9 ниже сохраняют **исторический target2026-10-04**.
 Актуальные требования — [Design v2](../redesign/requirements.md), scope/acceptance —
 [план](../redesign/plan.md). R3 DS/Manrope приняты; Brand A выбран D024.
-Shared theme/controls/assets, Projects и поддерживаемые Settings перенесены,
-но Home/Portfolio legacy composition, singleton storage/plain Resume и три
-roots сохранены. Full target model/media/publication/web требуют proposed
-[prerequisites](../redesign/prerequisites.md); R7 source QA PASS D041/awaiting_review,
+Shared theme/controls/assets перенесены D040. Функциональный mobile scope
+2026-10-07 использует четыре stateful roots, смешанную Home library,
+независимые Resume/Portfolio и секционные редакторы с прежними shared controls.
+Legacy Builder/resumeText сохранены для совместимости. Public/web/full account
+контракты остаются в [prerequisites](../redesign/prerequisites.md);
+R7 source QA PASS D041/awaiting_review,
 DESIGN_READY/REDESIGN_DONE не установлены. Старые recolor S/DM Sans/greeting/
 categories/artwork требования не переопределяют Design v2.
 
@@ -70,12 +72,19 @@ Controls используют внешний tap target≥48, input height56 и 
 focus/loading/disabled/error сохраняют доступное имя и input. Timing constants
 180/240/280ms существуют в StackCardMotion; сами константы не доказывают full
 prototype/runtime animations или persisted reduced-motion preference.
-Shell сохраняет bottom navigation на phone/tablet, три supported roots;
-Settings/appearance/account standalone. Projects — Import/Create/Search/List,
-query-only без categories; GitHub Import filter contract отдельно. Home и
-Portfolio composition ещё legacy, их полный target перенос не заявляется.
+Shell сохраняет bottom navigation на phone/tablet и четыре stateful roots
+Home/Resumes/Projects/Portfolios с постоянными labels. Settings открывается gear;
+редакторы/appearance/account standalone. Home — mixed library с тремя фильтрами,
+без readiness dashboard. Projects — Import/Create/Search/List, query-only без
+categories; GitHub Import filter contract отдельно. Resume/Portfolio roots —
+private libraries, с настоящими create/edit/duplicate/delete actions.
+Resume creation использует пять шагов, затем focused section editing; private
+preview использует существующий content renderer/theme. Saved private documents
+показывают draft; публичные Copy/Open/Share ожидают publication/URL контракт,
+фиктивная ссылка или success не отображаются. Это функциональный slice;
+полная Figma/native visual parity не подтверждена.
 
-Фактический supported UI результат:950headless tests PASS/analyze0issues,
+Исторический supported UI результат D040:950headless tests PASS/analyze0issues,
 Dark/Light,ru/en,scale1/2,7viewports включая320×568/568×320;32runtime SVGdecoded,
 0unsupported warnings. Это engine/widget evidence. Visual preview/playback/
 native launch/goldens пропущены по запросу, поэтому native font/SVG/AppIcon и

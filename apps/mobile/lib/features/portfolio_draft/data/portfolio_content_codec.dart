@@ -2,7 +2,10 @@ import '../domain/portfolio_content.dart';
 import '../domain/portfolio_validation.dart';
 import '../domain/portfolio_github_sync.dart';
 
-Map<String, Object?> encodePortfolioContent(PortfolioContent content) => {
+Map<String, Object?> encodePortfolioContent(
+  PortfolioContent content, {
+  bool includeDocuments = true,
+}) => {
   'profile': {
     'name': content.profile.name,
     'username': content.profile.username,
@@ -27,6 +30,8 @@ Map<String, Object?> encodePortfolioContent(PortfolioContent content) => {
           'featured': item.featured,
           'visible': item.visible,
           'imagePaths': item.imagePaths,
+          if (item.updatedAt != null)
+            'updatedAt': item.updatedAt!.toIso8601String(),
           'source': item.source.name,
           'githubMetadata': item.githubMetadata == null
               ? null
@@ -79,10 +84,105 @@ Map<String, Object?> encodePortfolioContent(PortfolioContent content) => {
         },
       )
       .toList(),
+  if (includeDocuments)
+    'documents': content.documents.map(_encodePortfolioDocument).toList(),
 };
 
-PortfolioContent decodePortfolioContent(Object? raw, {bool allowMedia = true}) {
+Map<String, Object?> _encodePortfolioDocument(PortfolioDocument document) {
+  final snapshot = document.content;
+  if (snapshot.documents.isNotEmpty ||
+      snapshot.projects.isNotEmpty ||
+      snapshot.ignoredGitHubRepositories.isNotEmpty) {
+    throw const FormatException('Документ содержит вложенную базу');
+  }
+  return {
+    'id': document.id,
+    'title': document.title,
+    'kind': document.kind.name,
+    'createdAt': document.createdAt.toIso8601String(),
+    'updatedAt': document.updatedAt.toIso8601String(),
+    'content': encodePortfolioContent(snapshot, includeDocuments: false),
+    'projects': document.projects
+        .map(
+          (attachment) => {
+            'projectId': attachment.projectId,
+            'visible': attachment.visible,
+            'featured': attachment.featured,
+          },
+        )
+        .toList(),
+    'attachedResumeId': document.attachedResumeId,
+  };
+}
+
+PortfolioDocument _decodePortfolioDocument(Object? raw) {
+  final item = _map(raw);
+  _fields(item, {
+    'id',
+    'title',
+    'kind',
+    'createdAt',
+    'updatedAt',
+    'content',
+    'projects',
+    'attachedResumeId',
+  });
+  final rawSnapshot = _map(item['content']);
+  _fields(rawSnapshot, {
+    'profile',
+    'skills',
+    'projects',
+    'experience',
+    'education',
+    'links',
+    'blocks',
+    'resumeText',
+    'theme',
+    'ignoredGitHubRepositories',
+  });
+  _fields(_map(rawSnapshot['profile']), {
+    'name',
+    'username',
+    'headline',
+    'bio',
+    'locationText',
+    'avatarUrl',
+    'avatarPath',
+  });
+  final snapshot = decodePortfolioContent(rawSnapshot, allowDocuments: false);
+  if (snapshot.projects.isNotEmpty ||
+      snapshot.ignoredGitHubRepositories.isNotEmpty) {
+    throw const FormatException('Документ содержит копии проектов');
+  }
+  return PortfolioDocument(
+    id: _string(item, 'id'),
+    title: _string(item, 'title'),
+    kind: _enum(item, 'kind', PortfolioDocumentKind.values),
+    createdAt: _utcDate(item['createdAt']),
+    updatedAt: _utcDate(item['updatedAt']),
+    content: snapshot,
+    projects: _list(item, 'projects').map((raw) {
+      final attachment = _map(raw);
+      _fields(attachment, {'projectId', 'visible', 'featured'});
+      return PortfolioProjectAttachment(
+        projectId: _string(attachment, 'projectId'),
+        visible: _bool(attachment, 'visible'),
+        featured: _bool(attachment, 'featured'),
+      );
+    }).toList(),
+    attachedResumeId: _nullableString(item, 'attachedResumeId'),
+  );
+}
+
+PortfolioContent decodePortfolioContent(
+  Object? raw, {
+  bool allowMedia = true,
+  bool allowDocuments = true,
+}) {
   final json = _map(raw);
+  if (!allowDocuments && json.containsKey('documents')) {
+    throw const FormatException('Документы требуют новую версию draft');
+  }
   final profile = _map(json['profile']);
   if (!allowMedia && profile.containsKey('avatarPath')) {
     throw const FormatException('Media требует новую версию draft');
@@ -151,6 +251,9 @@ PortfolioContent decodePortfolioContent(Object? raw, {bool allowMedia = true}) {
         liveUrl: _string(item, 'liveUrl'),
         featured: _bool(item, 'featured'),
         visible: _bool(item, 'visible'),
+        updatedAt: item['updatedAt'] == null
+            ? null
+            : _utcDate(item['updatedAt']),
         imagePaths: !item.containsKey('imagePaths')
             ? const []
             : _list(item, 'imagePaths').map((value) {
@@ -186,6 +289,9 @@ PortfolioContent decodePortfolioContent(Object? raw, {bool allowMedia = true}) {
               fingerprint: _string(item, 'fingerprint'),
             );
           }).toList(),
+    documents: !json.containsKey('documents')
+        ? const []
+        : _list(json, 'documents').map(_decodePortfolioDocument).toList(),
   );
   if (validatePortfolioContent(content).isNotEmpty) {
     throw const FormatException('Некорректный Builder content');

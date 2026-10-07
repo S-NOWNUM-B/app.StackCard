@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_states.dart';
+import '../../../shared/widgets/stackcard_button.dart';
 import '../../media/media.dart';
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_draft_repository.dart';
@@ -59,8 +62,9 @@ class _PortfolioProjectEditorScreenState
   }
 
   PortfolioProject? _findProject(PortfolioContent content) {
+    final id = widget.projectId ?? _initialProject?.id;
     for (final project in content.projects) {
-      if (project.id == widget.projectId) return project;
+      if (project.id == id) return project;
     }
     return null;
   }
@@ -131,8 +135,8 @@ class _PortfolioProjectEditorScreenState
     return null;
   }
 
-  void _apply() {
-    if (_mediaBusy) return;
+  Future<void> _apply() async {
+    if (_mediaBusy || ref.read(portfolioDraftControllerProvider).saving) return;
     if (_formKey.currentState?.validate() != true) return;
     final state = ref.read(portfolioDraftControllerProvider);
     final current = state.content;
@@ -142,7 +146,7 @@ class _PortfolioProjectEditorScreenState
           _initialRepository,
           ref.read(portfolioDraftRepositoryProvider),
         ) ||
-        (widget.projectId != null && existingProject != _initialProject)) {
+        (_initialProject != null && existingProject != _initialProject)) {
       setState(() => _stale = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.strings.tr('githubSync.editorStale'))),
@@ -153,7 +157,7 @@ class _PortfolioProjectEditorScreenState
     final values = builderFieldValues(_controllers!);
     final controller = ref.read(portfolioDraftControllerProvider.notifier);
     final edited = PortfolioProject(
-      id: widget.projectId ?? controller.createId(),
+      id: widget.projectId ?? _initialProject?.id ?? controller.createId(),
       title: values['title']!,
       description: values['description']!,
       technologies: _technologies(values['technologies']!),
@@ -162,23 +166,43 @@ class _PortfolioProjectEditorScreenState
       featured: _featured,
       visible: _visible,
       imagePaths: _imagePaths,
+      updatedAt: DateTime.now().toUtc(),
     );
     final project =
         existingProject
             ?.withUserEdits(edited)
-            .copyWith(imagePaths: _imagePaths) ??
+            .copyWith(imagePaths: _imagePaths, updatedAt: edited.updatedAt) ??
         edited;
-    controller.updateContent(
-      current.copyWith(
-        projects: [
-          for (final existing in current.projects)
-            if (existing.id == project.id) project else existing,
-          if (widget.projectId == null) project,
-        ],
-      ),
+    final saved = await controller.saveProject(
+      project,
+      expectedProject: _initialProject,
+      expectedRepository: _initialRepository!,
     );
-    _mediaKey.currentState?.retainUploads();
-    closeBuilderEditor(context);
+    if (!mounted ||
+        !identical(
+          _initialRepository,
+          ref.read(portfolioDraftRepositoryProvider),
+        )) {
+      return;
+    }
+    if (!saved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.strings.tr('workspace.failure'))),
+      );
+      return;
+    }
+    _initialProject = project;
+    _mediaKey.currentState?.retainUploads(paths: project.imagePaths);
+    // Ввод после нажатия Save остаётся в форме, даже если старый snapshot сохранён.
+    if (!mapEquals(values, builderFieldValues(_controllers!)) ||
+        !listEquals(project.imagePaths, _imagePaths)) {
+      return;
+    }
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/projects');
+    }
   }
 
   @override
@@ -189,102 +213,149 @@ class _PortfolioProjectEditorScreenState
         _initialRepository != null &&
         !identical(_initialRepository, repository);
     final content = state.content;
+    if (state.canEdit && content == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted &&
+            ref.read(portfolioDraftControllerProvider).content == null) {
+          ref.read(portfolioDraftControllerProvider.notifier).startBuilder();
+        }
+      });
+    }
     final found =
         widget.projectId == null ||
         (content != null && _findProject(content) != null);
-    return BuilderEditorScaffold(
-      titleKey: widget.projectId == null
-          ? 'builderForm.newProjectTitle'
-          : 'builderForm.editProjectTitle',
-      onApply:
-          state.canEdit &&
-              content != null &&
-              found &&
-              !_mediaBusy &&
-              !ownerChanged
-          ? _apply
-          : null,
-      child: BuilderContentGate(
-        data: (content) {
-          if (ownerChanged) {
-            return Text(context.strings.tr('media.ownerChanged'));
-          }
-          final project = _findProject(content);
-          if (widget.projectId != null && project == null) {
-            return StackCardStateView(
-              kind: StackCardViewState.empty,
-              title: context.strings.tr('builderForm.projectMissing'),
-              message: context.strings.tr('builderForm.projectMissingHint'),
-            );
-          }
-          _initialize(project);
-          return Padding(
-            padding: EdgeInsets.zero,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  PortfolioMediaEditor(
-                    key: _mediaKey,
-                    maxImages: portfolioProjectImageLimit,
-                    paths: _imagePaths,
-                    onChanged: (paths) => setState(() => _imagePaths = paths),
-                    onBusyChanged: (busy) => setState(() => _mediaBusy = busy),
-                  ),
-                  const SizedBox(height: StackCardSpacing.xl),
-                  if (_stale) ...[
-                    Semantics(
-                      liveRegion: true,
-                      child: Text(
-                        context.strings.tr('githubSync.editorStale'),
-                        key: const ValueKey('builder_project_stale'),
+    return PopScope(
+      canPop: !state.saving,
+      child: BuilderEditorScaffold(
+        allowClose: !state.saving,
+        applyLabelKey: 'builder.save',
+        titleKey: widget.projectId == null
+            ? 'builderForm.newProjectTitle'
+            : 'builderForm.editProjectTitle',
+        onApply:
+            state.canEdit &&
+                content != null &&
+                found &&
+                !_mediaBusy &&
+                !ownerChanged &&
+                !state.saving
+            ? _apply
+            : null,
+        child: BuilderContentGate(
+          data: (content) {
+            if (ownerChanged) {
+              return Text(context.strings.tr('media.ownerChanged'));
+            }
+            final project = _findProject(content);
+            if (widget.projectId != null && project == null) {
+              return StackCardStateView(
+                kind: StackCardViewState.empty,
+                title: context.strings.tr('builderForm.projectMissing'),
+                message: context.strings.tr('builderForm.projectMissingHint'),
+              );
+            }
+            _initialize(project);
+            return Padding(
+              padding: EdgeInsets.zero,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    PortfolioMediaEditor(
+                      key: _mediaKey,
+                      maxImages: portfolioProjectImageLimit,
+                      paths: _imagePaths,
+                      enabled: !state.saving && !ownerChanged,
+                      onChanged: (paths) => setState(() => _imagePaths = paths),
+                      onBusyChanged: (busy) =>
+                          setState(() => _mediaBusy = busy),
+                    ),
+                    const SizedBox(height: StackCardSpacing.xl),
+                    if (_stale) ...[
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          context.strings.tr('githubSync.editorStale'),
+                          key: const ValueKey('builder_project_stale'),
+                        ),
                       ),
+                      const SizedBox(height: StackCardSpacing.lg),
+                    ],
+                    if (project?.source == PortfolioProjectSource.github) ...[
+                      Text(context.strings.tr('githubSync.editorNote')),
+                      const SizedBox(height: StackCardSpacing.lg),
+                    ],
+                    BuilderFields(
+                      fields: _fields!,
+                      controllers: _controllers!,
+                      onSubmit: _apply,
                     ),
                     const SizedBox(height: StackCardSpacing.lg),
+                    if (project != null)
+                      StackCardButton(
+                        label: context.strings.tr('workspace.delete'),
+                        role: StackCardButtonRole.danger,
+                        onPressed: !state.saving
+                            ? () async {
+                                final accepted = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text(
+                                      context.strings.tr(
+                                        'workspace.deleteProjectTitle',
+                                      ),
+                                    ),
+                                    content: Text(
+                                      context.strings.tr(
+                                        'workspace.deleteProjectHint',
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: Text(
+                                          context.strings.tr('builder.cancel'),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: Text(
+                                          context.strings.tr(
+                                            'workspace.delete',
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (accepted != true || !mounted) return;
+                                final removed = await ref
+                                    .read(
+                                      portfolioDraftControllerProvider.notifier,
+                                    )
+                                    .deleteProject(
+                                      project,
+                                      expectedRepository: repository,
+                                    );
+                                if (removed && mounted) {
+                                  if (this.context.canPop()) {
+                                    this.context.pop();
+                                  } else {
+                                    this.context.go('/projects');
+                                  }
+                                }
+                              }
+                            : null,
+                      ),
                   ],
-                  if (project?.source == PortfolioProjectSource.github) ...[
-                    Text(context.strings.tr('githubSync.editorNote')),
-                    const SizedBox(height: StackCardSpacing.lg),
-                  ],
-                  BuilderFields(
-                    fields: _fields!,
-                    controllers: _controllers!,
-                    onSubmit: _apply,
-                  ),
-                  const SizedBox(height: StackCardSpacing.lg),
-                  Material(
-                    type: MaterialType.transparency,
-                    child: Column(
-                      children: [
-                        SwitchListTile(
-                          key: const ValueKey('builder_form_featured'),
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            context.strings.tr('builderForm.featured'),
-                          ),
-                          value: _featured,
-                          onChanged: (value) =>
-                              setState(() => _featured = value),
-                        ),
-                        SwitchListTile(
-                          key: const ValueKey('builder_form_visible'),
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            context.strings.tr('builderForm.visible'),
-                          ),
-                          value: _visible,
-                          onChanged: (value) =>
-                              setState(() => _visible = value),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

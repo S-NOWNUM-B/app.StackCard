@@ -61,11 +61,11 @@ void main() {
   });
 
   test(
-    'Legacy cloud schema remains readable and next write upgrades to version 3',
+    'Legacy cloud schema remains readable and next write upgrades to version 4',
     () {
       final legacy = decodeCloudPortfolioDraft(_data(), ownerUid: 'owner');
       final upgraded = encodeCloudPortfolioDraft(legacy);
-      expect(upgraded['schemaVersion'], 3);
+      expect(upgraded['schemaVersion'], 4);
       expect(upgraded['notes'], legacy.notes);
       expect(upgraded['mutationId'], legacy.mutationId);
       expect(upgraded['localRevision'], legacy.localRevision);
@@ -90,7 +90,7 @@ void main() {
     }
   });
 
-  test('Cloud V3 round-trips only media owned by the captured UID', () {
+  test('Cloud V4 round-trips only media owned by the captured UID', () {
     final content = _mediaContent('owner');
     final draft = CloudPortfolioDraft(
       ownerUid: 'owner',
@@ -100,7 +100,7 @@ void main() {
       content: content,
     );
     final encoded = encodeCloudPortfolioDraft(draft);
-    expect(encoded['schemaVersion'], 3);
+    expect(encoded['schemaVersion'], 4);
     final restored = decodeCloudPortfolioDraft({
       ...encoded,
       'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 10, 7)),
@@ -126,7 +126,7 @@ void main() {
         () => decodeCloudPortfolioDraft({
           ..._data(),
           'schemaVersion': 3,
-          'content': encodePortfolioContent(foreign),
+          'content': encodePortfolioContent(foreign, includeDocuments: false),
         }, ownerUid: 'owner'),
         throwsA(_failure(PortfolioSyncFailureKind.invalidData)),
       );
@@ -134,12 +134,15 @@ void main() {
   });
 
   test('Cloud legacy versions reject media fields and future schemas', () {
-    for (final version in [1, 2, 4]) {
+    for (final version in [1, 2, 5]) {
       expect(
         () => decodeCloudPortfolioDraft({
           ..._data(),
           'schemaVersion': version,
-          'content': encodePortfolioContent(_mediaContent('owner')),
+          'content': encodePortfolioContent(
+            _mediaContent('owner'),
+            includeDocuments: false,
+          ),
         }, ownerUid: 'owner'),
         throwsA(_failure(PortfolioSyncFailureKind.invalidData)),
       );
@@ -335,7 +338,10 @@ Map<String, dynamic> _data() => {
 };
 
 Map<String, Object?> _legacyContent() {
-  final encoded = encodePortfolioContent(PortfolioContent());
+  final encoded = encodePortfolioContent(
+    PortfolioContent(),
+    includeDocuments: false,
+  );
   (encoded['profile'] as Map).remove('avatarPath');
   return encoded;
 }

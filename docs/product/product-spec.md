@@ -4,7 +4,7 @@
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage Phase 12 in progress](https://raster.shields.io/badge/Stage-Phase_12_in_progress-111111?style=for-the-badge)
+![Stage mobile capabilities](https://raster.shields.io/badge/Stage-mobile_capabilities-111111?style=for-the-badge)
 ![Mobile + Web planned](https://raster.shields.io/badge/Mobile_%2B_Web-planned-FF0012?style=for-the-badge)
 
 </div>
@@ -31,16 +31,66 @@
 
 ## Статус и границы текущей работы
 
-**2026-10-07: Phase 12 — Location в работе**, по прямому поручению пользователя
-на локальной `dev`, с явно изменённым scope: карта и marker исключены полностью.
-Город и страна вводятся вручную либо определяются опционально по действию
-пользователя и сохраняются после подтверждения. Открытая device/live приёмка
-Phase 11, полного Design v2 и Google/reset/iOS Phase 7 сохраняется.
-Phase 13 и далее, commit/push, deployment и billing upgrade не разрешены.
+**2026-10-07: последовательная разработка по фазам поставлена на паузу**
+по прямому поручению пользователя. Действующая работа — развитие mobile по Figma
+и концепции «общая профессиональная база → несколько резюме и портфолио»:
+новая навигация, библиотеки документов, редакторы, общая Library и связи.
+Это разрешение функциональной разработки; история фаз и незакрытые проверки
+сохраняются. Карта и Google Maps по прежнему решению исключены.
 
-Перед началом Phase 11 проверено: `dev` и `redesign/full-app`
-совпадали на `16ec4eda783e07a1e03ba606d3646f97700556fa`, рабочее дерево было чистым.
-Пауза функционального roadmap снята поручениями Phase 11 и следующей Phase 12.
+**Реализованный private mobile scope в исходниках:**
+
+- Четыре stateful вкладки Home / Resumes / Projects / Portfolios с постоянными
+  labels, Settings через gear, standalone редакторами и origin Back.
+- Home показывает документы и проекты, три фильтра Все/Резюме/Проекты и порядок
+  по дате изменения. Пустая Library не наполняется demo автоматически.
+- Независимые Resume/Portfolio: создание, изменение, preview, дублирование,
+  подтверждаемое удаление. Resume создаётся за пять шагов; существующий документ
+  редактируется по секциям. Название/роль/секции/тема относятся к документу.
+- Settings открывает общую базу профиля/навыков/опыта/образования/ссылок.
+  Новый документ получает начальные значения базы; её изменение не переписывает
+  уже созданные документы. Отдельного review изменений базы пока нет.
+- Project остаётся одной записью Library. Документ хранит ordered relations
+  projectId/visible/featured; удаление связи сохраняет проект, удаление проекта
+  очищает его связи. «Создать проект» в документе держит новую Library запись
+  в local buffer; общий Save пишет Project и attachment атомарно одной revision,
+  Cancel не добавляет проект. Portfolio может выбрать private Resume по ID.
+- Scoped Save документа, проекта или базы использует прежний UID-bound draft
+  repository; соседний несохранённый ввод и notes не публикуются/не сохраняются
+  этим действием. Hive writer5/private cloud4 читают старые версии без rewrite
+  при чтении, с raw backups до upgrade; public schema1 прежняя.
+- Старый Builder и `resumeText` сохраняются. Явный импорт legacy создаёт
+  документы со stable legacy IDs; неизвестные/повреждённые записи блокируют
+  перезапись. Полный контракт — в
+  [architecture](../architecture/architecture.md#общая-база-и-независимые-документы).
+
+**Остаётся:** multiple-document Publish/Unpublish и постоянные URL, доверенная
+public projection/validation, публичный renderer и полноценный `apps/web`;
+полные контакты/privacy/account management, notifications и native sharing;
+review обновления базы с local overrides, локальные overrides представления Project,
+полная Figma/native приёмка и ранее открытые Google/reset/iOS/media/location
+сценарии. Карточки private документов честно показывают draft и отсутствие
+публичной ссылки. Private Resume attachment не становится публичной ссылкой.
+Публикация, deploy, billing, commit/push этим поручением не выполняются.
+Rules/cloud schema4 изменены в исходниках; live sync нового payload и обновление
+Rules окружения не подтверждены локальными widget/Rules checks.
+
+Наличие кода не подтверждает проверку нового сценария. Итоговые проверки этой
+работы фиксируются здесь по фактам; прежние 950/1068 PASS относятся к своим
+историческим версиям и не доказывают новую document модель.
+
+**Проверки функционального обновления 2026-10-07, macOS zsh:**
+`flutter analyze` — без замечаний; полный `flutter test --no-pub` — **1163/1163 PASS**;
+format `lib test integration_test` — 222 файла, без изменений;
+Firestore Emulator `npm run test:rules` — **36/36 PASS**; проверка импортированных
+Figma assets `check_imports.py --require-brand --require-imported` — PASS;
+`git diff --check` и ссылки/оформление 13 обновлённых Markdown документов — без ошибок.
+Проверены независимые Save/Discard, reopen, scope/revision конфликты, смена UID,
+очистка открытых modal, ввод во время записи, create-and-attach одной revision,
+неразрушающие upgrades/backups и четыре вкладки. Responsive матрица содержит
+168 случаев, отдельно проверены narrow editor, увеличенный текст и keyboard inset.
+Эти проверки не заменяют native camera/gallery, live Firebase sync/deploy,
+визуальную приёмку пользователем и multiple-document public flow.
 
 История выполненных этапов и состояния перед этим поручением:
 
@@ -83,39 +133,25 @@ Flutter-приложение находится в `apps/mobile`; в `apps/web`
 Для дальнейшей разработки выбрана ветка `dev`, отслеживающая `origin/dev`.
 Commit и push выполняются только по запросу пользователя.
 
-План фаз 0–20 документирован; обязательный порядок дальнейшей разработки
-закреплён в [общих AI-правилах](../AI/AGENTS.md#разработка-по-плану),
-корневом/mobile AGENTS, router и CONTRIBUTING.
+План фаз 0–20 документирован как история, требования и будущие зависимости.
+Действующее исключение для mobile capabilities закреплено в
+[общих AI-правилах](../AI/AGENTS.md#разработка-по-плану), mobile AGENTS и router.
 
-После успешного чтения пустого/legacy draft основные экраны используют demo;
-после начала Builder — единый working PortfolioContent. Home, Projects и Settings
-читают проекции этого content; Portfolio и preview отображают видимые блоки
-в заданном порядке и теме. Ошибка чтения draft показывает failure/retry, без demo fallback.
-GitHub Import отдельно читает публичный GitHub API с persistent cache и offline fallback.
-Firebase Auth и Firestore sync подключены в native bootstrap.
-Web и пользовательская публикация остаются следующими фазами. App settings принадлежат AppearanceController через
-Provider; account session/actions, Builder и filters — Riverpod.
-Settings, GitHub response cache, явно сохранённые content и notes переживают перезапуск;
-Firebase session восстанавливается SDK; явный guest access, query/filter и ещё
-не сохранённый ввод остаются в app session. Account draft хранится отдельно по UID;
-guest draft переносится только явно из Settings в пустой account namespace.
-Чтение и refresh GitHub не меняют curated portfolio. Явные Add/Accept/Ignore
-меняют working draft; Save сохраняет его отдельно, публикация остаётся отдельным действием.
-Пользователь явно разрешил переход к Phase 8 при открытой приёмке Phase 7;
-это не означает завершения оставшихся auth сценариев. Phase 9 завершена;
-Phase 10 завершена; Phase 11 реализована с открытой приёмкой, следующая Phase 12
-разрешена без карты по поручению 2026-10-07. Прежняя остановка перед Phase11 —
-история, актуальный scope указан в начале документа. По D040 активна
-полная R7.1–R7.4 [Design v2](../redesign/README.md), source build/structural QA
-PASS D041, package awaiting_review;явная приёмка/DESIGN_READY pending;
-R8/R9 прямо разрешены на `redesign/full-app`. Независимые Flutter theme/shared
-controls/assets, live Brand A, Projects и поддерживаемые Settings перенесены
-параллельно R7. Actual headless regression:950/950 PASS29s,analyze0issues3.8s,
-0SVGwarnings. Полная R8/R9 не завершена: Home/Portfolio legacy composition,
-3supported roots, Resume library и новый web отсутствуют. [Конкретные
-prerequisites](../redesign/prerequisites.md) proposed, scope ответа нет.
-DESIGN_READY/REDESIGN_DONE не установлены, commit/push/deploy не запрошены.
-Текущий scope/evidence — в [плане разработки](#план-разработки).
+Текущие Home/document libraries читают реальную общую базу из draft; пустая база
+остаётся пустой. Legacy preview/read models сохраняют demo только для
+исторических изолированных сценариев. GitHub Import отдельно читает публичный
+HTTP-источник с cache/offline fallback; чтение и refresh не меняют curated базу.
+Add/Accept/Ignore явно меняют working Library, Save отдельный. Firebase Auth и
+Firestore sync подключены в native bootstrap; draft хранится по guest/UID.
+Settings/cache независимы от UID; auth session восстанавливается SDK.
+Unsaved ввод остаётся session state, сохранённые документы/notes переживают reopen.
+Whole-document server-order LWW сохраняется и не обещает merge между устройствами.
+
+R7 source/graph QA D041 остаётся historical PASS и **awaiting_review**:
+явная приёмка/DESIGN_READY и REDESIGN_DONE не установлены. Новый private mobile
+scope разрешён последним поручением, а remaining
+[prerequisites](../redesign/prerequisites.md) разделяют pending public/web/account
+контракты. Исторический перенос UI D040 и его результаты сохранены ниже.
 
 ---
 
@@ -334,7 +370,8 @@ GitHub import → Select projects → Complete profile → Preview → Publish �
 
 </div>
 
-Основная навигация после авторизации: **Home, Portfolio, Projects, Inbox, Settings**.
+Действующая mobile навигация после авторизации: **Home, Resumes, Projects, Portfolios**.
+Settings открывается через gear; Inbox пока запланирован.
 Дополнительные экраны: Portfolio Preview, GitHub Import, Project Editor,
 Profile Editor, Location Picker, Resume Editor, Developer Card, Sync Suggestions.
 
@@ -508,15 +545,23 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 
 ## План разработки
 
-**Актуальное поручение 2026-10-07:** возобновить roadmap с Phase 11 Media на
-`dev`, сохранив перенесённый дизайн. Это разрешение новой функции; оно не
-закрывает незавершённую приёмку полного Design v2. Описанная ниже пауза от
-2026-10-05 относится к состоянию до этого поручения.
+**Актуальное поручение 2026-10-07:** поставить последовательную разработку
+по фазам на паузу и развивать mobile функциональность по Figma/концепции.
+Разрешённый capability scope и оставшаяся работа перечислены
+[в текущем статусе](#статус-и-границы-текущей-работы). Phase 11/12 и R0–R9 ниже
+сохраняют историю реализации и evidence; новые mobile changes не считаются
+автоматическим завершением этих фаз или full Design v2 acceptance.
 
 План объединяет исходное описание StackCard, требования учебного задания
 `individual_project_flutter_ru.docx` и актуальный scope выше: mobile, полноценный
 web-редактор и публичные портфолио. Этот раздел владеет roadmap; технические решения
 подробно фиксируются в architecture и ADR, команды — в CONTRIBUTING.
+
+### История фаз до функционального mobile scope 2026-10-07
+
+Следующие записи описывают исходный процесс и результат соответствующих версий.
+Их фразы о pending scope/паузе перед Phase11 не переопределяют последнее
+поручение в текущем статусе.
 
 **Phase 0–6 завершены:** основа, UI, состояние, архитектура, GitHub Import, offline и Builder проверены;
 результаты и ограничения записаны в соответствующих разделах ниже.
@@ -703,6 +748,10 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 </div>
 
 ### Как выполнять план
+
+С 2026-10-07 последовательная очередь на паузе. Для разрешённого mobile scope
+выполнять самостоятельные сценарии с сохранением architecture, данных и
+подходящими проверками. При возобновлении очереди применяются правила ниже.
 
 - Выполнять одну фазу за раз. Сначала завершить её задачи и проверки, затем
   показать результат. Переходить дальше по уже полученному разрешению пользователя;
@@ -1808,7 +1857,9 @@ browser push автоматически в scope не добавляется.
 App Distribution или deploy web требует запроса пользователя; iOS-публикация
 не заявляется выполненной по одному Android release.
 
-**Phase 0–6 и Phase 8–10 завершены. Google/reset/iOS приёмка Phase 7 и device/live приёмка Phase 11 остаются открытыми. Phase 12 в работе без карты по поручению 2026-10-07; Phase 13 и далее требуют отдельного поручения.**
+**История Phase 0–6/8–10 и результаты Phase 11/12 сохранены; открытые native/live
+сценарии остаются открытыми. Действующий режим — mobile capabilities при паузе
+последовательной очереди. Web/publication/release readiness не подтверждены.**
 
 ---
 

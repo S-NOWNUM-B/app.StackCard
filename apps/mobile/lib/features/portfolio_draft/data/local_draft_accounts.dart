@@ -75,6 +75,18 @@ final class LocalDraftAccounts {
       if (!_box.containsKey(_guestKey)) return;
       final raw = _validatedRaw(_guestKey);
       final backup = _optionalBackup(_guestBackupKey);
+      final backups = {
+        for (
+          var version = 2;
+          version < HivePortfolioDraftRepository.schemaVersion;
+          version++
+        )
+          if (_box.containsKey(_versionBackupKey(_guestKey, version)))
+            version: _optionalBackup(
+              _versionBackupKey(_guestKey, version),
+              version: version,
+            )!,
+      };
       if ((jsonDecode(raw) as Map)['schemaVersion'] == 1 &&
           backup != null &&
           backup != raw) {
@@ -85,6 +97,7 @@ final class LocalDraftAccounts {
         ownerKey: ownerKey,
         raw: raw,
         backup: backup,
+        backups: backups,
         generation: _generation(),
         committed: false,
       );
@@ -166,6 +179,10 @@ final class LocalDraftAccounts {
     if (journal.backup != null && !_box.containsKey(_backupKey(ownerKey))) {
       await _persist(_backupKey(ownerKey), journal.backup);
     }
+    for (final backup in journal.backups.entries) {
+      final key = _versionBackupKey(ownerKey, backup.key);
+      if (!_box.containsKey(key)) await _persist(key, backup.value);
+    }
     if (!journal.committed) {
       journal = journal.asCommitted();
       await _persist(_journalKey, journal.encode());
@@ -175,6 +192,9 @@ final class LocalDraftAccounts {
     await _persist(_generationKey, journal.generation + 1);
     await _delete(_guestKey);
     await _delete(_guestBackupKey);
+    for (final version in journal.backups.keys) {
+      await _delete(_versionBackupKey(_guestKey, version));
+    }
     await _delete(_journalKey);
   });
 
@@ -194,6 +214,19 @@ final class LocalDraftAccounts {
     } else if (journal.backup != null && !journal.committed) {
       throw _corrupted;
     }
+    for (
+      var version = 2;
+      version < HivePortfolioDraftRepository.schemaVersion;
+      version++
+    ) {
+      final key = _versionBackupKey(_guestKey, version);
+      final backup = journal.backups[version];
+      if (_box.containsKey(key)) {
+        if (_optionalBackup(key, version: version) != backup) throw _conflict;
+      } else if (backup != null && !journal.committed) {
+        throw _corrupted;
+      }
+    }
   }
 
   void _checkDestination(_TransferJournal journal) {
@@ -204,6 +237,17 @@ final class LocalDraftAccounts {
     final key = _backupKey(journal.ownerKey);
     if (_box.containsKey(key) && _optionalBackup(key) != journal.backup) {
       throw _conflict;
+    }
+    for (
+      var version = 2;
+      version < HivePortfolioDraftRepository.schemaVersion;
+      version++
+    ) {
+      final key = _versionBackupKey(journal.ownerKey, version);
+      if (_box.containsKey(key) &&
+          _optionalBackup(key, version: version) != journal.backups[version]) {
+        throw _conflict;
+      }
     }
   }
 
@@ -216,6 +260,17 @@ final class LocalDraftAccounts {
       _optionalBackup(_backupKey(key));
       throw _conflict;
     }
+    for (
+      var version = 2;
+      version < HivePortfolioDraftRepository.schemaVersion;
+      version++
+    ) {
+      final backupKey = _versionBackupKey(key, version);
+      if (_box.containsKey(backupKey)) {
+        _optionalBackup(backupKey, version: version);
+        throw _conflict;
+      }
+    }
   }
 
   String _validatedRaw(String key) {
@@ -224,10 +279,10 @@ final class LocalDraftAccounts {
     return raw as String;
   }
 
-  String? _optionalBackup(String key) {
+  String? _optionalBackup(String key, {int version = 1}) {
     if (!_box.containsKey(key)) return null;
     final raw = _validatedRaw(key);
-    if ((jsonDecode(raw) as Map)['schemaVersion'] != 1) throw _corrupted;
+    if ((jsonDecode(raw) as Map)['schemaVersion'] != version) throw _corrupted;
     return raw;
   }
 
@@ -255,6 +310,7 @@ final class LocalDraftAccounts {
       final owner = value['owner'];
       final source = value['raw'];
       final backup = value['backup'];
+      final rawBackups = value['backups'] ?? <String, dynamic>{};
       final generation = value['generation'];
       final committed = value['committed'];
       final syncPrepared = value['syncPrepared'] ?? false;
@@ -263,6 +319,7 @@ final class LocalDraftAccounts {
           !owner.startsWith('draft.user.') ||
           source is! String ||
           (backup != null && backup is! String) ||
+          rawBackups is! Map<String, dynamic> ||
           !value.containsKey('backup') ||
           generation is! int ||
           generation < 0 ||
@@ -279,6 +336,23 @@ final class LocalDraftAccounts {
         throw _corrupted;
       }
       HivePortfolioDraftRepository.validateStoredEnvelope(source);
+      final backups = <int, String>{};
+      for (final entry in rawBackups.entries) {
+        final version = int.tryParse(entry.key);
+        final rawBackup = entry.value;
+        if (version == null ||
+            version < 2 ||
+            version >= HivePortfolioDraftRepository.schemaVersion ||
+            entry.key != '$version' ||
+            rawBackup is! String) {
+          throw _corrupted;
+        }
+        HivePortfolioDraftRepository.validateStoredEnvelope(rawBackup);
+        if ((jsonDecode(rawBackup) as Map)['schemaVersion'] != version) {
+          throw _corrupted;
+        }
+        backups[version] = rawBackup;
+      }
       if (backup != null) {
         HivePortfolioDraftRepository.validateStoredEnvelope(backup);
         if ((jsonDecode(backup as String) as Map)['schemaVersion'] != 1) {
@@ -289,6 +363,7 @@ final class LocalDraftAccounts {
         ownerKey: owner,
         raw: source,
         backup: backup as String?,
+        backups: backups,
         generation: generation,
         committed: committed,
         syncPrepared: syncPrepared,
@@ -318,6 +393,8 @@ final class LocalDraftAccounts {
   }
 
   static String _backupKey(String key) => '$key.v1.backup';
+  static String _versionBackupKey(String key, int version) =>
+      '$key.v$version.backup';
   static const _conflict = PortfolioDraftFailure(
     PortfolioDraftFailureKind.conflict,
   );
@@ -331,6 +408,7 @@ final class _TransferJournal {
     required this.ownerKey,
     required this.raw,
     required this.backup,
+    this.backups = const {},
     required this.generation,
     required this.committed,
     this.syncPrepared = false,
@@ -341,6 +419,7 @@ final class _TransferJournal {
   final String ownerKey;
   final String raw;
   final String? backup;
+  final Map<int, String> backups;
   final int generation;
   final bool committed;
   final bool syncPrepared;
@@ -351,6 +430,7 @@ final class _TransferJournal {
     ownerKey: ownerKey,
     raw: raw,
     backup: backup,
+    backups: backups,
     generation: generation,
     committed: true,
     syncPrepared: syncPrepared,
@@ -361,6 +441,7 @@ final class _TransferJournal {
     ownerKey: ownerKey,
     raw: raw,
     backup: backup,
+    backups: backups,
     generation: generation,
     committed: committed,
     syncPrepared: true,
@@ -371,6 +452,7 @@ final class _TransferJournal {
     ownerKey: ownerKey,
     raw: raw,
     backup: backup,
+    backups: backups,
     generation: generation,
     committed: committed,
     syncPrepared: syncPrepared,
@@ -382,6 +464,9 @@ final class _TransferJournal {
     'owner': ownerKey,
     'raw': raw,
     'backup': backup,
+    'backups': {
+      for (final entry in backups.entries) '${entry.key}': entry.value,
+    },
     'generation': generation,
     'committed': committed,
     'syncPrepared': syncPrepared,

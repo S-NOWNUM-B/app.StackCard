@@ -99,6 +99,9 @@ List<PortfolioValidationCode> validatePortfolioContent(
   ids(content.projects.map((project) => project.id));
   final githubIds = <int>{};
   for (final project in content.projects) {
+    if (project.updatedAt?.isUtc == false) {
+      issues.add(PortfolioValidationCode.invalidStructure);
+    }
     text(project.title, 120, required: true);
     text(project.description, 4000);
     if (project.technologies.length > 20) {
@@ -163,6 +166,45 @@ List<PortfolioValidationCode> validatePortfolioContent(
     add(validatePortfolioUrl(link.url));
   }
   text(content.resumeText, 20000);
+  if (content.documents.length > portfolioDocumentLimit) {
+    issues.add(PortfolioValidationCode.invalidStructure);
+  }
+  ids(content.documents.map((document) => document.id));
+  final libraryIds = content.projects.map((project) => project.id).toSet();
+  final documentsById = {
+    for (final document in content.documents) document.id: document,
+  };
+  for (final document in content.documents) {
+    text(document.title, 120, required: true);
+    if (!document.createdAt.isUtc ||
+        !document.updatedAt.isUtc ||
+        document.updatedAt.isBefore(document.createdAt)) {
+      issues.add(PortfolioValidationCode.invalidStructure);
+    }
+    final snapshot = document.content;
+    if (snapshot.documents.isNotEmpty ||
+        snapshot.projects.isNotEmpty ||
+        snapshot.ignoredGitHubRepositories.isNotEmpty) {
+      issues.add(PortfolioValidationCode.invalidStructure);
+    }
+    // Невалидную вложенность не обходим рекурсивно; она уже отклонена выше.
+    issues.addAll(validatePortfolioContent(seedDocumentContent(snapshot)));
+    ids(document.projects.map((attachment) => attachment.projectId));
+    if (document.projects.any(
+      (attachment) => !libraryIds.contains(attachment.projectId),
+    )) {
+      issues.add(PortfolioValidationCode.invalidStructure);
+    }
+    final resumeId = document.attachedResumeId;
+    if (resumeId != null) {
+      text(resumeId, 200, required: true);
+      if (document.kind != PortfolioDocumentKind.portfolio ||
+          resumeId == document.id ||
+          documentsById[resumeId]?.kind != PortfolioDocumentKind.resume) {
+        issues.add(PortfolioValidationCode.invalidStructure);
+      }
+    }
+  }
   if (content.blocks.length != PortfolioBlockKind.values.length ||
       content.blocks.map((block) => block.kind).toSet().length !=
           PortfolioBlockKind.values.length) {

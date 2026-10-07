@@ -31,8 +31,11 @@ Scope и фактическая приёмка остаются в [product spec
 - Private notes/account data не смешивать с public snapshot; hidden content
   удаляется public projection перед записью, а не только скрывается renderer.
   Source snapshots, override flags и Ignore registry также private и удаляются
-  public codec. Private writer schema 3 читает 1/2/3; Rules запрещают downgrade,
-  public schema 1 сохраняется и исключает media paths. GitHub миграция — в
+  public codec. Private writer schema 4 читает 1/2/3/4; Rules запрещают downgrade,
+  public schema 1 сохраняется и исключает media paths/documents. Documents list
+  ограничен 20; Rules проверяют owner media path каждого snapshot, codec —
+  структуру, ID и Library/resume relations. Полный public-document контракт
+  ещё не реализован. GitHub миграция — в
   [ADR 0002](../../decisions/0002-github-import-and-review.md), media — в ADR 0003.
 - Publish/rename/unpublish меняют account pointer, username reservation и public
   snapshot атомарно. Проверять linked post-write state через `getAfter`/`existsAfter`

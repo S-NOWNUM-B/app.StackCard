@@ -175,7 +175,7 @@ void main() {
       expect(h.content.projects.single.imagePaths, [old]);
       await _tap(tester, 'builder_form_apply');
       expect(h.content.projects.single.imagePaths, [old, _path('owner', 'a')]);
-      expect(h.draft.saves, 0);
+      expect(h.draft.saves, 1);
     },
   );
 

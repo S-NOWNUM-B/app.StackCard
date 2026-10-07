@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/portfolio_draft_repository.dart';
@@ -136,6 +137,309 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
 
   String createId() =>
       '${DateTime.now().toUtc().microsecondsSinceEpoch}-${++_idCounter}';
+
+  /// Сохраняет только выбранный документ; соседний ввод и notes остаются рабочими.
+  Future<bool> saveDocument(
+    PortfolioDocument document, {
+    PortfolioDocument? expectedDocument,
+    List<PortfolioProject> newProjects = const [],
+    required PortfolioDraftRepository expectedRepository,
+  }) => _saveScope(
+    expectedRepository: expectedRepository,
+    change: (content) {
+      final existing = content.documents
+          .where((item) => item.id == document.id)
+          .firstOrNull;
+      if (existing != expectedDocument) throw _conflict;
+      final ids = content.projects.map((project) => project.id).toSet();
+      for (final project in newProjects) {
+        if (!ids.add(project.id)) throw _conflict;
+      }
+      return _withDocument(
+        content.copyWith(projects: [...content.projects, ...newProjects]),
+        document,
+      );
+    },
+    mergeWorking: (content) {
+      for (final project in newProjects) {
+        content = _withProject(content, project);
+      }
+      return _withDocument(content, document);
+    },
+  );
+
+  Future<bool> deleteDocument(
+    PortfolioDocument document, {
+    required PortfolioDraftRepository expectedRepository,
+  }) => _saveScope(
+    expectedRepository: expectedRepository,
+    change: (content) {
+      if (content.documents
+              .where((item) => item.id == document.id)
+              .firstOrNull !=
+          document) {
+        throw _conflict;
+      }
+      return _withoutDocument(content, document.id);
+    },
+    mergeWorking: (content) => _withoutDocument(content, document.id),
+  );
+
+  Future<bool> saveProject(
+    PortfolioProject project, {
+    PortfolioProject? expectedProject,
+    required PortfolioDraftRepository expectedRepository,
+  }) => _saveScope(
+    expectedRepository: expectedRepository,
+    change: (content) {
+      if (content.projects.where((item) => item.id == project.id).firstOrNull !=
+          expectedProject) {
+        throw _conflict;
+      }
+      return _withProject(content, project);
+    },
+    mergeWorking: (content) => _withProject(content, project),
+  );
+
+  Future<bool> deleteProject(
+    PortfolioProject project, {
+    required PortfolioDraftRepository expectedRepository,
+  }) => _saveScope(
+    expectedRepository: expectedRepository,
+    change: (content) {
+      if (content.projects.where((item) => item.id == project.id).firstOrNull !=
+          project) {
+        throw _conflict;
+      }
+      return _withoutProject(content, project.id);
+    },
+    mergeWorking: (content) => _withoutProject(content, project.id),
+  );
+
+  Future<bool> importLegacyDocuments({
+    required String portfolioTitle,
+    required String resumeTitle,
+    required PortfolioDraftRepository expectedRepository,
+  }) {
+    final now = DateTime.now().toUtc();
+    PortfolioContent migrate(PortfolioContent content) {
+      if (content.documents.isNotEmpty) return content;
+      final snapshot = seedDocumentContent(content);
+      final projects = [
+        for (final project in content.projects)
+          PortfolioProjectAttachment(
+            projectId: project.id,
+            visible: project.visible,
+            featured: project.featured,
+          ),
+      ];
+      return content.copyWith(
+        documents: [
+          PortfolioDocument(
+            id: 'legacy-portfolio',
+            title: portfolioTitle,
+            kind: PortfolioDocumentKind.portfolio,
+            createdAt: now,
+            updatedAt: now,
+            content: snapshot,
+            projects: projects,
+          ),
+          if (content.resumeText.trim().isNotEmpty)
+            PortfolioDocument(
+              id: 'legacy-resume',
+              title: resumeTitle,
+              kind: PortfolioDocumentKind.resume,
+              createdAt: now,
+              updatedAt: now,
+              content: snapshot,
+              projects: projects,
+            ),
+        ],
+      );
+    }
+
+    return _saveScope(
+      expectedRepository: expectedRepository,
+      change: migrate,
+      mergeWorking: (content) => content,
+    );
+  }
+
+  /// База профиля не переписывает snapshots уже созданных документов.
+  Future<bool> saveDeveloperProfile({
+    required PortfolioDraftRepository expectedRepository,
+  }) {
+    final working = state.content;
+    if (working == null) return Future.value(false);
+    final baseline = state.draft?.content ?? PortfolioContent();
+    PortfolioContent base(PortfolioContent content) => content.copyWith(
+      profile: working.profile,
+      skills: working.skills,
+      experience: working.experience,
+      education: working.education,
+      links: working.links,
+    );
+    return _saveScope(
+      expectedRepository: expectedRepository,
+      change: (content) {
+        if (developerProfileData(content) != developerProfileData(baseline)) {
+          throw _conflict;
+        }
+        return base(content);
+      },
+      // Новая правка базы во время записи не должна исчезать после ACK.
+      mergeWorking: (content) => content,
+    );
+  }
+
+  Future<bool> _saveScope({
+    required PortfolioDraftRepository expectedRepository,
+    required PortfolioContent Function(PortfolioContent) change,
+    required PortfolioContent Function(PortfolioContent) mergeWorking,
+  }) async {
+    if (!state.canEdit ||
+        state.saving ||
+        !identical(
+          ref.read(portfolioDraftRepositoryProvider),
+          expectedRepository,
+        )) {
+      return false;
+    }
+    final operationRef = ref;
+    final generation = ++_generation;
+    final baseline = state.draft?.content ?? PortfolioContent();
+    final baselineNotes = state.draft?.notes ?? '';
+    state = state.copyWith(saving: true, failure: null);
+    try {
+      final durable = await expectedRepository.read();
+      if (!operationRef.mounted || generation != _generation) return false;
+      final savedContent = change(durable?.content ?? PortfolioContent());
+      final draft = await expectedRepository.save(
+        savedContent,
+        expectedRevision: durable?.revision ?? 0,
+        notes: durable?.notes ?? '',
+      );
+      if (!operationRef.mounted || generation != _generation) return false;
+      state = state.copyWith(
+        draft: draft,
+        content: mergeWorking(
+          _mergeWorkspace(
+            baseline,
+            draft.content ?? PortfolioContent(),
+            state.content ?? baseline,
+          ),
+        ),
+        notes: state.notes == baselineNotes ? draft.notes : state.notes,
+        saving: false,
+        remoteUpdateAvailable: false,
+      );
+      _acceptQueuedDraft();
+      return true;
+    } on PortfolioDraftFailure catch (failure) {
+      _saveFailure(operationRef, generation, failure);
+    } catch (_) {
+      _saveFailure(operationRef, generation, _unavailable);
+    }
+    return false;
+  }
+
+  static PortfolioContent _withDocument(
+    PortfolioContent content,
+    PortfolioDocument document,
+  ) => content.copyWith(
+    documents: [
+      for (final item in content.documents)
+        if (item.id == document.id) document else item,
+      if (!content.documents.any((item) => item.id == document.id)) document,
+    ],
+  );
+
+  static PortfolioContent _withoutDocument(
+    PortfolioContent content,
+    String id,
+  ) => content.copyWith(
+    documents: [
+      for (final item in content.documents)
+        if (item.id != id)
+          if (item.attachedResumeId == id)
+            item.copyWith(clearAttachedResumeId: true)
+          else
+            item,
+    ],
+  );
+
+  static PortfolioContent _withProject(
+    PortfolioContent content,
+    PortfolioProject project,
+  ) => content.copyWith(
+    projects: [
+      for (final item in content.projects)
+        if (item.id == project.id) project else item,
+      if (!content.projects.any((item) => item.id == project.id)) project,
+    ],
+  );
+
+  static PortfolioContent _withoutProject(
+    PortfolioContent content,
+    String id,
+  ) => content.copyWith(
+    projects: content.projects.where((item) => item.id != id).toList(),
+    documents: [
+      for (final document in content.documents)
+        document.copyWith(
+          projects: document.projects
+              .where((item) => item.projectId != id)
+              .toList(),
+        ),
+    ],
+  );
+
+  static const _conflict = PortfolioDraftFailure(
+    PortfolioDraftFailureKind.conflict,
+  );
+
+  // Обновляет неизменённые slices из durable, сохраняя ввод соседних редакторов.
+  static PortfolioContent _mergeWorkspace(
+    PortfolioContent baseline,
+    PortfolioContent saved,
+    PortfolioContent working,
+  ) => working.copyWith(
+    profile: working.profile == baseline.profile
+        ? saved.profile
+        : working.profile,
+    skills: listEquals(working.skills, baseline.skills)
+        ? saved.skills
+        : working.skills,
+    experience: listEquals(working.experience, baseline.experience)
+        ? saved.experience
+        : working.experience,
+    education: listEquals(working.education, baseline.education)
+        ? saved.education
+        : working.education,
+    links: listEquals(working.links, baseline.links)
+        ? saved.links
+        : working.links,
+    projects: listEquals(working.projects, baseline.projects)
+        ? saved.projects
+        : working.projects,
+    documents: listEquals(working.documents, baseline.documents)
+        ? saved.documents
+        : working.documents,
+    blocks: listEquals(working.blocks, baseline.blocks)
+        ? saved.blocks
+        : working.blocks,
+    resumeText: working.resumeText == baseline.resumeText
+        ? saved.resumeText
+        : working.resumeText,
+    theme: working.theme == baseline.theme ? saved.theme : working.theme,
+    ignoredGitHubRepositories:
+        listEquals(
+          working.ignoredGitHubRepositories,
+          baseline.ignoredGitHubRepositories,
+        )
+        ? saved.ignoredGitHubRepositories
+        : working.ignoredGitHubRepositories,
+  );
 
   bool addGitHubProject(
     github.GitHubProjectSource source, {

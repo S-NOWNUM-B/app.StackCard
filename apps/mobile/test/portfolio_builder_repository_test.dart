@@ -500,5 +500,8 @@ final class _WriteGateBox implements Box<dynamic> {
   }
 
   @override
+  Future<void> flush() => box.flush();
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

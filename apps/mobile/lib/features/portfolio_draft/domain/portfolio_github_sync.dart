@@ -221,6 +221,7 @@ PortfolioContent addGitHubProject(
   final id = 'github-${source.repositoryId}';
   if (content.projects.any((project) => project.id == id)) throw _conflict;
   final project = PortfolioProject(
+    updatedAt: validatedAt,
     id: id,
     title: source.name,
     description: source.description ?? '',
@@ -252,6 +253,7 @@ PortfolioContent acceptGitHubProjectChanges(
   final overrides = metadata.overrideFields;
   final source = review.source;
   final updated = current.copyWith(
+    updatedAt: validatedAt,
     title: overrides.contains(PortfolioGitHubField.title)
         ? current.title
         : source.name,

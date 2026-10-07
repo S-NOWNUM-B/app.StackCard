@@ -30,7 +30,7 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  test('V2 read is pure; explicit Save upgrades to V4 and metadata survives reopen', () async {
+  test('V2 read is pure; explicit Save upgrades to V5 and metadata survives reopen', () async {
     final legacy = jsonEncode(_legacyEnvelope(now));
     final originalBackup = jsonEncode({
       'schemaVersion': 1,
@@ -57,7 +57,10 @@ void main() {
     final content = _importedContent(now);
     await repository.save(content, expectedRevision: 7, notes: read.notes);
     final upgraded = jsonDecode(box.get('draft') as String) as Map;
-    expect(upgraded['schemaVersion'], 4);
+    expect(
+      upgraded['schemaVersion'],
+      HivePortfolioDraftRepository.schemaVersion,
+    );
     expect(
       box.get(HivePortfolioDraftRepository.legacyBackupKey),
       originalBackup,
@@ -80,7 +83,7 @@ void main() {
   });
 
   test(
-    'Old outbox snapshot reads without migration; next metadata write uses V4',
+    'Old outbox snapshot reads without migration; next metadata write uses V5',
     () async {
       final key = HivePortfolioSyncMetadataStore.storageKeyForUser('owner');
       final legacy = jsonEncode({
@@ -113,7 +116,10 @@ void main() {
         ),
       );
       final encoded = jsonDecode(box.get(key) as String) as Map;
-      expect((encoded['snapshot'] as Map)['schemaVersion'], 4);
+      expect(
+        (encoded['snapshot'] as Map)['schemaVersion'],
+        HivePortfolioDraftRepository.schemaVersion,
+      );
       await box.close();
       box = await Hive.openBox<dynamic>('schema_upgrade', path: directory.path);
       final restored = (await HivePortfolioSyncMetadataStore(
@@ -126,7 +132,7 @@ void main() {
     },
   );
 
-  test('Cloud V1 reads unchanged and V3 carries source, overrides and ignored decisions', () {
+  test('Cloud V1 reads unchanged and V4 carries source, overrides and ignored decisions', () {
     final rawLegacy = {
       'schemaVersion': 1,
       'ownerUid': 'owner',
@@ -152,7 +158,7 @@ void main() {
         content: content,
       ),
     );
-    expect(encoded['schemaVersion'], 3);
+    expect(encoded['schemaVersion'], 4);
     final restored = decodeCloudPortfolioDraft({
       ...encoded,
       'updatedAt': Timestamp.fromDate(now),
@@ -164,7 +170,10 @@ void main() {
   test(
     'Unsupported future Hive schema blocks reads and Save without losing bytes',
     () async {
-      final raw = jsonEncode({..._legacyEnvelope(now), 'schemaVersion': 5});
+      final raw = jsonEncode({
+        ..._legacyEnvelope(now),
+        'schemaVersion': HivePortfolioDraftRepository.schemaVersion + 1,
+      });
       await box.put('draft', raw);
       final repository = HivePortfolioDraftRepository(box);
       final failure = isA<PortfolioDraftFailure>().having(
@@ -178,8 +187,11 @@ void main() {
     },
   );
 
-  test('V3 content reads without eager migration and V4 media survives reopen and ACK', () async {
-    final legacyContent = encodePortfolioContent(_importedContent(now));
+  test('V3 content reads without eager migration and V5 media survives reopen and ACK', () async {
+    final legacyContent = encodePortfolioContent(
+      _importedContent(now),
+      includeDocuments: false,
+    );
     (legacyContent['profile'] as Map).remove('avatarPath');
     for (final item in legacyContent['projects'] as List) {
       (item as Map).remove('imagePaths');
@@ -207,7 +219,10 @@ void main() {
       expectedRevision: 7,
       notes: previous.notes,
     );
-    expect((jsonDecode(box.get('draft') as String) as Map)['schemaVersion'], 4);
+    expect(
+      (jsonDecode(box.get('draft') as String) as Map)['schemaVersion'],
+      HivePortfolioDraftRepository.schemaVersion,
+    );
     final metadata = HivePortfolioSyncMetadataStore(box, ownerUid: 'owner');
     await metadata.write(
       PortfolioSyncRecord(
@@ -242,6 +257,7 @@ void main() {
           'content': encodePortfolioContent(
             _importedContent(now)
                 .copyWith(profile: const PortfolioProfile(avatarPath: _avatar)),
+            includeDocuments: false,
           ),
         });
         await box.put('draft', raw);
@@ -269,7 +285,7 @@ void main() {
       final raw = jsonEncode({
         ..._legacyEnvelope(now),
         'schemaVersion': 4,
-        'content': encodePortfolioContent(content),
+        'content': encodePortfolioContent(content, includeDocuments: false),
       });
       await box.put('draft', raw);
       final repository = HivePortfolioDraftRepository(box);
@@ -311,6 +327,7 @@ Map<String, Object?> _legacyContent() {
       ],
     ),
   );
+  encoded.remove('documents');
   encoded.remove('ignoredGitHubRepositories');
   (encoded['profile'] as Map).remove('avatarPath');
   for (final item in encoded['projects']! as List) {

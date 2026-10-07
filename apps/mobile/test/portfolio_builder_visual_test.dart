@@ -160,7 +160,11 @@ void main() {
         expect(tester.getRect(cancel).bottom, lessThanOrEqualTo(360));
         await tester.tap(cancel);
         await tester.pumpAndSettle();
-        expect(find.byKey(const ValueKey('builder_status')), findsOneWidget);
+        if (route == 'profile') {
+          expect(find.byKey(const ValueKey('builder_status')), findsOneWidget);
+        } else {
+          expect(find.byKey(const ValueKey('project_search')), findsOneWidget);
+        }
         expect(tester.takeException(), isNull);
       });
     }

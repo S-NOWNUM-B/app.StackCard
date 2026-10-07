@@ -67,12 +67,49 @@ service cloud.firestore {
 
     function validPrivateContent(content, version, uid) {
       return version == 1 ? validPublicContent(content)
-        : validContentFields(content, uid, version == 3)
-          && content.keys().hasOnly([
+        : validContentFields(content, uid, version >= 3)
+          && content.keys().hasOnly(version >= 4 ? [
+            'profile', 'skills', 'projects', 'experience', 'education', 'links',
+            'blocks', 'resumeText', 'theme', 'ignoredGitHubRepositories', 'documents'
+          ] : [
             'profile', 'skills', 'projects', 'experience', 'education', 'links',
             'blocks', 'resumeText', 'theme', 'ignoredGitHubRepositories'
           ])
-          && content.get('ignoredGitHubRepositories', []) is list;
+          && content.get('ignoredGitHubRepositories', []) is list
+          && (version < 4 || validDocuments(content.get('documents', []), uid));
+    }
+
+    function validDocument(document, uid) {
+      // Форма snapshot и связи принадлежат codec; Rules проверяют owner media.
+      // Минимум выражений сохраняет запись всех 20 документов в бюджете Rules.
+      // Для пустого canonical path суффикс даёт UID; формат проверяет codec.
+      return (document.content.profile.avatarPath + '/' + uid).split('/')[1] == uid;
+    }
+
+    function validDocuments(documents, uid) {
+      let count = documents.size();
+      // Rules не поддерживают циклы; лимит совпадает с portfolioDocumentLimit.
+      return documents is list && count <= 20
+        && (count <= 0 || validDocument(documents[0], uid))
+        && (count <= 1 || validDocument(documents[1], uid))
+        && (count <= 2 || validDocument(documents[2], uid))
+        && (count <= 3 || validDocument(documents[3], uid))
+        && (count <= 4 || validDocument(documents[4], uid))
+        && (count <= 5 || validDocument(documents[5], uid))
+        && (count <= 6 || validDocument(documents[6], uid))
+        && (count <= 7 || validDocument(documents[7], uid))
+        && (count <= 8 || validDocument(documents[8], uid))
+        && (count <= 9 || validDocument(documents[9], uid))
+        && (count <= 10 || validDocument(documents[10], uid))
+        && (count <= 11 || validDocument(documents[11], uid))
+        && (count <= 12 || validDocument(documents[12], uid))
+        && (count <= 13 || validDocument(documents[13], uid))
+        && (count <= 14 || validDocument(documents[14], uid))
+        && (count <= 15 || validDocument(documents[15], uid))
+        && (count <= 16 || validDocument(documents[16], uid))
+        && (count <= 17 || validDocument(documents[17], uid))
+        && (count <= 18 || validDocument(documents[18], uid))
+        && (count <= 19 || validDocument(documents[19], uid));
     }
 
     function accountAdvanced(uid) {
@@ -151,7 +188,7 @@ service cloud.firestore {
         allow create, update: if draftId == 'current' && owner(uid)
           && (!exists(/databases/$(database)/documents/accounts/$(uid)/drafts/$(draftId))
             || (resource.data.schemaVersion is int
-              && resource.data.schemaVersion in [1, 2, 3]
+              && resource.data.schemaVersion in [1, 2, 3, 4]
               && resource.data.ownerUid == uid
               && resource.data.schemaVersion <= request.resource.data.schemaVersion))
           && request.resource.data.keys().hasAll([
@@ -163,7 +200,7 @@ service cloud.firestore {
             'notes', 'content', 'updatedAt'
           ])
           && request.resource.data.schemaVersion is int
-          && request.resource.data.schemaVersion in [1, 2, 3]
+          && request.resource.data.schemaVersion in [1, 2, 3, 4]
           && request.resource.data.ownerUid == uid
           && request.resource.data.mutationId is string
           && request.resource.data.mutationId.size() > 0
