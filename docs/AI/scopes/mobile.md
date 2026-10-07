@@ -151,7 +151,7 @@ headless проверки не закрывают native visual, public/web ил
   не меняет content. Save сохраняет захваченный snapshot, более новый ввод
   остаётся unsaved; повторная запись одновременно не выполняется.
   [HivePortfolioDraftRepository](../../../apps/mobile/lib/features/portfolio_draft/data/hive_portfolio_draft_repository.dart)
-  последовательно проверяет expected revision и пишет envelope v5; v1/v2/v3/v4 читаются
+  последовательно проверяет expected revision и пишет envelope v6; v1–v5 читаются
   без eager migration, explicit Save/ACK пишет текущую версию. Conflict
   сохраняет несохранённые правки и требует явного решения перечитать durable draft.
   `saveNotes` изменяет только notes, сохраняя content. Чтение v1 не пишет migration:
@@ -166,8 +166,8 @@ headless проверки не закрывают native visual, public/web ил
   в Settings; configured runtime требует online claim и пустой local/cloud target,
   offline cache miss не означает cloud emptiness. LocalRuntime server-only preflight
   пропускается только для своего pending journal; transaction закрывает race.
-  Source envelope/revision/notes/content и raw backups v1–v4 сохраняются;
-  v1 не мигрируется при чтении, ACK после явного transfer может создать v5.
+  Source envelope/revision/notes/content и raw backups v1–v5 сохраняются;
+  v1 не мигрируется при чтении, ACK после явного transfer пишет текущую версию.
   Durable journal резервирует source одному UID до online create-if-absent claim;
   retry допускает только тот же mutation ID/notes/content. Remote ACK metadata
   сохраняется до local destination/cleanup; durable syncPrepared не позволяет
@@ -208,6 +208,12 @@ headless проверки не закрывают native visual, public/web ил
   остаётся local buffer до `saveDocument(newProjects: ...)`: Library+relation
   пишутся одной revision, Cancel не создаёт Project. Полный контракт —
   в [architecture](../../architecture/architecture.md#общая-база-и-независимые-документы).
+  [Review базы](../../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_document_base_review.dart)
+  сравнивает nullable last-reviewed baseSnapshot, buffer и saved base; profile
+  fields/stable-ID items выбираются отдельно. Legacy не имеет предвыбранных замен;
+  local-only записи и порядок остаются. Apply сохраняет captured baseline в buffer,
+  Save отдельный; Cancel/UID transition/stale base/изменённый buffer не применяют
+  captured выбор. Нельзя брать unsaved общую базу или записывать другой документ.
   Pure domain validation/completion живут в `features/portfolio_draft/domain`;
   процент вычисляется, скрытие блоков его не увеличивает. Remote sync и prepared
   publication принадлежат Phase 8; public UI/web остаются отдельными фазами.
@@ -248,8 +254,8 @@ headless проверки не закрывают native visual, public/web ил
   Private bytes cache memory-only и исчезает при UID transition; external public
   avatars используют cached_network_image. Не удалять прежние durable paths
   при замене/ACK: offline/LWW может ещё ссылаться на них. Public projection
-  исключает media fields, publication не вызывается. Hive writer v5/private
-  cloud writer4 читают legacy versions без read-time rewrite; downgrade запрещён.
+  исключает media fields, publication не вызывается. Hive writer v6/private
+  cloud writer5 читают legacy versions без read-time rewrite; downgrade запрещён.
 - Location: [public API](../../../apps/mobile/lib/features/location/location.dart) и
   [контракт](../../architecture/architecture.md#выбор-города-и-страны--phase-12).
   Picker подтверждает город/страну, manual input работает без permissions.
@@ -335,7 +341,7 @@ headless проверки не закрывают native visual, public/web ил
   `test/portfolio_draft_controller_test.dart`, `test/portfolio_draft_widget_test.dart`:
   revision, input retention, unknown schema, Save failures и навигация.
   Builder checks дополнительно проверяют validation/completion, CRUD, порядок/
-  видимость/тему preview, v1/v2/v3/v4 → v5 compatibility, stale revision и сохранение новых
+  видимость/тему preview, v1–v5 → v6 compatibility, stale revision и сохранение новых
   правок во время Save; имена актуальных tests — в `apps/mobile/test`.
 - Локальные шрифты и лицензии: [assets/fonts](../../../apps/mobile/assets/fonts/);
   регистрация остаётся в pubspec. Manrope400/600/700/800 и OFL/pinned hashes

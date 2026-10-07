@@ -107,6 +107,21 @@ function workspaceDocuments(count = 1) {
   };
 }
 
+function workspaceBaseReviews(count = 1) {
+  const workspace = workspaceDocuments(count);
+  for (const document of workspace.documents) {
+    const snapshot = document.content;
+    document.baseSnapshot = {
+      profile: { ...snapshot.profile },
+      skills: [], experience: [], education: [], links: [],
+    };
+    // Фото документа и захваченной базы могут независимо меняться.
+    document.baseSnapshot.profile.avatarPath =
+      'accounts/alice/media/abcdef0123456789abcdef0123456789.jpg';
+  }
+  return workspace;
+}
+
 async function saveDraft(db, uid = 'alice', overrides = {}) {
   await setDoc(doc(db, `accounts/${uid}/drafts/current`), draft(uid, overrides));
 }
@@ -254,6 +269,123 @@ test('document Rules reject foreign snapshot media', async () => {
   await assertSucceeds(saveDraft(alice, 'alice', {
     schemaVersion: 4, content: workspaceDocuments(),
   }));
+});
+
+test('schema 5 accepts all 20 captured bases and blocks downgrades and foreign clients', async () => {
+  const alice = database();
+  await assertSucceeds(saveDraft(alice, 'alice', {
+    schemaVersion: 5, content: workspaceBaseReviews(20),
+  }));
+  const stored = (await getDoc(doc(alice, 'accounts/alice/drafts/current'))).data();
+  assert.equal(stored.content.documents[19].baseSnapshot.profile.name, 'Alice');
+  for (const schemaVersion of [1, 2, 3, 4]) {
+    await assertFails(saveDraft(alice, 'alice', { schemaVersion }));
+  }
+  const foreign = workspaceBaseReviews(20);
+  foreign.documents[19].baseSnapshot.profile.avatarPath =
+    'accounts/bob/media/0123456789abcdef0123456789abcdef.jpg';
+  await assertFails(saveDraft(alice, 'alice', { schemaVersion: 5, content: foreign }));
+  await assertFails(saveDraft(alice, 'alice', { schemaVersion: 5, content: workspaceBaseReviews(21) }));
+  for (const uid of ['bob', null]) {
+    await assertFails(getDoc(doc(database(uid), 'accounts/alice/drafts/current')));
+    await assertFails(saveDraft(database(uid), 'alice', {
+      schemaVersion: 5, content: workspaceBaseReviews(),
+    }));
+  }
+});
+
+test('schema 5 preserves legacy documents without a baseline key and rejects explicit null writes', async () => {
+  const alice = database();
+  await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 4, content: workspaceDocuments() }));
+  await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 5, content: workspaceDocuments() }));
+  const workspace = workspaceDocuments();
+  workspace.documents[0].baseSnapshot = null;
+  await assertFails(saveDraft(alice, 'alice', { schemaVersion: 5, content: workspace }));
+});
+
+test('captured base media rejects malformed, missing and non-string paths', async () => {
+  const alice = database();
+  const mutations = [
+    (snapshot) => { snapshot.profile = []; },
+    (snapshot) => { delete snapshot.profile.avatarPath; },
+    (snapshot) => { snapshot.profile.avatarPath = 42; },
+    (snapshot) => { snapshot.profile.avatarPath = 'https://example.invalid/private'; },
+    (snapshot) => { snapshot.profile.avatarPath = 'accounts/alice/media/not-an-image.jpg'; },
+    (snapshot) => { snapshot.profile.avatarPath = 'accounts/bob/media/0123456789abcdef0123456789abcdef.jpg'; },
+  ];
+  for (const mutate of mutations) {
+    const workspace = workspaceBaseReviews();
+    mutate(workspace.documents[0].baseSnapshot);
+    await assertFails(saveDraft(alice, 'alice', { schemaVersion: 5, content: workspace }));
+  }
+  const emptyAvatars = workspaceBaseReviews(20);
+  for (const document of emptyAvatars.documents) document.baseSnapshot.profile.avatarPath = '';
+  await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 5, content: emptyAvatars }));
+});
+
+test('literal UID quoting prevents regex injection, including embedded quote terminators and path separators', async () => {
+  for (const uid of ['a.b*+?^$()[]{}|', 'literal\\E.*', 'literal;uid', 'literal\\Quid\\E', 'a\\E\\E|b', 'алматы']) {
+    const db = database(uid);
+    const workspace = workspaceBaseReviews(20);
+    for (const [index, document] of workspace.documents.entries()) {
+      document.content.profile.avatarPath =
+        `accounts/${uid}/media/${index.toString(16).padStart(32, '0')}.jpg`;
+      document.baseSnapshot.profile.avatarPath =
+        `accounts/${uid}/media/${(index + 100).toString(16).padStart(32, '0')}.jpg`;
+    }
+    await assertSucceeds(saveDraft(db, uid, { schemaVersion: 5, content: workspace }));
+    workspace.documents[19].baseSnapshot.profile.avatarPath =
+      'accounts/bob/media/0123456789abcdef0123456789abcdef.jpg';
+    await assertFails(saveDraft(db, uid, { schemaVersion: 5, content: workspace }));
+  }
+  const uid = 'a.b';
+  const workspace = workspaceBaseReviews();
+  workspace.documents[0].content.profile.avatarPath =
+    'accounts/a.b/media/0123456789abcdef0123456789abcdef.jpg';
+  workspace.documents[0].baseSnapshot.profile.avatarPath =
+    'accounts/axb/media/0123456789abcdef0123456789abcdef.jpg';
+  await assertFails(saveDraft(database(uid), uid, { schemaVersion: 5, content: workspace }));
+});
+
+test('typed field access still rejects every missing mandatory draft, profile and content field', async () => {
+  const alice = database();
+  for (const key of ['schemaVersion', 'ownerUid', 'mutationId', 'localRevision', 'notes', 'content', 'updatedAt']) {
+    const value = draft('alice', { schemaVersion: 5, content: workspaceBaseReviews() });
+    delete value[key];
+    await assertFails(setDoc(doc(alice, 'accounts/alice/drafts/current'), value));
+  }
+  for (const key of ['profile', 'skills', 'projects', 'experience', 'education', 'links', 'blocks', 'resumeText', 'theme']) {
+    const value = content();
+    delete value[key];
+    await assertFails(saveDraft(alice, 'alice', { schemaVersion: 5, content: value }));
+  }
+  for (const key of ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl']) {
+    const value = content();
+    delete value.profile[key];
+    await assertFails(saveDraft(alice, 'alice', { schemaVersion: 5, content: value }));
+  }
+  for (const value of [[], 42, 'Not an object']) {
+    await assertFails(saveDraft(alice, 'alice', { schemaVersion: 5, content: value }));
+    await assertFails(saveDraft(alice, 'alice', { schemaVersion: 5, content: { ...content(), profile: value } }));
+  }
+});
+
+test('public schema remains 1 and rejects captured bases and documents', async () => {
+  const alice = database();
+  await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 5, content: workspaceBaseReviews() }));
+  for (const extra of [
+    { documents: workspaceBaseReviews().documents },
+    { baseSnapshot: workspaceBaseReviews().documents[0].baseSnapshot },
+  ]) {
+    await assertFails(publishBatch(alice, 'alice', 'alice', 1, {
+      content: { ...content(), ...extra },
+    }).commit());
+  }
+  await assertSucceeds(publishBatch(alice).commit());
+  const publicData = (await getDoc(doc(database(null), 'publicPortfolios/alice'))).data();
+  assert.equal(publicData.schemaVersion, 1);
+  assert.equal(Object.hasOwn(publicData.content, 'documents'), false);
+  assert.equal(Object.hasOwn(publicData.content, 'baseSnapshot'), false);
 });
 
 test('an existing unknown-schema or mismatched-owner draft cannot be overwritten', async () => {

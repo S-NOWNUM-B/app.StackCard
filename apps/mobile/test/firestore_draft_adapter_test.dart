@@ -61,11 +61,11 @@ void main() {
   });
 
   test(
-    'Legacy cloud schema remains readable and next write upgrades to version 4',
+    'Legacy cloud schema remains readable and next write upgrades to version 5',
     () {
       final legacy = decodeCloudPortfolioDraft(_data(), ownerUid: 'owner');
       final upgraded = encodeCloudPortfolioDraft(legacy);
-      expect(upgraded['schemaVersion'], 4);
+      expect(upgraded['schemaVersion'], 5);
       expect(upgraded['notes'], legacy.notes);
       expect(upgraded['mutationId'], legacy.mutationId);
       expect(upgraded['localRevision'], legacy.localRevision);
@@ -90,7 +90,7 @@ void main() {
     }
   });
 
-  test('Cloud V4 round-trips only media owned by the captured UID', () {
+  test('Cloud V5 round-trips media while V3 and V4 remain readable', () {
     final content = _mediaContent('owner');
     final draft = CloudPortfolioDraft(
       ownerUid: 'owner',
@@ -100,12 +100,27 @@ void main() {
       content: content,
     );
     final encoded = encodeCloudPortfolioDraft(draft);
-    expect(encoded['schemaVersion'], 4);
+    expect(encoded['schemaVersion'], 5);
     final restored = decodeCloudPortfolioDraft({
       ...encoded,
       'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 10, 7)),
     }, ownerUid: 'owner');
     expect(restored.content, content);
+    for (final version in [3, 4]) {
+      final legacy = {
+        ..._data(),
+        'schemaVersion': version,
+        'content': encodePortfolioContent(
+          content,
+          includeDocuments: version >= 4,
+        ),
+      };
+      expect(
+        decodeCloudPortfolioDraft(legacy, ownerUid: 'owner').content,
+        content,
+      );
+      expect(legacy['schemaVersion'], version);
+    }
     for (final foreign in [
       content.copyWith(profile: _mediaContent('owner-extra').profile),
       content.copyWith(projects: _mediaContent('foreign').projects),
@@ -134,7 +149,7 @@ void main() {
   });
 
   test('Cloud legacy versions reject media fields and future schemas', () {
-    for (final version in [1, 2, 5]) {
+    for (final version in [1, 2, 6]) {
       expect(
         () => decodeCloudPortfolioDraft({
           ..._data(),

@@ -48,6 +48,7 @@ final class PortfolioDocument {
     required this.createdAt,
     required this.updatedAt,
     required this.content,
+    this.baseSnapshot,
     List<PortfolioProjectAttachment> projects = const [],
     this.attachedResumeId,
   }) : projects = List.unmodifiable(projects);
@@ -58,6 +59,9 @@ final class PortfolioDocument {
   final DateTime createdAt;
   final DateTime updatedAt;
   final PortfolioContent content;
+
+  /// Последняя явно просмотренная база; null у документов старого формата.
+  final PortfolioContent? baseSnapshot;
   final List<PortfolioProjectAttachment> projects;
   final String? attachedResumeId;
 
@@ -68,6 +72,7 @@ final class PortfolioDocument {
     DateTime? createdAt,
     DateTime? updatedAt,
     PortfolioContent? content,
+    PortfolioContent? baseSnapshot,
     List<PortfolioProjectAttachment>? projects,
     String? attachedResumeId,
     bool clearAttachedResumeId = false,
@@ -78,6 +83,7 @@ final class PortfolioDocument {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     content: content ?? this.content,
+    baseSnapshot: baseSnapshot ?? this.baseSnapshot,
     projects: projects ?? this.projects,
     attachedResumeId: clearAttachedResumeId
         ? null
@@ -93,6 +99,7 @@ final class PortfolioDocument {
       other.createdAt == createdAt &&
       other.updatedAt == updatedAt &&
       other.content == content &&
+      other.baseSnapshot == baseSnapshot &&
       other.attachedResumeId == attachedResumeId &&
       portfolioListEquals(other.projects, projects);
 
@@ -104,6 +111,7 @@ final class PortfolioDocument {
     createdAt,
     updatedAt,
     content,
+    baseSnapshot,
     attachedResumeId,
     Object.hashAll(projects),
   );

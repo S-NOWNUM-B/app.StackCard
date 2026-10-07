@@ -55,6 +55,7 @@ void main() {
       expect(workspace.profile.headline, 'Fullstack Developer');
       expect(document.projects.single.projectId, 'library-project');
       expect(document.content.projects, isEmpty);
+      expect(document.baseSnapshot, developerProfileData(workspace));
       expect(workspace.projects.single.id, 'library-project');
       expect((await repository.read())!.notes, 'private note');
       await tester.pumpWidget(const SizedBox.shrink());
@@ -635,6 +636,171 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets(
+    'base review Apply changes only the buffer; Save and reopen retain local role',
+    (tester) async {
+      final repository = await _reviewRepository();
+      final before = (await repository.read())!;
+      final container = await _open(tester, repository, documentId: 'reviewed');
+      final controller = container.read(
+        portfolioDraftControllerProvider.notifier,
+      );
+      controller.updateNotes('unsaved neighbouring notes');
+      controller.updateContent(
+        controller.workingContent!.copyWith(
+          profile: before.content!.profile.copyWith(bio: 'unsaved base input'),
+        ),
+      );
+      await _tap(tester, 'document.section.profile');
+      await _enter(tester, 'headline', 'Unsaved local role');
+      await _tap(tester, 'document.back');
+      await _tap(tester, 'document.baseReview');
+      expect(find.text('Saved new bio'), findsOneWidget);
+      expect(find.text('unsaved base input'), findsNothing);
+      expect(find.text('Unsaved local role'), findsOneWidget);
+      await _tap(tester, 'base-review-apply');
+      expect((await repository.read())!, before);
+      await _tap(tester, 'document.section.profile');
+      expect(_value(tester, 'headline'), 'Unsaved local role');
+      expect(_value(tester, 'bio'), 'Saved new bio');
+      await _tap(tester, 'document.save');
+      final after = (await repository.read())!;
+      final reviewed = after.content!.documents.singleWhere(
+        (item) => item.id == 'reviewed',
+      );
+      expect(reviewed.content.profile.headline, 'Unsaved local role');
+      expect(reviewed.baseSnapshot, developerProfileData(before.content!));
+      expect(after.content!.documents.last, before.content!.documents.last);
+      expect(after.content!.profile, before.content!.profile);
+      expect(after.notes, before.notes);
+      expect(controller.workingContent!.profile.bio, 'unsaved base input');
+      expect(
+        container.read(portfolioDraftControllerProvider).notes,
+        'unsaved neighbouring notes',
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      await _open(tester, repository, documentId: 'reviewed');
+      await _tap(tester, 'document.baseReview');
+      expect(find.byKey(const ValueKey('base-review-bio:')), findsNothing);
+      await _tap(tester, 'base-review-cancel');
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'base review Cancel discards choices and leaves durable revision unchanged',
+    (tester) async {
+      final repository = await _reviewRepository();
+      final before = (await repository.read())!;
+      await _open(tester, repository, documentId: 'reviewed');
+      await _tap(tester, 'document.baseReview');
+      await _tap(tester, 'base-review-cancel');
+      await _tap(tester, 'document.section.profile');
+      expect(_value(tester, 'bio'), 'Old bio');
+      expect(_value(tester, 'headline'), 'Frontend role');
+      await _tap(tester, 'document.back');
+      await _tap(tester, 'document.back');
+      expect(find.text('Library'), findsOneWidget);
+      expect((await repository.read())!, before);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'a changed saved base rejects the captured review and preserves document input',
+    (tester) async {
+      final repository = await _reviewRepository();
+      final container = await _open(tester, repository, documentId: 'reviewed');
+      final controller = container.read(
+        portfolioDraftControllerProvider.notifier,
+      );
+      await _tap(tester, 'document.baseReview');
+      controller.updateContent(
+        controller.workingContent!.copyWith(
+          profile: controller.workingContent!.profile.copyWith(
+            bio: 'Newest base',
+          ),
+        ),
+      );
+      expect(
+        await controller.saveDeveloperProfile(expectedRepository: repository),
+        isTrue,
+      );
+      await tester.pumpAndSettle();
+      await _tap(tester, 'base-review-apply');
+      expect(
+        find.textContaining('База или документ изменились'),
+        findsOneWidget,
+      );
+      await _tap(tester, 'document.section.profile');
+      expect(_value(tester, 'bio'), 'Old bio');
+      expect(_value(tester, 'headline'), 'Frontend role');
+      expect(
+        (await repository.read())!.content!.documents.first.content.profile.bio,
+        'Old bio',
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'owner transition hides base review without writing either owner',
+    (tester) async {
+      final first = await _reviewRepository();
+      final second = await _repository();
+      final firstBefore = (await first.read())!;
+      final secondBefore = (await second.read())!;
+      final container = await _open(tester, first, documentId: 'reviewed');
+      await _tap(tester, 'document.baseReview');
+      container.updateOverrides([
+        portfolioDraftRepositoryProvider.overrideWithValue(second),
+      ]);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('base-review-apply')), findsNothing);
+      expect(find.text('Saved new bio'), findsNothing);
+      expect((await first.read())!, firstBefore);
+      expect((await second.read())!, secondBefore);
+      expect(tester.takeException(), isNull);
+    },
+  );
+}
+
+Future<MemoryPortfolioDraftRepository> _reviewRepository() async {
+  final repository = MemoryPortfolioDraftRepository();
+  final old = PortfolioContent(
+    profile: const PortfolioProfile(
+      name: 'Alex',
+      headline: 'Fullstack role',
+      bio: 'Old bio',
+    ),
+  );
+  final date = DateTime.utc(2026, 10, 7);
+  final document = PortfolioDocument(
+    id: 'reviewed',
+    title: 'Resume',
+    kind: PortfolioDocumentKind.resume,
+    createdAt: date,
+    updatedAt: date,
+    content: seedDocumentContent(old)
+        .copyWith(profile: old.profile.copyWith(headline: 'Frontend role')),
+    baseSnapshot: developerProfileData(old),
+  );
+  await repository.save(
+    old.copyWith(
+      profile: old.profile.copyWith(
+        headline: 'New base role',
+        bio: 'Saved new bio',
+      ),
+      documents: [
+        document,
+        document.copyWith(id: 'neighbour', title: 'Other resume'),
+      ],
+    ),
+    expectedRevision: 0,
+    notes: 'private notes',
+  );
+  return repository;
 }
 
 Future<MemoryPortfolioDraftRepository> _repository({

@@ -30,7 +30,7 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  test('V2 read is pure; explicit Save upgrades to V5 and metadata survives reopen', () async {
+  test('V2 read is pure; explicit Save upgrades to V6 and metadata survives reopen', () async {
     final legacy = jsonEncode(_legacyEnvelope(now));
     final originalBackup = jsonEncode({
       'schemaVersion': 1,
@@ -83,7 +83,7 @@ void main() {
   });
 
   test(
-    'Old outbox snapshot reads without migration; next metadata write uses V5',
+    'Old outbox snapshot reads without migration; next metadata write uses V6',
     () async {
       final key = HivePortfolioSyncMetadataStore.storageKeyForUser('owner');
       final legacy = jsonEncode({
@@ -132,7 +132,7 @@ void main() {
     },
   );
 
-  test('Cloud V1 reads unchanged and V4 carries source, overrides and ignored decisions', () {
+  test('Cloud V1 reads unchanged and V5 carries source, overrides and ignored decisions', () {
     final rawLegacy = {
       'schemaVersion': 1,
       'ownerUid': 'owner',
@@ -158,7 +158,7 @@ void main() {
         content: content,
       ),
     );
-    expect(encoded['schemaVersion'], 4);
+    expect(encoded['schemaVersion'], 5);
     final restored = decodeCloudPortfolioDraft({
       ...encoded,
       'updatedAt': Timestamp.fromDate(now),
@@ -187,7 +187,7 @@ void main() {
     },
   );
 
-  test('V3 content reads without eager migration and V5 media survives reopen and ACK', () async {
+  test('V3 content reads without eager migration and V6 media survives reopen and ACK', () async {
     final legacyContent = encodePortfolioContent(
       _importedContent(now),
       includeDocuments: false,

@@ -59,11 +59,15 @@ ordered projectId/visible/featured relations и optional private attachedResumeI
 Максимум 20 документов; doc snapshot не содержит projects/documents/Ignore.
 Новый документ предлагает base values, существующий не обновляется от base edits.
 Atomic create-and-attach реализован через document local buffer и один
-`saveDocument(newProjects: ...)`/revision; Cancel не пишет Library. Review
-captured baseline/local project presentation overrides пока pending.
+`saveDocument(newProjects: ...)`/revision; Cancel не пишет Library.
+Captured baseline review реализован через nullable document baseSnapshot:
+profile fields и stable-ID items сравниваются отдельно, local overrides не выбраны
+автоматически. Apply меняет buffer, Save отдельно сохраняет baseline и content;
+legacy без baseline требует явного выбора. Local Project presentation overrides
+пока pending. Порядок базы не переносится, порядок документа сохраняется.
 
-Hive writer5/readers1–5 и private cloud4/readers1–4 читают старые версии без rewrite;
-Save/ACK сохраняет raw owner backup v1–v4 до upgrade. Старые UID namespaces,
+Hive writer6/readers1–6 и private cloud5/readers1–5 читают старые версии без rewrite;
+Save/ACK сохраняет raw owner backup v1–v5 до upgrade. Старые UID namespaces,
 Box queue, guest transfer journal/generation, outbox/exact ACK и whole-document
 server-order LWW сохранены. Явный legacy import создаёт stable legacy-portfolio/
 legacy-resume, сохраняя source content/resumeText/notes. Новый migration CAS/
@@ -91,10 +95,10 @@ final native visual acceptance остаются pending. Media/location испо
 | **Сейчас** | **Файл и проверенный контракт** |
 |:---|:---|
 | PortfolioContent aggregate | domain/portfolio_content.dart и portfolio_document.dart: общая база/Library, independent documents snapshots/relations, legacy blocks/theme/resumeText и Ignore |
-| Private envelope | domain/portfolio_draft.dart и data/hive_portfolio_draft_repository.dart: notes вне content, local revision, pendingSync; writer5 / readers1–5; read не делает eager migration; corrupt/unknown не перезаписываются |
+| Private envelope | domain/portfolio_draft.dart и data/hive_portfolio_draft_repository.dart: notes вне content, local revision, pendingSync; writer6 / readers1–6; read не делает eager migration; corrupt/unknown не перезаписываются |
 | Local owner boundary | data/local_draft_accounts.dart: guest generation, UID key, shared Box queue, reserved transfer journal, raw backup, metadata-first ACK, syncPrepared, exact retry payload, committed-before-cleanup |
 | Outbox / ACK | data/synced_portfolio_draft_repository.dart и data/hive_portfolio_sync_metadata_store.dart: mutation + captured snapshot, cache-before-metadata recovery; older ACK не подтверждает newer Save; metadata version1 |
-| Cloud | data/firestore_portfolio_draft_repository.dart: accounts/UID/drafts/current, writer4/readers1–4; server timestamp, captured UID, online create-if-absent transfer claim |
+| Cloud | data/firestore_portfolio_draft_repository.dart: accounts/UID/drafts/current, writer5/readers1–5; server timestamp, captured UID, online create-if-absent transfer claim |
 | Prepared publication | data/firestore_portfolio_publication_repository.dart: username-based transaction; domain API publish(username, content)/unpublish; нет UI/DI или stable document inventory |
 | Source review | domain/portfolio_project.dart / portfolio_github_sync.dart; github_portfolio_providers.dart: acceptedSource, manual overrideFields, Ignore fingerprints, stale owner/read checks; cache отдельный |
 | Ownership / Rules | firebase/firestore.rules: own UID draft get, no list; atomic username/account/public transitions; nested lists проверяются контейнером |
@@ -144,7 +148,7 @@ Public projections для Publish разрешаются из сохранённ
 
 Полный proposal первоначально предлагал отдельный workspace payload. D045
 реализует совместимое расширение существующего content: paths/keys прежние,
-Hive5/private cloud4 уже используются, metadata/public schemas прежние.
+Hive6/private cloud5 уже используются, metadata/public schemas прежние.
 Версии будущего workspace/public lifecycle не назначаются здесь заранее.
 Old writers не могут downgrade upgraded private cloud schema.
 
@@ -245,14 +249,26 @@ Publish/update/unpublish/delete имеют request operation identity и read-re
 
 ## Последовательность после scope решения
 
-1. Независимый R8 UI foundations/controls/assets и supported forms продолжаются отдельно, не ждут нового backend.
-2. PR-DATA-01/02/03 + CONTACT contracts и migration fixtures; PR-MIG-01 + SYNC/Rules upgrade вместе, без ранней production migration.
-3. Publication/URL/delete trusted contract и security fixtures; account/media/preferences/share owners работают параллельно по immutable references/API.
-4. Web13a →13b →13c по фактическим dependency contracts; handler/SSR используют те же JSON fixtures и payload policy.
-5. Dependent R8 flows подключаются к реальным providers и honest states; R9 unit/widget/Rules/contract checks, затем только отдельно разрешённое runtime/native evidence. Ни один mock/Figma/structural pass не объявляет live media/auth/sharing/web backend working.
+Актуальная очередь принадлежит [основному roadmap](../product/product-spec.md#актуальная-последовательность-2026-10-08).
 
-No commit/push/deploy/user messaging другим людям. Private mobile subset D045
-разрешён; оставшийся proposal не считается реализованным или принятым по этому факту.
+1. Сохранить реализованный D045/D046 private core и compatibility. Не строить
+   PR-DATA-01/02/03, migration и base review заново. Закрыть remaining contacts/privacy,
+   Project presentation overrides, app/account действия по реальным capabilities.
+2. Совместно определить permanent public ID, trusted projection/validation,
+   public media/attached Resume policy, operation recovery/delete и минимальный
+   Next.js published reader. Public data boundary проверяется до открытия visitor route.
+3. Подключить Publish/Update/Unpublish выбранного документа из mobile и настоящие
+   Copy/Open/Share; full owner web editor не является предпосылкой этой возможности.
+4. Развить marketing/download и owner web editor той же базы/Library/documents,
+   с общими JSON fixtures, online-first Save/reopen/conflict и Figma wide/narrow UX.
+5. Account deletion требует withdraw/cleanup; Inbox — actual contact service,
+   FCM — Inbox/device permissions, Developer Card/QR — подтверждённый permanent URL.
+6. R9 contract/unit/widget/Rules checks идут с каждой capability. Visual/native/live
+   evidence и user acceptance остаются отдельными gates с сохранённым no-preview/run.
+
+Обновление roadmap не разворачивает Rules/Functions/web и не разрешает billing,
+commit/push или сообщения другим людям. D045/D046 private mobile scope остаётся
+разрешённым; remaining proposal не считается реализованным по факту обновления плана.
 
 ---
 

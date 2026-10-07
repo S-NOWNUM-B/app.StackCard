@@ -27,11 +27,15 @@
 фазам поставлена на паузу; разрешено функциональное развитие mobile по Figma
 и концепции общей базы/нескольких документов. Private slice включает четыре
 stateful roots, mixed Home library, независимые Resume/Portfolio, scoped Save
-и совместимые Hive5/cloud4 adapters. Публичные documents/URL, web и full account
+и явный review обновлений базы с сохранением local overrides, совместимые
+Hive6/cloud5 adapters. Публичные documents/URL, web и full account
 пока отсутствуют; подробный scope/проверки — в
 [product status](../product/product-spec.md#статус-и-границы-текущей-работы).
 R7 остаётся awaiting_review; DESIGN_READY/REDESIGN_DONE не установлены.
 No-preview/run ограничение сохраняется; headless evidence не означает native parity.
+Roadmap обновлён 2026-10-08 под [capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-08):
+разрешённая функциональная mobile работа продолжается при открытой visual/native
+приёмке; это не утверждение о завершении полного переноса.
 
 Дальнейшие записи о состоянии 2026-10-05 — история переноса D040–D042.
 Последующие Phase 11 Media и Phase 12 Location без карты сохраняют свои
@@ -128,7 +132,7 @@ states/motion/adaptive собраны и проверены в review D033, за
 | Визуальные макеты Design v2 | [Бренд A](screens.md#r23--принятый-бренд-и-направление) принят D024; R3.1 done D028, Manrope. [Navigation/cards/badges R3.2](screens.md#r32--навигация-карточки-и-technologybadge) приняты D030; [Forms/stepper/photo/sections R3.3](screens.md#r33--формы-stepper-фото-и-секции) приняты D032; [States/motion/adaptive R3.4](screens.md#r34--состояния-motion-и-адаптивность) приняты D034; [все девять задач R4](screens.md#r4--основные-экраны-и-настройки) приняты D036; [весь пакет R5](screens.md#r5--создание-редактирование-и-публикация) принят D038; [весь пакет R6](screens.md#r6--веб-поверхности) принят D040; R7 awaiting_review D041, R8/R9 partial авторизованы D040 |
 | Интерактивный прототип Design v2 | R7 source graph/structural QA завершены D041; package awaiting_review. Playback/visual omitted, DESIGN_READY pending |
 | Реализованный Design v2 UI | D040 shared slice сохранён; D045 private mobile navigation/libraries/editor реализуются на той же DS. Полная Figma/native/public/web parity не подтверждена |
-| Backend новых сценариев | Private documents schema4 расширяет прежний draft sync; новый public-document backend/URL/web отсутствует |
+| Backend новых сценариев | Private documents schema5 расширяет прежний draft sync и хранит baseline review; новый public-document backend/URL/web отсутствует |
 
 ---
 
@@ -162,10 +166,12 @@ Google/reset/iOS приёмка Phase 7 остаётся открытой. Сл�
 Flutter tests, native launch или live Firebase-проверки. Их прежние результаты
 не доказывают готовность нового дизайна или новых продуктовых функций.
 
-Основная разработка новых функций приостановлена по прямому запросу пользователя.
-Возвращение предлагается только после пользовательской приёмки R9 и
+По историческому поручению D001 основная разработка новых функций была приостановлена.
+Первоначально возвращение предлагалось после пользовательской приёмки R9 и
 `REDESIGN_DONE`, с сохранённой точкой «перед Phase 11» и открытой приёмкой Phase 7.
-Переход к продуктовой задаче требует отдельного поручения.
+Это историческая точка остановки: D043/D044 разрешили Media/Location, D045/D046
+разрешили нынешние mobile capabilities. Полный REDESIGN_DONE остаётся отдельной
+приёмкой; он не блокирует уже разрешённую функциональную работу.
 
 В [audit](audit.md#продуктовые-пробелы) отмечены зависимости, без которых часть
 Design v2 нельзя честно реализовать. Перед R8 пользователь согласует отдельные

@@ -20,7 +20,7 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
   }) : _clock = clock ?? DateTime.now;
 
   static const storageKey = 'draft';
-  static const schemaVersion = 5;
+  static const schemaVersion = 6;
   static const legacyBackupKey = 'draft.v1.backup';
 
   final Box<dynamic> _box;
@@ -169,12 +169,13 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
         version != 2 &&
         version != 3 &&
         version != 4 &&
+        version != 5 &&
         version != schemaVersion) {
       throw const PortfolioDraftFailure(
         PortfolioDraftFailureKind.unsupportedVersion,
       );
     }
-    if (version < schemaVersion &&
+    if (version < 5 &&
         decoded['content'] is Map &&
         (decoded['content'] as Map).containsKey('documents')) {
       throw _corrupted;
@@ -207,6 +208,7 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
             decoded['content'],
             allowMedia: version >= 4,
             allowDocuments: version >= 5,
+            allowBaseSnapshot: version >= 6,
           );
         } on FormatException {
           throw _corrupted;
