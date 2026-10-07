@@ -26,7 +26,8 @@
 
 **Обновление 2026-10-07:** отдельным прямым поручением разрешена Phase 11 Media
 на `dev`; перенос `redesign/full-app` подтверждён совпадением Git refs.
-Функциональный roadmap возобновлён для этой фазы. DESIGN_READY/REDESIGN_DONE
+Следующим поручением разрешена Phase 12 Location без карты: ручной город/страна
+и опциональное определение города. Функциональный roadmap возобновлён для этих фаз. DESIGN_READY/REDESIGN_DONE
 и приёмка полного редизайна не изменены; прежняя пауза ниже описывает историю.
 
 На 2026-10-05 R0 принята прямым поручением использовать план и начать первую
@@ -1470,6 +1471,7 @@ DESIGN_READY/REDESIGN_DONE не установлены, Phase11 автомати
 | D041 / 2026-10-05 | Завершённый R7 source package и структурная QA | awaiting_review: 2736 matched bindings (1758 mobile / 978 web), 879 mobile / 946 web contracts, 974 web controls; 723 roots / 52255 nodes / 15822 TEXT, 328 unique starts. 22 contract chunks + topology PASS, 11 failure categories = 0. 6 motion pairs same targets, 180/240/280 ms + static/reduced, no timers/SET_VARIABLE. 12 new adaptive + 10 reused + 2 keyboard; 180 static ×2 texts, 16 adaptive failure categories = 0. 98 variable values / 50 style IDs exact; style properties not checked. Portable r7-handoff.json, fullR7Pass=null. Visual/playback/native omitted; R7.4 explicit acceptance/DESIGN_READY pending. Partial R8/R9 supported 950 PASS не означает полный REDESIGN_DONE; prerequisites proposed, scope pending |
 | D042 / 2026-10-05 | «теперь всё из ветки redesign/full-app перенеси в dev. закомментируй все изменения и отправь в гитхаб» | Разрешены commit всех изменений редизайна, исправление сообщения неопубликованного коммита, линейный перенос всей ветки в dev и push origin/dev. «Закомментируй» интерпретировано как «закоммить». Это Git delivery; R7 acceptance/DESIGN_READY, prerequisite scope, deployment и Phase11 этим поручением не подтверждены; no-preview/run сохранён |
 | D043 / 2026-10-07 | «перейди в локальную ветку dev. убедись что в ней есть изменения дизайна из redesign/full-app и приступай к разработке 11 фазы» | Подтверждены одинаковые refs dev/redesign/full-app на16ec4ed; разрешена Phase11 Media и возобновление этого функционального этапа. Полная Design v2 acceptance/REDESIGN_DONE не закрыта; Phase12, commit/push/deploy/billing не разрешены. |
+| D044 / 2026-10-07 | «переходи к следующей фазе», затем «вычеркнем полностью пункты по добавлению карты, удали что было создано под это и продолжи разработку без этого» | Разрешена Phase12 с изменённым scope: ручной город/страна и optional geolocation, без карты/marker/Maps SDK/API keys. Созданные Maps-зависимости/config/type удаляются. Открытая Phase11/Phase7/Design v2 acceptance сохраняется; Phase13 и commit/push/deploy/billing не разрешены. |
 
 Новый scope change записывается отдельной строкой с причиной, requirement IDs,
 влиянием на задачи/gaps и явным решением пользователя. Исторические результаты

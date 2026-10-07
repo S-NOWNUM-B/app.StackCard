@@ -4,7 +4,7 @@
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage Phase 11 in progress](https://raster.shields.io/badge/Stage-Phase_11_in_progress-111111?style=for-the-badge)
+![Stage Phase 12 in progress](https://raster.shields.io/badge/Stage-Phase_12_in_progress-111111?style=for-the-badge)
 ![Mobile + Web planned](https://raster.shields.io/badge/Mobile_%2B_Web-planned-FF0012?style=for-the-badge)
 
 </div>
@@ -31,12 +31,16 @@
 
 ## Статус и границы текущей работы
 
-**2026-10-07: Phase 11 — Media в работе**, по прямому поручению пользователя
-на локальной `dev`. Перед изменениями проверено: `dev` и `redesign/full-app`
+**2026-10-07: Phase 12 — Location в работе**, по прямому поручению пользователя
+на локальной `dev`, с явно изменённым scope: карта и marker исключены полностью.
+Город и страна вводятся вручную либо определяются опционально по действию
+пользователя и сохраняются после подтверждения. Открытая device/live приёмка
+Phase 11, полного Design v2 и Google/reset/iOS Phase 7 сохраняется.
+Phase 13 и далее, commit/push, deployment и billing upgrade не разрешены.
+
+Перед началом Phase 11 проверено: `dev` и `redesign/full-app`
 совпадали на `16ec4eda783e07a1e03ba606d3646f97700556fa`, рабочее дерево было чистым.
-Пауза функционального roadmap снята только для Phase 11; открытая приёмка
-полного Design v2 и Google/reset/iOS Phase 7 сохраняется. Следующие фазы,
-commit/push, deployment и billing upgrade этим поручением не разрешены.
+Пауза функционального roadmap снята поручениями Phase 11 и следующей Phase 12.
 
 История выполненных этапов и состояния перед этим поручением:
 
@@ -99,8 +103,9 @@ guest draft переносится только явно из Settings в пус
 меняют working draft; Save сохраняет его отдельно, публикация остаётся отдельным действием.
 Пользователь явно разрешил переход к Phase 8 при открытой приёмке Phase 7;
 это не означает завершения оставшихся auth сценариев. Phase 9 завершена;
-Phase 10 завершена; Phase 11 и последующие этапы требуют отдельного поручения.
-Основная разработка функций приостановлена перед Phase11. По D040 активна
+Phase 10 завершена; Phase 11 реализована с открытой приёмкой, следующая Phase 12
+разрешена без карты по поручению 2026-10-07. Прежняя остановка перед Phase11 —
+история, актуальный scope указан в начале документа. По D040 активна
 полная R7.1–R7.4 [Design v2](../redesign/README.md), source build/structural QA
 PASS D041, package awaiting_review;явная приёмка/DESIGN_READY pending;
 R8/R9 прямо разрешены на `redesign/full-app`. Независимые Flutter theme/shared
@@ -435,14 +440,15 @@ system theme и языковые настройки. Их детализация
   портфолио доступно только для чтения. Firestore и Storage Rules должны проверять
   ownership; draft, account data, contact requests и device tokens не становятся
   публичными вместе с портфолио.
-- Location выбирается с подтверждением пользователя. Карта и permission имеют
-  конкретную цель: указать местоположение профиля. Публично сохраняется безопасное
-  представление города/страны, например «Almaty, Kazakhstan», без точных GPS
-  coordinates. Нужно обработать denied, permanently denied и service disabled.
+- Location — подтверждённый город и страна, например «Almaty, Kazakhstan».
+  Ручной ввод доступен без разрешений; опциональное определение города запрашивает
+  геопозицию только по нажатию. Точные coordinates и адрес не сохраняются и не
+  передаются в public snapshot. Denied, permanently denied, service disabled
+  и ошибка определения города оставляют ручной ввод доступным.
 - Camera/gallery используются для avatar и project images. До upload нужны
   validation, compression/resize; для Storage — ограничения размера, разрешённые
   MIME types, access rules и стратегия очистки старых файлов.
-- Camera, maps, permissions и sharing реализуются с учётом конкретной платформы.
+- Camera, location permissions и sharing реализуются с учётом конкретной платформы.
   Web поддержит загрузку файлов и подходящий browser UX; MethodChannel и Kotlin
   относятся к Android. Полное равенство нативных возможностей клиентов не обещается.
 - Входящие данные, URL и contact form требуют validation. Защита от contact spam
@@ -646,7 +652,7 @@ DESIGN_READY/REDESIGN_DONE не установлены; commit/push/deploy не 
 Private schema не мигрирована; поддерживаемый UI перенесён частично.
 Проверки и ограничения — в [результатах R8/R9](../redesign/plan.md#фактический-перенос-поддерживаемого-ui-r8r9-d040);
 предыдущие цветовые правки и результаты R2 сохранены отдельно.
-Точка остановки функционального roadmap —
+Историческая точка остановки функционального roadmap до поручений 2026-10-07 —
 после Phase 10, перед Phase 11 Media; Google/reset/iOS приёмка Phase 7 остаётся
 открытой. Возврат к roadmap предлагается после пользовательской приёмки
 REDESIGN_DONE и требует отдельного поручения. Новые model/migration/media/account/
@@ -659,8 +665,8 @@ Phase 10 завершена. Предыдущее прямое поручени�
 audit, IA, design system и ключевые экраны по [redesign plan](../design/redesign-plan.md).
 Первый этап Figma выполнен; core flows/states и перенос Flutter/web остаются
 отдельными последующими шагами. История runtime-redesign выше сохраняется.
-Открытые Google/reset/iOS проверки Phase 7 сохранены; Phase 11–20 остаются планом и
-требуют отдельного поручения пользователя.
+Открытые Google/reset/iOS проверки Phase 7 сохранены; Phase 11 и Phase 12 разрешены
+отдельными поручениями 2026-10-07, Phase 13–20 остаются планом и требуют поручения.
 
 Чекбокс `- [x]` означает подтверждённый результат, `- [ ]` — оставшуюся задачу
 или непроверенный сценарий. При отметке проверки рядом фиксируются результат
@@ -682,7 +688,7 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 9 — Living Portfolio / Smart GitHub Sync | Завершена; импорт/review/ignore, overrides, совместимость draft и Android restart проверены |
 | Phase 10 — Portfolio Suggestions | Завершена; pure rules, объяснения ru/en, явные Preview/editor actions и Android-запуск проверены |
 | Phase 11 — Media | Реализована; 1013 Flutter/40 Rules/Android SDK PASS; полная device/live приёмка открыта |
-| Phase 12 — Location | Запланирована |
+| Phase 12 — Location | Реализована без карты; 1068 Flutter/2 native cases PASS; device geolocation/iOS приёмка открыта |
 | Phase 13a — Public shell | Запланирована |
 | Phase 13b — Auth и редактор | Запланирована |
 | Phase 13c — Public portfolio | Запланирована |
@@ -1487,29 +1493,79 @@ Phase 11 разрешена отдельным поручением 2026-10-07; 
   Save/restart, iOS. Android SDK тест не подменяет эти сценарии. Live Storage
   требует Blaze/созданный bucket; billing upgrade и deployment не выполнялись.
   Google/reset/iOS Phase 7 и полная Design v2 acceptance остаются открытыми.
-  Commit/push не выполнялись; переход к Phase 12 не разрешён.
+  По следующему поручению 2026-10-07 разрешена Phase 12; эта открытая приёмка
+  Phase 11 не считается завершённой при переходе.
 
 ### Phase 12 — Location
 
+**Изменение scope 2026-10-07:** по прямому решению пользователя карта, marker,
+Google Maps SDK и настройка Maps API исключены из проекта. Location остаётся
+обычным выбором города/страны с опциональным определением по геопозиции.
+Это изменение требований проекта, а не подтверждение соответствия исходному
+учебному пункту о карте.
+
 **Задачи**
 
-- [ ] Подключить geolocator и Google Maps к Profile Location Picker.
-- [ ] Получить геопозицию по действию пользователя, показать marker и дать
-  подтвердить местоположение на карте.
-- [ ] Обработать denied, permanently denied и service disabled; в публичное
-  представление передавать только выбранный город/страну без точных coordinates.
+- [x] Добавить ручной выбор города и страны в Profile Location Picker.
+- [x] Подключить geolocator и native reverse geocoding к действию
+  «Определить мой город»; результат редактируется и подтверждается пользователем.
+- [x] Обработать denied, permanently denied и service disabled; в публичное
+  представление передавать только выбранный город/страну без точных coordinates
+  и адреса. При timeout или ошибке определения города оставить ручной ввод.
 
 **Проверки и приёмка**
 
-- [ ] Геопозиция запрашивается по действию пользователя; marker показан,
-  выбранное местоположение подтверждается и сохраняется.
+- [x] Ручной выбор и отмена работают без геолокации и без запросов разрешений:
+  widget checks подтверждают нулевой запрос при открытии/manual/cancel;
+  Android manual picker → confirm → Hive reopen/public payload —1 PASS.
+- [ ] Геопозиция запрашивается только по действию пользователя;
+  город/страна подтверждаются, Apply меняет форму/draft, Save сохраняет результат.
 - [ ] Denied, permanently denied и service disabled проверены;
   отказ не блокирует editor.
-- [ ] Public представление содержит только выбранный город/страну;
-  точные GPS coordinates не раскрываются.
+- [x] Public представление содержит только выбранный город/страну;
+  точные GPS coordinates и адрес не раскрываются; скрытый Location исключён.
 
 **Готово, когда:** location выбирается и сохраняется, отказ не блокирует editor,
 публичное портфолио не раскрывает точную геопозицию.
+
+**Реализация и проверки 2026-10-07:**
+
+- Google Maps packages и transitive Maps dependencies удалены из manifest/lockfile;
+  Maps enable flag и подготовленный coordinate contract удалены. Карты/marker/API
+  configuration не входят в активные требования. Geolocator/native geocoding
+  остаются только для optional «Определить мой город».
+- `features/location` возвращает `PortfolioPlace` без координат/адреса; SDK data
+  использует только locality/country. Android — coarse permission, iOS — When In Use;
+  fix20s/geocoding15s ограничены, stream/background updates отсутствуют.
+- Picker редактирует/подтверждает город/страну, legacy `locationText` сохраняется.
+  Apply и Save отдельны; manual edits/Cancel/UID/repository transitions не получают
+  поздний результат. Public projection исключает скрытый Location.
+- Полный `flutter test --no-pub --reporter expanded` — **1068/1068 PASS**, 33s,
+  **55 новых cases**: data28, UI23, persistence/public4. Focused финальный UI/Builder/
+  media/localization —65/65 PASS. Проверены explicit request, typed failures,
+  settings/retry, late results, same-repository UID change, Apply/Save,
+  ru/en,320×568/568×320,text scale2 и keyboard.
+- `flutter analyze --no-pub` — **0 issues**, 4.3s; format212files/0changes,
+  `git diff --check` clean. Source integrity checker PASS, documentation validator
+  PASS. Dark/Light390×844 с реальными Manrope/Noto отрисованы и просмотрены,
+  без overflow; headless preview не доказывает native visual parity.
+- Android `integration_test/location_runtime_test.dart`, `serviceDisabled` —
+  **1 PASS**, 3s; actual SDK отказ проверен. Прежний master location switch восстановлен.
+  Debug APK собран81.3s. Tests используют отдельный Hive test storage и
+  `--no-uninstall`, ordinary account/draft не очищаются.
+- Android `manual` — **1 PASS**, 15s: настоящий picker → ручной город/страна →
+  подтверждение → Save → Hive reopen → city-only public payload, при coarse
+  permission=false. После закрытия зависшего Google Play Services dialog и
+  перезапуска test runner сценарий выполнен; process restart этим тестом не доказан.
+- Обычный `main` восстановлен через `flutter run --no-pub -d emulator-5554
+  --no-resident` — exit0. Состояния эмулятора восстановлены: coarse permission=false,
+  master Location=true. Commit/push в этом этапе не выполнялись.
+- **Открыто:** успешный native geolocation/reverse geocoding и системные denied/
+  permanently denied flows на устройстве. `granted` на API37.2 эмуляторе завершился
+  timeout20s; Google Play Services Location Accuracy dialog затем дал ANR,
+  поэтому успешный fix не подтверждён. Fine permission ради эмулятора не добавлялась.
+  iOS build/runtime не проверены: выбран только CommandLineTools, полного Xcode нет.
+  Открытые Phase7/Phase11/Design v2 gates сохраняются; Phase13 не начата.
 
 ### Phase 13 — Website и web editor
 
@@ -1752,7 +1808,7 @@ browser push автоматически в scope не добавляется.
 App Distribution или deploy web требует запроса пользователя; iOS-публикация
 не заявляется выполненной по одному Android release.
 
-**Phase 0–6 и Phase 8–10 завершены. Google/reset/iOS приёмка Phase 7 остаётся открытой. Phase 11 в работе по поручению 2026-10-07; Phase 12 и далее требуют отдельного поручения.**
+**Phase 0–6 и Phase 8–10 завершены. Google/reset/iOS приёмка Phase 7 и device/live приёмка Phase 11 остаются открытыми. Phase 12 в работе без карты по поручению 2026-10-07; Phase 13 и далее требуют отдельного поручения.**
 
 ---
 
@@ -1775,7 +1831,7 @@ App Distribution или deploy web требует запроса пользов�
 | 6 — Persistence | Phase 5: настройки, кэш и доступ без сети; локальный Builder развивается на Phase 6. |
 | 7 — Navigation/adaptive UI | Phases 1 и 7: routes/parameters/nested navigation, auth redirect после подключения auth, телефон/планшет и обе ориентации. |
 | 8 — Firebase/РК1 | Phases 7–8 и 14: email/Google, Firestore, Rules, FCM на устройстве; материалы текущих заданий недель 1–7. |
-| 9 — Maps/location | Phase 12: карта, marker, геопозиция и отказ в permissions; use-case Profile Location. |
+| 9 — Location | Phase 12: ручной город/страна, опциональная геопозиция, подтверждение и отказ в permissions; карта исключена по решению владельца проекта 2026-10-07. |
 | 10 — Performance | Phase 16 и предыдущие API/media фазы: lazy lists, pagination, image cache, DevTools screenshots до/после. |
 | 11 — Native | Phases 11 и 15: camera/gallery и собственный Kotlin MethodChannel на устройстве. |
 | 12 — CI/CD | Phase 18: зелёный pipeline, build/analyze/tests на push и APK artifact. |

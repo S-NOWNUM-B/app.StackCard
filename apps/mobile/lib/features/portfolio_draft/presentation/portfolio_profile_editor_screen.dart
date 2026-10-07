@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
+import '../../../shared/widgets/stackcard_button.dart';
+import '../../auth/auth.dart';
+import '../../location/location.dart';
 import '../../media/media.dart';
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_draft_repository.dart';
@@ -115,6 +118,46 @@ class _PortfolioProfileEditorScreenState
     closeBuilderEditor(context);
   }
 
+  Future<void> _pickLocation() async {
+    final repository = ref.read(portfolioDraftRepositoryProvider);
+    final account = ref.read(accountAuthRepositoryProvider);
+    final uid = account == null
+        ? null
+        : ref.read(accountSessionProvider).value?.uid;
+    final guest = ref.read(guestAccessProvider);
+    bool sameOwner() {
+      if (!identical(account, ref.read(accountAuthRepositoryProvider))) {
+        return false;
+      }
+      if (account == null) return true;
+      final session = ref.read(accountSessionProvider);
+      return session.hasValue &&
+          !session.isLoading &&
+          !session.hasError &&
+          session.value?.uid == uid &&
+          ref.read(guestAccessProvider) == guest;
+    }
+
+    bool active() =>
+        mounted &&
+        sameOwner() &&
+        identical(repository, ref.read(portfolioDraftRepositoryProvider)) &&
+        identical(_initialRepository, repository) &&
+        ref.read(portfolioDraftControllerProvider).canEdit;
+    if (!active()) return;
+    final result = await Navigator.of(context).push<PortfolioPlace>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => PortfolioLocationPicker(
+          currentLocation: _controllers!['locationText']!.text,
+          isActive: active,
+        ),
+      ),
+    );
+    if (!active() || result == null || !result.isValid) return;
+    _controllers!['locationText']!.text = result.displayText;
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(portfolioDraftControllerProvider);
@@ -151,7 +194,19 @@ class _PortfolioProfileEditorScreenState
                   ),
                   const SizedBox(height: StackCardSpacing.xl),
                   BuilderFields(
-                    fields: _fields!,
+                    fields: _fields!.take(5).toList(),
+                    controllers: _controllers!,
+                  ),
+                  const SizedBox(height: StackCardSpacing.sm),
+                  StackCardButton(
+                    key: const ValueKey('profile_pick_location'),
+                    label: context.strings.tr('location.pick'),
+                    icon: Icons.location_city_rounded,
+                    onPressed: _pickLocation,
+                  ),
+                  const SizedBox(height: StackCardSpacing.lg),
+                  BuilderFields(
+                    fields: _fields!.skip(5).toList(),
                     controllers: _controllers!,
                     onSubmit: _apply,
                   ),

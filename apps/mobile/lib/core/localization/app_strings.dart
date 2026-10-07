@@ -11,6 +11,7 @@ import 'auth_strings.dart';
 import 'sync_strings.dart';
 import 'suggestion_strings.dart';
 import 'media_strings.dart';
+import 'location_strings.dart';
 
 class AppStrings {
   const AppStrings(this.locale);
@@ -272,6 +273,7 @@ const russianAppStrings = <String, String>{
   ...russianSyncStrings,
   ...russianSuggestionStrings,
   ...russianMediaStrings,
+  ...russianLocationStrings,
   ...russianDraftStrings,
   ...builderRussianStrings,
   ...builderFormRussianStrings,
@@ -469,6 +471,7 @@ const englishAppStrings = <String, String>{
   ...englishSyncStrings,
   ...englishSuggestionStrings,
   ...englishMediaStrings,
+  ...englishLocationStrings,
   ...englishDraftStrings,
   ...builderEnglishStrings,
   ...builderFormEnglishStrings,

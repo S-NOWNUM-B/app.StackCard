@@ -5,7 +5,7 @@
 **Процесс работы, проверки и правила внесения согласованных изменений**
 
 ![Contributing guide](https://raster.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
-![Scope Phase 10 complete](https://raster.shields.io/badge/Scope-Phase_10_complete-FF0012?style=for-the-badge)
+![Scope Phase 12 in progress](https://raster.shields.io/badge/Scope-Phase_12_in_progress-FF0012?style=for-the-badge)
 
 </div>
 
@@ -33,8 +33,10 @@ Google flow, полный password reset и iOS приёмка остаются 
 Phase 8 добавила local-first sync и подготовила atomic publication repository;
 Phase 9 завершена: явный GitHub import/review/ignore сохраняет ручные overrides;
 Phase 10 завершена: детерминированные подсказки объясняют причины и явные действия;
+Phase 11 реализована с открытой device/live приёмкой; Phase 12 разрешена без карты,
+с ручным городом/страной и optional geolocation.
 статус и результаты проверок находятся в
-[product spec](docs/product/product-spec.md#phase-10--portfolio-suggestions).
+[product spec](docs/product/product-spec.md#статус-и-границы-текущей-работы).
 Продуктовые функции вводятся последовательно по
 [roadmap](docs/product/product-spec.md#roadmap),
 переход к следующей фазе требует подтверждения пользователя.
@@ -491,6 +493,45 @@ flutter test integration_test/firestore_runtime_test.dart -d emulator-5554 --no-
 iOS acceptance — разные проверки; результаты не заменяют друг друга.
 Prepared publication repository не означает наличия public UI или выполненной
 публикации портфолио пользователя.
+
+### Location и native acceptance
+
+Phase 12 использует ручной город/страну и optional geolocator/native geocoding,
+без карты, Maps API keys и Maps billing. Контракт — в
+[architecture](docs/architecture/architecture.md#выбор-города-и-страны--phase-12).
+Android manifest запрашивает только `ACCESS_COARSE_LOCATION`, iOS Info.plist —
+`NSLocationWhenInUseUsageDescription`; background updates не включаются.
+При отказе, timeout, отсутствии locality/country или сбое native geocoder
+работает ручной ввод. Native geocoding может требовать сеть; это не поиск
+по каталогу городов, не гарантированный offline resolver и не отдельный HTTP API.
+
+macOS — zsh/bash, cwd `apps/mobile`, focused checks:
+
+```zsh
+flutter test --no-pub test/location
+```
+
+Opt-in [location_runtime_test.dart](apps/mobile/integration_test/location_runtime_test.dart)
+проверяет настоящий SDK и, для granted, отдельный Hive test storage после reopen
+и city-only public projection. Обычные account/draft не очищаются;
+`--no-uninstall` сохраняет данные приложения. До запуска подготовить состояние
+permissions/location services на dev device. `granted` требует разрешение,
+location services, доступный fix и native geocoder; `serviceDisabled` — выключенные
+services; `denied` — отказ в появившемся системном dialog; `permanentlyDenied` —
+запрет в OS. Не подменять отсутствующий native fix mocked координатами.
+
+```zsh
+flutter test --no-pub integration_test/location_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_LOCATION_ACCEPTANCE=true --dart-define=LOCATION_SCENARIO=manual
+flutter test --no-pub integration_test/location_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_LOCATION_ACCEPTANCE=true --dart-define=LOCATION_SCENARIO=granted
+flutter test --no-pub integration_test/location_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_LOCATION_ACCEPTANCE=true --dart-define=LOCATION_SCENARIO=serviceDisabled
+```
+
+После проверки восстановить прежние OS settings. SDK test не подтверждает
+системный permission dialog, работу всего picker или process restart;
+widget/unit checks и Android/iOS device acceptance фиксируются отдельно в product spec.
+`manual` проверяет настоящий picker без вызова геолокации, подтверждение и
+city-only Hive/public payload. После integration runner вернуть обычный entrypoint
+через `flutter run --no-pub -d emulator-5554 --no-resident`, без uninstall.
 
 ### Media Storage и native acceptance
 

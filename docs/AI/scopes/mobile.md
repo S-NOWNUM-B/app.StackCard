@@ -16,6 +16,8 @@ plain Resume и legacy Home/Portfolio composition сохранены; новый
 multiple documents, новая model/account/publication/web ещё не реализованы.
 Phase 11 разрешена 2026-10-07: private media добавляются в текущий singleton draft;
 это не завершение полной Design v2 acceptance.
+Следующая Phase 12 разрешена с ручным городом/страной и optional geolocation;
+карта и Google Maps исключены по прямому решению пользователя.
 Конкретный [prerequisite scope](../../redesign/prerequisites.md) — proposed,
 не разрешение backend/migration. Current status хранится в product spec/plan;
 headless950PASS не означает полный REDESIGN_DONE или native visual acceptance.
@@ -242,6 +244,14 @@ headless950PASS не означает полный REDESIGN_DONE или native v
   при замене/ACK: offline/LWW может ещё ссылаться на них. Public projection
   исключает media fields, publication не вызывается. Hive writer v4/private
   cloud writer3 читают legacy versions без read-time rewrite; downgrade запрещён.
+- Location: [public API](../../../apps/mobile/lib/features/location/location.dart) и
+  [контракт](../../architecture/architecture.md#выбор-города-и-страны--phase-12).
+  Picker подтверждает город/страну, manual input работает без permissions.
+  Одно определение города вызывается явно; SDK/GPS/native geocoding — только data,
+  наружу возвращается `PortfolioPlace`, без координат/адреса и background updates.
+  Apply/Save отдельны; manual edits/Cancel/UID change защищены от позднего ответа.
+  Существующее `locationText` и схемы сохраняются; hidden Location исключён public
+  projection. Не возвращать карту, Maps SDK/API keys или billing в этот scope.
 - Account sync: [pure contracts](../../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_sync.dart),
   [local-first repository](../../../apps/mobile/lib/features/portfolio_draft/data/synced_portfolio_draft_repository.dart),
   [Hive metadata](../../../apps/mobile/lib/features/portfolio_draft/data/hive_portfolio_sync_metadata_store.dart)

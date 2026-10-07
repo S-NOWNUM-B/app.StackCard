@@ -30,6 +30,8 @@
 	<string>Выберите фото профиля или проекта с камеры для вашего портфолио.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Выберите изображение профиля или проекта из вашей галереи.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>По вашему запросу определим город и страну для профиля. Точные координаты не сохраняются.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
