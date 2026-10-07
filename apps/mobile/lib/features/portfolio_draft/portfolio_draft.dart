@@ -1,6 +1,7 @@
 export 'domain/portfolio_draft.dart';
 export 'domain/portfolio_content.dart';
 export 'domain/portfolio_document.dart';
+export 'domain/portfolio_document_base_review.dart';
 export 'domain/portfolio_completion.dart';
 export 'domain/portfolio_validation.dart';
 export 'domain/portfolio_draft_repository.dart';

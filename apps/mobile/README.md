@@ -238,6 +238,11 @@ Resume creation состоит из пяти шагов: профиль, кон�
 Начальные значения берутся из общей базы Settings (`/settings/profile`,
 `/settings/contacts`). Документ хранит свой snapshot секций: изменение роли в
 Resume не меняет базу, а изменение базы не обновляет уже созданный Resume.
+«Обновление из профиля» в редакторе сравнивает сохранённую базу с последним
+просмотренным снимком. Выберите отдельные изменения: собственные значения
+по умолчанию сохраняются. Apply меняет только buffer, Save записывает результат.
+Cancel ничего не применяет; legacy документы без снимка требуют явного выбора
+каждой замены. Изменения несохранённой базы не предлагаются.
 Проекты выбираются по ID из одной Library; порядок/visible/featured принадлежат
 документу. Удаление связи сохраняет Project. Удаление Project убирает его связи;
 удаление Resume очищает ссылку из Portfolio. Документы можно дублировать и
@@ -253,7 +258,7 @@ Save документа/проекта/базы сохраняет выбран�
 Legacy Builder (`/portfolio/builder`) и plain `resumeText` остаются доступны.
 Явный импорт старого draft из document library создаёт legacy-portfolio и, при
 непустом Resume text, legacy-resume; текст/notes/source metadata сохраняются.
-Hive writer5 читает1–5, cloud writer4 —1–4 без eager rewrite. Save/ACK пишет текущую
+Hive writer6 читает1–6, cloud writer5 —1–5 без eager rewrite. Save/ACK пишет текущую
 версию после raw owner backup; corrupt/unknown блокирует перезапись.
 Подробный [контракт](../../docs/architecture/architecture.md#общая-база-и-независимые-документы).
 

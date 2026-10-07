@@ -112,10 +112,62 @@ Map<String, Object?> _encodePortfolioDocument(PortfolioDocument document) {
         )
         .toList(),
     'attachedResumeId': document.attachedResumeId,
+    if (document.baseSnapshot != null)
+      'baseSnapshot': _encodeBaseSnapshot(document.baseSnapshot!),
   };
 }
 
-PortfolioDocument _decodePortfolioDocument(Object? raw) {
+Map<String, Object?> _encodeBaseSnapshot(PortfolioContent snapshot) {
+  if (snapshot != developerProfileData(snapshot) ||
+      validatePortfolioContent(snapshot).isNotEmpty) {
+    throw const FormatException('Некорректный snapshot общей базы');
+  }
+  final encoded = encodePortfolioContent(snapshot, includeDocuments: false);
+  return {
+    for (final key in ['profile', 'skills', 'experience', 'education', 'links'])
+      key: encoded[key],
+  };
+}
+
+PortfolioContent _decodeBaseSnapshot(Object? raw) {
+  final json = _map(raw);
+  _fields(json, {'profile', 'skills', 'experience', 'education', 'links'});
+  _fields(_map(json['profile']), {
+    'name',
+    'username',
+    'headline',
+    'bio',
+    'locationText',
+    'avatarUrl',
+    'avatarPath',
+  });
+  for (final key in ['skills', 'experience', 'education', 'links']) {
+    final fields = switch (key) {
+      'skills' => {'id', 'name'},
+      'experience' => {'id', 'role', 'organization', 'period', 'description'},
+      'education' => {
+        'id',
+        'institution',
+        'qualification',
+        'period',
+        'description',
+      },
+      _ => {'id', 'label', 'url', 'kind'},
+    };
+    for (final item in _list(json, key)) {
+      _fields(_map(item), fields);
+    }
+  }
+  return decodePortfolioContent({
+    ...encodePortfolioContent(PortfolioContent(), includeDocuments: false),
+    ...json,
+  }, allowDocuments: false);
+}
+
+PortfolioDocument _decodePortfolioDocument(
+  Object? raw, {
+  required bool allowBaseSnapshot,
+}) {
   final item = _map(raw);
   _fields(item, {
     'id',
@@ -126,6 +178,7 @@ PortfolioDocument _decodePortfolioDocument(Object? raw) {
     'content',
     'projects',
     'attachedResumeId',
+    if (allowBaseSnapshot && item.containsKey('baseSnapshot')) 'baseSnapshot',
   });
   final rawSnapshot = _map(item['content']);
   _fields(rawSnapshot, {
@@ -171,6 +224,9 @@ PortfolioDocument _decodePortfolioDocument(Object? raw) {
       );
     }).toList(),
     attachedResumeId: _nullableString(item, 'attachedResumeId'),
+    baseSnapshot: item['baseSnapshot'] == null
+        ? null
+        : _decodeBaseSnapshot(item['baseSnapshot']),
   );
 }
 
@@ -178,6 +234,7 @@ PortfolioContent decodePortfolioContent(
   Object? raw, {
   bool allowMedia = true,
   bool allowDocuments = true,
+  bool allowBaseSnapshot = true,
 }) {
   final json = _map(raw);
   if (!allowDocuments && json.containsKey('documents')) {
@@ -291,7 +348,14 @@ PortfolioContent decodePortfolioContent(
           }).toList(),
     documents: !json.containsKey('documents')
         ? const []
-        : _list(json, 'documents').map(_decodePortfolioDocument).toList(),
+        : _list(json, 'documents')
+              .map(
+                (raw) => _decodePortfolioDocument(
+                  raw,
+                  allowBaseSnapshot: allowBaseSnapshot,
+                ),
+              )
+              .toList(),
   );
   if (validatePortfolioContent(content).isNotEmpty) {
     throw const FormatException('Некорректный Builder content');

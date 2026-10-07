@@ -84,6 +84,39 @@ class _AppStringsDelegate extends LocalizationsDelegate<AppStrings> {
 }
 
 const russianAppStrings = <String, String>{
+  'documentEditor.baseReview': 'Обновление из профиля',
+  'documentEditor.baseReviewStale':
+      'База или документ изменились. Откройте обновления ещё раз.',
+  'baseReview.title': 'Обновление из профиля',
+  'baseReview.intro': 'Выберите изменения общей базы для этого документа. Локальные правки останутся, пока вы не выберете их замену.',
+  'baseReview.noBaseline': 'Для этого документа ещё нет сохранённой версии общей базы. Все изменения выключены: выберите только те, которые хотите перенести.',
+  'baseReview.current': 'В документе',
+  'baseReview.incoming': 'Из общей базы',
+  'baseReview.localOverride': 'Есть локальная правка',
+  'baseReview.select': 'Перенести изменение',
+  'baseReview.apply': 'Применить',
+  'baseReview.cancel': 'Отмена',
+  'baseReview.back': 'Назад',
+  'baseReview.saveHint':
+      'Изменения попадут в редактор. Сохраните документ отдельно.',
+  'baseReview.emptyTitle': 'Документ актуален',
+  'baseReview.emptyHint':
+      'В общей базе нет новых изменений для этого документа.',
+  'baseReview.emptyValue': 'Не заполнено',
+  'baseReview.removed': 'Удалено из общей базы',
+  'baseReview.missing': 'Не добавлено в документ',
+  'baseReview.ownerChanged':
+      'Сеанс изменился. Вернитесь к документу в текущем аккаунте.',
+  'baseReview.field.name': 'Имя',
+  'baseReview.field.username': 'Имя пользователя',
+  'baseReview.field.headline': 'Профессиональная роль',
+  'baseReview.field.bio': 'О себе',
+  'baseReview.field.locationText': 'Город и страна',
+  'baseReview.field.avatar': 'Фото профиля',
+  'baseReview.field.skills': 'Навык',
+  'baseReview.field.experience': 'Опыт работы',
+  'baseReview.field.education': 'Образование',
+  'baseReview.field.links': 'Контакт или ссылка',
   "project.importGitHub": "Импорт из GitHub",
   "project.create": "Создать проект",
   "project.emptyTitle": "Пока нет проектов",
@@ -285,6 +318,39 @@ const russianAppStrings = <String, String>{
 };
 
 const englishAppStrings = <String, String>{
+  'documentEditor.baseReview': 'Profile updates',
+  'documentEditor.baseReviewStale':
+      'The shared profile or document changed. Open profile updates again.',
+  'baseReview.title': 'Update from profile',
+  'baseReview.intro': 'Choose shared profile changes for this document. Local edits stay until you choose to replace them.',
+  'baseReview.noBaseline': 'This document has no saved shared profile version yet. All changes are unchecked: choose only what you want to bring in.',
+  'baseReview.current': 'In this document',
+  'baseReview.incoming': 'From shared profile',
+  'baseReview.localOverride': 'Locally edited',
+  'baseReview.select': 'Bring in this change',
+  'baseReview.apply': 'Apply',
+  'baseReview.cancel': 'Cancel',
+  'baseReview.back': 'Back',
+  'baseReview.saveHint':
+      'Changes will appear in the editor. Save the document separately.',
+  'baseReview.emptyTitle': 'Document is up to date',
+  'baseReview.emptyHint':
+      'The shared profile has no new changes for this document.',
+  'baseReview.emptyValue': 'Not filled in',
+  'baseReview.removed': 'Removed from shared profile',
+  'baseReview.missing': 'Not added to this document',
+  'baseReview.ownerChanged':
+      'Your session changed. Return to the document in your current account.',
+  'baseReview.field.name': 'Name',
+  'baseReview.field.username': 'Username',
+  'baseReview.field.headline': 'Professional role',
+  'baseReview.field.bio': 'About',
+  'baseReview.field.locationText': 'City and country',
+  'baseReview.field.avatar': 'Profile photo',
+  'baseReview.field.skills': 'Skill',
+  'baseReview.field.experience': 'Experience',
+  'baseReview.field.education': 'Education',
+  'baseReview.field.links': 'Contact or link',
   "project.importGitHub": "Import from GitHub",
   "project.create": "Create project",
   "project.emptyTitle": "No projects yet",

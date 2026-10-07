@@ -366,7 +366,7 @@ snapshot restore, очередь записей/retry, ru/en UI и увелич�
 `test/portfolio_draft_repository_test.dart`, `test/portfolio_draft_controller_test.dart`
 и `test/portfolio_draft_widget_test.dart` проверяют saved notes, revisions,
 сохранность ввода при ошибках, unknown schema и экран локального draft.
-Builder domain/repository tests проверяют validation/completion, schema v1/v2/v3/v4→v5
+Builder domain/repository tests проверяют validation/completion, schema v1–v5→v6
 и сохранность private notes/documents; controller/forms/preview/integration tests проверяют
 CRUD, рабочее состояние, сохранение и единые проекции. Визуальные проверки
 Builder находятся в `test/portfolio_builder_visual_test.dart`.
@@ -541,7 +541,7 @@ Phase 11 использует `features/media`, Storage paths в private draft �
 bucket, но это само по себе не доказывает его существование. Billing upgrade
 и deployment не выполняются автоматически. Перед live запуском после отдельного
 разрешения должны быть deployed и Storage Rules, и обновлённые Firestore Rules
-(private schema 4). Старые writers после нового schema update получат отказ.
+(private schema 5). Старые writers после нового schema update получат отказ.
 
 macOS — zsh/bash, cwd `firebase`, для локальной проверки без billing:
 
@@ -584,6 +584,18 @@ cached_network_image. Потерянный picker result после process deat
 best effort; прежние saved paths сохраняются для offline/LWW, server GC нет.
 
 ### Остальные focused и visual проверки
+
+Для review общей базы, macOS zsh/bash, cwd `apps/mobile`:
+
+```zsh
+flutter test --no-pub test/portfolio_document_base_review_test.dart test/portfolio_document_base_review_widget_test.dart test/portfolio_document_editor_test.dart test/portfolio_documents_persistence_test.dart
+```
+
+Проверяются сохранение local overrides и порядка, Apply/Cancel/Save/reopen,
+legacy без baseline, raw backups, UID transition и stale captured base. Rules
+проверяются отдельной командой `npm run test:rules` из `firebase`, включая все
+20 документов с baseline. Headless результаты не доказывают visual/native или
+live sync нового payload; действующее no-preview/run ограничение сохраняется.
 
 Для сфокусированной проверки storage и настроек из той же директории:
 

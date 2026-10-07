@@ -47,7 +47,7 @@ void main() {
       );
       expect(
         (jsonDecode(box.get('draft') as String) as Map)['schemaVersion'],
-        5,
+        HivePortfolioDraftRepository.schemaVersion,
       );
       await reopen();
       final restored = (await HivePortfolioDraftRepository(box).read())!;
@@ -256,7 +256,7 @@ void main() {
     expect((await HivePortfolioDraftRepository(box).read())!.content, isNull);
   });
 
-  test('cloud writer4 roundtrip validates every snapshot owner and legacy no-doc schemas', () {
+  test('cloud writer5 roundtrip validates every snapshot owner and legacy no-doc schemas', () {
     final workspace = _workspace(now);
     final draft = CloudPortfolioDraft(
       ownerUid: 'owner',
@@ -266,7 +266,7 @@ void main() {
       content: workspace,
     );
     final encoded = encodeCloudPortfolioDraft(draft);
-    expect(encoded['schemaVersion'], 4);
+    expect(encoded['schemaVersion'], 5);
     final stored = {...encoded, 'updatedAt': Timestamp.fromDate(now)};
     expect(
       decodeCloudPortfolioDraft(stored, ownerUid: 'owner').content,
@@ -284,7 +284,7 @@ void main() {
     expect(
       () => decodeCloudPortfolioDraft({
         ...stored,
-        'schemaVersion': 5,
+        'schemaVersion': 6,
       }, ownerUid: 'owner'),
       throwsA(_syncFailure),
     );

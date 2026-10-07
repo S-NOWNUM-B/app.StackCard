@@ -270,7 +270,7 @@ backend/media/web и не автоматически начатый roadmap. R8/
 |:---|:---|
 | GAP-DATA-01 | Singleton → DeveloperProfile/Projects Library/multiple Resume/Portfolio; отдельное согласование модели и migration. Сохранить notes, resumeText, curated projects, source metadata и UID data; миграцию проверить reopen/compatibility tests |
 | GAP-DATA-02 | Attachment order/featured/visibility, create+attach/remove-only-relation. Проверить reuse одного Project в нескольких outputs и сохранность library/других links при remove |
-| GAP-DATA-03 | Предложение profile data новым outputs и explicit review обновлений существующих; selections/local overrides. Проверить, что base edit не меняет старый документ или published snapshot незаметно |
+| GAP-DATA-03 | Private mobile: new-doc seed и captured baseline review реализованы, выбранные fields/stable-ID items применяются явно, local overrides/order сохраняются. Save отдельный; legacy без baseline не имеет автозамен. Public/native acceptance остаётся открытой; результаты в product spec |
 | GAP-MEDIA-01 | Gallery/camera/photo replacement/removal, upload/retry, MIME/size, cleanup и Storage Rules — основная Phase 11. Проверить permissions, no-photo, preview и owner/public access |
 | GAP-PUB-01 | Public Resume и несколько Portfolio snapshots; explicit publish/unpublish UI, постоянные Copy/Open/Share и dirty-published state. Основа transaction есть; новое document addressing и public readers отсутствуют |
 | GAP-PUB-02 | Глубокая server validation/public projection для нового data contract; см. раздел ниже. Проверить direct SDK writes, hidden/private fields и отсутствие утечки через nested arrays |

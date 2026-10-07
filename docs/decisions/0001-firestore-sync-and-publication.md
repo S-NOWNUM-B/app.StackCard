@@ -7,6 +7,20 @@ Hive v3/private Firestore schema 2, public schema 1 сохраняется. Со
 и защита от downgrade описаны в [ADR 0002](0002-github-import-and-review.md);
 ownership, LWW, outbox и atomic publication этого ADR остаются действующими.
 
+Уточнение 2026-10-07: private documents используют Hive6/cloud5 для nullable
+baseSnapshot (только profile/skills/experience/education/links). Legacy readers
+сохраняют отсутствие baseline; старые версии не принимают этот новый ключ.
+Writer опускает ключ при null; non-null baseline сериализуется в пять секций.
+Cloud Rules проверяют ownership обоих canonical avatar paths одним matcher
+с буквальным экранированием UID, сохраняя лимит 20 документов; подробная форма
+baseline принадлежит codec. Explicit null в новом cloud write отклоняется.
+До upgrade сохраняется raw owner backup, чтение не переписывает запись.
+Review применяет выбранные изменения только к buffer документа, следующий
+scoped Save записывает snapshot и baseline вместе. Captured owner/base/input
+проверяются перед Apply; sync/ACK/LWW остаются прежними. Public schema1 не включает
+documents/baseSnapshot; trusted multiple-document publication ещё не введена.
+Подробный [контракт review](../architecture/architecture.md#общая-база-и-независимые-документы).
+
 ## Контекст
 
 Phase 8 разрешена отдельным поручением пользователя. Android email authentication
@@ -99,3 +113,17 @@ Firestore Emulator Rules tests: owner/foreign/anonymous, private/public separati
 username race, atomic publish/rename/unpublish и отказ partial writes.
 Native Android: реальные SDK offline/reconnect, server ACK, второй клиент и restart;
 запуск без удаления имеющихся app data. Native iOS проверяется при доступном toolchain.
+
+## План публикации независимых документов
+
+Roadmap 2026-10-08 требует публикации выбранного Resume/Portfolio по permanent
+public ID. Действующий prepared `publish(username, content)` остаётся legacy
+контрактом до отдельной реализации и безопасной миграции; private schema5 не
+превращает этот adapter в multioutput publication.
+
+Trusted recursive validation/projection, selected public contacts/sections,
+public media/attached Resume policy, unknown operation recovery и delete
+anti-resurrection определяются до visitor access. Минимальный public web reader
+может читать публикации mobile до полного owner web editor. Обновление roadmap
+не меняет current LWW/sync/private-public правила этого ADR и не разрешает deploy.
+Задачи и приёмка — в [Phase 13](../product/product-spec.md#phase-13--website-и-web-editor).

@@ -13,12 +13,15 @@ import '../../../shared/widgets/stackcard_icon.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../../../shared/widgets/stackcard_technology_badge.dart';
 import '../../media/media.dart';
+import '../../auth/auth.dart';
 import '../domain/portfolio_content.dart';
+import '../domain/portfolio_document_base_review.dart';
 import '../domain/portfolio_draft_repository.dart';
 import '../portfolio_draft_providers.dart';
 import 'builder_editor_widgets.dart';
 import 'portfolio_content_view.dart';
 import 'portfolio_draft_controller.dart';
+import 'portfolio_document_base_review_screen.dart';
 
 enum _DocumentSection {
   profile,
@@ -52,6 +55,8 @@ class _PortfolioDocumentEditorScreenState
   PortfolioDraftRepository? _repository;
   PortfolioDocument? _expected;
   PortfolioContent? _content;
+  PortfolioContent? _baseSnapshot;
+  (Object?, String?, bool, bool)? _initialOwner;
   Map<String, TextEditingController>? _fields;
   List<PortfolioProjectAttachment> _projects = [];
   List<PortfolioProject> _newProjects = [];
@@ -94,8 +99,12 @@ class _PortfolioDocumentEditorScreenState
 
   void _initialize(PortfolioContent workspace, PortfolioDocument? document) {
     _repository = ref.read(portfolioDraftRepositoryProvider);
+    _initialOwner = _owner();
     _expected = document;
     _content = document?.content ?? seedDocumentContent(workspace);
+    _baseSnapshot = document == null
+        ? developerProfileData(workspace)
+        : document.baseSnapshot;
     _projects = [...?document?.projects];
     _resumeId = document?.attachedResumeId;
     _id =
@@ -127,12 +136,29 @@ class _PortfolioDocumentEditorScreenState
 
   bool get _sameOwner =>
       !_ownerInvalid &&
+      _initialOwner == _owner() &&
       identical(_repository, ref.read(portfolioDraftRepositoryProvider));
+
+  (Object?, String?, bool, bool) _owner({bool watch = false}) {
+    final account = watch
+        ? ref.watch(accountAuthRepositoryProvider)
+        : ref.read(accountAuthRepositoryProvider);
+    if (account == null) return (null, null, true, true);
+    final session = watch
+        ? ref.watch(accountSessionProvider)
+        : ref.read(accountSessionProvider);
+    final guest = watch
+        ? ref.watch(guestAccessProvider)
+        : ref.read(guestAccessProvider);
+    final ready = session.hasValue && !session.isLoading && !session.hasError;
+    return (account, ready ? session.value?.uid : null, ready && guest, ready);
+  }
 
   void _invalidateOwner() {
     _ownerInvalid = true;
     _content = null;
     _expected = null;
+    _baseSnapshot = null;
     _projects = [];
     _newProjects = [];
     _resumeId = null;
@@ -175,6 +201,7 @@ class _PortfolioDocumentEditorScreenState
     createdAt: _createdAt!,
     updatedAt: DateTime.now().toUtc(),
     content: _buffer(),
+    baseSnapshot: _baseSnapshot,
     projects: _projects,
     attachedResumeId: _resumeId,
   );
@@ -353,10 +380,62 @@ class _PortfolioDocumentEditorScreenState
     }
   }
 
+  Future<void> _reviewBase() async {
+    if (!_sameOwner || _saving || _mediaBusy || _conflicted()) return;
+    final workspace = ref.read(portfolioDraftControllerProvider).draft?.content;
+    if (workspace == null) return;
+    final review = PortfolioDocumentBaseReview(
+      document: _document(),
+      base: workspace,
+    );
+    final generation = _bufferGeneration;
+    final result = await Navigator.of(context).push<PortfolioDocument>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => PortfolioDocumentBaseReviewScreen(
+          review: review,
+          isActive: () => mounted && _sameOwner,
+        ),
+      ),
+    );
+    if (!mounted || !_sameOwner || result == null) return;
+    final currentBase = ref
+        .read(portfolioDraftControllerProvider)
+        .draft
+        ?.content;
+    if (generation != _bufferGeneration ||
+        currentBase == null ||
+        developerProfileData(currentBase) != review.base ||
+        _findDocument(currentBase) != _expected ||
+        _conflicted()) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_tr('baseReviewStale'))));
+      return;
+    }
+    _edit(() {
+      _content = result.content;
+      _baseSnapshot = result.baseSnapshot;
+      final profile = result.content.profile;
+      final values = {
+        'name': profile.name,
+        'headline': profile.headline,
+        'bio': profile.bio,
+        'locationText': profile.locationText,
+      };
+      for (final entry in values.entries) {
+        final field = _fields![entry.key]!;
+        field.removeListener(_changed);
+        if (field.text.trim() != entry.value) field.text = entry.value;
+        field.addListener(_changed);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final repository = ref.watch(portfolioDraftRepositoryProvider);
     final state = ref.watch(portfolioDraftControllerProvider);
+    final owner = _owner(watch: true);
     ref.listen(portfolioDraftRepositoryProvider, (_, next) {
       if (_repository != null && !identical(_repository, next)) {
         setState(_invalidateOwner);
@@ -381,7 +460,9 @@ class _PortfolioDocumentEditorScreenState
     }
     final ownerChanged =
         _ownerInvalid ||
+        (_initialOwner != null && _initialOwner != owner) ||
         (_repository != null && !identical(_repository, repository));
+    if (ownerChanged && !_ownerInvalid) _invalidateOwner();
     final ready =
         !ownerChanged && !_missing && _fields != null && state.canEdit;
     final title = _tr(
@@ -610,6 +691,15 @@ class _PortfolioDocumentEditorScreenState
       Text(
         _fields!['title']!.text,
         style: Theme.of(context).textTheme.titleLarge,
+      ),
+      const SizedBox(height: StackCardSpacing.lg),
+      StackCardButton(
+        key: const Key('document.baseReview'),
+        label: _tr('baseReview'),
+        role: StackCardButtonRole.secondary,
+        onPressed: !_saving && !_mediaBusy && !_conflicted()
+            ? _reviewBase
+            : null,
       ),
       const SizedBox(height: StackCardSpacing.lg),
       for (final entry in <(_DocumentSection, String, String)>[

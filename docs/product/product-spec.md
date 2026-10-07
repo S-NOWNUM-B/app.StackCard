@@ -49,7 +49,10 @@
   редактируется по секциям. Название/роль/секции/тема относятся к документу.
 - Settings открывает общую базу профиля/навыков/опыта/образования/ссылок.
   Новый документ получает начальные значения базы; её изменение не переписывает
-  уже созданные документы. Отдельного review изменений базы пока нет.
+  уже созданные документы. «Обновление из профиля» в редакторе сравнивает
+  сохранённую базу с последним просмотренным снимком: унаследованные изменения
+  выбраны, собственные правки остаются невыбранными. Apply меняет только buffer,
+  Save отдельно сохраняет документ. Legacy без снимка не предлагает автозамену.
 - Project остаётся одной записью Library. Документ хранит ordered relations
   projectId/visible/featured; удаление связи сохраняет проект, удаление проекта
   очищает его связи. «Создать проект» в документе держит новую Library запись
@@ -57,7 +60,7 @@
   Cancel не добавляет проект. Portfolio может выбрать private Resume по ID.
 - Scoped Save документа, проекта или базы использует прежний UID-bound draft
   repository; соседний несохранённый ввод и notes не публикуются/не сохраняются
-  этим действием. Hive writer5/private cloud4 читают старые версии без rewrite
+  этим действием. Hive writer6/private cloud5 читают старые версии без rewrite
   при чтении, с raw backups до upgrade; public schema1 прежняя.
 - Старый Builder и `resumeText` сохраняются. Явный импорт legacy создаёт
   документы со stable legacy IDs; неизвестные/повреждённые записи блокируют
@@ -67,12 +70,12 @@
 **Остаётся:** multiple-document Publish/Unpublish и постоянные URL, доверенная
 public projection/validation, публичный renderer и полноценный `apps/web`;
 полные контакты/privacy/account management, notifications и native sharing;
-review обновления базы с local overrides, локальные overrides представления Project,
+локальные overrides представления Project,
 полная Figma/native приёмка и ранее открытые Google/reset/iOS/media/location
 сценарии. Карточки private документов честно показывают draft и отсутствие
 публичной ссылки. Private Resume attachment не становится публичной ссылкой.
 Публикация, deploy, billing, commit/push этим поручением не выполняются.
-Rules/cloud schema4 изменены в исходниках; live sync нового payload и обновление
+Rules/cloud schema5 изменены в исходниках; live sync нового payload и обновление
 Rules окружения не подтверждены локальными widget/Rules checks.
 
 Наличие кода не подтверждает проверку нового сценария. Итоговые проверки этой
@@ -91,6 +94,21 @@ Figma assets `check_imports.py --require-brand --require-imported` — PASS;
 168 случаев, отдельно проверены narrow editor, увеличенный текст и keyboard inset.
 Эти проверки не заменяют native camera/gallery, live Firebase sync/deploy,
 визуальную приёмку пользователем и multiple-document public flow.
+
+**Проверки обновления из общей базы (D046), macOS zsh:**
+полный `flutter test --no-pub --reporter expanded` — **1212/1212 PASS**;
+`flutter analyze --no-pub` — без замечаний; format `lib test integration_test` —
+227 файлов, без изменений; Firestore Emulator `npm run test:rules` — **42/42 PASS**.
+Проверены local overrides, stable-ID добавление/удаление, legacy без baseline,
+Cancel/Apply/Save, повторное открытие, stale base/input и смена владельца.
+Migration checks сохраняют raw backups и pending/ACK; Rules принимают 20 документов
+с разными собственными snapshot/baseline avatar paths и отклоняют чужой путь
+в последнем документе. Literal UID quoting проверен с regex-символами и вложенным
+`\E`; missing обязательные поля и downgrade отклоняются. Public schema1 не
+получает private documents/baselines. Strict Figma asset checker, `git diff --check`
+и validator 11 обновлённых Markdown документов — PASS. По действующему no-preview/run
+ограничению native launch и визуальная приёмка пропущены; Rules не развёрнуты,
+live sync cloud5 payload ещё требует отдельной проверки окружения.
 
 История выполненных этапов и состояния перед этим поручением:
 
@@ -258,9 +276,11 @@ web design, multiple-output migration и Flutter/web implementation остают
 **StackCard** — приложение для управления developer identity: базовый профиль,
 глобальная библиотека проектов, несколько резюме и портфолио под разные роли.
 Flutter-приложение и будущий web-кабинет используют общие данные владельца и
-явную публикацию outputs; текущий runtime пока хранит один draft. Сайт объясняет проект на
-главной странице, предлагает скачать мобильное приложение и показывает
-опубликованные портфолио с контактной формой и metadata для распространения ссылки.
+явную публикацию документов. В mobile уже есть один private aggregate с общей
+базой, Library и несколькими независимыми Resume/Portfolio. Общий aggregate
+хранения не означает единственное выходное портфолио. Сайт объясняет проект,
+предлагает скачать приложение и показывает опубликованные документы;
+web runtime и новый public lifecycle ещё предстоит реализовать.
 
 Платформы продукта — Android, iOS и web. Mobile реализуется на Flutter в
 `apps/mobile`, сайт — отдельно на Next.js в `apps/web`. Каталог сайта уже подготовлен
@@ -274,8 +294,7 @@ Flutter-приложение и будущий web-кабинет использ
 и результатах работы. StackCard помогает выбрать проекты, дополнить их понятным
 описанием, изображениями и demo, а затем поделиться одной ссылкой.
 
-Пример адреса: `stackcard.dev/u/snownumb`. **Домен — иллюстрация, не заявка на
-регистрацию и не выбранный production host.** Прежний singleton-план публичного профиля использовал `/u/[username]`.
+Прежний singleton-план публичного профиля использовал `/u/[username]`.
 Актуальный Design v2 принял D019: постоянный адрес каждого Resume/Portfolio,
 независимый от названия и username. Это target-политика; новая route scheme
 и миграция прежнего adapter ещё не реализованы.
@@ -284,7 +303,9 @@ Flutter-приложение и будущий web-кабинет использ
 
 ## Living Portfolio: данные и контроль пользователя
 
-Главная функция — **Living Portfolio / Smart GitHub Sync**. GitHub поставляет
+Основная ценность — **одна профессиональная база → несколько целевых резюме
+и портфолио без повторного заполнения**. **Living Portfolio / Smart GitHub Sync**
+помогает наполнять и поддерживать общую Library. GitHub поставляет
 публичные профиль, avatar, bio, repositories, descriptions, repository URLs,
 languages, topics, stars, forks и сведения об активности. Это источник данных,
 но не абсолютный source of truth для публичного портфолио.
@@ -297,20 +318,23 @@ Firestore schema:
 | **Состояние** | **Назначение и управление** |
 |:---|:---|
 | GitHub source data | Полученные metadata и их кэш. Обновление источника не означает одобрение публикации. |
-| Curated portfolio / draft | Данные, отобранные и отредактированные владельцем. Включают ручные проекты и дополнения к импортированным. |
-| Published portfolio | Одобренная пользователем публичная версия. Публичные страницы сайта читают только её; черновик доступен владельцу в mobile и защищённом web-кабинете. |
+| Curated workspace / document draft | Общая база/Library и независимые документы, отобранные и отредактированные владельцем. Ручные проекты равноправны импортированным. |
+| Published document | Одобренная пользователем публичная версия отдельного Resume/Portfolio. Сайт читает только её; private база, notes и черновики доступны владельцу. |
 
 </div>
 
 При импорте пользователь выбирает репозиторий и может изменить описание и
-технологии, добавить screenshot и live/demo URL, назначить featured, скрыть проект
-или удалить его из портфолио. Проект имеет происхождение `manual | github`;
+технологии, добавить screenshot и live/demo URL. В документе отдельно выбираются
+порядок, featured и видимость attachment; удаление связи сохраняет Project в
+Library. Проект имеет происхождение `manual | github`;
 для импортированного проекта нужны связь с GitHub repository и сведения о sync.
 Модель и правила сопоставления Phase 9 зафиксированы в
 [ADR 0002](../decisions/0002-github-import-and-review.md).
 
 Smart Sync обнаруживает новый репозиторий или изменения существующего и предлагает
-действия: **Ignore**, **Preview / Review changes**, **Add to portfolio**.
+действия: **Ignore**, **Preview / Review changes**, **Add to Library**. Исторический
+UI может сохранять прежнюю подпись Add to portfolio; target — одна Library запись,
+которую пользователь отдельно включает в нужные документы.
 Пользователь видит изменения до их принятия. Ручные правки сохраняют смысл и не
 должны молча заменяться новыми данными GitHub.
 
@@ -343,118 +367,113 @@ Screenshot относится к Media Phase 11; новые технологии
 
 ### Мобильное приложение
 
-Принятый target экранов и переходов — в
-[Figma-first плане](../design/redesign-plan.md#navigation-map). Ниже сохранён
-прежний single-portfolio scope для связи с учебными фазами и current runtime;
-completion, global Featured и пять tabs не являются новым target.
+Принятые экраны и переходы — в [Design v2](../redesign/screens.md), требования —
+в [requirements](../redesign/requirements.md). Основной путь:
 
-Прежний целевой первый запуск:
+`Вход или local guest → общая база и Library → выбор Resume/Portfolio →
+содержимое → оформление → preview → Save → явный Publish → ссылка/Share`.
 
-`Splash → Onboarding → Sign In / Sign Up → Create Profile → Choose username →
-GitHub import → Select projects → Complete profile → Preview → Publish → Share`.
-
-Ручное создание проектов также поддерживается: GitHub не является единственным
-способом наполнения портфолио. До появления auth и облака промежуточные учебные
-фазы работают с mock data и локальным draft.
+GitHub import необязателен; ручные Projects поддерживают закрытые и командные
+работы. Guest сохраняет local draft; sync и будущая публикация требуют аккаунта.
+Publish/Share в этом пути — план до проверяемого public lifecycle.
 
 <div align="center">
 
-| **Раздел** | **Содержимое** |
+| **Раздел** | **Содержимое и границы** |
 |:---|:---|
-| Authentication | Splash, Onboarding, Sign In, Sign Up, Forgot Password. |
-| Home | Приветствие, portfolio completion, public status и URL, quick actions, recent sync, suggestions, recent contact requests. |
-| Portfolio | Профиль, about, skills, experience, education, links, location, resume, blocks, theme, preview, publish/unpublish. |
-| Projects | Ручные и импортированные проекты, GitHub repositories, featured projects, editor и sync state. |
-| Inbox | Контактные обращения с публичной страницы. |
-| Settings | Account, appearance, light/dark/system, language, GitHub, privacy, notifications, logout/delete account. |
+| Authentication | Splash, Onboarding, Sign In, Sign Up, Forgot Password; готовность реальных способов входа проверяется отдельно. |
+| Home | Лента Resume/Project/Portfolio по изменению, ровно Все/Резюме/Проекты; без приветствия, completion, dashboard и глобального поиска. |
+| Resumes | Библиотека CV, пять шагов создания, прямая правка секций, preview, duplicate/delete; Publish/Copy/Open/Share требуют public lifecycle. |
+| Projects | Единая Library: import, manual create, query-only поиск, фото и technology badges; featured/visible задаются в attachment документа. |
+| Portfolios | Независимые визитки, content/appearance/preview, выбор Library projects и Resume; постоянный адрес после публикации. |
+| Settings через gear | DeveloperProfile, контакты/ссылки, аккаунт/безопасность, приложение, приватность, sign out/delete; группы реализованы частично. |
+| Inbox | Будущие обращения по published документу; не дополнительная root-вкладка. |
 
 </div>
 
-Действующая mobile навигация после авторизации: **Home, Resumes, Projects, Portfolios**.
-Settings открывается через gear; Inbox пока запланирован.
-Дополнительные экраны: Portfolio Preview, GitHub Import, Project Editor,
-Profile Editor, Location Picker, Resume Editor, Developer Card, Sync Suggestions.
+Четыре root-вкладки остаются на телефоне и планшете. Settings, focused editors,
+GitHub Import, location picker, base review и будущие Share/Inbox открываются
+отдельно. Назад возвращает к исходному разделу; private state изолирован по UID.
 
 ### Сайт и web-редактор
 
-Сайт предлагает полный путь: знакомство с проектом → регистрация или вход →
-создание и редактирование портфолио → preview → явная публикация → публичная ссылка.
-Мобильное приложение можно скачать отдельно; оно использует тот же аккаунт и draft.
-
-Предлагаемая карта страниц — **прежний singleton-план Phase 13, не реализованные
-маршруты или окончательный API-контракт**. Design v2/D019 заменяет username-only
-public link на постоянный адрес отдельного Resume/Portfolio; точные paths и
-миграция согласуются до реализации. Карта ниже сохраняет исторический контекст:
+Web имеет три назначения: маркетинг/download, защищённый кабинет/редактор,
+анонимные публичные Resume/Portfolio. Mobile и web используют один аккаунт,
+общую базу/Library и независимые документы. Ниже **целевые области маршрутов**,
+а не созданное приложение или окончательная URL-схема.
 
 <div align="center">
 
-| **Путь** | **Доступ и назначение** |
+| **Область** | **Доступ и назначение** |
 |:---|:---|
-| `/` | Публичная главная: назначение, преимущества, сценарий работы и переходы к web-редактору или скачиванию приложения. |
-| `/download` | Информация о мобильной версии, поддерживаемых release targets и реальные способы скачивания после появления релизов. |
-| `/sign-in`, `/sign-up` | Вход и создание аккаунта для одного Firebase backend. |
-| `/app` | Защищённый кабинет: обзор состояния портфолио и переходы к редактированию. |
-| `/app/portfolio`, `/app/projects` | Планируемые разделы редактора: профиль, блоки и проекты, GitHub import, preview и publish/unpublish. |
-| `/app/inbox`, `/app/settings` | Планируемые обращения и настройки аккаунта; точные вложенные пути определить при реализации. |
-| `/u/[username]` | Публичное опубликованное портфолио, SEO/OpenGraph и контактная форма. |
+| `/`, `/download` | Landing с пользой общей базы, примерами Resume/Portfolio и реальными действиями/download links. |
+| `/sign-in`, `/sign-up`, password recovery | Auth общего Firebase backend; поля входа не становятся публичными контактами. |
+| Private кабинет и библиотеки | Resume/Project/Portfolio, общая база, Library и те же смысловые действия, что mobile. |
+| Private editor выбранного document ID | Content/appearance/preview, scoped Save, base review и отдельный Publish/Unpublish. |
+| Settings/Inbox | Данные своего владельца; обращения появляются с Phase 14. |
+| Permanent public document route | Published-only Resume/Portfolio по постоянному public ID; photo/no-photo, metadata/SEO/OpenGraph и missing/unpublished states. |
 
 </div>
 
-Редакторы разделяют модель портфолио и правила сохранения/публикации. Изменение
-в одном клиенте должно появляться в другом после синхронизации, с понятным статусом
-и выбранной conflict strategy. Web v1 планируется online-first; обязательная
-поддержка локального offline draft остаётся задачей mobile.
+Точные вложенные paths и public route фиксируются в контракте Phase 13 до
+реализации. D019: URL документа сохраняется после rename/смены username и
+unpublish→republish; дубликат получает отдельную идентичность. Legacy
+`/u/[username]` остаётся вопросом совместимости прежнего prepared adapter.
+Ни production host, ни рабочая ссылка этим планом не объявляются выбранными.
+
+Wide web editor допускает параметры рядом с preview; narrow использует
+самостоятельные Edit/Preview modes. Web v1 online-first, mobile сохраняет offline
+draft. Обмен правками требует общих JSON fixtures и явно принятой conflict policy;
+нынешний whole-aggregate LWW не обещает слияние двух параллельных версий.
 
 ---
 
 ## Portfolio Builder и Developer Card
 
-Builder v1 состоит из блоков: Profile, About, Skills, Featured Projects,
-Experience, Education, GitHub, Links, Resume, Location. Пользователь редактирует
-содержимое, меняет порядок и включает/выключает блоки. Локальный builder позволяет
-добавлять, редактировать и удалять данные с preview. Варианты отображения блоков
-возможны позднее. Свободный canvas, двумерный resize и редактор уровня Figma/Webflow
+Portfolio editor использует секции Profile, About, Skills, Featured Projects,
+Experience, Education, GitHub, Links, Resume, Location. Resume имеет собственную
+структурированную документную подачу. Content → Appearance → Preview → Publish —
+разные действия; Save не публикует. В документе задаются порядок/видимость секций,
+ограниченное Figma оформление и фото. Legacy Builder сохраняет старые данные,
+но не заменяет библиотеки. Свободный canvas и редактор уровня Figma/Webflow
 не входят в v1.
 
-**Shareable Developer Card** — компактная цифровая визитка с avatar, name, role,
-основными technologies, username, portfolio URL, QR-кодом на публичное портфолио
-и логотипом StackCard. Её можно показать и отправить. Android sharing планируется
-через собственный MethodChannel, Kotlin и native share sheet.
+Developer Card строится из выбранного Portfolio: фото, имя, роль, technologies
+и логотип. URL/QR принадлежат этому опубликованному документу. Обычный Share
+поддерживает также выбранное Resume; черновик не получает фиктивную ссылку.
+Android sharing планируется через MethodChannel/Kotlin/native share sheet;
+iOS проверяется отдельно. Полная Card/QR относится к Phase 15.
 
 ---
 
 ## MVP и полный scope v1
 
-Ниже сохранён прежний MVP по фазам, а не задача Phase 0. Его single Portfolio и
-global Featured заменены новым [target model](../design/redesign-plan.md#целевая-domain-relation):
-multiple Resumes/Portfolios и featured в PortfolioProject. Историческая приёмка
-фаз сохраняется; будущая migration определяется до implementation.
+MVP соответствует общей базе и нескольким документам. Таблица — критерии
+продукта, а не объявление всех возможностей готовыми. Actual scope/evidence —
+[в статусе](#статус-и-границы-текущей-работы).
 
 <div align="center">
 
-| **Область** | **Обязательный результат MVP** |
+| **Область** | **Обязательный результат** |
 |:---|:---|
-| Authentication | Email/password и Google. |
-| Profile | Avatar, name, username, headline, bio, skills, links, location. |
-| Projects | Manual project, GitHub import, featured, screenshot, technologies, repository URL, live URL. |
-| Living Portfolio | Repositories, import, sync и простые suggestions. |
-| Portfolio | Редактирование в mobile и web, block ordering, hide/show, preview, publish/unpublish одного портфолио. |
-| Website | Главная о проекте, страница скачивания mobile, auth и защищённый редактор, public portfolio и contact form. |
-| Inbox / Notifications | Contact requests в обоих кабинетах и mobile FCM notification о новом обращении. |
-| Offline | Mobile: кэш ранее загруженных данных и portfolio draft. Web: online-first с явным статусом сохранения/синхронизации. |
-| Другие сценарии | Light/dark theme; mobile location, camera, native share и QR Developer Card по возможностям платформы. |
+| Authentication | Email/password и Google, восстановление доступа; реальные native flows и UID isolation. |
+| DeveloperProfile | Имя/ник/роль/фото, навыки, опыт, образование, location и public contacts; login email отдельно. |
+| Projects Library | Manual и GitHub работы, описание/вклад, изображения, technologies, repository/demo; одна запись на работу. |
+| Resume / Portfolio | Независимые title/role/секции/оформление, attachments order/visible/featured, base review с сохранением local overrides. |
+| Living Portfolio | Явный import/review/ignore и ручные overrides; без тихой перепубликации. |
+| Publication | Publish/Update/Unpublish выбранного документа, постоянный URL, public renderer и безопасные delete/republish последствия. |
+| Website | Landing/download, защищённый кабинет с базой/Library/документами, anonymous Resume/Portfolio. |
+| Inbox / Notifications | ContactRequest по published документу и owner Inbox в обоих клиентах; FCM после подключения настоящего сервиса. |
+| Offline | Mobile local draft/cache/outbox; web online-first с настоящими saving/error/retry и conflict states. |
+| Settings / Sharing | Theme light/dark/system, ru/en, reduced motion, account/privacy, native share и Card/QR по возможностям платформы. |
 
 </div>
 
-Полное направление v1 также предусматривает experience, education, resume,
-system theme и языковые настройки. Их детализация, как и username policy,
-форматы resume и ограничения полей, выполняется перед соответствующей реализацией.
-
-Публичная страница показывает только одобренные profile data, проекты и включённые
-блоки. Посетитель может отправить **Contact me** с name, email и message.
-Создаётся ContactRequest; владелец получает FCM notification и читает обращение
-в mobile или web Inbox. Это контактная форма, а не чат. Поддержка browser push
-не следует автоматически из требования mobile FCM и требует отдельного решения.
+Public projection включает только выбранные секции, контакты и visible projects;
+private notes, login/provider data, baseSnapshot и скрытые поля не передаются
+посетителю. Contact me появляется вместе с validation/anti-spam/owner Inbox на
+Phase 14; отсутствие push не теряет само обращение. Карта/Google Maps исключены,
+город/страна и permission states сохраняют контракт Phase 12.
 
 ---
 
@@ -554,8 +573,33 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 
 План объединяет исходное описание StackCard, требования учебного задания
 `individual_project_flutter_ru.docx` и актуальный scope выше: mobile, полноценный
-web-редактор и публичные портфолио. Этот раздел владеет roadmap; технические решения
+web-редактор и публичные Resume/Portfolio. Этот раздел владеет roadmap; технические решения
 подробно фиксируются в architecture и ADR, команды — в CONTRIBUTING.
+
+### Актуальная последовательность 2026-10-08
+
+План обновлён под Figma и концепцию общей базы. Полный перенос не завершён:
+private mobile core реализован, публикация/web отсутствуют, настройки готовы частично,
+R7 user acceptance и full native/visual parity остаются открытыми.
+Функциональное развитие разрешённого mobile scope продолжается по D045/D046;
+ожидание полного REDESIGN_DONE не блокирует эти capabilities. Вопрос о готовности
+и обновление плана не возобновляют старую очередь автоматически и не разрешают
+deployment или реализацию всех будущих сервисов.
+
+| **Очередь / capability** | **Что уже есть → что осталось** | **Готово, когда / зависимость** |
+| --- | --- | --- |
+| База и private документы; PR-DATA-01/02/03 | Общая база, Library, multiple Resume/Portfolio, wizard, scoped Save, atomic create-and-attach и base review уже реализованы. Остались Project presentation overrides, отдельные описание/вклад, полные public contacts/selection/privacy и Figma варианты оформления. | Выборочные overrides не меняют Library/соседние документы, Save/Discard/reopen/UID и schema compatibility проверены; реализованное ядро повторно не строится. |
+| Ближайший mobile блок; PR-CONTACT-01, PR-PREF-01, PR-AUTH-01, PR-ACCOUNT-01/02 | Довести реальные Contacts/Profile/Account/Privacy/App actions и состояния по Figma; theme/locale/links/sign-out уже есть. Native media/location/auth и visual acceptance остаются отдельными проверками. | Login/providers отделены от public contacts; изменение базы не переписывает документы; unsupported действие не показывает success. Account deletion требует public withdrawal/cleanup contract и выполняется после него. |
+| Публикация; PR-PUB-01/02/03, PR-URL-01 | Нужны trusted projection/validation, постоянный public ID, inventory/version/unknown operation recovery, public media lifecycle и минимальный anonymous renderer. Legacy username adapter не закрывает multiple outputs. | Выбранный документ доступен по настоящему URL, draft/Library/base edits не меняют public snapshot; rename/republish сохраняют URL, duplicate его не наследует, delete не воскресает после позднего retry. |
+| Web; PR-WEB-13A/B/C | В apps/web только README. Сначала минимальный runtime/public reader вместе с публикацией, затем полный кабинет и marketing/download. | Full owner editor не является предпосылкой первого public документа: source сначала mobile. После расширения оба клиента используют совместимую базу/Library/документы и owner guards. |
+| Связь и распространение; Phase 14/15 | Copy/Open/native Share после подтверждённого URL; затем ContactRequest/Inbox/FCM и Developer Card/QR. | Контактная форма следует выбранному published документу и privacy; notifications не подменяются локальным toggle. QR/Share никогда не передают фиктивную ссылку. |
+| Качество и выпуск; Phase 16–20 | Tests/security/CI идут вместе с capabilities; профилирование, полная native/live приёмка и release — отдельные результаты. | Есть воспроизводимые измерения/checks, приёмка критических journeys Android/iOS/web и разрешённый пользователем выпуск. |
+
+Детальные PR-* контракты и Figma/task mappings остаются в
+[prerequisites](../redesign/prerequisites.md#product-tasks-gap-и-владельцы-источников)
+и [R8/R9 plan](../redesign/plan.md#r8--перенос-согласованного-ui). Эта таблица задаёт
+актуальные приоритеты; Phase 0–12 ниже сохраняют историю/учебную прослеживаемость,
+а Phase 13–20 описывают обновлённые будущие результаты.
 
 ### История фаз до функционального mobile scope 2026-10-07
 
@@ -693,18 +737,20 @@ No-preview/run исключил native launch/playback/visual parity; headless e
 DESIGN_READY/REDESIGN_DONE не установлены; commit/push/deploy не запрошены,
 основной roadmap сохраняет pause перед Phase11.
 
-Новая URL route scheme и миграция adapter остаются предпосылкой R8.
-Private schema не мигрирована; поддерживаемый UI перенесён частично.
+На исторической точке D040 новая URL route scheme и миграция adapter были
+предпосылкой R8; private schema ещё не была мигрирована. D045/D046 позднее
+реализовали private документы/base review/Hive6/cloud5; public URL и adapter
+остаются текущими пробелами. UI acceptance сохраняется частичной.
 Проверки и ограничения — в [результатах R8/R9](../redesign/plan.md#фактический-перенос-поддерживаемого-ui-r8r9-d040);
 предыдущие цветовые правки и результаты R2 сохранены отдельно.
 Историческая точка остановки функционального roadmap до поручений 2026-10-07 —
 после Phase 10, перед Phase 11 Media; Google/reset/iOS приёмка Phase 7 остаётся
-открытой. Возврат к roadmap предлагается после пользовательской приёмки
-REDESIGN_DONE и требует отдельного поручения. Новые model/migration/media/account/
+открытой. Тогда возврат к roadmap предлагался после пользовательской приёмки
+REDESIGN_DONE; D045/D046 позднее разрешили нынешнюю mobile работу вне очереди. Новые model/migration/media/account/
 publication/web возможности перечислены как [продуктовые пробелы](../redesign/audit.md#продуктовые-пробелы)
 и [предпосылки R8](../redesign/plan.md#зависимости-реализации). Сам перенос R8
-и R9 уже разрешены D040; состав prerequisite-реализации либо конкретные
-implementation exceptions ещё ждёт ответа. Повторного phase approval нет. Последние требования Design v2 имеют приоритет над прежними макетами.
+и R9 уже разрешены D040; D045/D046 реализовали private subset, оставшийся
+public/account/web scope раскрыт в актуальном roadmap. Повторного phase approval нет. Последние требования Design v2 имеют приоритет над прежними макетами.
 
 Phase 10 завершена. Предыдущее прямое поручение — Figma-first refactor:
 audit, IA, design system и ключевые экраны по [redesign plan](../design/redesign-plan.md).
@@ -734,9 +780,9 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 10 — Portfolio Suggestions | Завершена; pure rules, объяснения ru/en, явные Preview/editor actions и Android-запуск проверены |
 | Phase 11 — Media | Реализована; 1013 Flutter/40 Rules/Android SDK PASS; полная device/live приёмка открыта |
 | Phase 12 — Location | Реализована без карты; 1068 Flutter/2 native cases PASS; device geolocation/iOS приёмка открыта |
-| Phase 13a — Public shell | Запланирована |
-| Phase 13b — Auth и редактор | Запланирована |
-| Phase 13c — Public portfolio | Запланирована |
+| Phase 13a — Public shell | План: настоящий web runtime, оболочка/public reader, landing/download |
+| Phase 13b — Auth и редактор | План: кабинет общей базы/Library и независимых Resume/Portfolio |
+| Phase 13c — Public Resume/Portfolio | План: trusted publication, постоянные URL и published-only reader |
 | Phase 14 — Contact / Inbox / FCM | Запланирована |
 | Phase 15 — Developer Card и native sharing | Запланирована |
 | Phase 16 — Performance | Запланирована |
@@ -1618,88 +1664,116 @@ Google Maps SDK и настройка Maps API исключены из прое�
 
 ### Phase 13 — Website и web editor
 
-Ниже сохранён исходный roadmap singleton-модели. До реализации сверить его
-с принятым Design v2: общая база и разные Resume/Portfolio, D019 с постоянными
-адресами документов. `/u/[username]` в прежнем списке не переопределяет D019;
-конкретные routes/schema и миграция adapter согласуются как prerequisite,
-а Figma R6 не означает готовность Phase 13.
+Обновлённый scope: общая база/Library, разные Resume/Portfolio и постоянный URL
+каждого опубликованного документа. Legacy `publish(username, content)` и
+`/u/[username]` не определяют новый public API; их совместимость и миграция
+решаются до переключения. Phase 13 пока не реализована.
 
-Только здесь создать Next.js-приложение в подготовленном `apps/web`, выбрать
-зависимости и реальные format/lint/typecheck/test/build команды. Выполнять
-подэтапы **13a → 13b → 13c**, сохраняя единые data contracts с mobile.
+13a/13b/13c обозначают части результата. Минимальный 13a runtime и public slice
+13c могут дать работающую публикацию из mobile до полного owner editor 13b.
+Единственная обязательная последовательность — data/privacy/URL contract и
+trusted validation → public reader → доступные Publish/Copy/Open действия.
+Ни Figma frame, ни новый scaffold не доказывают готовность этих сценариев.
 
 #### 13a — Public shell
 
 **Задачи**
 
-- [ ] Создать Next.js-приложение в `apps/web`; выбрать используемые зависимости
-  и реальные format/lint/typecheck/test/build команды.
-- [ ] Реализовать responsive layout, главную и `/download` в принятом
-  визуальном стиле.
-- [ ] Показать CTA и download links по фактической доступности;
-  до релиза не показывать фиктивные ссылки на магазин.
+- [ ] Создать Next.js runtime в apps/web по реальному manifest/config, выбрать
+  необходимые зависимости и format/lint/typecheck/test/build команды.
+- [ ] Перенести tokens/shared controls и минимальную оболочку public reader
+  Resume/Portfolio по Figma R6; phone/tablet/wide, dark/light и photo/no-photo.
+- [ ] Реализовать landing и download по Figma с пользой base→outputs;
+  CTA/store links отражают фактическую доступность сборок и редактора.
 
 **Проверки и приёмка**
 
-- [ ] Главная и `/download` читаемы и доступны на телефоне, планшете и desktop;
-  layout соответствует принятому стилю.
-- [ ] CTA ведут к доступным действиям; фиктивных store/download links нет.
-- [ ] Выбранные web checks и build проходят по реальным configs;
-  результаты и ограничения записаны.
+- [ ] Реальный browser runtime/build работает; layout, keyboard/focus и UI states
+  проверены, screenshots сопоставлены с согласованными Figma frames.
+- [ ] Пустые/unavailable/download состояния не обещают отсутствующих функций.
+- [ ] В public shell отсутствуют private data/owner controls; интеграция с
+  published reader принимается по 13c, не по наличию статического макета.
 
 #### 13b — Auth и редактор
 
 **Задачи**
 
-- [ ] Реализовать вход и защищённый `/app` для владельца.
-- [ ] Добавить профиль, проекты, блоки и GitHub import общего private draft.
-- [ ] Показать saving/saved/error/retry; web v1 оставить online-first.
-- [ ] Проверить owner access и обмен правками mobile ↔ web.
+- [ ] Реализовать sign-in/register/reset и owner guards общего backend;
+  login/provider data отделить от публичных контактов.
+- [ ] Создать кабинет с общей базой, Library и библиотеками Resume/Portfolio;
+  создавать, редактировать, дублировать и удалять выбранный документ по ID.
+- [ ] Поддержать document content/appearance/preview, выбор Library projects,
+  attachment order/visible/featured, attached Resume и выборочный base review.
+- [ ] Использовать совместимые versioned JSON fixtures/private schema;
+  сохранять только выбранный scope, показывать dirty/saving/error/retry/conflict.
+- [ ] Проверить обмен mobile↔web, newer input during Save, UID transitions,
+  повреждённые/неизвестные данные и последствия whole-aggregate LWW.
 
 **Проверки и приёмка**
 
-- [ ] Auth guards закрывают private редактор от анонимного и чужого пользователя.
-- [ ] Владелец редактирует одно портфолио из обоих клиентов;
-  правки передаются mobile ↔ web по общей модели и conflict strategy.
-- [ ] Saving/saved/error/retry отражают реальное состояние;
-  сбой online-сохранения даёт понятный повтор, проверки редактора проходят.
+- [ ] Anonymous/foreign access к private базе, документам и media отклоняется
+  на стороне данных; routing guard сам по себе не считается защитой.
+- [ ] Frontend Resume и Backend Resume одного владельца остаются независимыми;
+  один Project выбирается в оба без копирования Library записи.
+- [ ] Base review сохраняет local overrides; правка базы/Library не публикует
+  ничего автоматически, изменение одного scope не захватывает соседний ввод.
+- [ ] Wide editor показывает параметры/preview рядом, narrow — отдельные modes;
+  Save/Cancel и ошибки доступны с keyboard/увеличенным текстом.
+- [ ] Совместимость двух клиентов и явно выбранная conflict policy подтверждены
+  contract/integration tests; online-first ограничения web объяснены.
 
-#### 13c — Public portfolio
+#### 13c — Public Resume и Portfolio
 
 **Задачи**
 
-- [ ] Реализовать preview и явные publish/unpublish в обоих редакторах.
-- [ ] Создать `/u/[username]`, metadata, SEO/OpenGraph.
-- [ ] Публичному клиенту разрешить чтение только published snapshot;
-  корректно обработать неизвестный/unpublished username.
+- [ ] Утвердить documentId→permanent publicId mapping, exact route, publication
+  inventory/version и совместимость legacy username snapshot/alias.
+- [ ] Реализовать trusted validation/projection выбранного saved+ACK документа:
+  selected contacts/sections и resolved visible projects; закрыть прямую запись
+  неподтверждённого public payload из клиента.
+- [ ] Исключить notes, baseSnapshot, Ignore/source metadata, login/providers,
+  private Storage paths и hidden data до записи public snapshot.
+- [ ] Определить безопасный public media lifecycle: выбранные фото доступны
+  посетителю; draft replacement/removal не уничтожает published assets.
+- [ ] Реализовать Publish/Update/Unpublish выбранного Resume/Portfolio, stale/unknown
+  outcomes/retry/reopen reconciliation и generation защиту withdraw/delete.
+- [ ] Реализовать anonymous published-only reader и настоящие Copy/Open actions;
+  постоянная ссылка доступна у опубликованного документа в библиотеке/редакторе.
+- [ ] Сохранить URL после rename/username change/unpublish→republish;
+  duplicate начинает отдельный draft без URL исходника.
+- [ ] Публичное Portfolio может ссылаться только на отдельно published Resume;
+  private/unpublished/deleted Resume attachment не раскрывается посетителю.
+- [ ] Проверить metadata/SEO/OpenGraph, безопасные missing/unpublished states и
+  одинаковую выбранную версию на mobile preview и public web.
 
 **Проверки и приёмка**
 
-- [ ] Посетитель видит только опубликованную версию;
-  изменение draft не меняет public page до Publish.
-- [ ] Publish обновляет публичную версию, Unpublish прекращает доступ;
-  неизвестный и unpublished username обработаны корректно.
-- [ ] Metadata и SEO/OpenGraph проверены; private данные не раскрываются,
-  publication tests и общий сценарий mobile ↔ web проходят.
+- [ ] Изменение draft, базы или Library не меняет published snapshot до отдельного
+  Update/Publish. Save local, sync ACK и publication — различимые состояния.
+- [ ] Anonymous получает только allowlisted published данные; malicious nested
+  payload, foreign UID, hidden contacts/media и listing отклонены.
+- [ ] Rename/republish сохраняют URL, duplicate получает новую идентичность;
+  unknown operation перечитывает подтверждённое состояние вместо ложного success.
+- [ ] Unpublish закрывает доступ, delete не воскресает после delayed Save/ACK/retry;
+  соседние документы и Library остаются доступны владельцу.
+- [ ] URL действительно открывается без login на телефоне/desktop; Copy/Open
+  используют подтверждённый адрес, private attachment не становится ссылкой.
 
-**Проверки и приёмка Phase 13**
-
-- [ ] Подэтапы 13a → 13b → 13c приняты последовательно;
-  общие data contracts согласованы с mobile, web checks проходят.
-- [ ] Сценарий редактирование → preview → publish → правка draft → unpublish
-  подтверждён в обоих клиентах и на public page.
-
-**Готово, когда:** владелец редактирует одно портфолио из двух клиентов, посетитель
-видит только опубликованную версию, новая правка draft не меняет public page
-до Publish, Unpublish прекращает доступ. Contact form подключается на Phase 14.
+**Готово, когда:** владелец публикует выбранный Resume/Portfolio из mobile и web;
+посетитель открывает именно опубликованный snapshot по постоянному адресу.
+Первые mobile→public сценарии допустимы до полного 13b; Phase 13 целиком закрывается
+после приёмки всех трёх частей. Contact me/Inbox подключаются на Phase 14.
 
 ### Phase 14 — Contact / Inbox / FCM
 
 **Задачи**
 
 - [ ] Добавить web Contact me с name/email/message и validation; определить
-  anti-spam/rate limiting до публичного открытия формы.
+  anti-spam/rate limiting до публичного открытия формы. Форма относится к выбранному
+  published документу и учитывает его contact/privacy selection.
 - [ ] Создать ContactRequest и Inbox в mobile/web; обращения читает только владелец.
+  Проверить переход к обращению без добавления пятой root-вкладки и передачу
+  только разрешённых полей; private owner identity не раскрывать отправителю.
 - [ ] Настроить mobile FCM: device tokens, permissions и переход из уведомления
   к обращению. Отправку выполнять с доверенной стороны, с Functions при необходимости.
 - [ ] Проверить доставку на устройстве, отказ в уведомлениях и смену аккаунта;
@@ -1723,7 +1797,9 @@ browser push автоматически в scope не добавляется.
 **Задачи**
 
 - [ ] Создать карточку с avatar, name, role, technologies, username, logo и public URL.
-- [ ] Добавить QR-код; обработать состояние портфолио, которое ещё не опубликовано.
+  Источник — выбранное опубликованное Portfolio, с его title/role/выбранным содержимым.
+- [ ] Добавить QR-код этого permanent public URL; для Copy/Open/Share поддержать
+  выбранное Resume или Portfolio, draft/unpublished/unknown обработать отдельно.
 - [ ] Реализовать собственный MethodChannel → Android/Kotlin → `Intent.ACTION_SEND`.
   Поведение sharing для iOS определить и проверить отдельно.
 
@@ -1731,7 +1807,8 @@ browser push автоматически в scope не добавляется.
 
 - [ ] Developer Card содержит avatar, name, role, technologies, username,
   logo и корректный public URL; unpublished состояние обработано.
-- [ ] QR открывает опубликованное portfolio.
+- [ ] QR открывает выбранное опубликованное Portfolio; rename и republish не
+  ломают ссылку, дубликат не использует public ID исходника.
 - [ ] Собственный Kotlin MethodChannel и Android share sheet передают ссылку
   на реальном устройстве; результат проверки iOS sharing указан отдельно.
 
@@ -1743,7 +1820,8 @@ browser push автоматически в scope не добавляется.
 **Задачи**
 
 - [ ] Проверить большие списки, pagination, изображения, rebuilds, memory и frames
-  в Flutter DevTools; ListView.builder и image caching вводить уже при появлении сценариев.
+  в Flutter DevTools: mixed Home, обе document libraries, project attachments,
+  wizard/base review и media; учитывать реальные limits private aggregate.
 - [ ] Сохранить исходные измерения и screenshots, исправить обнаруженные проблемы
   и повторить тот же сценарий на том же устройстве.
 - [ ] Проверить public web/editor после появления реальных данных и изображений.
@@ -1766,8 +1844,10 @@ browser push автоматически в scope не добавляется.
 
 - [ ] Довести unit tests repositories, validation, completion, sync и suggestions;
   widget tests auth, project card, builder и loading/error/empty states.
-- [ ] Добавить минимум один integration test: sign in → create/edit project →
-  preview → publish. Проверить offline/reconnect и private/public границу.
+- [ ] Добавить integration journeys: общая база → Library → два разных Resume →
+  Portfolio с выбранными projects/Resume → preview → scoped Save → Publish → public URL.
+  Проверить base review, duplicate/rename, Unpublish/delete, offline/reconnect
+  и private/public границу в обоих клиентах.
 - [ ] Получить `flutter test --coverage` с coverage **более 40%**, clean analyze
   и отчёт о покрытии. Проверить web auth guards, публикацию и обмен draft с mobile.
 
@@ -1775,8 +1855,9 @@ browser push автоматически в scope не добавляется.
 
 - [ ] Unit и widget tests для repositories, validation, completion, sync,
   suggestions, auth, project card, builder и UI states проходят.
-- [ ] Integration test sign in → create/edit project → preview → publish
-  проходит; offline/reconnect и private/public граница подтверждены.
+- [ ] Journeys подтверждают независимость документов, сохранность Library и
+  local overrides, постоянство URL и явную публикацию; offline/reconnect,
+  delayed retries/UID transitions и private/public граница проверены.
 - [ ] Coverage по flutter test --coverage превышает 40%, analyze чистый;
   отчёт сохранён, web auth guards, publication и обмен draft с mobile проверены.
 
@@ -1790,7 +1871,8 @@ browser push автоматически в scope не добавляется.
 - [ ] Добавить GitHub Actions для каждого push/PR: dependency resolution, format check,
   analyze, tests с coverage, APK build и сохранение artifact.
 - [ ] Настроить проверку порога coverage, воспроизводимое окружение и отдельные
-  проверки web по его реальным configs.
+  проверки web по его реальным configs. Добавить Rules/Storage, общие JSON fixtures,
+  private migration/public projection и Figma source asset integrity checks.
 - [ ] Проверить, что ошибка проверки делает pipeline неуспешным; signing secrets
   не хранить в коде. Release AAB подключить на фазе выпуска.
 
@@ -1813,7 +1895,8 @@ browser push автоматически в scope не добавляется.
 - [ ] Подключить Crashlytics и подтвердить доставку тестового отчёта; настроить
   безопасное error logging без private данных.
 - [ ] Провести audit Firestore/Storage Rules и public/private границ, проверить
-  validation, permission descriptions, account deletion и обработку сбоев.
+  nested projection/media, стабильные public IDs, unknown outcomes, поздние retry,
+  account deletion/withdrawal, permission descriptions и обработку сбоев.
 - [ ] Завершить onboarding, loading/error/empty UX, app icon, splash, versioning
   и privacy policy; проверить оба мобильных targets и responsive web.
 
@@ -1836,6 +1919,8 @@ browser push автоматически в scope не добавляется.
 - [ ] Утвердить application IDs и signing configuration, создать и безопасно хранить
   Android keystore; собрать подписанный release AAB с obfuscation и сохранить symbols.
 - [ ] Проверить release на устройстве, подготовить screenshots, описание и privacy policy.
+  Материалы отражают четыре вкладки и base→multiple Resume/Portfolio, а не старый
+  singleton dashboard; критические сценарии проверены на release build.
 - [ ] Подготовить Google Play internal testing; при отсутствии developer account —
   подписанный AAB и пакет материалов, раздачу через Firebase App Distribution.
 - [ ] Опубликовать реальные download links после появления релиза; отдельно описать

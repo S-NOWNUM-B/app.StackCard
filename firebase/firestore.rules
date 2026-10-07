@@ -29,11 +29,9 @@ service cloud.firestore {
     }
 
     function validProfile(profile, uid, media) {
-      return profile is map
-        && profile.keys().hasAll([
-          'name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl'
-        ])
-        && profile.keys().hasOnly(media
+      // Каждый обязательный field ниже читается и проверяется по типу;
+      // повторный hasAll не нужен, missing/non-map остаётся fail-closed.
+      return profile.keys().hasOnly(media
           ? ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl',
             'avatarPath']
           : ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl'])
@@ -45,12 +43,7 @@ service cloud.firestore {
 
     function validContentFields(content, uid, media) {
       // Rules не имеют циклов: элементы projects/imagePaths проверяет общий codec.
-      return content is map
-        && content.keys().hasAll([
-          'profile', 'skills', 'projects', 'experience', 'education', 'links',
-          'blocks', 'resumeText', 'theme'
-        ])
-        && validProfile(content.profile, uid, media)
+      return validProfile(content.profile, uid, media)
         && content.skills is list && content.projects is list
         && content.experience is list && content.education is list
         && content.links is list && content.blocks is list
@@ -76,19 +69,26 @@ service cloud.firestore {
             'blocks', 'resumeText', 'theme', 'ignoredGitHubRepositories'
           ])
           && content.get('ignoredGitHubRepositories', []) is list
-          && (version < 4 || validDocuments(content.get('documents', []), uid));
+          && (version < 4
+            || (version == 4 && validDocuments(content.get('documents', []), uid))
+            || (version >= 5 && validReviewedDocuments(content.get('documents', []), uid)));
     }
 
     function validDocument(document, uid) {
-      // Форма snapshot и связи принадлежат codec; Rules проверяют owner media.
-      // Минимум выражений сохраняет запись всех 20 документов в бюджете Rules.
-      // Для пустого canonical path суффикс даёт UID; формат проверяет codec.
+      // Legacy schema4: подробная форма и relations принадлежат strict codec.
       return (document.content.profile.avatarPath + '/' + uid).split('/')[1] == uid;
+    }
+
+    function validReviewedDocument(document, pattern) {
+      // Один matcher проверяет оба canonical пути в бюджете 20 документов.
+      // При legacy без baseline используется прежний content; форма — codec.
+      let baseline = document.get('baseSnapshot', document.content);
+      return (document.content.profile.avatarPath + ';' + baseline.profile.avatarPath).matches(pattern);
     }
 
     function validDocuments(documents, uid) {
       let count = documents.size();
-      // Rules не поддерживают циклы; лимит совпадает с portfolioDocumentLimit.
+      // Rules не имеют циклов; лимит 20 сохраняется и проверяется emulator tests.
       return documents is list && count <= 20
         && (count <= 0 || validDocument(documents[0], uid))
         && (count <= 1 || validDocument(documents[1], uid))
@@ -110,6 +110,37 @@ service cloud.firestore {
         && (count <= 17 || validDocument(documents[17], uid))
         && (count <= 18 || validDocument(documents[18], uid))
         && (count <= 19 || validDocument(documents[19], uid));
+    }
+
+    function validReviewedDocuments(documents, uid) {
+      let count = documents.size();
+      // RE2 quote делает UID буквальным текстом. Вложенный \E закрывает quote,
+      // записывается как literal \E и открывает quote снова; replace требует
+      // отдельного экранирования replacement поверх строкового синтаксиса Rules.
+      let escapedUid = uid.replace('\\\\E', '\\\\E\\\\\\\\E\\\\Q');
+      let media = 'accounts/\\Q' + escapedUid + '\\E/media/[0-9a-f]{32}[.]jpg';
+      let pattern = '^(' + media + ')?;(' + media + ')?$';
+      return documents is list && count <= 20
+        && (count <= 0 || validReviewedDocument(documents[0], pattern))
+        && (count <= 1 || validReviewedDocument(documents[1], pattern))
+        && (count <= 2 || validReviewedDocument(documents[2], pattern))
+        && (count <= 3 || validReviewedDocument(documents[3], pattern))
+        && (count <= 4 || validReviewedDocument(documents[4], pattern))
+        && (count <= 5 || validReviewedDocument(documents[5], pattern))
+        && (count <= 6 || validReviewedDocument(documents[6], pattern))
+        && (count <= 7 || validReviewedDocument(documents[7], pattern))
+        && (count <= 8 || validReviewedDocument(documents[8], pattern))
+        && (count <= 9 || validReviewedDocument(documents[9], pattern))
+        && (count <= 10 || validReviewedDocument(documents[10], pattern))
+        && (count <= 11 || validReviewedDocument(documents[11], pattern))
+        && (count <= 12 || validReviewedDocument(documents[12], pattern))
+        && (count <= 13 || validReviewedDocument(documents[13], pattern))
+        && (count <= 14 || validReviewedDocument(documents[14], pattern))
+        && (count <= 15 || validReviewedDocument(documents[15], pattern))
+        && (count <= 16 || validReviewedDocument(documents[16], pattern))
+        && (count <= 17 || validReviewedDocument(documents[17], pattern))
+        && (count <= 18 || validReviewedDocument(documents[18], pattern))
+        && (count <= 19 || validReviewedDocument(documents[19], pattern));
     }
 
     function accountAdvanced(uid) {
@@ -188,19 +219,16 @@ service cloud.firestore {
         allow create, update: if draftId == 'current' && owner(uid)
           && (!exists(/databases/$(database)/documents/accounts/$(uid)/drafts/$(draftId))
             || (resource.data.schemaVersion is int
-              && resource.data.schemaVersion in [1, 2, 3, 4]
+              && resource.data.schemaVersion in [1, 2, 3, 4, 5]
               && resource.data.ownerUid == uid
               && resource.data.schemaVersion <= request.resource.data.schemaVersion))
-          && request.resource.data.keys().hasAll([
-            'schemaVersion', 'ownerUid', 'mutationId', 'localRevision',
-            'notes', 'content', 'updatedAt'
-          ])
+          // Обязательные 7 полей ниже читаются и проверяются по типу; extra запрещены.
           && request.resource.data.keys().hasOnly([
             'schemaVersion', 'ownerUid', 'mutationId', 'localRevision',
             'notes', 'content', 'updatedAt'
           ])
           && request.resource.data.schemaVersion is int
-          && request.resource.data.schemaVersion in [1, 2, 3, 4]
+          && request.resource.data.schemaVersion in [1, 2, 3, 4, 5]
           && request.resource.data.ownerUid == uid
           && request.resource.data.mutationId is string
           && request.resource.data.mutationId.size() > 0

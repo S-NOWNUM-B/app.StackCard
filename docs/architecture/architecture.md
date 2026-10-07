@@ -270,13 +270,13 @@ Dart и TypeScript реализуют их независимо в своих с
 |:---|:---|
 | `/`, `/download` | Публичная информация о проекте и мобильных релизах. |
 | `/sign-in`, `/sign-up` | Authentication. |
-| `/app` и вложенные страницы | Защищённые профиль/проекты/блоки, preview, publish/unpublish, Inbox и настройки своего аккаунта. |
-| `/u/[username]` | Только published portfolio, SEO/metadata/OpenGraph; Contact me на Phase 14. |
+| Private кабинет и editor по document ID | Общая база/Library, независимые Resume/Portfolio, scoped Save/base review, preview и отдельный Publish/Unpublish; Inbox/settings своего UID. |
+| Permanent public document route | Published-only Resume/Portfolio по отдельному public ID, SEO/metadata/OpenGraph; Contact me на Phase 14. Exact path определяется до реализации. |
 
 </div>
 
 Защита маршрута помогает UX, но не заменяет ownership checks в Firebase Rules
-и на доверенной стороне. Владелец читает/изменяет свой draft из обоих клиентов;
+и на доверенной стороне. Владелец читает/изменяет свою базу/Library и независимые документы из обоих клиентов;
 анонимный посетитель не получает account data, черновики или Inbox.
 
 Mobile сохраняет offline draft и cache. Web v1 планируется online-first с явными
@@ -284,12 +284,17 @@ Mobile сохраняет offline draft и cache. Web v1 планируется 
 Phase 8 выбирает whole-document LWW по порядку server commits и отдельные
 private/public документы; контракт — в [ADR 0001](../decisions/0001-firestore-sync-and-publication.md).
 Перед Phase 13 проверить совместимость
-web-редактора с этой моделью; не создавать вторую независимую модель портфолио.
+web-редактора с текущим private aggregate/schema и общими JSON fixtures;
+не создавать вторую независимую модель данных.
 
-Phase 13 развивается по шагам: **13a** — public shell, главная и скачивание mobile;
-**13b** — auth/защищённый кабинет и редактор общего draft; **13c** — published
-портфолио, preview и publish/unpublish. Детали — в [roadmap](../product/product-spec.md#roadmap).
-Это план после мобильных фундаментальных фаз; Phase 1 реализует только mobile UI.
+В roadmap 2026-10-08 Phase 13 объединяет public shell, owner editor и published
+Resume/Portfolio. Минимальный public reader и document publication могут работать
+с mobile source до полного web editor. Trusted projection/privacy/URL/media
+контракт предшествует доступному Publish/Copy/Open; saved private schema не
+заменяет public API. D019 требует стабильного document URL после rename/republish;
+`/u/[username]` остаётся legacy prepared adapter и вопросом миграции.
+Подробная [очередь capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-08)
+и [Phase 13](../product/product-spec.md#phase-13--website-и-web-editor) — в product spec.
 
 ---
 
@@ -403,7 +408,7 @@ Firestore; пустой offline cache не доказывает, что cloud dr
 проверяет server-only read перед новым переносом; при своём pending journal
 продолжает recovery. Corrupt/unsupported source, target или sync metadata
 блокируют перенос без перезаписи. V1 читается без migration; при явном переносе
-raw envelope/backups сохраняются, последующая ACK migration может создать v5.
+raw envelope/backups сохраняются, последующая ACK migration пишет текущую версию.
 
 Durable owner journal записывается до online cloud claim. Transaction создаёт
 private current draft только при отсутствии записи; повтор разрешён только для
@@ -599,7 +604,7 @@ Corrupt preferences дают безопасные defaults; locale не пере
 [`portfolio_draft`](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart)
 на Phase 5 сохранял предварительные заметки в envelope v1: notes, revision,
 UTC updatedAt, pendingSync. Phase 6 сохраняет полный portfolio draft в той же
-отдельной Hive box; совместимый переход к v5 описан ниже. Успешная запись увеличивает
+отдельной Hive box; совместимый переход к v6 описан ниже. Успешная запись увеличивает
 revision; на Phase 5–7 pendingSync обозначал локальные изменения без remote sync.
 На Phase 8 account repository связывает этот draft с durable outbox и реальным
 server ACK; guest остаётся local-only.
@@ -658,10 +663,10 @@ snapshot, увеличивает revision один раз и ставит pendin
 поскольку отбрасывает несохранённые правки. `saveNotes` изменяет только notes,
 сохраняя остальной content.
 
-Hive envelope v5 допускает nullable content, private GitHub metadata, media paths
-и documents. Чтение v1/v2/v3/v4 не мигрирует запись; v2 projects становятся manual;
+Hive envelope v6 допускает nullable content, private GitHub metadata, media paths,
+documents и их optional baseSnapshot. Чтение v1–v5 не мигрирует запись; v2 projects становятся manual;
 legacy content получает пустые media/documents поля. Версии до v4 отвергают media
-keys, до v5 — documents. Действующий контракт документов описан ниже.
+keys, до v5 — documents, до v6 — baseSnapshot. Действующий контракт документов описан ниже.
 Чтение v1 сохраняет точные notes
 и metadata, возвращая content null, и само не переписывает запись. Первая явная
 запись сохраняет raw owner-scoped backup исходной версии в той же box перед заменой. Ошибка backup или записи
@@ -688,18 +693,33 @@ Root legacy blocks/theme/resumeText сохраняются для обратно
 
 [`PortfolioDocument`](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_document.dart)
 имеет stable ID, title, kind resume/portfolio, UTC createdAt/updatedAt,
-собственный snapshot профиля/секций/blocks/theme/resumeText, ordered project
+собственный snapshot профиля/секций/blocks/theme/resumeText, nullable baseSnapshot
+последней явно просмотренной базы, ordered project
 attachments и optional attachedResumeId для Portfolio. Snapshot не содержит
 documents, projects или ignore registry. В текущем private контракте максимум
 20 документов: ограничение согласовано между domain, codec и Rules.
 
-Наличие cloud schema4/Rules в repository не доказывает их deployment или live
+Наличие cloud schema5/Rules в repository не доказывает их deployment или live
 SDK sync; текущая задача не выполняет deploy/native launch. В подключённом
 окружении может потребоваться отдельно разрешённое обновление Rules.
 
 `seedDocumentContent` предлагает значения базы при явном создании документа.
-Позднее изменение базы не переписывает уже созданные snapshots; отдельного
-captured-baseline review с выборочным обновлением пока нет. `resumeText` сохраняет
+Позднее изменение базы не переписывает уже созданные snapshots.
+[`PortfolioDocumentBaseReview`](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_document_base_review.dart)
+сравнивает last-reviewed baseSnapshot, текущий buffer и сохранённую базу.
+Profile fields и stable-ID элементы skills/experience/education/links выбираются
+отдельно: изменённые локально или удалённые из документа не выбраны автоматически.
+Применение сохраняет порядок документа и local-only записи; порядок самой базы
+не переносится. Avatar URL/path — одна атомарная пара. Layout/Projects/relations
+и legacy text не участвуют в обновлении. Принятие выбора, включая отказ от всех
+замен, запоминает captured базу; невыбранные значения остаются local overrides.
+Документы без baseSnapshot предлагают только явный выбор, без предвыбранных строк;
+их local-only записи не считаются удалёнными из базы.
+
+Review меняет только buffer, Save остаётся отдельным scope действием. Cancel
+оставляет buffer и baseline прежними. При смене owner или изменении captured
+базы/документа/ввода результат отбрасывается; unsaved база не становится источником.
+`resumeText` сохраняет
 старый plain text посимвольно; structured editor не выводит факты из этого текста.
 
 Каждый `PortfolioProjectAttachment` содержит projectId/visible/featured;
@@ -725,9 +745,13 @@ LWW по server commit order.
 
 [`Private codec`](../../apps/mobile/lib/features/portfolio_draft/data/portfolio_content_codec.dart)
 проверяет IDs, UTC даты, kind, snapshot nesting и существование relations.
-Hive writer **5** читает **1–5**, cloud writer **4** читает **1–4**;
-read-time rewrite отсутствует. До замены старой Hive записи Save/ACK сохраняет
-raw backup v1 через прежний ключ, v2–v4 — через owner storageKey.vN.backup с flush.
+Hive writer **6** читает **1–6**, cloud writer **5** читает **1–5**;
+read-time rewrite отсутствует. Writer пропускает ключ baseSnapshot при отсутствии
+снимка; non-null baseline содержит только profile/skills/experience/education/links.
+Reader сохраняет legacy отсутствие и принимает nullable значение в текущей версии;
+Rules для нового cloud write требуют отсутствующий ключ либо объект, без explicit null.
+До замены старой Hive записи Save/ACK сохраняет
+raw backup v1 через прежний ключ, v2–v5 — через owner storageKey.vN.backup с flush.
 Transfer journal переносит эти backups и использует прежние generation/claim/ACK
 границы. Unknown/corrupt формат блокирует перезапись. Metadata/outbox сохраняют
 прежний captured-payload ACK contract; отдельный migration CAS/journal из proposal
@@ -740,8 +764,12 @@ notes-only/пустая база не создаёт документов при
 действие сохранения, а не автоматическая миграция startup.
 
 [`Rules`](../../firebase/firestore.rules) сохраняют UID и no-downgrade boundary,
-проверяют ограниченный documents list и owner media path каждого snapshot;
-client codec выполняет подробную relation validation. Это не доверенная public
+проверяют ограниченный documents list и owner media path каждого snapshot/baseline.
+В schema5 один RE2 matcher проверяет пару canonical paths, UID цитируется как
+буквальный текст, включая вложенный `\E`; это сохраняет 20 документов в лимите
+выражений Rules. Обязательные поля проверяются прямым чтением и проверкой типа;
+missing/non-map отклоняются. Client codec подробно проверяет baseline sections,
+unknown keys и relations. Это не доверенная public
 projection или безопасность нового public-document API. Public schema **1**,
 username-addressed prepared publication и web не превращаются в multiple-output
 Publish от private migration. Полный дальнейший scope — в
@@ -843,8 +871,10 @@ Unpublish удаляет snapshot/reservation и обнуляет pointer, со�
 [`Public projection`](../../apps/mobile/lib/features/portfolio_draft/data/portfolio_public_content_codec.dart)
 исключает hidden projects и очищает поля скрытых блоков перед записью snapshot.
 Accepted source/override fields и ignore registry удаляются из public payload.
-Private writer schema 4 читает 1/2/3/4, Rules запрещают downgrade; public schema 1
-сохраняет прежний curated contract и физически исключает private media keys и documents. Миграция — в [ADR 0002](../decisions/0002-github-import-and-review.md).
+Private writer schema 5 читает 1–5, Rules запрещают downgrade; public schema 1
+сохраняет прежний curated contract и физически исключает private media keys,
+documents и baseSnapshot. GitHub миграция — в [ADR 0002](../decisions/0002-github-import-and-review.md),
+review базы — в [контракте документов](#общая-база-и-независимые-документы).
 Private notes не входят в content и не отправляются в public collection.
 [`Firestore Rules`](../../firebase/firestore.rules) проверяют owner, field allowlists
 и связанные post-write records через `getAfter`/`existsAfter`: частичный

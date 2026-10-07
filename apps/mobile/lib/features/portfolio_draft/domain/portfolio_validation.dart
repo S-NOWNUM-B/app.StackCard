@@ -189,6 +189,12 @@ List<PortfolioValidationCode> validatePortfolioContent(
     }
     // Невалидную вложенность не обходим рекурсивно; она уже отклонена выше.
     issues.addAll(validatePortfolioContent(seedDocumentContent(snapshot)));
+    final base = document.baseSnapshot;
+    if (base != null) {
+      final data = developerProfileData(base);
+      if (base != data) issues.add(PortfolioValidationCode.invalidStructure);
+      issues.addAll(validatePortfolioContent(data));
+    }
     ids(document.projects.map((attachment) => attachment.projectId));
     if (document.projects.any(
       (attachment) => !libraryIds.contains(attachment.projectId),

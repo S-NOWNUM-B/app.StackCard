@@ -25,11 +25,14 @@
 Каталог предназначен для отдельного Next.js-приложения StackCard: главной
 о проекте, страницы скачивания mobile, защищённого web-редактора и публичных
 Resume/Portfolio. Это второй редактор общей профессиональной базы и
-публичный вход в продукт; текущий runtime ещё использует singleton draft.
+публичный вход в продукт. Mobile уже хранит общую базу/Library и несколько
+private Resume/Portfolio в одном aggregate; будущий web использует тот же контракт.
 
 Сейчас здесь только README. Приложение, dependencies,
-конфигурация и команды запуска появятся на Phase 13 по
-[roadmap](../../docs/product/product-spec.md#roadmap).
+конфигурация и команды запуска пока отсутствуют. Приоритеты — в
+[актуальном roadmap](../../docs/product/product-spec.md#актуальная-последовательность-2026-10-08).
+Минимальный public runtime/reader может работать с публикациями mobile до полного
+owner web editor; точные URL и trusted publication contract фиксируются до реализации.
 Принятые основы и flows [StackCard Design v2 R1–R5](../../docs/redesign/README.md)
 задают текущий target; весь [web-дизайн R6.1–R6.4](../../docs/redesign/screens.md#r6--веб-поверхности)
 принят D040; evidence D039:24состояния/96wide-narrow Dark-Light frames.
@@ -40,11 +43,12 @@ R7 source graph/structural QA PASS D041; [пакет](../../docs/redesign/source
 awaiting_review, явная пользовательская приёмка/DESIGN_READY pending. D040 уже разрешило R8/R9 на
 `redesign/full-app`; независимый существующий Flutter slice перенесён и
 проверен950headless tests/analyze, но это не создаёт web runtime. Новый
-Next.js, workspace model и trusted public projection предложены в
-[prerequisites](../../docs/redesign/prerequisites.md), статус proposed/scope
-ответа нет. Full R8/R9 и DESIGN_READY/REDESIGN_DONE не закрыты.
-No-preview/run сохранён, commit/push/deploy не запрошены; Phase13/Phase11
-не начинаются автоматически из авторизации UI-переноса.
+Next.js и trusted public projection остаются планом из
+[prerequisites](../../docs/redesign/prerequisites.md). D045/D046 уже реализовали
+private mobile documents/base review и совместимые Hive6/cloud5 adapters;
+это не создаёт web runtime и не реализует public lifecycle. Full R8/R9 и DESIGN_READY/REDESIGN_DONE не закрыты.
+No-preview/run сохранён; обновление roadmap 2026-10-08 не запускает web/deploy
+автоматически и не закрывает full Figma/native приёмку.
 
 ---
 
@@ -82,7 +86,8 @@ No-preview/run сохранён, commit/push/deploy не запрошены; Pha
 narrow layout использует отдельные modes. Save, sync ACK и explicit Publish
 различимы; новая правка draft не меняет public snapshot автоматически.
 Web v1 планируется online-first, с одним аккаунтом и общими ownership/data
-contracts; миграция нынешнего singleton остаётся отдельной предпосылкой.
+contracts. Реализованный mobile private aggregate повторно не создаётся;
+совместимость fixtures/readers/writers и public migration проверяются отдельно.
 
 ### Посмотреть опубликованный документ
 
@@ -90,7 +95,8 @@ contracts; миграция нынешнего singleton остаётся отд
 private draft/account data и owner controls; missing/unpublished имеют отдельные
 состояния. [D019](../../docs/redesign/plan.md#журнал-решений) приняло постоянный
 адрес документа, сохраняемый при rename и смене username; duplicate не
-наследует публичную ссылку исходного документа. Конкретные document IDs/route scheme/migration ещё не реализованы.
+наследует публичную ссылку исходного документа. Private document IDs уже реализованы в mobile; permanent public IDs, route
+scheme и migration прежней публикации остаются планом.
 `/u/[username]` — прежний singleton-план Phase 13 и username-based adapter,
 не обещание уже работающего адреса Design v2. SEO/metadata/OpenGraph остаются
 Phase 13; Contact me/Inbox — Phase 14.
@@ -100,7 +106,7 @@ Phase 13; Contact me/Inbox — Phase 14.
 ## Правила
 
 - перед работой прочитай [общие правила](../../docs/AI/AGENTS.md) и [AI router](../../docs/AI/README.md);
-- создавай приложение и выбирай команды только на подтверждённой фазе;
+- создавай runtime по явно разрешённой задаче и dependency contracts актуального roadmap;
 - сохраняй общие data contracts, ownership и явную публикацию из [архитектуры](../../docs/architecture/architecture.md);
 - различай публичные страницы и защищённый редактор, route guards не заменяют checks доступа к данным;
 - используй принятый [Design v2](../../docs/redesign/README.md) и согласованные R3–R5 tokens/components; прежний [design guide](../../docs/design/design-system.md) описывает runtime/историю, а не актуальный Figma target;
