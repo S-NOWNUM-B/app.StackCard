@@ -22,27 +22,35 @@ service cloud.firestore {
       return /databases/$(database)/documents/publicPortfolios/$(username);
     }
 
-    function validProfile(profile) {
+    function validMediaPath(path, uid) {
+      return path is string && (path == ''
+        || (path.matches('^accounts/[^/]+/media/[0-9a-f]{32}[.]jpg$')
+          && path.split('/')[1] == uid));
+    }
+
+    function validProfile(profile, uid, media) {
       return profile is map
         && profile.keys().hasAll([
           'name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl'
         ])
-        && profile.keys().hasOnly([
-          'name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl'
-        ])
+        && profile.keys().hasOnly(media
+          ? ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl',
+            'avatarPath']
+          : ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl'])
         && profile.name is string && profile.username is string
         && profile.headline is string && profile.bio is string
-        && profile.locationText is string && profile.avatarUrl is string;
+        && profile.locationText is string && profile.avatarUrl is string
+        && (!media || validMediaPath(profile.get('avatarPath', ''), uid));
     }
 
-    function validContentFields(content) {
-      // Rules have no loops: list element validation belongs to the shared codec.
+    function validContentFields(content, uid, media) {
+      // Rules не имеют циклов: элементы projects/imagePaths проверяет общий codec.
       return content is map
         && content.keys().hasAll([
           'profile', 'skills', 'projects', 'experience', 'education', 'links',
           'blocks', 'resumeText', 'theme'
         ])
-        && validProfile(content.profile)
+        && validProfile(content.profile, uid, media)
         && content.skills is list && content.projects is list
         && content.experience is list && content.education is list
         && content.links is list && content.blocks is list
@@ -50,16 +58,16 @@ service cloud.firestore {
     }
 
     function validPublicContent(content) {
-      return validContentFields(content)
+      return validContentFields(content, '', false)
         && content.keys().hasOnly([
           'profile', 'skills', 'projects', 'experience', 'education', 'links',
           'blocks', 'resumeText', 'theme'
         ]);
     }
 
-    function validPrivateContent(content, version) {
+    function validPrivateContent(content, version, uid) {
       return version == 1 ? validPublicContent(content)
-        : validContentFields(content)
+        : validContentFields(content, uid, version == 3)
           && content.keys().hasOnly([
             'profile', 'skills', 'projects', 'experience', 'education', 'links',
             'blocks', 'resumeText', 'theme', 'ignoredGitHubRepositories'
@@ -143,7 +151,7 @@ service cloud.firestore {
         allow create, update: if draftId == 'current' && owner(uid)
           && (!exists(/databases/$(database)/documents/accounts/$(uid)/drafts/$(draftId))
             || (resource.data.schemaVersion is int
-              && resource.data.schemaVersion in [1, 2]
+              && resource.data.schemaVersion in [1, 2, 3]
               && resource.data.ownerUid == uid
               && resource.data.schemaVersion <= request.resource.data.schemaVersion))
           && request.resource.data.keys().hasAll([
@@ -155,7 +163,7 @@ service cloud.firestore {
             'notes', 'content', 'updatedAt'
           ])
           && request.resource.data.schemaVersion is int
-          && request.resource.data.schemaVersion in [1, 2]
+          && request.resource.data.schemaVersion in [1, 2, 3]
           && request.resource.data.ownerUid == uid
           && request.resource.data.mutationId is string
           && request.resource.data.mutationId.size() > 0
@@ -164,7 +172,7 @@ service cloud.firestore {
           && request.resource.data.notes is string
           && (request.resource.data.content == null
             || validPrivateContent(request.resource.data.content,
-              request.resource.data.schemaVersion))
+              request.resource.data.schemaVersion, uid))
           && request.resource.data.updatedAt == request.time;
       }
     }

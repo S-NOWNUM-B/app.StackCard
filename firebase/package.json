@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-stackcard-test 'npm test'"
+    "test:firestore": "node --test test/firestore_rules.test.mjs",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-stackcard-test 'npm run test:firestore'",
+    "test:storage": "firebase emulators:exec --only storage --project demo-stackcard-test 'node --test test/storage_rules.test.mjs'",
+    "test:all-rules": "firebase emulators:exec --only firestore,storage --project demo-stackcard-test 'npm test'"
   },
   "engines": {
     "node": ">=20"

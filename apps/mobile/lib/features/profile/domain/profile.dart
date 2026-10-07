@@ -10,6 +10,8 @@ class Profile {
     required this.readiness,
     this.experience,
     this.education,
+    this.avatarPath = '',
+    this.avatarUrl = '',
   }) : skills = List.unmodifiable(skills);
 
   final String name;
@@ -22,6 +24,8 @@ class Profile {
   final ProfileReadiness readiness;
   final ProfileHighlight? experience;
   final ProfileHighlight? education;
+  final String avatarPath;
+  final String avatarUrl;
 
   String get firstName => name.trim().split(RegExp(r'\s+')).first;
 }

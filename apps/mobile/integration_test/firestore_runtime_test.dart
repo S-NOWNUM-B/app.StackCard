@@ -102,7 +102,7 @@ void main() {
         expect(saved.content, content);
         expect(saved.pendingSync, isTrue);
         _expectImportedProject(saved.content!);
-        expect(_storedDraftEnvelope(storage, saved.notes)['schemaVersion'], 3);
+        expect(_storedDraftEnvelope(storage, saved.notes)['schemaVersion'], 4);
         expect(
           repository.syncState.status,
           anyOf(PortfolioSyncStatus.pending, PortfolioSyncStatus.error),
@@ -124,7 +124,7 @@ void main() {
         _expectImportedProject(restored!.content!);
         expect(
           _storedDraftEnvelope(storage, restored.notes)['schemaVersion'],
-          3,
+          4,
         );
 
         await ownerFirestore.enableNetwork();
@@ -140,7 +140,7 @@ void main() {
         expect(acknowledged.metadata.hasPendingWrites, isFalse);
         expect(acknowledged.data()?['notes'], 'Private offline note');
         expect(acknowledged.data()?['updatedAt'], isA<Timestamp>());
-        expect(acknowledged.data()?['schemaVersion'], 2);
+        expect(acknowledged.data()?['schemaVersion'], 3);
         final cloud = decodeCloudPortfolioDraft(
           acknowledged.data()!,
           ownerUid: ownerUid,
@@ -189,7 +189,7 @@ void main() {
           reviewedCloudSnapshot.data()!,
           ownerUid: ownerUid,
         );
-        expect(reviewedCloudSnapshot.data()?['schemaVersion'], 2);
+        expect(reviewedCloudSnapshot.data()?['schemaVersion'], 3);
         expect(reviewedCloud.content, repeatedImport);
         _expectImportedProject(reviewedCloud.content!, renamed: true);
         content = repeatedImport;

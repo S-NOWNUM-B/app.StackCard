@@ -62,6 +62,7 @@ Map<String, Object?> encodePublicPortfolioContent(PortfolioContent content) {
     projectPublicPortfolioContent(content),
   );
   encoded.remove('ignoredGitHubRepositories');
+  (encoded['profile']! as Map).remove('avatarPath');
   const projectFields = {
     'id',
     'title',

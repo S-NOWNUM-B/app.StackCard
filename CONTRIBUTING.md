@@ -492,6 +492,57 @@ iOS acceptance — разные проверки; результаты не за
 Prepared publication repository не означает наличия public UI или выполненной
 публикации портфолио пользователя.
 
+### Media Storage и native acceptance
+
+Phase 11 использует `features/media`, Storage paths в private draft и
+[Storage Rules](firebase/storage.rules). Контракт/cleanup —
+[ADR 0003](docs/decisions/0003-private-portfolio-media.md). Live Cloud Storage
+требует Blaze и созданный bucket; generated Firebase options содержит имя
+bucket, но это само по себе не доказывает его существование. Billing upgrade
+и deployment не выполняются автоматически. Перед live запуском после отдельного
+разрешения должны быть deployed и Storage Rules, и обновлённые Firestore Rules
+(private schema 3). Старые writers после нового schema update получат отказ.
+
+macOS — zsh/bash, cwd `firebase`, для локальной проверки без billing:
+
+```sh
+npm run test:all-rules
+```
+
+`test:storage` проверяет Storage отдельно; `test:rules` — прежние Firestore tests.
+Для native SDK acceptance сначала запустить demo Auth/Storage emulators.
+macOS — zsh/bash, cwd `firebase`:
+
+```sh
+firebase emulators:start --only auth,storage --project demo-stackcard-test
+```
+
+macOS — zsh/bash, второй терминал, cwd `apps/mobile`, Android emulator:
+
+```sh
+flutter test integration_test/media_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_MEDIA_ACCEPTANCE=true
+```
+
+Named Firebase apps используют только demo namespace и не меняют обычный
+app session/draft. Этот тест проверяет native upload/read/progress и отказ
+foreign/unauthenticated SDK; он не открывает camera/gallery системный UI.
+Android debug network config допускает HTTP только к `10.0.2.2`, `127.0.0.1`
+и `localhost`; release не получает это исключение.
+В native app composition Storage emulator включается через
+`STORAGE_EMULATOR_HOST` и `STORAGE_EMULATOR_PORT`; Android host `10.0.2.2`,
+port — из [firebase.json](firebase/firebase.json). Auth/Firestore defines
+настраиваются отдельно; не смешивать emulator и live services случайно.
+
+Обязательная ручная приёмка: avatar и project image через camera/gallery,
+cancel без потери формы, отказ permissions, progress/retry после network
+failure, Apply → Save → restart → отображение и UID change во время upload.
+iOS требует проверки camera/photo permissions из Info.plist на доступном
+нативном устройстве. JPEG/PNG/WebP supported; HEIC выдаёт validation failure.
+Private image cache memory-only, public внешние avatars кешируются пакетом
+cached_network_image. Потерянный picker result после process death не
+применяется автоматически: выбор повторить. Новые отменённые uploads очищаются
+best effort; прежние saved paths сохраняются для offline/LWW, server GC нет.
+
 ### Остальные focused и visual проверки
 
 Для сфокусированной проверки storage и настроек из той же директории:

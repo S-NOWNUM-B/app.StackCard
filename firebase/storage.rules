@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function owner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function validImageName(imageId) {
+      return imageId.matches('^[0-9a-f]{32}[.]jpg$');
+    }
+
+    match /accounts/{uid}/media/{imageId} {
+      allow get, delete: if owner(uid) && validImageName(imageId);
+      allow create: if owner(uid) && validImageName(imageId) && resource == null
+        && request.resource.size > 0
+        && request.resource.size <= 2 * 1024 * 1024
+        && request.resource.contentType == 'image/jpeg';
+      // Замена получает новый путь; metadata и содержимое существующего файла неизменяемы.
+      allow list, update: if false;
+    }
+
+    // Public media открывается только вместе с отдельной реализацией явной публикации.
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

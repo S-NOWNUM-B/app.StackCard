@@ -10,6 +10,22 @@ enum PortfolioValidationCode {
   invalidStructure,
 }
 
+const portfolioProjectImageLimit = 6;
+
+/// Domain проверяет формат; соответствие UID проверяет account adapter.
+PortfolioValidationCode? validatePortfolioMediaPath(
+  String value, {
+  bool required = false,
+}) {
+  if (value.isEmpty && !required) return null;
+  final match = RegExp(r'^accounts/[^/]+/media/[0-9a-f]{32}\.jpg$')
+      .firstMatch(value);
+  if (match == null || match.end != value.length) {
+    return PortfolioValidationCode.invalidStructure;
+  }
+  return null;
+}
+
 PortfolioValidationCode? validatePortfolioText(
   String value, {
   bool required = false,
@@ -75,6 +91,7 @@ List<PortfolioValidationCode> validatePortfolioContent(
   text(profile.bio, 4000);
   text(profile.locationText, 200);
   add(validatePortfolioUrl(profile.avatarUrl));
+  add(validatePortfolioMediaPath(profile.avatarPath));
   ids(content.skills.map((skill) => skill.id));
   for (final skill in content.skills) {
     text(skill.name, 60, required: true);
@@ -92,6 +109,12 @@ List<PortfolioValidationCode> validatePortfolioContent(
     }
     add(validatePortfolioUrl(project.repositoryUrl));
     add(validatePortfolioUrl(project.liveUrl));
+    if (project.imagePaths.length > portfolioProjectImageLimit) {
+      issues.add(PortfolioValidationCode.invalidStructure);
+    }
+    for (final path in project.imagePaths) {
+      add(validatePortfolioMediaPath(path, required: true));
+    }
     final metadata = project.githubMetadata;
     if (project.source == PortfolioProjectSource.manual) {
       if (metadata != null) {

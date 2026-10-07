@@ -5,7 +5,7 @@
 **Текущая Flutter-основа и целевые границы mobile, web и общего backend**
 
 ![Architecture guide](https://raster.shields.io/badge/Architecture-guide-09090B?style=for-the-badge)
-![Stage Phase 10 complete](https://raster.shields.io/badge/Stage-Phase_10_complete-FF0012?style=for-the-badge)
+![Stage Phase 11 in progress](https://raster.shields.io/badge/Stage-Phase_11_in_progress-FF0012?style=for-the-badge)
 
 </div>
 
@@ -25,6 +25,7 @@
 - [Portfolio Suggestions](#portfolio-suggestions)
 - [Локальные настройки и draft на Phase 5](#локальные-настройки-и-draft-на-phase-5)
 - [Portfolio domain и локальный Builder](#portfolio-domain-и-локальный-builder)
+- [Приватные изображения — Phase 11](#приватные-изображения--phase-11)
 - [Source, draft и публикация](#source-draft-и-публикация)
 - [Ключевые потоки](#ключевые-потоки)
 - [Границы расширения](#границы-расширения)
@@ -34,6 +35,10 @@
 ---
 
 ## Текущее состояние — Phase 10
+
+Phase 10 завершена. На 2026-10-07 разрешена и реализуется Phase 11 Media;
+контракт и ограничения описаны в [media](#приватные-изображения--phase-11),
+приёмка — в [product spec](../product/product-spec.md#phase-11--media).
 
 В monorepo есть одно Flutter-приложение в `apps/mobile`. Код Architecture
 Phase 3 реализован поверх UI foundation и basic state management;
@@ -82,6 +87,7 @@ apps/mobile/
 │       ├── github_import/    # public GitHub source, DTO, Dio, Hive response cache
 │       ├── portfolio/        # public API и presentation read model
 │       ├── portfolio_draft/  # Builder, Hive/Firestore sync, publication и controller
+│       ├── media/            # picker/preprocessing, private Storage, UID-scoped DI
 │       ├── home/             # экран на PortfolioOverview
 │       └── settings/         # настройки, SharedPreferences adapter и preview состояний
 └── test/                     # contracts, DI, состояние, UI и responsive
@@ -301,6 +307,7 @@ features/<feature>/
 | [github_import](../../apps/mobile/lib/features/github_import/github_import.dart) | Public source models и `GitHubImportRepository`; Dio/DTO/cache в data, отдельный Riverpod controller и экран. Не меняет profile/projects/portfolio repositories |
 | [portfolio](../../apps/mobile/lib/features/portfolio/portfolio.dart) | `PortfolioOverview` объединяет публичные profile/projects states для Home и demo Portfolio; это presentation read model |
 | [portfolio_draft](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart) | Pure Dart portfolio content, validation/completion/suggestions, draft/sync/publication contracts; working controller, Builder/preview, Hive cache/outbox и UID-bound Firestore adapters |
+| [media](../../apps/mobile/lib/features/media/media.dart) | Pure picker/repository contracts, MIME/resize preprocessing, UID-bound Storage adapter; editor/image widgets используют публичный API |
 | Home и Settings | Рендерят данные публичных feature APIs; Home использует overview, Settings — profile state и AppSettings через Provider |
 
 </div>
@@ -386,7 +393,7 @@ Firestore; пустой offline cache не доказывает, что cloud dr
 проверяет server-only read перед новым переносом; при своём pending journal
 продолжает recovery. Corrupt/unsupported source, target или sync metadata
 блокируют перенос без перезаписи. V1 читается без migration; при явном переносе
-raw envelope/backup сохраняются, последующая ACK migration может создать v3.
+raw envelope/backup сохраняются, последующая ACK migration может создать v4.
 
 Durable owner journal записывается до online cloud claim. Transaction создаёт
 private current draft только при отсутствии записи; повтор разрешён только для
@@ -516,7 +523,8 @@ Ignore registry в private content хранит ID/fingerprint конкретн�
 даёт предложение. Cached source не получает свежий lastGitHubSyncAt;
 незавершённая pagination и отсутствие repository не удаляют curated проект.
 Prepared publication repository не вызывается этим путём.
-Схемы Hive v3/private Firestore 2, защита от downgrade и public projection
+На Phase 9 были введены Hive v3/private Firestore 2; на Phase 11 writers
+обновлены до v4/3 (ADR 0003). Защита от downgrade и public projection
 зафиксированы в [ADR 0002](../decisions/0002-github-import-and-review.md).
 Результаты приёмки — в [Phase 9](../product/product-spec.md#phase-9--living-portfolio--smart-github-sync).
 
@@ -581,7 +589,7 @@ Corrupt preferences дают безопасные defaults; locale не пере
 [`portfolio_draft`](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart)
 на Phase 5 сохранял предварительные заметки в envelope v1: notes, revision,
 UTC updatedAt, pendingSync. Phase 6 сохраняет полный portfolio draft в той же
-отдельной Hive box; совместимый переход к v3 описан ниже. Успешная запись увеличивает
+отдельной Hive box; совместимый переход к v4 описан ниже. Успешная запись увеличивает
 revision; на Phase 5–7 pendingSync обозначал локальные изменения без remote sync.
 На Phase 8 account repository связывает этот draft с durable outbox и реальным
 server ACK; guest остаётся local-only.
@@ -640,8 +648,9 @@ snapshot, увеличивает revision один раз и ставит pendin
 поскольку отбрасывает несохранённые правки. `saveNotes` изменяет только notes,
 сохраняя остальной content.
 
-Hive envelope v3 допускает nullable content и private GitHub metadata.
-Чтение v1/v2 не мигрирует запись; v2 projects становятся manual.
+Hive envelope v4 допускает nullable content, private GitHub metadata и media paths.
+Чтение v1/v2/v3 не мигрирует запись; v2 projects становятся manual;
+legacy content получает пустые media поля. Версии до v4 отвергают media keys.
 Чтение v1 сохраняет точные notes
 и metadata, возвращая content null, и само не переписывает запись. Первая явная
 запись сохраняет raw v1 backup в той же box перед заменой. Ошибка backup или записи
@@ -656,6 +665,30 @@ Education, GitHub, Resume и Location опциональны; скрытие б�
 Приёмка и ограничения — в [Phase 6](../product/product-spec.md#phase-6--portfolio-domain-и-локальный-builder).
 
 ---
+
+## Приватные изображения — Phase 11
+
+[Media API](../../apps/mobile/lib/features/media/media.dart) разделяет picker,
+preprocessing, Repository и Riverpod session state. Profile/project forms
+сохраняют upload result в локальной форме до Apply; Save остаётся прежним явным
+действием. Storage SDK работает по owner-only path, без `getDownloadURL`.
+Guest не имеет media repository; UID transition отменяет uploads и исключает
+late results. Private bytes cache живёт только в provider memory, внешние public
+avatars используют `cached_network_image`.
+
+`avatarPath`/`imagePaths` принадлежат private draft и не попадают в public codec.
+Original MIME/size, decode bounds, JPEG resize/compression и EXIF cleanup
+проверяются до upload. Storage Rules ограничивают owner read/create/delete,
+JPEG size и immutable path, запрещают list/public namespace. Firebase bearer
+tokens при намеренном раскрытии владельцем обходят Rules; приложение их не
+получает и не сохраняет.
+
+Прежние сохранённые files не удаляются при замене: offline/LWW клиент может
+ссылаться на них. Отмена новых unapplied uploads делает best-effort cleanup;
+server garbage collection отсутствует. Полный контракт и причины — в
+[ADR 0003](../decisions/0003-private-portfolio-media.md), команды — в
+[CONTRIBUTING](../../CONTRIBUTING.md#media-storage-и-native-acceptance), фактическая
+приёмка — в [Phase 11](../product/product-spec.md#phase-11--media).
 
 ## Source, draft и публикация
 
@@ -727,8 +760,8 @@ Unpublish удаляет snapshot/reservation и обнуляет pointer, со�
 [`Public projection`](../../apps/mobile/lib/features/portfolio_draft/data/portfolio_public_content_codec.dart)
 исключает hidden projects и очищает поля скрытых блоков перед записью snapshot.
 Accepted source/override fields и ignore registry удаляются из public payload.
-Private writer schema 2 читает 1/2, Rules запрещают downgrade; public schema 1
-сохраняет прежний curated contract. Миграция — в [ADR 0002](../decisions/0002-github-import-and-review.md).
+Private writer schema 3 читает 1/2/3, Rules запрещают downgrade; public schema 1
+сохраняет прежний curated contract и физически исключает private media keys. Миграция — в [ADR 0002](../decisions/0002-github-import-and-review.md).
 Private notes не входят в content и не отправляются в public collection.
 [`Firestore Rules`](../../firebase/firestore.rules) проверяют owner, field allowlists
 и связанные post-write records через `getAfter`/`existsAfter`: частичный

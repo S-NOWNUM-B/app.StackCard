@@ -12,6 +12,7 @@ import '../../../shared/widgets/stackcard_icon.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../../../shared/widgets/stackcard_technology_badge.dart';
+import '../../media/media.dart';
 import '../../portfolio_draft/portfolio_draft.dart';
 import '../domain/project.dart';
 import '../domain/project_filters.dart';
@@ -235,7 +236,7 @@ class _ProjectCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _ProjectImagePlaceholder(),
+              _ProjectImage(project: project),
               const SizedBox(width: StackCardSpacing.md),
               Expanded(
                 child: Column(
@@ -336,6 +337,21 @@ class _ProjectImagePlaceholder extends StatelessWidget {
   );
 }
 
+class _ProjectImage extends StatelessWidget {
+  const _ProjectImage({required this.project});
+  final Project project;
+
+  @override
+  Widget build(BuildContext context) => project.imagePaths.isEmpty
+      ? const _ProjectImagePlaceholder()
+      : PortfolioMediaImage(
+          path: project.imagePaths.first,
+          width: 72,
+          height: 72,
+          fallback: const _ProjectImagePlaceholder(),
+        );
+}
+
 class _ProjectTechnologyList extends StatelessWidget {
   const _ProjectTechnologyList({required this.project, this.compact = false});
 
@@ -392,7 +408,7 @@ void _showProjectDetails(BuildContext context, Project project) {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const _ProjectImagePlaceholder(),
+                      _ProjectImage(project: project),
                       const SizedBox(width: StackCardSpacing.md),
                       Expanded(
                         child: Text(
@@ -403,6 +419,17 @@ void _showProjectDetails(BuildContext context, Project project) {
                     ],
                   ),
                   const SizedBox(height: StackCardSpacing.lg),
+                  if (project.imagePaths.isNotEmpty) ...[
+                    Wrap(
+                      spacing: StackCardSpacing.sm,
+                      runSpacing: StackCardSpacing.sm,
+                      children: [
+                        for (final path in project.imagePaths)
+                          PortfolioMediaImage(path: path),
+                      ],
+                    ),
+                    const SizedBox(height: StackCardSpacing.lg),
+                  ],
                   Text(
                     context.strings.tr(
                       project.id == null

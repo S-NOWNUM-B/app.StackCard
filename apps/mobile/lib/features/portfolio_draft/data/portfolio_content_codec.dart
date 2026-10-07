@@ -10,6 +10,7 @@ Map<String, Object?> encodePortfolioContent(PortfolioContent content) => {
     'bio': content.profile.bio,
     'locationText': content.profile.locationText,
     'avatarUrl': content.profile.avatarUrl,
+    'avatarPath': content.profile.avatarPath,
   },
   'skills': content.skills
       .map((item) => {'id': item.id, 'name': item.name})
@@ -25,6 +26,7 @@ Map<String, Object?> encodePortfolioContent(PortfolioContent content) => {
           'liveUrl': item.liveUrl,
           'featured': item.featured,
           'visible': item.visible,
+          'imagePaths': item.imagePaths,
           'source': item.source.name,
           'githubMetadata': item.githubMetadata == null
               ? null
@@ -79,9 +81,12 @@ Map<String, Object?> encodePortfolioContent(PortfolioContent content) => {
       .toList(),
 };
 
-PortfolioContent decodePortfolioContent(Object? raw) {
+PortfolioContent decodePortfolioContent(Object? raw, {bool allowMedia = true}) {
   final json = _map(raw);
   final profile = _map(json['profile']);
+  if (!allowMedia && profile.containsKey('avatarPath')) {
+    throw const FormatException('Media требует новую версию draft');
+  }
   final content = PortfolioContent(
     profile: PortfolioProfile(
       name: _string(profile, 'name'),
@@ -90,6 +95,9 @@ PortfolioContent decodePortfolioContent(Object? raw) {
       bio: _string(profile, 'bio'),
       locationText: _string(profile, 'locationText'),
       avatarUrl: _string(profile, 'avatarUrl'),
+      avatarPath: profile.containsKey('avatarPath')
+          ? _string(profile, 'avatarPath')
+          : '',
     ),
     skills: _list(json, 'skills').map((raw) {
       final item = _map(raw);
@@ -126,6 +134,9 @@ PortfolioContent decodePortfolioContent(Object? raw) {
     }).toList(),
     projects: _list(json, 'projects').map((raw) {
       final item = _map(raw);
+      if (!allowMedia && item.containsKey('imagePaths')) {
+        throw const FormatException('Media требует новую версию draft');
+      }
       return PortfolioProject(
         id: _string(item, 'id'),
         title: _string(item, 'title'),
@@ -140,6 +151,14 @@ PortfolioContent decodePortfolioContent(Object? raw) {
         liveUrl: _string(item, 'liveUrl'),
         featured: _bool(item, 'featured'),
         visible: _bool(item, 'visible'),
+        imagePaths: !item.containsKey('imagePaths')
+            ? const []
+            : _list(item, 'imagePaths').map((value) {
+                if (value is! String) {
+                  throw const FormatException('Некорректный путь изображения');
+                }
+                return value;
+              }).toList(),
         source: item.containsKey('source')
             ? _enum(item, 'source', PortfolioProjectSource.values)
             : PortfolioProjectSource.manual,

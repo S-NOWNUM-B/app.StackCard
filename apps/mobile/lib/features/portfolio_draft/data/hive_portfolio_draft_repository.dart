@@ -20,7 +20,7 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
   }) : _clock = clock ?? DateTime.now;
 
   static const storageKey = 'draft';
-  static const schemaVersion = 3;
+  static const schemaVersion = 4;
   static const legacyBackupKey = 'draft.v1.backup';
 
   final Box<dynamic> _box;
@@ -160,7 +160,10 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
     if (decoded is! Map<String, dynamic>) throw _corrupted;
     final version = decoded['schemaVersion'];
     if (version is! int) throw _corrupted;
-    if (version != 1 && version != 2 && version != schemaVersion) {
+    if (version != 1 &&
+        version != 2 &&
+        version != 3 &&
+        version != schemaVersion) {
       throw const PortfolioDraftFailure(
         PortfolioDraftFailureKind.unsupportedVersion,
       );
@@ -189,7 +192,10 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
       if (!decoded.containsKey('content')) throw _corrupted;
       if (decoded['content'] != null) {
         try {
-          content = decodePortfolioContent(decoded['content']);
+          content = decodePortfolioContent(
+            decoded['content'],
+            allowMedia: version >= 4,
+          );
         } on FormatException {
           throw _corrupted;
         }

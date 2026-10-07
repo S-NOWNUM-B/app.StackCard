@@ -213,6 +213,46 @@ void main() {
     expect(firestore.transactions, 0);
   });
 
+  test('Publication keeps private media in the draft and excludes it from schema one', () async {
+    const avatar = 'accounts/owner/media/0123456789abcdef0123456789abcdef.jpg';
+    const image = 'accounts/owner/media/abcdef0123456789abcdef0123456789.jpg';
+    final original = _content();
+    final content = original.copyWith(
+      profile: original.profile.copyWith(avatarPath: avatar),
+      projects: [
+        PortfolioProject(
+          id: 'project',
+          title: 'Project',
+          description: '',
+          technologies: [],
+          featured: true,
+          imagePaths: [image],
+        ),
+      ],
+    );
+    final firestore = _Firestore()..documents[_draftPath] = _draft(content);
+    await _repository(firestore)
+        .publish(username: 'public-name', content: content);
+    final snapshot = firestore.documents['publicPortfolios/public-name']!;
+    expect(snapshot['schemaVersion'], 1);
+    final public = decodePortfolioContent(snapshot['content']);
+    expect(public.profile.avatarPath, isEmpty);
+    expect(public.projects.single.imagePaths, isEmpty);
+    expect(
+      (snapshot['content'] as Map)['profile'],
+      isNot(contains('avatarPath')),
+    );
+    expect(
+      ((snapshot['content'] as Map)['projects'] as List).single,
+      isNot(contains('imagePaths')),
+    );
+    final private = decodeCloudPortfolioDraft(
+      firestore.documents[_draftPath]!,
+      ownerUid: 'owner',
+    );
+    expect(private.content, content);
+  });
+
   test(
     'Malformed account pointer does not free or overwrite any documents',
     () async {
@@ -271,7 +311,7 @@ PortfolioContent _content() => PortfolioContent(
 );
 
 Map<String, dynamic> _draft(PortfolioContent content) => {
-  'schemaVersion': 1,
+  'schemaVersion': 3,
   'ownerUid': 'owner',
   'mutationId': 'saved-mutation',
   'localRevision': 4,

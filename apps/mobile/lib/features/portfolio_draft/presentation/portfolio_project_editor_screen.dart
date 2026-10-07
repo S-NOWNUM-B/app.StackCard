@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_states.dart';
+import '../../media/media.dart';
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_draft_repository.dart';
+import '../domain/portfolio_validation.dart';
 import '../portfolio_draft_providers.dart';
 import 'builder_editor_widgets.dart';
 import 'portfolio_draft_controller.dart';
@@ -30,6 +32,9 @@ class _PortfolioProjectEditorScreenState
   PortfolioProject? _initialProject;
   PortfolioDraftRepository? _initialRepository;
   bool _stale = false;
+  var _mediaKey = GlobalKey<PortfolioMediaEditorState>();
+  List<String> _imagePaths = const [];
+  bool _mediaBusy = false;
 
   @override
   void didUpdateWidget(PortfolioProjectEditorScreen oldWidget) {
@@ -41,6 +46,9 @@ class _PortfolioProjectEditorScreenState
       _initialProject = null;
       _initialRepository = null;
       _stale = false;
+      _mediaKey = GlobalKey<PortfolioMediaEditorState>();
+      _imagePaths = const [];
+      _mediaBusy = false;
     }
   }
 
@@ -61,6 +69,7 @@ class _PortfolioProjectEditorScreenState
     if (_fields != null) return;
     _initialProject = project;
     _initialRepository = ref.read(portfolioDraftRepositoryProvider);
+    _imagePaths = project?.imagePaths ?? const [];
     _featured = project?.featured ?? false;
     _visible = project?.visible ?? true;
     _fields = [
@@ -123,6 +132,7 @@ class _PortfolioProjectEditorScreenState
   }
 
   void _apply() {
+    if (_mediaBusy) return;
     if (_formKey.currentState?.validate() != true) return;
     final state = ref.read(portfolioDraftControllerProvider);
     final current = state.content;
@@ -151,8 +161,13 @@ class _PortfolioProjectEditorScreenState
       liveUrl: values['liveUrl']!,
       featured: _featured,
       visible: _visible,
+      imagePaths: _imagePaths,
     );
-    final project = existingProject?.withUserEdits(edited) ?? edited;
+    final project =
+        existingProject
+            ?.withUserEdits(edited)
+            .copyWith(imagePaths: _imagePaths) ??
+        edited;
     controller.updateContent(
       current.copyWith(
         projects: [
@@ -162,12 +177,17 @@ class _PortfolioProjectEditorScreenState
         ],
       ),
     );
+    _mediaKey.currentState?.retainUploads();
     closeBuilderEditor(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(portfolioDraftControllerProvider);
+    final repository = ref.watch(portfolioDraftRepositoryProvider);
+    final ownerChanged =
+        _initialRepository != null &&
+        !identical(_initialRepository, repository);
     final content = state.content;
     final found =
         widget.projectId == null ||
@@ -176,9 +196,19 @@ class _PortfolioProjectEditorScreenState
       titleKey: widget.projectId == null
           ? 'builderForm.newProjectTitle'
           : 'builderForm.editProjectTitle',
-      onApply: state.canEdit && content != null && found ? _apply : null,
+      onApply:
+          state.canEdit &&
+              content != null &&
+              found &&
+              !_mediaBusy &&
+              !ownerChanged
+          ? _apply
+          : null,
       child: BuilderContentGate(
         data: (content) {
+          if (ownerChanged) {
+            return Text(context.strings.tr('media.ownerChanged'));
+          }
           final project = _findProject(content);
           if (widget.projectId != null && project == null) {
             return StackCardStateView(
@@ -195,6 +225,14 @@ class _PortfolioProjectEditorScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  PortfolioMediaEditor(
+                    key: _mediaKey,
+                    maxImages: portfolioProjectImageLimit,
+                    paths: _imagePaths,
+                    onChanged: (paths) => setState(() => _imagePaths = paths),
+                    onBusyChanged: (busy) => setState(() => _mediaBusy = busy),
+                  ),
+                  const SizedBox(height: StackCardSpacing.xl),
                   if (_stale) ...[
                     Semantics(
                       liveRegion: true,

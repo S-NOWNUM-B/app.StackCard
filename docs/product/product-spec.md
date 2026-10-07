@@ -4,7 +4,7 @@
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage Phase 10 complete](https://raster.shields.io/badge/Stage-Phase_10_complete-111111?style=for-the-badge)
+![Stage Phase 11 in progress](https://raster.shields.io/badge/Stage-Phase_11_in_progress-111111?style=for-the-badge)
 ![Mobile + Web planned](https://raster.shields.io/badge/Mobile_%2B_Web-planned-FF0012?style=for-the-badge)
 
 </div>
@@ -30,6 +30,15 @@
 ---
 
 ## Статус и границы текущей работы
+
+**2026-10-07: Phase 11 — Media в работе**, по прямому поручению пользователя
+на локальной `dev`. Перед изменениями проверено: `dev` и `redesign/full-app`
+совпадали на `16ec4eda783e07a1e03ba606d3646f97700556fa`, рабочее дерево было чистым.
+Пауза функционального roadmap снята только для Phase 11; открытая приёмка
+полного Design v2 и Google/reset/iOS Phase 7 сохраняется. Следующие фазы,
+commit/push, deployment и billing upgrade этим поручением не разрешены.
+
+История выполненных этапов и состояния перед этим поручением:
 
 **Phase 0: Product foundation завершена.** Проверки кода и документов пройдены;
 debug APK собран и запущен на Android-эмуляторе, изменение счётчика подтверждено.
@@ -493,6 +502,11 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 
 ## План разработки
 
+**Актуальное поручение 2026-10-07:** возобновить roadmap с Phase 11 Media на
+`dev`, сохранив перенесённый дизайн. Это разрешение новой функции; оно не
+закрывает незавершённую приёмку полного Design v2. Описанная ниже пауза от
+2026-10-05 относится к состоянию до этого поручения.
+
 План объединяет исходное описание StackCard, требования учебного задания
 `individual_project_flutter_ru.docx` и актуальный scope выше: mobile, полноценный
 web-редактор и публичные портфолио. Этот раздел владеет roadmap; технические решения
@@ -667,7 +681,7 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 8 — Firestore synchronization | Завершена; offline/reconnect, Android restart, LWW и Rules проверены |
 | Phase 9 — Living Portfolio / Smart GitHub Sync | Завершена; импорт/review/ignore, overrides, совместимость draft и Android restart проверены |
 | Phase 10 — Portfolio Suggestions | Завершена; pure rules, объяснения ru/en, явные Preview/editor actions и Android-запуск проверены |
-| Phase 11 — Media | Запланирована |
+| Phase 11 — Media | Реализована; 1013 Flutter/40 Rules/Android SDK PASS; полная device/live приёмка открыта |
 | Phase 12 — Location | Запланирована |
 | Phase 13a — Public shell | Запланирована |
 | Phase 13b — Auth и редактор | Запланирована |
@@ -1400,18 +1414,18 @@ sign out и смена пользователя не раскрывают чуж
   незавершённом Xcode/CocoaPods toolchain; Google/reset/iOS приёмка Phase 7
   остаётся открытой. Commit/push не выполнялись.
 
-Phase 11 и последующие этапы требуют отдельного поручения пользователя.
+Phase 11 разрешена отдельным поручением 2026-10-07; переход к Phase 12 требует нового поручения.
 
 ### Phase 11 — Media
 
 **Задачи**
 
-- [ ] Подключить Firebase Storage для avatar и project images, camera/gallery.
+- [x] Подключить Firebase Storage для avatar и project images, camera/gallery.
   При выбранном файловом формате resume добавить его загрузку здесь.
-- [ ] Ввести MIME/size validation, compression/resize, upload progress, retry
+- [x] Ввести MIME/size validation, compression/resize, upload progress, retry
   и image caching через cached_network_image; обработать отказ в permissions
   и отмену выбора.
-- [ ] Создать Storage Rules, проверку ownership и public/private доступа,
+- [x] Создать Storage Rules, проверку ownership и public/private доступа,
   определить очистку заменённых файлов.
 
 **Проверки и приёмка**
@@ -1420,11 +1434,60 @@ Phase 11 и последующие этапы требуют отдельног�
   проходят MIME/size validation, compression/resize и отображаются после upload.
 - [ ] Progress, retry, caching, отказ в permissions и отмена выбора проверены
   на устройстве; выбранный файловый Resume обрабатывается, если он предусмотрен.
-- [ ] Storage Rules tests подтверждают ownership и public/private доступ;
+- [x] Storage Rules tests подтверждают ownership и public/private доступ;
   чужие/private файлы недоступны, очистка заменённых файлов определена.
 
 **Готово, когда:** изображения загружаются и отображаются, сбой даёт повтор,
 чужие/private файлы недоступны. Нативный сценарий проверен на устройстве.
+
+**Текущий результат (2026-10-07):** реализация Phase 11 выполнена на `dev`;
+фаза остаётся в работе до полной нативной приёмки. Контракт —
+[ADR 0003](../decisions/0003-private-portfolio-media.md).
+
+- Profile/project editors используют camera/gallery, JPEG/PNG/WebP validation,
+  isolate resize/compression с удалением EXIF/GPS, progress, typed failure и
+  retry без повторного выбора. Cancel не меняет draft; Apply и Save отдельны.
+  Resume остаётся обычным текстом. Upload доступен аккаунту, guest local-only.
+- `avatarPath` и до шести `imagePaths` сохраняются в Hive v4/private Firestore
+  schema 3; legacy versions читаются без перезаписи, downgrade запрещён.
+  GitHub import/review и текстовые правки сохраняют media. Portfolio/preview и
+  Projects показывают private SDK bytes; внешние public avatars используют
+  cached_network_image. Private cache только memory/UID scoped, без disk persistence.
+- Storage Rules разрешают owner get/create/delete только immutable JPEG до 2 MiB,
+  запрещают overwrite/list/foreign/unauthenticated/public namespace. App не
+  получает download URLs/tokens; сознательно раскрытый owner bearer URL Rules
+  не защищают. Public codec физически исключает private media fields.
+- Новые отменённые uploads очищаются best effort; old saved paths сохраняются
+  для offline/LWW references. Server garbage collection отсутствует, политика
+  retention/очистки определена в ADR. Lost picker result после Android process
+  death автоматически не применяется к новому owner/draft.
+- Проверки macOS zsh, cwd `apps/mobile`: формат **202 files, 0 changed**;
+  итоговый `flutter analyze --no-pub` — **0 issues (3.4s)**; полный
+  `flutter test --no-pub --reporter expanded` — **1013/1013 PASS (34s)**.
+  После уточнения ru/en сообщений и общего лимита повторены focused
+  media/localization tests — **24/24 PASS**. Pure model, migration, public
+  projection, provider UID/races, processor, forms/retry/cancel, narrow320/
+  text scale2 и locale parity входят в эти результаты.
+- `npm run test:all-rules` (cwd `firebase`) — **40/40 PASS**: 32 Firestore,
+  8 Storage; strict Design v2 asset/source integrity — **PASS**; local docs links
+  и `git diff --check` — **PASS**. NativeAppIcon/полная Design v2 parity этим
+  checker не подтверждаются.
+- `media_runtime_test.dart` на **emulator-5554** с Auth/Storage demo emulators
+  — **1/1 PASS (8s)**: настоящий Android SDK upload/progress/read и отказ
+  foreign/unauthenticated access. APK собран; обычный app session/draft не
+  менялся named SDK apps. Для emulator HTTP добавлен debug-only network config
+  с разрешением localhost/10.0.2.2; release исключение не получает.
+- После SDK теста обычный `main.dart` снова собран и запущен на emulator-5554
+  через `flutter run --no-pub --no-resident`, без uninstall. Две synthetic
+  media-формы с progress45% отрисованы при 390×844 с локальными Manrope/Noto
+  и просмотрены; controls/progress/form fields без overflow. Снимки временные,
+  mock preview не подтверждает системный picker или native visual parity.
+- **Открыто:** системные camera/gallery, отказ permissions и network retry на
+  устройстве, live bucket/Rules deployment, private image после native
+  Save/restart, iOS. Android SDK тест не подменяет эти сценарии. Live Storage
+  требует Blaze/созданный bucket; billing upgrade и deployment не выполнялись.
+  Google/reset/iOS Phase 7 и полная Design v2 acceptance остаются открытыми.
+  Commit/push не выполнялись; переход к Phase 12 не разрешён.
 
 ### Phase 12 — Location
 
@@ -1689,7 +1752,7 @@ browser push автоматически в scope не добавляется.
 App Distribution или deploy web требует запроса пользователя; iOS-публикация
 не заявляется выполненной по одному Android release.
 
-**Phase 0–6 и Phase 8–10 завершены. Google/reset/iOS приёмка Phase 7 остаётся открытой. Phase 11 и последующие этапы требуют отдельного поручения.**
+**Phase 0–6 и Phase 8–10 завершены. Google/reset/iOS приёмка Phase 7 остаётся открытой. Phase 11 в работе по поручению 2026-10-07; Phase 12 и далее требуют отдельного поручения.**
 
 ---
 

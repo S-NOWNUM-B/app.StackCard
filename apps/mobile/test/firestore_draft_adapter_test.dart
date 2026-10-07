@@ -61,11 +61,11 @@ void main() {
   });
 
   test(
-    'Legacy cloud schema remains readable and next write upgrades to version 2',
+    'Legacy cloud schema remains readable and next write upgrades to version 3',
     () {
       final legacy = decodeCloudPortfolioDraft(_data(), ownerUid: 'owner');
       final upgraded = encodeCloudPortfolioDraft(legacy);
-      expect(upgraded['schemaVersion'], 2);
+      expect(upgraded['schemaVersion'], 3);
       expect(upgraded['notes'], legacy.notes);
       expect(upgraded['mutationId'], legacy.mutationId);
       expect(upgraded['localRevision'], legacy.localRevision);
@@ -76,6 +76,97 @@ void main() {
       expect(restored.content, legacy.content);
     },
   );
+
+  test('Cloud V1 and V2 keep legacy media defaults without mutating input', () {
+    for (final version in [1, 2]) {
+      final data = {..._data(), 'schemaVersion': version};
+      final draft = decodeCloudPortfolioDraft(data, ownerUid: 'owner');
+      expect(draft.content!.profile.avatarPath, isEmpty);
+      expect(data['schemaVersion'], version);
+      expect(
+        (data['content'] as Map)['profile'],
+        isNot(contains('avatarPath')),
+      );
+    }
+  });
+
+  test('Cloud V3 round-trips only media owned by the captured UID', () {
+    final content = _mediaContent('owner');
+    final draft = CloudPortfolioDraft(
+      ownerUid: 'owner',
+      mutationId: 'media-save',
+      localRevision: 1,
+      notes: 'Private',
+      content: content,
+    );
+    final encoded = encodeCloudPortfolioDraft(draft);
+    expect(encoded['schemaVersion'], 3);
+    final restored = decodeCloudPortfolioDraft({
+      ...encoded,
+      'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 10, 7)),
+    }, ownerUid: 'owner');
+    expect(restored.content, content);
+    for (final foreign in [
+      content.copyWith(profile: _mediaContent('owner-extra').profile),
+      content.copyWith(projects: _mediaContent('foreign').projects),
+    ]) {
+      expect(
+        () => encodeCloudPortfolioDraft(
+          CloudPortfolioDraft(
+            ownerUid: 'owner',
+            mutationId: 'foreign-path',
+            localRevision: 1,
+            notes: '',
+            content: foreign,
+          ),
+        ),
+        throwsA(_failure(PortfolioSyncFailureKind.invalidData)),
+      );
+      expect(
+        () => decodeCloudPortfolioDraft({
+          ..._data(),
+          'schemaVersion': 3,
+          'content': encodePortfolioContent(foreign),
+        }, ownerUid: 'owner'),
+        throwsA(_failure(PortfolioSyncFailureKind.invalidData)),
+      );
+    }
+  });
+
+  test('Cloud legacy versions reject media fields and future schemas', () {
+    for (final version in [1, 2, 4]) {
+      expect(
+        () => decodeCloudPortfolioDraft({
+          ..._data(),
+          'schemaVersion': version,
+          'content': encodePortfolioContent(_mediaContent('owner')),
+        }, ownerUid: 'owner'),
+        throwsA(_failure(PortfolioSyncFailureKind.invalidData)),
+      );
+    }
+  });
+
+  test('Adapter rejects foreign media before SDK write', () async {
+    final firestore = _Firestore();
+    final repository = FirestorePortfolioDraftRepository(
+      firestore: firestore,
+      uid: 'owner',
+    );
+    await expectLater(
+      repository.write(
+        CloudPortfolioDraft(
+          ownerUid: 'owner',
+          mutationId: 'foreign-media',
+          localRevision: 1,
+          notes: '',
+          content: _mediaContent('foreign'),
+        ),
+      ),
+      throwsA(_failure(PortfolioSyncFailureKind.invalidData)),
+    );
+    expect(firestore.document.writes, isEmpty);
+    await firestore.document.events.close();
+  });
 
   test('Unresolved server timestamp is accepted only for pending snapshot', () {
     final data = {..._data(), 'updatedAt': null};
@@ -239,9 +330,30 @@ Map<String, dynamic> _data() => {
   'mutationId': 'mutation-1',
   'localRevision': 1,
   'notes': 'Private notes',
-  'content': encodePortfolioContent(PortfolioContent()),
+  'content': _legacyContent(),
   'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 10, 4)),
 };
+
+Map<String, Object?> _legacyContent() {
+  final encoded = encodePortfolioContent(PortfolioContent());
+  (encoded['profile'] as Map).remove('avatarPath');
+  return encoded;
+}
+
+PortfolioContent _mediaContent(String uid) => PortfolioContent(
+  profile: PortfolioProfile(
+    avatarPath: 'accounts/$uid/media/0123456789abcdef0123456789abcdef.jpg',
+  ),
+  projects: [
+    PortfolioProject(
+      id: 'project',
+      title: 'Project',
+      description: '',
+      technologies: [],
+      imagePaths: ['accounts/$uid/media/abcdef0123456789abcdef0123456789.jpg'],
+    ),
+  ],
+);
 
 class _Firestore extends Fake implements FirebaseFirestore {
   late _Document document;
