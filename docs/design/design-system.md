@@ -63,7 +63,8 @@ iOS transparent corners flattened на исходный #070708 и RGB без al
 [Generator](../../tools/redesign/export_native_icons.mjs) и
 [ledger](../redesign/source/native-app-icons.json) фиксируют source/output SHA,
 размеры и преобразование. D048 exact check20 PNG и Android debug build PASS;
-Home/Project editor/Resume editor/Contacts Dark-Light screenshots просмотрены.
+Current Home/Resume editor/Share screenshots просмотрены; Project/Contacts
+Dark-Light screenshots промежуточные до последних label/helper/counter правок.
 Full device/icon/Figma acceptance и iOS runtime отдельно; actual evidence — в
 [product checks](../product/product-spec.md#проверки-d048--2026-10-08).
 
