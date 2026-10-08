@@ -14,11 +14,14 @@
   и открытые проверки; пауза очереди не запрещает этот разрешённый scope.
   Обновление roadmap 2026-10-08 —
   [актуальные capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-08).
-  Старые singleton/public-username задачи не задают target; план не является
-  приёмкой полного переноса, запуском будущих сервисов или разрешением deploy.
+  D048 (2026-10-08): прямое поручение «закончи перенос» и явный ответ «Также
+  реализовать web и публикацию» расширяют разрешённый scope на mobile, actual
+  web и document publication. Старые singleton/public-username задачи не задают
+  target; это не приёмка полного переноса или разрешение deploy/billing/Git.
 - Flutter-проект находится в `apps/mobile`; не создавать второе приложение в корне.
-  Git относится ко всему monorepo. В `apps/web` пока только README;
-  Next.js-приложение и CI ещё не созданы; mobile Firebase Auth введён на Phase 7,
+  Git относится ко всему monorepo. Next.js-приложение находится в `apps/web`;
+  его правила — [Web scope](scopes/web.md), версии/команды — actual manifest.
+  CI остаётся отдельной capability; mobile Firebase Auth введён на Phase 7,
   Firestore sync и Rules введены на Phase 8; явный GitHub import/review — Phase 9.
 - Mobile targets — только Android и iOS. Сайт развивается отдельно в `apps/web`
   на Next.js; desktop и Flutter web не входят в scope мобильного проекта.
@@ -26,8 +29,9 @@
   личный кабинет/редактор и публичные резюме/портфолио. Редакторы используют общие
   owner data и правила явной публикации; новый target предусматривает multiple
   outputs. Mobile хранит общую базу и независимые документы внутри существующего
-  `PortfolioContent`, через один UID-bound draft repository. Публичные snapshots,
-  постоянные URL и web остаются отдельными нереализованными capabilities.
+  `PortfolioContent`, через один UID-bound draft repository. D048 вводит отдельные
+  trusted public snapshots и постоянный `/d/<publicId>`: server читает сохранённый
+  workspace, клиент не записывает public payload напрямую. Sync не публикует.
 - Existing Pattern First: сначала изучить аналог и canonical source, затем менять.
   Минимальный scope, без лишних слоёв, зависимостей и unrelated изменений.
 - Архитектура в [guide](../architecture/architecture.md) помечена как текущая или
@@ -44,8 +48,8 @@
   расширять эти механизмы, не вводить параллельные tokens и компоненты.
   Актуальная инициатива — [StackCard Design v2](../redesign/README.md): сначала
   читать её README и [план](../redesign/plan.md), сопоставлять capability с реальными
-  Figma/source contracts. Последнее поручение 2026-10-07 разрешает функциональный
-  mobile scope вне последовательной очереди фаз; прежние поручения Phase 11/12
+  Figma/source contracts. D048 разрешает перенос mobile/web/publication вне
+  последовательной очереди фаз; прежние поручения Phase 11/12
   сохранены как история. Карта полностью исключена. Приёмка редизайна открыта.
   Прежний [Figma-first план](../design/redesign-plan.md) сохраняется
   как история и не переопределяет последние требования. По D040 Lime/Manrope,
@@ -55,8 +59,8 @@
   [design guide](../design/design-system.md#действующий-runtime-contract-r8).
   Runtime использует четыре stateful roots: Home / Resumes / Projects / Portfolios;
   Home — mixed library, Resume/Portfolio — независимые private documents.
-  Legacy Builder остаётся редактором общей базы. Полную Figma parity, публикацию
-  и prerequisites не считать выполненными из наличия screens/headless checks.
+  Legacy Builder остаётся редактором общей базы. Полную Figma parity и live
+  publication acceptance не считать выполненными из screens/headless checks.
   При UI-переносе сверять target и реальный source.
   Экраны получают demo/mock и GitHub source data через Repository и Riverpod DI; widgets
   не импортируют concrete sources. Публичные feature APIs и направления
@@ -114,13 +118,17 @@
 
 ## Разработка по плану
 
-**Действующее исключение 2026-10-07:** по прямому поручению пользователя
-последовательная очередь фаз поставлена на паузу. Разрешённый mobile scope
+**Действующее исключение D045/D046/D048:** по прямому поручению пользователя
+последовательная очередь фаз поставлена на паузу. Разрешённый mobile/web/publication scope
 из [product spec](../product/product-spec.md#статус-и-границы-текущей-работы)
 выполняется по конкретным capabilities и сценариям, без повторного запроса
 разрешения фазы для навигации, документов, базы и совместимой private migration.
-Это не приёмка полного Figma/runtime, не автоматический старт web/publication
-и не разрешение commit/push/deploy. Правила ниже описывают режим очереди фаз
+Ответ 2026-10-08 явно разрешает web и публикацию документов; повторное разрешение
+для них не требуется. Это не приёмка полного Figma/runtime и не разрешение
+commit/push/deploy/billing. Последующий явный ответ пользователя «Да, выполнить
+визуальную проверку web/mobile» разрешает preview/browser/native проверки D048;
+фактические результаты и ограничения среды записывать отдельно.
+Правила ниже описывают режим очереди фаз
 при её возобновлении; минимальные изменения, проверки и сохранность данных
 действуют всегда.
 

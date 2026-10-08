@@ -10,7 +10,7 @@ final class SharedPreferencesSettingsRepository implements SettingsRepository {
     : _preferences = preferences;
 
   static const storageKey = 'stackcard.settings.v1';
-  static const schemaVersion = 1;
+  static const schemaVersion = 2;
   final SharedPreferencesAsync _preferences;
 
   @override
@@ -26,7 +26,7 @@ final class SharedPreferencesSettingsRepository implements SettingsRepository {
       final value = jsonDecode(stored);
       if (value is! Map<String, dynamic> ||
           value['version'] is! int ||
-          value['version'] != schemaVersion) {
+          (value['version'] != 1 && value['version'] != schemaVersion)) {
         return const AppSettings();
       }
       return AppSettings(
@@ -39,6 +39,7 @@ final class SharedPreferencesSettingsRepository implements SettingsRepository {
         showSourceDescriptions: value['showSourceDescriptions'] is bool
             ? value['showSourceDescriptions'] as bool
             : true,
+        reducedMotion: value['reducedMotion'] == true,
       );
     } on FormatException {
       return const AppSettings();
@@ -55,6 +56,7 @@ final class SharedPreferencesSettingsRepository implements SettingsRepository {
           'theme': settings.theme.name,
           'language': settings.language.name,
           'showSourceDescriptions': settings.showSourceDescriptions,
+          'reducedMotion': settings.reducedMotion,
         }),
       );
     } catch (_) {

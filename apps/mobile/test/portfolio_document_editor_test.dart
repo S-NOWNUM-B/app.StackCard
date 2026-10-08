@@ -524,6 +524,7 @@ void main() {
           matching: find.text('Убрать из документа'),
         ),
       );
+      await _tap(tester, 'document.detach.confirm');
       await _tap(tester, 'document.save');
       final detached = (await repository.read())!.content!;
       expect(
@@ -534,6 +535,142 @@ void main() {
         'library-project',
         'second-project',
       ]);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'project presentation persists locally without changing library or another document',
+    (tester) async {
+      final repository = await _repository(
+        existing: true,
+        kind: PortfolioDocumentKind.portfolio,
+      );
+      final initial = (await repository.read())!;
+      final original = initial.content!.documents.single.copyWith(
+        projects: const [
+          PortfolioProjectAttachment(projectId: 'library-project'),
+        ],
+      );
+      await repository.save(
+        initial.content!.copyWith(
+          documents: [
+            original,
+            original.copyWith(id: 'neighbour', title: 'Neighbour portfolio'),
+          ],
+        ),
+        expectedRevision: initial.revision,
+        notes: initial.notes,
+      );
+      await _open(
+        tester,
+        repository,
+        documentId: 'existing',
+        kind: PortfolioDocumentKind.portfolio,
+      );
+      await _tap(tester, 'document.section.projects');
+      await _tap(tester, 'document.presentation.library-project');
+      for (final field in ['name', 'description', 'contribution']) {
+        await _tap(tester, 'project-presentation.inherit.$field');
+      }
+      Finder presentationField(String field) => find.descendant(
+        of: find.byKey(ValueKey('project-presentation.$field')),
+        matching: find.byType(TextFormField),
+      );
+      await tester.enterText(
+        presentationField('name'),
+        'Project for this role',
+      );
+      await tester.enterText(
+        presentationField('description'),
+        'Document-specific narrative',
+      );
+      await tester.ensureVisible(presentationField('contribution'));
+      await tester.enterText(
+        presentationField('contribution'),
+        'Implemented mobile publishing',
+      );
+      await _tap(tester, 'project-presentation.apply');
+      await _tap(tester, 'document.save');
+      final saved = (await repository.read())!.content!;
+      final document = saved.documents.firstWhere(
+        (item) => item.id == 'existing',
+      );
+      final neighbour = saved.documents.firstWhere(
+        (item) => item.id == 'neighbour',
+      );
+      expect(saved.projects.single.title, 'Shared project');
+      expect(saved.projects.single.description, 'From the library');
+      expect(saved.projects.single.contribution, isEmpty);
+      expect(
+        resolveDocumentContent(saved, document).projects.single.title,
+        'Project for this role',
+      );
+      expect(
+        resolveDocumentContent(saved, document).projects.single.contribution,
+        'Implemented mobile publishing',
+      );
+      expect(
+        resolveDocumentContent(saved, neighbour).projects.single.title,
+        'Shared project',
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      await _open(
+        tester,
+        repository,
+        documentId: 'existing',
+        kind: PortfolioDocumentKind.portfolio,
+      );
+      await _tap(tester, 'document.section.projects');
+      await _tap(tester, 'document.presentation.library-project');
+      await _tap(tester, 'project-presentation.inherit.description');
+      await tester.ensureVisible(presentationField('contribution'));
+      await tester.enterText(presentationField('contribution'), '');
+      await _tap(tester, 'project-presentation.apply');
+      await _tap(tester, 'document.save');
+      final updated = (await repository.read())!.content!;
+      final updatedDocument = updated.documents.firstWhere(
+        (item) => item.id == 'existing',
+      );
+      expect(updatedDocument.projects.single.descriptionOverride, isNull);
+      expect(updatedDocument.projects.single.contributionOverride, '');
+      expect(
+        resolveDocumentContent(
+          updated,
+          updatedDocument,
+        ).projects.single.description,
+        'From the library',
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'contact visibility and location permission stay local to a document',
+    (tester) async {
+      final repository = await _repository(existing: true);
+      await _open(tester, repository, documentId: 'existing');
+      await _tap(tester, 'document.section.contacts');
+      expect(
+        find.textContaining('Публикация закрыта в общей базе'),
+        findsOneWidget,
+      );
+      await _tap(tester, 'document.contact.visible.site');
+      await _tap(tester, 'document.contact.location');
+      await _tap(tester, 'document.save');
+      final workspace = (await repository.read())!.content!;
+      expect(workspace.links.single.visible, isTrue);
+      expect(workspace.links.single.publishAllowed, isFalse);
+      expect(workspace.profile.publishLocation, isFalse);
+      expect(workspace.documents.single.content.links.single.visible, isFalse);
+      expect(
+        workspace.documents.single.content.links.single.publishAllowed,
+        isFalse,
+      );
+      expect(
+        workspace.documents.single.content.profile.publishLocation,
+        isTrue,
+      );
       expect(tester.takeException(), isNull);
     },
   );

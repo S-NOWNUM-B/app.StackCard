@@ -118,7 +118,7 @@ Map<String, dynamic> encodeCloudPortfolioDraft(CloudPortfolioDraft draft) {
   }
   _validateMediaOwner(draft.content, draft.ownerUid);
   return {
-    'schemaVersion': 5,
+    'schemaVersion': 6,
     'ownerUid': draft.ownerUid,
     'mutationId': draft.mutationId,
     'localRevision': draft.localRevision,
@@ -155,7 +155,8 @@ CloudPortfolioDraft decodeCloudPortfolioDraft(
           schemaVersion != 2 &&
           schemaVersion != 3 &&
           schemaVersion != 4 &&
-          schemaVersion != 5) ||
+          schemaVersion != 5 &&
+          schemaVersion != 6) ||
       ownerUid.isEmpty ||
       ownerUid.contains('/') ||
       data['ownerUid'] != ownerUid ||
@@ -177,6 +178,7 @@ CloudPortfolioDraft decodeCloudPortfolioDraft(
             allowMedia: schemaVersion >= 3,
             allowDocuments: schemaVersion >= 4,
             allowBaseSnapshot: schemaVersion >= 5,
+            allowPresentationPrivacy: schemaVersion >= 6,
           );
     _validateMediaOwner(content, ownerUid);
     return CloudPortfolioDraft(

@@ -5,21 +5,8 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == uid;
     }
 
-    function validUsername(username) {
-      return username is string
-        && username.matches('^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$');
-    }
-
     function accountPath(uid) {
       return /databases/$(database)/documents/accounts/$(uid);
-    }
-
-    function claimPath(username) {
-      return /databases/$(database)/documents/usernames/$(username);
-    }
-
-    function publicPath(username) {
-      return /databases/$(database)/documents/publicPortfolios/$(username);
     }
 
     function validMediaPath(path, uid) {
@@ -28,22 +15,26 @@ service cloud.firestore {
           && path.split('/')[1] == uid));
     }
 
-    function validProfile(profile, uid, media) {
+    function validProfile(profile, uid, version) {
       // Каждый обязательный field ниже читается и проверяется по типу;
       // повторный hasAll не нужен, missing/non-map остаётся fail-closed.
-      return profile.keys().hasOnly(media
+      return profile.keys().hasOnly(version >= 6
+          ? ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl',
+            'avatarPath', 'publishLocation']
+          : version >= 3
           ? ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl',
             'avatarPath']
           : ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl'])
         && profile.name is string && profile.username is string
         && profile.headline is string && profile.bio is string
         && profile.locationText is string && profile.avatarUrl is string
-        && (!media || validMediaPath(profile.get('avatarPath', ''), uid));
+        && (version < 3 || validMediaPath(profile.get('avatarPath', ''), uid))
+        && (version < 6 || profile.get('publishLocation', false) is bool);
     }
 
-    function validContentFields(content, uid, media) {
+    function validContentFields(content, uid, version) {
       // Rules не имеют циклов: элементы projects/imagePaths проверяет общий codec.
-      return validProfile(content.profile, uid, media)
+      return validProfile(content.profile, uid, version)
         && content.skills is list && content.projects is list
         && content.experience is list && content.education is list
         && content.links is list && content.blocks is list
@@ -51,7 +42,7 @@ service cloud.firestore {
     }
 
     function validPublicContent(content) {
-      return validContentFields(content, '', false)
+      return validContentFields(content, '', 0)
         && content.keys().hasOnly([
           'profile', 'skills', 'projects', 'experience', 'education', 'links',
           'blocks', 'resumeText', 'theme'
@@ -60,7 +51,7 @@ service cloud.firestore {
 
     function validPrivateContent(content, version, uid) {
       return version == 1 ? validPublicContent(content)
-        : validContentFields(content, uid, version >= 3)
+        : validContentFields(content, uid, version)
           && content.keys().hasOnly(version >= 4 ? [
             'profile', 'skills', 'projects', 'experience', 'education', 'links',
             'blocks', 'resumeText', 'theme', 'ignoredGitHubRepositories', 'documents'
@@ -69,157 +60,87 @@ service cloud.firestore {
             'blocks', 'resumeText', 'theme', 'ignoredGitHubRepositories'
           ])
           && content.get('ignoredGitHubRepositories', []) is list
-          && (version < 4
-            || (version == 4 && validDocuments(content.get('documents', []), uid))
-            || (version >= 5 && validReviewedDocuments(content.get('documents', []), uid)));
-    }
-
-    function validDocument(document, uid) {
-      // Legacy schema4: подробная форма и relations принадлежат strict codec.
-      return (document.content.profile.avatarPath + '/' + uid).split('/')[1] == uid;
-    }
-
-    function validReviewedDocument(document, pattern) {
-      // Один matcher проверяет оба canonical пути в бюджете 20 документов.
-      // При legacy без baseline используется прежний content; форма — codec.
-      let baseline = document.get('baseSnapshot', document.content);
-      return (document.content.profile.avatarPath + ';' + baseline.profile.avatarPath).matches(pattern);
-    }
-
-    function validDocuments(documents, uid) {
-      let count = documents.size();
-      // Rules не имеют циклов; лимит 20 сохраняется и проверяется emulator tests.
-      return documents is list && count <= 20
-        && (count <= 0 || validDocument(documents[0], uid))
-        && (count <= 1 || validDocument(documents[1], uid))
-        && (count <= 2 || validDocument(documents[2], uid))
-        && (count <= 3 || validDocument(documents[3], uid))
-        && (count <= 4 || validDocument(documents[4], uid))
-        && (count <= 5 || validDocument(documents[5], uid))
-        && (count <= 6 || validDocument(documents[6], uid))
-        && (count <= 7 || validDocument(documents[7], uid))
-        && (count <= 8 || validDocument(documents[8], uid))
-        && (count <= 9 || validDocument(documents[9], uid))
-        && (count <= 10 || validDocument(documents[10], uid))
-        && (count <= 11 || validDocument(documents[11], uid))
-        && (count <= 12 || validDocument(documents[12], uid))
-        && (count <= 13 || validDocument(documents[13], uid))
-        && (count <= 14 || validDocument(documents[14], uid))
-        && (count <= 15 || validDocument(documents[15], uid))
-        && (count <= 16 || validDocument(documents[16], uid))
-        && (count <= 17 || validDocument(documents[17], uid))
-        && (count <= 18 || validDocument(documents[18], uid))
-        && (count <= 19 || validDocument(documents[19], uid));
+          && (version < 4 || validReviewedDocuments(content.get('documents', []), uid));
     }
 
     function validReviewedDocuments(documents, uid) {
-      let count = documents.size();
-      // RE2 quote делает UID буквальным текстом. Вложенный \E закрывает quote,
-      // записывается как literal \E и открывает quote снова; replace требует
-      // отдельного экранирования replacement поверх строкового синтаксиса Rules.
+      // Padding убирает 20 условных ветвей и сохраняет бюджет Rules <= 1000.
+      // Фиксированные 40 разделителей отклоняют null, non-string и injected ';'.
+      let empty = {'id': null, 'content': {'profile': {'avatarPath': ''}}};
+      let padded = documents.concat([empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty]);
       let escapedUid = uid.replace('\\\\E', '\\\\E\\\\\\\\E\\\\Q');
       let media = 'accounts/\\Q' + escapedUid + '\\E/media/[0-9a-f]{32}[.]jpg';
-      let pattern = '^(' + media + ')?;(' + media + ')?$';
-      return documents is list && count <= 20
-        && (count <= 0 || validReviewedDocument(documents[0], pattern))
-        && (count <= 1 || validReviewedDocument(documents[1], pattern))
-        && (count <= 2 || validReviewedDocument(documents[2], pattern))
-        && (count <= 3 || validReviewedDocument(documents[3], pattern))
-        && (count <= 4 || validReviewedDocument(documents[4], pattern))
-        && (count <= 5 || validReviewedDocument(documents[5], pattern))
-        && (count <= 6 || validReviewedDocument(documents[6], pattern))
-        && (count <= 7 || validReviewedDocument(documents[7], pattern))
-        && (count <= 8 || validReviewedDocument(documents[8], pattern))
-        && (count <= 9 || validReviewedDocument(documents[9], pattern))
-        && (count <= 10 || validReviewedDocument(documents[10], pattern))
-        && (count <= 11 || validReviewedDocument(documents[11], pattern))
-        && (count <= 12 || validReviewedDocument(documents[12], pattern))
-        && (count <= 13 || validReviewedDocument(documents[13], pattern))
-        && (count <= 14 || validReviewedDocument(documents[14], pattern))
-        && (count <= 15 || validReviewedDocument(documents[15], pattern))
-        && (count <= 16 || validReviewedDocument(documents[16], pattern))
-        && (count <= 17 || validReviewedDocument(documents[17], pattern))
-        && (count <= 18 || validReviewedDocument(documents[18], pattern))
-        && (count <= 19 || validReviewedDocument(documents[19], pattern));
+      let deleted = exists(accountPath(uid)) ? get(accountPath(uid)).data.get('deletedDocumentIds', []) : [];
+      let ids = [padded[0].id,
+        padded[1].id,
+        padded[2].id,
+        padded[3].id,
+        padded[4].id,
+        padded[5].id,
+        padded[6].id,
+        padded[7].id,
+        padded[8].id,
+        padded[9].id,
+        padded[10].id,
+        padded[11].id,
+        padded[12].id,
+        padded[13].id,
+        padded[14].id,
+        padded[15].id,
+        padded[16].id,
+        padded[17].id,
+        padded[18].id,
+        padded[19].id];
+      let paths = [padded[0].content.profile.avatarPath, padded[0].get('baseSnapshot', padded[0].content).profile.avatarPath,
+        padded[1].content.profile.avatarPath, padded[1].get('baseSnapshot', padded[1].content).profile.avatarPath,
+        padded[2].content.profile.avatarPath, padded[2].get('baseSnapshot', padded[2].content).profile.avatarPath,
+        padded[3].content.profile.avatarPath, padded[3].get('baseSnapshot', padded[3].content).profile.avatarPath,
+        padded[4].content.profile.avatarPath, padded[4].get('baseSnapshot', padded[4].content).profile.avatarPath,
+        padded[5].content.profile.avatarPath, padded[5].get('baseSnapshot', padded[5].content).profile.avatarPath,
+        padded[6].content.profile.avatarPath, padded[6].get('baseSnapshot', padded[6].content).profile.avatarPath,
+        padded[7].content.profile.avatarPath, padded[7].get('baseSnapshot', padded[7].content).profile.avatarPath,
+        padded[8].content.profile.avatarPath, padded[8].get('baseSnapshot', padded[8].content).profile.avatarPath,
+        padded[9].content.profile.avatarPath, padded[9].get('baseSnapshot', padded[9].content).profile.avatarPath,
+        padded[10].content.profile.avatarPath, padded[10].get('baseSnapshot', padded[10].content).profile.avatarPath,
+        padded[11].content.profile.avatarPath, padded[11].get('baseSnapshot', padded[11].content).profile.avatarPath,
+        padded[12].content.profile.avatarPath, padded[12].get('baseSnapshot', padded[12].content).profile.avatarPath,
+        padded[13].content.profile.avatarPath, padded[13].get('baseSnapshot', padded[13].content).profile.avatarPath,
+        padded[14].content.profile.avatarPath, padded[14].get('baseSnapshot', padded[14].content).profile.avatarPath,
+        padded[15].content.profile.avatarPath, padded[15].get('baseSnapshot', padded[15].content).profile.avatarPath,
+        padded[16].content.profile.avatarPath, padded[16].get('baseSnapshot', padded[16].content).profile.avatarPath,
+        padded[17].content.profile.avatarPath, padded[17].get('baseSnapshot', padded[17].content).profile.avatarPath,
+        padded[18].content.profile.avatarPath, padded[18].get('baseSnapshot', padded[18].content).profile.avatarPath,
+        padded[19].content.profile.avatarPath, padded[19].get('baseSnapshot', padded[19].content).profile.avatarPath,
+        ''].join(';');
+      return documents is list && documents.size() <= 20 && !ids.hasAny(deleted)
+        && paths.matches('^((' + media + ')?;){40}$');
     }
 
-    function accountAdvanced(uid) {
-      let path = accountPath(uid);
-      return existsAfter(path)
-        && getAfter(path).data.ownerUid == uid
-        && getAfter(path).data.updatedAt == request.time
-        && getAfter(path).data.publicationVersion == (
-          exists(path) ? get(path).data.publicationVersion + 1 : 1
-        );
+    function activeAccount(uid) {
+      return !exists(accountPath(uid))
+        || get(accountPath(uid)).data.get('lifecycleState', 'active') == 'active';
     }
 
-    function linkedPublication(uid, username, version) {
-      return existsAfter(claimPath(username))
-        && getAfter(claimPath(username)).data.ownerUid == uid
-        && getAfter(claimPath(username)).data.username == username
-        && existsAfter(publicPath(username))
-        && getAfter(publicPath(username)).data.ownerUid == uid
-        && getAfter(publicPath(username)).data.username == username
-        && getAfter(publicPath(username)).data.publicationVersion == version
-        && getAfter(publicPath(username)).data.publishedAt == request.time;
-    }
-
-    function previousPublicationRemoved(previous, next) {
-      return previous == null || previous == next
-        || (!existsAfter(claimPath(previous))
-          && !existsAfter(publicPath(previous)));
-    }
-
-    function validAccount(data, uid) {
-      return data.keys().hasAll([
-          'ownerUid', 'username', 'updatedAt', 'publicationVersion'
-        ])
-        && data.keys().hasOnly([
-          'ownerUid', 'username', 'updatedAt', 'publicationVersion'
-        ])
-        && data.ownerUid == uid
-        && (data.username == null || validUsername(data.username))
-        && data.updatedAt == request.time
-        && data.publicationVersion is int && data.publicationVersion >= 1;
-    }
-
-    function removedPublication(uid, username) {
-      return accountAdvanced(uid)
-        && exists(accountPath(uid))
-        && get(accountPath(uid)).data.username == username
-        && getAfter(accountPath(uid)).data.username != username
-        && !existsAfter(claimPath(username))
-        && !existsAfter(publicPath(username));
+    function legacyAccount(uid) {
+      return !exists(accountPath(uid))
+        || !get(accountPath(uid)).data.keys().hasAny(['lifecycleGeneration']);
     }
 
     match /accounts/{uid} {
       allow get: if owner(uid);
-      allow list, delete: if false;
-      allow create: if owner(uid)
-        && validAccount(request.resource.data, uid)
-        && request.resource.data.publicationVersion == 1
-        && validUsername(request.resource.data.username)
-        && linkedPublication(uid, request.resource.data.username, 1);
-      allow update: if owner(uid) && resource.data.ownerUid == uid
-        && validAccount(request.resource.data, uid)
-        && request.resource.data.publicationVersion
-          == resource.data.publicationVersion + 1
-        && previousPublicationRemoved(
-          resource.data.username, request.resource.data.username
-        )
-        && (request.resource.data.username == null
-          ? resource.data.username != null
-          : linkedPublication(uid, request.resource.data.username,
-            request.resource.data.publicationVersion));
+      // Публикация/lock/tombstones принадлежат authenticated trusted service.
+      allow list, write: if false;
 
       match /drafts/{draftId} {
         allow get: if draftId == 'current' && owner(uid);
-        allow delete: if draftId == 'current' && owner(uid);
+        allow delete: if draftId == 'current' && owner(uid)
+          && activeAccount(uid) && legacyAccount(uid);
         allow list: if false;
         allow create, update: if draftId == 'current' && owner(uid)
+          && activeAccount(uid)
           && (!exists(/databases/$(database)/documents/accounts/$(uid)/drafts/$(draftId))
             || (resource.data.schemaVersion is int
-              && resource.data.schemaVersion in [1, 2, 3, 4, 5]
+              && resource.data.schemaVersion in [1, 2, 3, 4, 5, 6]
               && resource.data.ownerUid == uid
               && resource.data.schemaVersion <= request.resource.data.schemaVersion))
           // Обязательные 7 полей ниже читаются и проверяются по типу; extra запрещены.
@@ -228,7 +149,7 @@ service cloud.firestore {
             'notes', 'content', 'updatedAt'
           ])
           && request.resource.data.schemaVersion is int
-          && request.resource.data.schemaVersion in [1, 2, 3, 4, 5]
+          && request.resource.data.schemaVersion in [1, 2, 3, 4, 5, 6]
           && request.resource.data.ownerUid == uid
           && request.resource.data.mutationId is string
           && request.resource.data.mutationId.size() > 0
@@ -240,58 +161,33 @@ service cloud.firestore {
               request.resource.data.schemaVersion, uid))
           && request.resource.data.updatedAt == request.time;
       }
+
+      match /publications/{documentId} {
+        allow get, list: if owner(uid);
+        allow write: if false;
+      }
+
+      match /publicationOperations/{operationId} {
+        allow get: if owner(uid);
+        allow list, write: if false;
+      }
     }
 
     match /usernames/{username} {
       allow get: if request.auth != null;
-      allow list: if false;
-      allow create, update: if request.auth != null && validUsername(username)
-        && request.resource.data.keys().hasAll(['ownerUid', 'username'])
-        && request.resource.data.keys().hasOnly(['ownerUid', 'username'])
-        && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.username == username
-        && (!exists(claimPath(username))
-          || resource.data == request.resource.data)
-        && accountAdvanced(request.auth.uid)
-        && getAfter(accountPath(request.auth.uid)).data.username == username
-        && linkedPublication(request.auth.uid, username,
-          getAfter(accountPath(request.auth.uid)).data.publicationVersion);
-      allow delete: if owner(resource.data.ownerUid)
-        && removedPublication(resource.data.ownerUid, username);
+      allow list, write: if false;
     }
 
     match /publicPortfolios/{username} {
+      // Исторический snapshot доступен без миграции/перенаправления username.
       allow get: if true;
-      allow list: if false;
-      allow create, update: if request.auth != null && validUsername(username)
-        && request.resource.data.keys().hasAll([
-          'schemaVersion', 'ownerUid', 'username', 'content', 'publishedAt',
-          'publicationVersion', 'sourceMutationId'
-        ])
-        && request.resource.data.keys().hasOnly([
-          'schemaVersion', 'ownerUid', 'username', 'content', 'publishedAt',
-          'publicationVersion', 'sourceMutationId'
-        ])
-        && request.resource.data.schemaVersion is int
-        && request.resource.data.schemaVersion == 1
-        && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.username == username
-        && validPublicContent(request.resource.data.content)
-        && request.resource.data.publishedAt == request.time
-        && request.resource.data.sourceMutationId is string
-        && request.resource.data.sourceMutationId == getAfter(
-          /databases/$(database)/documents/accounts/$(request.auth.uid)/drafts/current
-        ).data.mutationId
-        && (!exists(publicPath(username))
-          || resource.data.ownerUid == request.auth.uid)
-        && accountAdvanced(request.auth.uid)
-        && getAfter(accountPath(request.auth.uid)).data.username == username
-        && request.resource.data.publicationVersion
-          == getAfter(accountPath(request.auth.uid)).data.publicationVersion
-        && linkedPublication(request.auth.uid, username,
-          request.resource.data.publicationVersion);
-      allow delete: if owner(resource.data.ownerUid)
-        && removedPublication(resource.data.ownerUid, username);
+      allow list, write: if false;
+    }
+
+    match /publicDocuments/{publicId} {
+      // Handler Admin SDK — единственный writer; public не содержит owner fields.
+      allow get: if publicId.matches('^[0-9a-f]{32}$');
+      allow list, write: if false;
     }
 
     match /{document=**} {

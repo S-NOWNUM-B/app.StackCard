@@ -7,9 +7,9 @@ import 'package:app_stackcard/features/auth/auth.dart';
 import 'package:app_stackcard/features/github_import/github_import.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
-import 'package:app_stackcard/features/projects/projects.dart';
 import 'package:app_stackcard/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -28,12 +28,13 @@ void main() {
   });
 
   testWidgets(
-    'Manual advice opens its editor without changing or saving a draft',
+    'Manual advice emits its editor target without changing or saving a draft',
     (tester) async {
       final content = _manualContent();
       final local = await _local(content);
-      await _openProjects(tester, local);
-      final container = _container(tester, ProjectsScreen);
+      PortfolioSuggestion? action;
+      await _openAdvice(tester, local, onAction: (value) => action = value);
+      final container = _container(tester, _AdviceSurface);
       expect(find.textContaining('Без описания'), findsOneWidget);
       expect(find.textContaining('нет демо-ссылки'), findsOneWidget);
       expect(find.text('Добавить описание'), findsOneWidget);
@@ -41,18 +42,9 @@ void main() {
       expect(container.read(portfolioDraftControllerProvider).content, content);
       expect(local.writes, 0);
       await _tap(tester, find.text('Добавить демо-ссылку'));
-      expect(
-        tester
-            .widget<PortfolioProjectEditorScreen>(
-              find.byType(PortfolioProjectEditorScreen),
-            )
-            .projectId,
-        'manual-1',
-      );
-      expect(
-        find.byKey(const ValueKey('builder_form_liveUrl')),
-        findsOneWidget,
-      );
+      expect(action?.action, PortfolioSuggestionAction.editProject);
+      expect(action?.projectId, 'manual-1');
+      expect(action?.kind, PortfolioSuggestionKind.missingPreview);
       expect(container.read(portfolioDraftControllerProvider).content, content);
       expect(local.writes, 0);
       expect((await local.read())!.content, content);
@@ -145,7 +137,7 @@ void main() {
         liveUrl: 'https://example.com/demo',
       );
       final local = await _local(content);
-      await _openProjects(tester, local);
+      await _openAdvice(tester, local);
       expect(find.textContaining('не менее 180 дней назад'), findsOneWidget);
       expect(find.textContaining('У репозитория 8 звёзд'), findsOneWidget);
       expect(find.text('Проверить актуальность'), findsOneWidget);
@@ -153,7 +145,7 @@ void main() {
       expect(
         _container(
           tester,
-          ProjectsScreen,
+          _AdviceSurface,
         ).read(portfolioDraftControllerProvider).content,
         content,
       );
@@ -169,7 +161,7 @@ void main() {
         liveUrl: 'https://example.com/demo',
       );
       final local = await _local(content);
-      await _openProjects(tester, local);
+      await _openAdvice(tester, local);
       expect(
         find.textContaining('Есть описание, технологии и демо-ссылка'),
         findsOneWidget,
@@ -178,7 +170,7 @@ void main() {
       expect(find.textContaining('звёзд'), findsNothing);
       expect(local.writes, 0);
       expect(
-        _container(tester, ProjectsScreen)
+        _container(tester, _AdviceSurface)
             .read(portfolioDraftControllerProvider)
             .content!
             .projects
@@ -192,7 +184,7 @@ void main() {
   testWidgets('English advice names a demo URL and localized editor actions', (
     tester,
   ) async {
-    await _openProjects(
+    await _openAdvice(
       tester,
       await _local(_manualContent()),
       language: AppLanguage.en,
@@ -225,11 +217,11 @@ void main() {
   testWidgets(
     'Demo content and an empty curated portfolio have no advice panel',
     (tester) async {
-      await _openProjects(tester, _Local());
-      expect(find.byKey(const ValueKey('projects_suggestions')), findsNothing);
+      await _openAdvice(tester, _Local());
+      expect(_nonEmptyAdvice(), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
-      await _openProjects(tester, await _local(PortfolioContent()));
-      expect(find.byKey(const ValueKey('projects_suggestions')), findsNothing);
+      await _openAdvice(tester, await _local(PortfolioContent()));
+      expect(_nonEmptyAdvice(), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
@@ -239,21 +231,14 @@ void main() {
   ) async {
     final pending = Completer<PortfolioDraft?>();
     final local = _Local()..readResult = () => pending.future;
-    await tester.pumpWidget(
-      StackCardApp(
-        initialLocation: '/projects',
-        providerOverrides: [
-          portfolioDraftRepositoryProvider.overrideWithValue(local),
-        ],
-      ),
-    );
+    await _openAdvice(tester, local, settle: false);
     await tester.pump();
-    expect(find.byKey(const ValueKey('projects_suggestions')), findsNothing);
+    expect(_nonEmptyAdvice(), findsNothing);
     pending.completeError(
       const PortfolioDraftFailure(PortfolioDraftFailureKind.corrupted),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('projects_suggestions')), findsNothing);
+    expect(_nonEmptyAdvice(), findsNothing);
     expect(local.writes, 0);
   });
 
@@ -381,22 +366,55 @@ Future<_Local> _local(PortfolioContent content) async {
   return local;
 }
 
-Future<void> _openProjects(
+Future<void> _openAdvice(
   WidgetTester tester,
   _Local local, {
   AppLanguage language = AppLanguage.ru,
+  ValueChanged<PortfolioSuggestion>? onAction,
+  bool settle = true,
 }) async {
   await tester.pumpWidget(
-    StackCardApp(
-      initialLocation: '/projects',
-      initialSettings: AppSettings(language: language),
-      providerOverrides: [
+    ProviderScope(
+      overrides: [
         portfolioDraftRepositoryProvider.overrideWithValue(local),
         portfolioSuggestionClockProvider.overrideWithValue(() => _now),
       ],
+      child: MaterialApp(
+        theme: StackCardTheme.dark,
+        locale: Locale(language.name),
+        supportedLocales: AppStrings.supportedLocales,
+        localizationsDelegates: const [
+          AppStrings.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: _AdviceSurface(onAction: onAction),
+      ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) await tester.pumpAndSettle();
+}
+
+Finder _nonEmptyAdvice() => find.byWidgetPredicate(
+  (widget) =>
+      widget is PortfolioSuggestionList && widget.suggestions.isNotEmpty,
+);
+
+class _AdviceSurface extends ConsumerWidget {
+  const _AdviceSurface({this.onAction});
+
+  final ValueChanged<PortfolioSuggestion>? onAction;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
+    body: SingleChildScrollView(
+      child: PortfolioSuggestionList(
+        suggestions: ref.watch(portfolioSuggestionsProvider),
+        onAction: onAction ?? (_) {},
+      ),
+    ),
+  );
 }
 
 Future<void> _openGitHub(

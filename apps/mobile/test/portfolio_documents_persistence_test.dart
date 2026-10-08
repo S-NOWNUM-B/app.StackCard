@@ -13,6 +13,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
+import 'support/legacy_portfolio_content.dart';
+
 void main() {
   late Directory directory;
   late Box<dynamic> box;
@@ -256,7 +258,7 @@ void main() {
     expect((await HivePortfolioDraftRepository(box).read())!.content, isNull);
   });
 
-  test('cloud writer5 roundtrip validates every snapshot owner and legacy no-doc schemas', () {
+  test('cloud writer6 roundtrip validates every snapshot owner and legacy no-doc schemas', () {
     final workspace = _workspace(now);
     final draft = CloudPortfolioDraft(
       ownerUid: 'owner',
@@ -266,7 +268,7 @@ void main() {
       content: workspace,
     );
     final encoded = encodeCloudPortfolioDraft(draft);
-    expect(encoded['schemaVersion'], 5);
+    expect(encoded['schemaVersion'], 6);
     final stored = {...encoded, 'updatedAt': Timestamp.fromDate(now)};
     expect(
       decodeCloudPortfolioDraft(stored, ownerUid: 'owner').content,
@@ -284,7 +286,7 @@ void main() {
     expect(
       () => decodeCloudPortfolioDraft({
         ...stored,
-        'schemaVersion': 6,
+        'schemaVersion': 7,
       }, ownerUid: 'owner'),
       throwsA(_syncFailure),
     );
@@ -392,6 +394,7 @@ String _legacyEnvelope(int version, DateTime now) {
     ),
     includeDocuments: false,
   );
+  removePresentationPrivacyFields(encoded);
   if (version < 4) {
     (encoded['profile'] as Map).remove('avatarPath');
     for (final project in encoded['projects'] as List) {

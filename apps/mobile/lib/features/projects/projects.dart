@@ -9,6 +9,8 @@ export 'presentation/project_filters.dart'
         ProjectFiltersNotifier,
         projectFiltersProvider;
 export 'presentation/projects_screen.dart' show ProjectsScreen;
+export 'presentation/project_library_card.dart'
+    show ProjectLibraryCard, ProjectLibraryCover;
 export 'projects_providers.dart'
     show
         projectsRepositoryProvider,

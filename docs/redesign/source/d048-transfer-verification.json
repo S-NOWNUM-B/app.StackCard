@@ -1,0 +1,333 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "d048-transfer-verification-2026-10-08",
+  "status": "verification_in_progress",
+  "recordedAtUtc": "2026-10-08T08:35:08.773005+00:00",
+  "evidenceRecordedBy": "documentation agent from integration lead results and checked local artifact bytes",
+  "scope": {
+    "description": "Local mobile/web/document-publication implementation and verification; full device/Figma/live acceptance remains separate.",
+    "phaseCompletionAsserted": false,
+    "fullR8CompletionAsserted": false,
+    "fullR9CompletionAsserted": false,
+    "DESIGN_READY": false,
+    "REDESIGN_DONE": false,
+    "implemented": [
+      "Four mobile roots, shared base/Projects Library and independent Resume/Portfolio",
+      "Hive7/cloud6 compatibility, document presentation overrides, explicit contact/location privacy",
+      "Trusted document publication, permanent publicId, operation recovery, public media and deletion lifecycle",
+      "Next.js owner/public runtime and Firebase account actions",
+      "Native Open/Share adapters, persisted reduced motion and pinned AppIcon packaging"
+    ]
+  },
+  "environment": {
+    "platform": "macOS",
+    "shell": "zsh",
+    "firebaseTarget": "local demo Emulator Suite",
+    "productionDataChanged": false,
+    "runtimeChecksAuthorized": true
+  },
+  "checks": {
+    "mobileFullSuite": {
+      "cwd": "apps/mobile",
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded"
+      ],
+      "status": "PASS",
+      "passed": 1323,
+      "failed": 0,
+      "secondsReported": 65,
+      "log": {
+        "name": "stackcard-full-tests-final2.log",
+        "localPath": "/private/tmp/stackcard-full-tests-final2.log",
+        "sha256": "b8be3f75dd2ce05470553a7c3e0c19f44417d745f516b21c9c86e10f7feb4a5d",
+        "bytes": 250557,
+        "requiredToRunChecks": false
+      }
+    },
+    "mobileAnalyze": {
+      "cwd": "apps/mobile",
+      "command": [
+        "flutter",
+        "analyze",
+        "--no-pub"
+      ],
+      "status": "PASS",
+      "issues": 0,
+      "secondsReported": 4.4,
+      "log": {
+        "name": "stackcard-analysis-final3.log",
+        "localPath": "/private/tmp/stackcard-analysis-final3.log",
+        "sha256": "297a8152c1d6c3c382fcc4f792ca7aa2c13c610ad4273b8dbfa7c800ed9757b7",
+        "bytes": 96,
+        "requiredToRunChecks": false
+      }
+    },
+    "rootFocusedMobile": {
+      "status": "PASS",
+      "passed": 45,
+      "failed": 0,
+      "includedInFullSuiteCount": false,
+      "countsMustNotBeSummed": true,
+      "log": {
+        "name": "stackcard-root-focus-final.log",
+        "localPath": "/private/tmp/stackcard-root-focus-final.log",
+        "sha256": "bfa6715808051f164db591eeebbc00f138866374a6252ffc6642ffd51678ef93",
+        "bytes": 8700,
+        "requiredToRunChecks": false
+      }
+    },
+    "importedAssets": {
+      "cwd": ".",
+      "command": [
+        "python3",
+        "tools/redesign/check_imports.py",
+        "--require-brand",
+        "--require-imported"
+      ],
+      "status": "PASS",
+      "files": 41
+    },
+    "nativeAppIcons": {
+      "cwd": ".",
+      "environment": {
+        "SHARP_MODULE_ROOT": "firebase/functions/node_modules"
+      },
+      "command": [
+        "node",
+        "tools/redesign/export_native_icons.mjs",
+        "--check"
+      ],
+      "status": "PASS",
+      "exactOutputFiles": 20,
+      "provenance": "docs/redesign/source/native-app-icons.json"
+    },
+    "backendAllRulesAndService": {
+      "cwd": "firebase",
+      "command": [
+        "npm",
+        "run",
+        "test:all-rules"
+      ],
+      "status": "PASS",
+      "passed": 51,
+      "breakdown": {
+        "firestore": 30,
+        "service": 11,
+        "storage": 10
+      }
+    },
+    "backendBarrierRaceFocused": {
+      "status": "PASS",
+      "passed": 11,
+      "countsMustNotBeSummedWithAllRules": true,
+      "coverage": "Actual Admin-SDK service barriers/races on demo Auth/Firestore/Storage"
+    },
+    "pureProjection": {
+      "cwd": "firebase/functions",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "status": "PASS",
+      "passed": 14,
+      "coverage": [
+        "Visible Resume section gates public attachment",
+        "Public collection limits apply after privacy projection",
+        "Private collections retain existing field/document/Firestore size limits"
+      ]
+    },
+    "webLatestCompleted": {
+      "cwd": "apps/web",
+      "tests": {
+        "status": "PASS",
+        "passed": 61
+      },
+      "typecheck": {
+        "status": "PASS"
+      },
+      "finalCheck": {
+        "command": [
+          "npm",
+          "run",
+          "check"
+        ],
+        "status": "pending"
+      },
+      "formatCheck": {
+        "command": [
+          "npm",
+          "run",
+          "format:check"
+        ],
+        "status": "not_recorded_here"
+      }
+    },
+    "browserActualE2E": {
+      "status": "PASS",
+      "target": "real local demo Auth/Firestore/Storage/publication service and current Next.js app",
+      "steps": [
+        "Authenticate demo owner and load mobile cloud6 fixture",
+        "CAS Save then explicit Publish",
+        "Read anonymous HTML without private fields",
+        "Save a changed role while published snapshot stays unchanged",
+        "Unpublish with dirty input preserved; withdrawn403 becomes friendly unavailable",
+        "Save and republish using the same publicId",
+        "Copy UI displays actual success"
+      ],
+      "responsiveRetest": {
+        "workspaceWidth": 390,
+        "workspaceScrollWidth": 390,
+        "fourTabsAndHeaderSettings": true,
+        "settingsOpenedByActualHeaderClick": true,
+        "publicPageWidth": 1280,
+        "publicPageScrollWidth": 1280,
+        "publicPageConsoleErrors": []
+      }
+    },
+    "nativeAndroid": {
+      "debugBuild": {
+        "status": "PASS",
+        "exactArgvNotRecordedHere": true
+      },
+      "runtime": "isolated demo session on Android emulator",
+      "share": {
+        "status": "PASS",
+        "systemSheetPresented": true,
+        "url": "real local demo publication URL",
+        "destinationChosen": false,
+        "messageSent": false
+      },
+      "currentScreensReviewed": [
+        "Home",
+        "Resume editor",
+        "Share sheet"
+      ],
+      "intermediateScreensReviewed": [
+        "Project editor before final Save label correction",
+        "Contacts Dark before helper correction",
+        "Contacts Light before counters removal"
+      ],
+      "finalIntermediateScreenCorrectionsCoveredBySourceAndTests": true
+    },
+    "documentation": {
+      "status": "PASS",
+      "markdownFiles": 11,
+      "heroAndBadgesGuides": 7,
+      "tocOrderGuides": 7,
+      "ownedDocumentDiffCheck": "clean"
+    }
+  },
+  "runtimeScreenshots": [
+    {
+      "name": "stackcard-native-home.png",
+      "localPath": "/private/tmp/stackcard-native-home.png",
+      "sha256": "e02a160d3922e1b6254f2e9cfbb5e18f218cbaffc17533aabcc0770c801a28a8",
+      "bytes": 159856,
+      "requiredToRunChecks": false,
+      "platform": "android",
+      "screen": "Home",
+      "reviewStatus": "current_D048_viewed_by_lead"
+    },
+    {
+      "name": "stackcard-native-resume-editor.png",
+      "localPath": "/private/tmp/stackcard-native-resume-editor.png",
+      "sha256": "f9f95a4df27a03e75197d26f7f9433c95ae30772338c86969fc828556cc0ba1d",
+      "bytes": 122267,
+      "requiredToRunChecks": false,
+      "platform": "android",
+      "screen": "Resume editor",
+      "reviewStatus": "current_D048_viewed_by_lead"
+    },
+    {
+      "name": "stackcard-native-share.png",
+      "localPath": "/private/tmp/stackcard-native-share.png",
+      "sha256": "5ee29db1869e3abad7d1cc6ea6b3579cb4ccc35ebfdf716d31433b1333b4724f",
+      "bytes": 192440,
+      "requiredToRunChecks": false,
+      "platform": "android",
+      "screen": "Share sheet",
+      "reviewStatus": "current_D048_viewed_by_lead"
+    },
+    {
+      "name": "stackcard-native-project-editor.png",
+      "localPath": "/private/tmp/stackcard-native-project-editor.png",
+      "sha256": "70d4ecc28682870047370d9a44fc7a90ca5e46336f8f73101d76bd3ab981140a",
+      "bytes": 138309,
+      "requiredToRunChecks": false,
+      "platform": "android",
+      "screen": "Project editor",
+      "reviewStatus": "intermediate_viewed_before_final_Save_label_correction"
+    },
+    {
+      "name": "stackcard-native-contacts.png",
+      "localPath": "/private/tmp/stackcard-native-contacts.png",
+      "sha256": "d0e253888783b86a864bc87dbac8b783feddbeb657f0a002cd3b44d54aace81f",
+      "bytes": 165010,
+      "requiredToRunChecks": false,
+      "platform": "android",
+      "screen": "Contacts Dark",
+      "reviewStatus": "intermediate_viewed_before_helper_correction"
+    },
+    {
+      "name": "stackcard-native-contacts-light.png",
+      "localPath": "/private/tmp/stackcard-native-contacts-light.png",
+      "sha256": "397823e8bce40dfb481a1236ef1e0875bf5e686e77e4313fc8ade133fea6bc1b",
+      "bytes": 170599,
+      "requiredToRunChecks": false,
+      "platform": "android",
+      "screen": "Contacts Light",
+      "reviewStatus": "intermediate_viewed_before_counters_removal"
+    },
+    {
+      "name": "stackcard-web-public-final.jpg",
+      "localPath": "/private/tmp/stackcard-web-public-final.jpg",
+      "sha256": "ae0a286bc3b48ce7a614fab30a6d388675925a7aae1b35486a7f449872f71f04",
+      "bytes": 40593,
+      "requiredToRunChecks": false,
+      "platform": "browser",
+      "screen": "Actual published page1280",
+      "reviewStatus": "final_viewed_and_DOM_verified_by_lead"
+    },
+    {
+      "name": "stackcard-web-workspace-mobile-final.jpg",
+      "localPath": "/private/tmp/stackcard-web-workspace-mobile-final.jpg",
+      "sha256": "50cd2dc0befe91cdf4c1a564415e217d996734702f5b8875c5a1430e22a38dc2",
+      "bytes": 35161,
+      "requiredToRunChecks": false,
+      "platform": "browser",
+      "screen": "Workspace header Settings390",
+      "reviewStatus": "final_viewed_and_DOM_verified_by_lead"
+    }
+  ],
+  "contractLimits": {
+    "privateHiveWriter": 7,
+    "privateCloudWriter": 6,
+    "publicDocumentSchema": 1,
+    "privateAggregateStorageLimit": "existing Firestore1MiB",
+    "privateCollectionGlobal200Limit": false,
+    "publicCollectionLimit": 200,
+    "publicLimitAppliedAfterProjection": true,
+    "publicResumeAttachmentRequiresVisibleSectionAndSeparatelyPublishedTarget": true
+  },
+  "openGates": [
+    "Final npm run check after browser dev server stop",
+    "Full Figma parity/journey/a11y matrix and explicit user acceptance",
+    "iOS build/runtime: full Xcode/simctl unavailable",
+    "Actual native Auth/Google, camera/picker/permissions and successful geolocation",
+    "Native Open/browser handoff beyond demonstrated Android Share sheet",
+    "Live cloud6 sync and Rules/Functions/web deployment",
+    "Inbox/FCM, QR/DeveloperCard, store release and billing remain future scope"
+  ],
+  "limitations": [
+    "Focused counts overlap suite coverage; do not sum them into a new total",
+    "Screenshots/logs are optional local evidence; hashes identify captured bytes, not a source-stability proof between runs",
+    "Intermediate native images do not prove final corrected UI appearance",
+    "Emulator service and local browser verification do not prove production deployment",
+    "Android verification does not prove iOS readiness"
+  ],
+  "canonicalStatus": "docs/product/product-spec.md#проверки-d048--2026-10-08"
+}

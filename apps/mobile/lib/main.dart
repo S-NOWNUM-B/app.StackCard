@@ -17,6 +17,7 @@ import 'features/auth/auth.dart';
 import 'features/media/media.dart';
 import 'features/portfolio_draft/portfolio_draft.dart';
 import 'features/projects/projects.dart';
+import 'features/settings/settings_providers.dart';
 import 'shared/widgets/stackcard_states.dart';
 
 void main() {
@@ -81,6 +82,24 @@ class _StackCardBootstrapState extends State<StackCardBootstrap> {
             ),
             portfolioMediaRepositoryFactoryProvider.overrideWithValue(
               runtime.mediaRepositoryForUser,
+            ),
+            documentPublicationRepositoryFactoryProvider.overrideWithValue(
+              runtime.publicationRepositoryForUser,
+            ),
+            documentPublicationOperationStoreFactoryProvider.overrideWithValue(
+              runtime.publicationOperationStoreForUser,
+            ),
+            documentLinkActionsProvider.overrideWithValue(
+              const NativeDocumentLinkActions(),
+            ),
+            accountDeletionJournalFactoryProvider.overrideWithValue(
+              runtime.accountDeletionJournalForUser,
+            ),
+            accountDeletionInitialOwnerProvider.overrideWithValue(
+              runtime.pendingDeletionOwner,
+            ),
+            accountConfirmedDeletionCleanupProvider.overrideWithValue(
+              runtime.clearConfirmedDeletedUser,
             ),
             guestDraftTransferProvider.overrideWithValue(
               runtime.transferGuestToUser,
@@ -220,6 +239,8 @@ class _RoutedStackCardAppState
       restoring: session.isLoading || session.hasError,
       authenticated: user != null,
       guest: guest,
+      pendingAccountDeletion:
+          ref.read(accountPendingDeletionOwnerProvider) != null,
     );
   }
 
@@ -247,8 +268,13 @@ class _RoutedStackCardAppState
   Widget build(BuildContext context) {
     ref.listen(accountSessionProvider, (_, _) => _sessionChanged());
     ref.listen(guestAccessProvider, (_, _) => _sessionChanged());
-    return Selector<AppearanceController, (ThemeMode, Locale)>(
-      selector: (_, controller) => (controller.themeMode, controller.locale),
+    ref.listen(
+      accountPendingDeletionOwnerProvider,
+      (_, _) => _sessionChanged(),
+    );
+    return Selector<AppearanceController, (ThemeMode, Locale, bool)>(
+      selector: (_, controller) =>
+          (controller.themeMode, controller.locale, controller.reducedMotion),
       builder: (context, appearance, _) => MaterialApp.router(
         key: ValueKey(_identity),
         title: 'StackCard',
@@ -265,6 +291,15 @@ class _RoutedStackCardAppState
           GlobalCupertinoLocalizations.delegate,
         ],
         themeAnimationDuration: Duration.zero,
+        builder: (context, child) {
+          final media = MediaQuery.of(context);
+          return MediaQuery(
+            data: media.copyWith(
+              disableAnimations: media.disableAnimations || appearance.$3,
+            ),
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
         routerConfig: _router,
       ),
     );

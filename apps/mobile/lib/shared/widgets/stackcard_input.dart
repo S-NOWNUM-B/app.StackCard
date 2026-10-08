@@ -25,7 +25,9 @@ class StackCardInput extends StatelessWidget {
     this.helperText,
     this.errorText,
     this.focusNode,
-  }) : assert(prefixIcon == null || prefixIconWidget == null);
+    this.prefixIconSize = 20,
+  }) : assert(prefixIcon == null || prefixIconWidget == null),
+       assert(prefixIconSize > 0);
 
   final String label;
   final String? hint;
@@ -35,6 +37,7 @@ class StackCardInput extends StatelessWidget {
   final bool enabled;
   final IconData? prefixIcon;
   final Widget? prefixIconWidget;
+  final double prefixIconSize;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onFieldSubmitted;
@@ -93,13 +96,13 @@ class StackCardInput extends StatelessWidget {
                   widthFactor: 1,
                   heightFactor: 1,
                   child: SizedBox.square(
-                    dimension: 20,
+                    dimension: prefixIconSize,
                     child: prefixIconWidget,
                   ),
                 )
               : prefixIcon == null
               ? null
-              : Icon(prefixIcon, size: 20),
+              : Icon(prefixIcon, size: prefixIconSize),
           constraints: BoxConstraints(
             minHeight: multiline ? 120 : StackCardSize.inputHeight,
           ),

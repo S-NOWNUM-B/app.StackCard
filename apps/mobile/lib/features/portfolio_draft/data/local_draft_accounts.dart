@@ -19,6 +19,7 @@ final class LocalDraftAccounts {
   static const _guestBackupKey = HivePortfolioDraftRepository.legacyBackupKey;
 
   final Box<dynamic> _box;
+  final Map<String, int> _userGenerations = {};
 
   HivePortfolioDraftRepository get guestRepository {
     final generation = _generation();
@@ -32,14 +33,38 @@ final class LocalDraftAccounts {
 
   HivePortfolioDraftRepository repositoryForUser(String uid) {
     final key = _userKey(uid);
+    final generation = _userGenerations[uid] ?? 0;
     return HivePortfolioDraftRepository(
       _box,
       storageKey: key,
       backupKey: _backupKey(key),
       beforeAccess: () {
+        if (generation != (_userGenerations[uid] ?? 0)) throw _conflict;
         if (_journal()?.ownerKey == key) throw _conflict;
       },
     );
+  }
+
+  /// Вызывается только после подтверждённого удаления captured UID сервером.
+  /// Старые handles теряют право записи; guest и другие UID сохраняются.
+  Future<void> clearConfirmedDeletedUser(String uid) {
+    final key = _userKey(uid);
+    _userGenerations[uid] = (_userGenerations[uid] ?? 0) + 1;
+    return HiveDraftOperations.run(_box, () async {
+      final journal = _journal();
+      final keys = _box.keys.where((item) =>
+          item == key ||
+          (item is String && item.startsWith('$key.v')) ||
+          item == HivePortfolioSyncMetadataStore.storageKeyForUser(uid)).toList();
+      for (final item in keys) {
+        await _box.delete(item);
+      }
+      if (journal?.ownerKey == key) {
+        await _box.delete(_journalKey);
+        await _box.put(_generationKey, _generation() + 1);
+      }
+      await _box.flush();
+    });
   }
 
   Future<bool> hasGuestDraft({String? forUid}) => HiveDraftOperations.run(

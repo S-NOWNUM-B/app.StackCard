@@ -17,9 +17,10 @@ PortfolioContent projectPublicPortfolioContent(PortfolioContent content) {
       headline: profileVisible ? profile.headline : '',
       avatarUrl: profileVisible ? profile.avatarUrl : '',
       bio: includes(PortfolioBlockKind.about) ? profile.bio : '',
-      locationText: includes(PortfolioBlockKind.location)
+      locationText: includes(PortfolioBlockKind.location) && profile.publishLocation
           ? profile.locationText
           : '',
+      publishLocation: profile.publishLocation,
     ),
     skills: includes(PortfolioBlockKind.skills) ? content.skills : const [],
     projects: includes(PortfolioBlockKind.featuredProjects)
@@ -30,6 +31,7 @@ PortfolioContent projectPublicPortfolioContent(PortfolioContent content) {
                   id: project.id,
                   title: project.title,
                   description: project.description,
+                  contribution: project.contribution,
                   technologies: project.technologies,
                   repositoryUrl: project.repositoryUrl,
                   liveUrl: project.liveUrl,
@@ -46,6 +48,7 @@ PortfolioContent projectPublicPortfolioContent(PortfolioContent content) {
         ? content.education
         : const [],
     links: content.links.where((link) {
+      if (!link.publishAllowed || !link.visible) return false;
       return includes(
         link.kind == SocialLinkKind.github
             ? PortfolioBlockKind.github
@@ -65,6 +68,11 @@ Map<String, Object?> encodePublicPortfolioContent(PortfolioContent content) {
   );
   encoded.remove('ignoredGitHubRepositories');
   (encoded['profile']! as Map).remove('avatarPath');
+  (encoded['profile']! as Map).remove('publishLocation');
+  for (final link in encoded['links']! as List) {
+    (link as Map).remove('publishAllowed');
+    link.remove('visible');
+  }
   const projectFields = {
     'id',
     'title',

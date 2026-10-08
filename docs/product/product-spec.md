@@ -4,8 +4,8 @@
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage mobile capabilities](https://raster.shields.io/badge/Stage-mobile_capabilities-111111?style=for-the-badge)
-![Mobile + Web planned](https://raster.shields.io/badge/Mobile_%2B_Web-planned-FF0012?style=for-the-badge)
+![Stage full transfer in progress](https://raster.shields.io/badge/Stage-full_transfer_in_progress-111111?style=for-the-badge)
+![Mobile + Web source](https://raster.shields.io/badge/Mobile_%2B_Web-source-C7FF1A?style=for-the-badge)
 
 </div>
 
@@ -31,6 +31,16 @@
 
 ## Статус и границы текущей работы
 
+**2026-10-08, D048:** поручение «закончи перенос» и явный ответ «Также реализовать
+web и публикацию» разрешают завершение mobile-сценариев, actual Next.js web и
+публикацию независимых Resume/Portfolio. Source пакета реализован; текущие
+headless/emulator/browser/Android результаты ниже отделены от full acceptance
+и live availability. Deploy/billing/
+commit/push не запрошены. Последующий явный ответ «Да, выполнить визуальную
+проверку web/mobile» разрешает D048 preview/browser/native checks; результаты
+и ограничения среды записываются отдельно.
+R7 awaiting_review, DESIGN_READY/REDESIGN_DONE и пользовательская приёмка открыты.
+
 **2026-10-07: последовательная разработка по фазам поставлена на паузу**
 по прямому поручению пользователя. Действующая работа — развитие mobile по Figma
 и концепции «общая профессиональная база → несколько резюме и портфолио»:
@@ -53,34 +63,71 @@
   сохранённую базу с последним просмотренным снимком: унаследованные изменения
   выбраны, собственные правки остаются невыбранными. Apply меняет только buffer,
   Save отдельно сохраняет документ. Legacy без снимка не предлагает автозамену.
-- Project остаётся одной записью Library. Документ хранит ordered relations
-  projectId/visible/featured; удаление связи сохраняет проект, удаление проекта
+- Project остаётся одной записью Library с отдельным contribution. Документ
+  хранит ordered relations projectId/visible/featured и optional title/description/
+  contribution overrides: null наследует Library, явное значение меняет только
+  этот документ. Удаление связи сохраняет проект, удаление проекта
   очищает его связи. «Создать проект» в документе держит новую Library запись
   в local buffer; общий Save пишет Project и attachment атомарно одной revision,
   Cancel не добавляет проект. Portfolio может выбрать private Resume по ID.
 - Scoped Save документа, проекта или базы использует прежний UID-bound draft
   repository; соседний несохранённый ввод и notes не публикуются/не сохраняются
-  этим действием. Hive writer6/private cloud5 читают старые версии без rewrite
-  при чтении, с raw backups до upgrade; public schema1 прежняя.
+  этим действием. Hive writer7/private cloud6 читают старые версии без rewrite
+  при чтении, с raw backups до upgrade; legacy public schema1 прежняя.
+- Public contacts отделены от login email: typed email/phone/telegram/links,
+  разрешение базы `publishAllowed` default false и document selection `visible`
+  default true. Публикация location разрешается отдельно (default false);
+  privacy изменение требует explicit Publish/Unpublish для public snapshots.
 - Старый Builder и `resumeText` сохраняются. Явный импорт legacy создаёт
   документы со stable legacy IDs; неизвестные/повреждённые записи блокируют
   перезапись. Полный контракт — в
   [architecture](../architecture/architecture.md#общая-база-и-независимые-документы).
 
-**Остаётся:** multiple-document Publish/Unpublish и постоянные URL, доверенная
-public projection/validation, публичный renderer и полноценный `apps/web`;
-полные контакты/privacy/account management, notifications и native sharing;
-локальные overrides представления Project,
-полная Figma/native приёмка и ранее открытые Google/reset/iOS/media/location
-сценарии. Карточки private документов честно показывают draft и отсутствие
-публичной ссылки. Private Resume attachment не становится публичной ссылкой.
-Публикация, deploy, billing, commit/push этим поручением не выполняются.
-Rules/cloud schema5 изменены в исходниках; live sync нового payload и обновление
-Rules окружения не подтверждены локальными widget/Rules checks.
+**D048 publication/web реализованы в source:** authenticated HTTP
+`documentPublication` читает server-saved workspace, создаёт trusted public
+projection отдельного документа и постоянный `/d/<publicId>`. Реализованы exact
+saved mutation/CAS, inventory/version, recovery unknown operations, immutable
+public media и Unpublish/delete lifecycle. Next.js содержит landing/download,
+Auth, owner базу/Library/document editors и anonymous published-only reader.
+Account actions используют Firebase SDK; deletion journal восстанавливает прежнюю
+операцию после утраты Auth. Проверки D048 приведены ниже; prepared legacy
+username API не определяет этот public contract.
+Private Resume attachment даёт public link только после отдельной подтверждённой
+публикации Resume. Фиктивные URL или success для отсутствующего сервиса запрещены.
+
+**Открытая приёмка:** полная Figma/visual/native/browser parity и прежние
+Google/reset/iOS/media/location сценарии; live cloud6 sync и deployment Rules/
+Functions/web ещё не подтверждены. Inbox/FCM, QR/Developer Card, store release
+и billing остаются отдельными будущими capabilities. Новые результаты tests
+не закрывают эти gates. Production публикации пользователя этим запуском не создаются.
 
 Наличие кода не подтверждает проверку нового сценария. Итоговые проверки этой
 работы фиксируются здесь по фактам; прежние 950/1068 PASS относятся к своим
 историческим версиям и не доказывают новую document модель.
+
+### Проверки D048 — 2026-10-08
+
+Результаты ведущего по текущему пакету; emulator/browser использовали demo
+accounts и fixture, production данные/публикации не менялись. Числа отдельных
+focused прогонов не суммируются с полным suite.
+
+| Проверка | Фактический результат |
+| --- | --- |
+| Mobile regression | Полный `flutter test --no-pub --reporter expanded` — **1323/1323 PASS**; run log `/private/tmp/stackcard-full-tests-final2.log`. Root-focused проверки — **45 PASS**. |
+| Mobile static | Предыдущий final2 `flutter analyze --no-pub` — **0 issues**; final3 повтор ещё выполняется. Его итог не подменяется предыдущим PASS. |
+| Assets | Strict `check_imports.py --require-brand --require-imported` — **41 files PASS**; `export_native_icons.mjs --check` с `SHARP_MODULE_ROOT=firebase/functions/node_modules` — **20 exact PNG PASS**. |
+| Backend | `npm run test:all-rules` — **51 PASS**: Firestore30, actual Admin-SDK service11, Storage10. Focused barrier/race service run — **11 PASS**; latest pure projection suite — **14 PASS**. |
+| Web static/contracts | Последний завершённый `npm test` — **61 PASS**, typecheck — **PASS**. Final production build ещё ожидает завершения browser session; новый build PASS не заявлен. |
+| Browser E2E | Actual demo Auth → mobile cloud6 fixture → web CAS Save → Publish → anonymous HTML. HTML не содержит private fields. Save новой роли сохранил прежний public snapshot; dirty Unpublish сохранил ввод, withdrawn403 дал friendly unavailable state; Save+Republish сохранили publicId. Реальный Copy UI показал success. |
+| Native Android | Debug build текущего source — **PASS**. Изолированная demo session: Home, Project editor, Resume editor и Contacts Dark/Light запущены; screenshots просмотрены ведущим. Native Share sheet ещё проверяется. |
+| Documentation | 11 updated files: оформление/local links — **PASS**; hero/badges и TOC order семи guides — **PASS**; owned-document `git diff --check` clean. |
+
+Проверены реальный web service flow и выбранные Android экраны. Полная Figma
+parity/journey matrix и user acceptance не объявляются завершёнными. iOS runtime
+недоступен: нет полного Xcode/simctl. Actual native Auth/Google, camera/picker,
+успешная geolocation, native Share/Open и live cloud6/Rules/Functions/web deployment
+этим evidence пока не закрыты. R7 awaiting_review, DESIGN_READY/REDESIGN_DONE
+сохраняются; Inbox/FCM/QR/release остаются будущим scope.
 
 **Проверки функционального обновления 2026-10-07, macOS zsh:**
 `flutter analyze` — без замечаний; полный `flutter test --no-pub` — **1163/1163 PASS**;
@@ -106,8 +153,8 @@ Migration checks сохраняют raw backups и pending/ACK; Rules прини
 в последнем документе. Literal UID quoting проверен с regex-символами и вложенным
 `\E`; missing обязательные поля и downgrade отклоняются. Public schema1 не
 получает private documents/baselines. Strict Figma asset checker, `git diff --check`
-и validator 11 обновлённых Markdown документов — PASS. По действующему no-preview/run
-ограничению native launch и визуальная приёмка пропущены; Rules не развёрнуты,
+и validator 11 обновлённых Markdown документов — PASS. На этапе D046 действовало
+no-preview/run: native launch и визуальная приёмка пропущены; Rules не развёрнуты,
 live sync cloud5 payload ещё требует отдельной проверки окружения.
 
 История выполненных этапов и состояния перед этим поручением:
@@ -146,13 +193,14 @@ session, защищённые routes и UID isolation. Обязательная 
 По следующему прямому поручению завершена **Phase 10: Portfolio Suggestions**:
 детерминированные подсказки с объяснением и явным действием владельца.
 Этот документ отделяет реализованный интерфейс от целевых функций.
-Flutter-приложение находится в `apps/mobile`; в `apps/web`
-сейчас только README. Remote `origin` уже подключён; `main` отслеживает `origin/main`.
+Flutter-приложение находится в `apps/mobile`; D048 создаёт Next.js runtime в
+`apps/web` и trusted publication service в `firebase/functions`.
+Историческая Git delivery: remote `origin` уже подключён; `main` отслеживает `origin/main`.
 Для дальнейшей разработки выбрана ветка `dev`, отслеживающая `origin/dev`.
 Commit и push выполняются только по запросу пользователя.
 
 План фаз 0–20 документирован как история, требования и будущие зависимости.
-Действующее исключение для mobile capabilities закреплено в
+Действующее исключение для mobile/web/publication capabilities закреплено в
 [общих AI-правилах](../AI/AGENTS.md#разработка-по-плану), mobile AGENTS и router.
 
 Текущие Home/document libraries читают реальную общую базу из draft; пустая база
@@ -579,27 +627,29 @@ web-редактор и публичные Resume/Portfolio. Этот разде
 ### Актуальная последовательность 2026-10-08
 
 План обновлён под Figma и концепцию общей базы. Полный перенос не завершён:
-private mobile core реализован, публикация/web отсутствуют, настройки готовы частично,
-R7 user acceptance и full native/visual parity остаются открытыми.
-Функциональное развитие разрешённого mobile scope продолжается по D045/D046;
-ожидание полного REDESIGN_DONE не блокирует эти capabilities. Вопрос о готовности
-и обновление плана не возобновляют старую очередь автоматически и не разрешают
-deployment или реализацию всех будущих сервисов.
+D045/D046 private core сохранён, D048 явно разрешает mobile/web/publication.
+Contacts/privacy/Project overrides, actual Next.js owner/public runtime и trusted
+publication source используют Hive7/cloud6. Mobile1323/1323, backend51 и
+projection14 PASS; actual browser publication и Android source/screen smoke
+проверены, final analyze/build и native Share ещё ожидают итога.
+R7 user acceptance и full native/browser/Figma parity остаются открытыми.
+Ожидание REDESIGN_DONE не блокирует разрешённые capabilities; новая source
+реализация не означает deployment или запуск всех будущих сервисов.
 
 | **Очередь / capability** | **Что уже есть → что осталось** | **Готово, когда / зависимость** |
 | --- | --- | --- |
-| База и private документы; PR-DATA-01/02/03 | Общая база, Library, multiple Resume/Portfolio, wizard, scoped Save, atomic create-and-attach и base review уже реализованы. Остались Project presentation overrides, отдельные описание/вклад, полные public contacts/selection/privacy и Figma варианты оформления. | Выборочные overrides не меняют Library/соседние документы, Save/Discard/reopen/UID и schema compatibility проверены; реализованное ядро повторно не строится. |
-| Ближайший mobile блок; PR-CONTACT-01, PR-PREF-01, PR-AUTH-01, PR-ACCOUNT-01/02 | Довести реальные Contacts/Profile/Account/Privacy/App actions и состояния по Figma; theme/locale/links/sign-out уже есть. Native media/location/auth и visual acceptance остаются отдельными проверками. | Login/providers отделены от public contacts; изменение базы не переписывает документы; unsupported действие не показывает success. Account deletion требует public withdrawal/cleanup contract и выполняется после него. |
-| Публикация; PR-PUB-01/02/03, PR-URL-01 | Нужны trusted projection/validation, постоянный public ID, inventory/version/unknown operation recovery, public media lifecycle и минимальный anonymous renderer. Legacy username adapter не закрывает multiple outputs. | Выбранный документ доступен по настоящему URL, draft/Library/base edits не меняют public snapshot; rename/republish сохраняют URL, duplicate его не наследует, delete не воскресает после позднего retry. |
-| Web; PR-WEB-13A/B/C | В apps/web только README. Сначала минимальный runtime/public reader вместе с публикацией, затем полный кабинет и marketing/download. | Full owner editor не является предпосылкой первого public документа: source сначала mobile. После расширения оба клиента используют совместимую базу/Library/документы и owner guards. |
-| Связь и распространение; Phase 14/15 | Copy/Open/native Share после подтверждённого URL; затем ContactRequest/Inbox/FCM и Developer Card/QR. | Контактная форма следует выбранному published документу и privacy; notifications не подменяются локальным toggle. QR/Share никогда не передают фиктивную ссылку. |
+| База и private документы; PR-DATA-01/02/03 | D045/D046 core сохранён; D048 добавляет отдельный contribution и per-document title/description/contribution overrides с Hive7/cloud6. Figma/native варианты и final acceptance открыты. | Выборочные overrides не меняют Library/соседние документы, Save/Discard/reopen/UID и schema compatibility проверены; реализованное ядро повторно не строится. |
+| Ближайший mobile блок; PR-CONTACT-01, PR-PREF-01, PR-AUTH-01, PR-ACCOUNT-01/02 | D048 source: typed Contacts/selection/privacy, reduced motion и Account actions/deletion lifecycle. Native media/location/Google/iOS и visual acceptance остаются отдельными проверками. | Login/providers отделены от public contacts; изменение базы не переписывает документы; unsupported действие не показывает success. Account deletion требует public withdrawal/cleanup contract и выполняется после него. |
+| Публикация; PR-PUB-01/02/03, PR-URL-01 | D048 trusted Functions, permanent /d/<publicId>, inventory/version/unknown recovery, public media/current-version access и delete tombstones/account lock. Deployment/live reader ещё не подтверждены. | Выбранный документ доступен по настоящему URL, draft/Library/base edits не меняют public snapshot; rename/republish сохраняют URL, duplicate его не наследует, delete не воскресает после позднего retry. |
+| Web; PR-WEB-13A/B/C | D048 actual Next.js landing/download/Auth, owner база/Library/document editors и anonymous /d/[publicId]. Headless checks и browser/live acceptance фиксируются отдельно. | Full owner editor не является предпосылкой первого public документа: source сначала mobile. После расширения оба клиента используют совместимую базу/Library/документы и owner guards. |
+| Связь и распространение; Phase 14/15 | D048 confirmed URL Copy/Open/native Share actions; device acceptance открыта. Затем отдельно ContactRequest/Inbox/FCM и Developer Card/QR. | Контактная форма следует выбранному published документу и privacy; notifications не подменяются локальным toggle. QR/Share никогда не передают фиктивную ссылку. |
 | Качество и выпуск; Phase 16–20 | Tests/security/CI идут вместе с capabilities; профилирование, полная native/live приёмка и release — отдельные результаты. | Есть воспроизводимые измерения/checks, приёмка критических journeys Android/iOS/web и разрешённый пользователем выпуск. |
 
 Детальные PR-* контракты и Figma/task mappings остаются в
 [prerequisites](../redesign/prerequisites.md#product-tasks-gap-и-владельцы-источников)
 и [R8/R9 plan](../redesign/plan.md#r8--перенос-согласованного-ui). Эта таблица задаёт
 актуальные приоритеты; Phase 0–12 ниже сохраняют историю/учебную прослеживаемость,
-а Phase 13–20 описывают обновлённые будущие результаты.
+Phase13 описывает D048 source и открытую приёмку, Phase14–20 - будущие результаты.
 
 ### История фаз до функционального mobile scope 2026-10-07
 
@@ -780,9 +830,9 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 10 — Portfolio Suggestions | Завершена; pure rules, объяснения ru/en, явные Preview/editor actions и Android-запуск проверены |
 | Phase 11 — Media | Реализована; 1013 Flutter/40 Rules/Android SDK PASS; полная device/live приёмка открыта |
 | Phase 12 — Location | Реализована без карты; 1068 Flutter/2 native cases PASS; device geolocation/iOS приёмка открыта |
-| Phase 13a — Public shell | План: настоящий web runtime, оболочка/public reader, landing/download |
-| Phase 13b — Auth и редактор | План: кабинет общей базы/Library и независимых Resume/Portfolio |
-| Phase 13c — Public Resume/Portfolio | План: trusted publication, постоянные URL и published-only reader |
+| Phase 13a — Public shell | D048 source реализован: Next.js shell/landing/download; browser runtime проверен, final build/full Figma acceptance отдельно |
+| Phase 13b — Auth и редактор | D048 source реализован: Auth/UID owner база/Library/document editors; mobile fixture/web CAS browser flow PASS, full cross-client/live acceptance отдельно |
+| Phase 13c — Public Resume/Portfolio | D048 source реализован: trusted publication/permanent URL/public media/reader; backend51/projection14 и browser Publish/Unpublish/republish/Copy PASS, live acceptance отдельно |
 | Phase 14 — Contact / Inbox / FCM | Запланирована |
 | Phase 15 — Developer Card и native sharing | Запланирована |
 | Phase 16 — Performance | Запланирована |
@@ -795,7 +845,8 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 
 ### Как выполнять план
 
-С 2026-10-07 последовательная очередь на паузе. Для разрешённого mobile scope
+С 2026-10-07 последовательная очередь на паузе. Для разрешённого D048
+mobile/web/publication scope
 выполнять самостоятельные сценарии с сохранением architecture, данных и
 подходящими проверками. При возобновлении очереди применяются правила ниже.
 
@@ -1667,7 +1718,11 @@ Google Maps SDK и настройка Maps API исключены из прое�
 Обновлённый scope: общая база/Library, разные Resume/Portfolio и постоянный URL
 каждого опубликованного документа. Legacy `publish(username, content)` и
 `/u/[username]` не определяют новый public API; их совместимость и миграция
-решаются до переключения. Phase 13 пока не реализована.
+решаются до переключения. D048 (2026-10-08) явно разрешает web и публикацию:
+actual Next.js/Functions и mobile clients реализованы в source. Итоговые
+checks и разрешённые browser/native попытки фиксируются в текущем статусе;
+live deployment не подтверждён, Phase13 целиком не объявляется завершённой.
+Отметки source-задач ниже не означают приёмку соответствующего сценария.
 
 13a/13b/13c обозначают части результата. Минимальный 13a runtime и public slice
 13c могут дать работающую публикацию из mobile до полного owner editor 13b.
@@ -1679,11 +1734,11 @@ trusted validation → public reader → доступные Publish/Copy/Open д
 
 **Задачи**
 
-- [ ] Создать Next.js runtime в apps/web по реальному manifest/config, выбрать
-  необходимые зависимости и format/lint/typecheck/test/build команды.
-- [ ] Перенести tokens/shared controls и минимальную оболочку public reader
+- [x] Создать Next.js runtime в apps/web по реальному manifest/config, выбрать
+  необходимые зависимости и format/typecheck/test/build команды из actual manifest.
+- [x] Перенести tokens/shared controls и минимальную оболочку public reader
   Resume/Portfolio по Figma R6; phone/tablet/wide, dark/light и photo/no-photo.
-- [ ] Реализовать landing и download по Figma с пользой base→outputs;
+- [x] Реализовать landing и download по Figma с пользой base→outputs;
   CTA/store links отражают фактическую доступность сборок и редактора.
 
 **Проверки и приёмка**
@@ -1698,13 +1753,13 @@ trusted validation → public reader → доступные Publish/Copy/Open д
 
 **Задачи**
 
-- [ ] Реализовать sign-in/register/reset и owner guards общего backend;
+- [x] Реализовать sign-in/register/reset и owner guards общего backend;
   login/provider data отделить от публичных контактов.
-- [ ] Создать кабинет с общей базой, Library и библиотеками Resume/Portfolio;
+- [x] Создать кабинет с общей базой, Library и библиотеками Resume/Portfolio;
   создавать, редактировать, дублировать и удалять выбранный документ по ID.
-- [ ] Поддержать document content/appearance/preview, выбор Library projects,
+- [x] Поддержать document content/appearance/preview, выбор Library projects,
   attachment order/visible/featured, attached Resume и выборочный base review.
-- [ ] Использовать совместимые versioned JSON fixtures/private schema;
+- [x] Использовать совместимые versioned JSON fixtures/private schema;
   сохранять только выбранный scope, показывать dirty/saving/error/retry/conflict.
 - [ ] Проверить обмен mobile↔web, newer input during Save, UID transitions,
   повреждённые/неизвестные данные и последствия whole-aggregate LWW.
@@ -1726,22 +1781,22 @@ trusted validation → public reader → доступные Publish/Copy/Open д
 
 **Задачи**
 
-- [ ] Утвердить documentId→permanent publicId mapping, exact route, publication
+- [x] Утвердить documentId→permanent publicId mapping, exact route, publication
   inventory/version и совместимость legacy username snapshot/alias.
-- [ ] Реализовать trusted validation/projection выбранного saved+ACK документа:
+- [x] Реализовать trusted validation/projection выбранного saved+ACK документа:
   selected contacts/sections и resolved visible projects; закрыть прямую запись
   неподтверждённого public payload из клиента.
-- [ ] Исключить notes, baseSnapshot, Ignore/source metadata, login/providers,
+- [x] Исключить notes, baseSnapshot, Ignore/source metadata, login/providers,
   private Storage paths и hidden data до записи public snapshot.
-- [ ] Определить безопасный public media lifecycle: выбранные фото доступны
+- [x] Определить безопасный public media lifecycle: выбранные фото доступны
   посетителю; draft replacement/removal не уничтожает published assets.
-- [ ] Реализовать Publish/Update/Unpublish выбранного Resume/Portfolio, stale/unknown
+- [x] Реализовать Publish/Update/Unpublish выбранного Resume/Portfolio, stale/unknown
   outcomes/retry/reopen reconciliation и generation защиту withdraw/delete.
-- [ ] Реализовать anonymous published-only reader и настоящие Copy/Open actions;
+- [x] Реализовать anonymous published-only reader и настоящие Copy/Open actions;
   постоянная ссылка доступна у опубликованного документа в библиотеке/редакторе.
-- [ ] Сохранить URL после rename/username change/unpublish→republish;
+- [x] Сохранить URL после rename/username change/unpublish→republish;
   duplicate начинает отдельный draft без URL исходника.
-- [ ] Публичное Portfolio может ссылаться только на отдельно published Resume;
+- [x] Публичное Portfolio может ссылаться только на отдельно published Resume;
   private/unpublished/deleted Resume attachment не раскрывается посетителю.
 - [ ] Проверить metadata/SEO/OpenGraph, безопасные missing/unpublished states и
   одинаковую выбранную версию на mobile preview и public web.

@@ -6,26 +6,49 @@ enum PortfolioDocumentKind { resume, portfolio }
 // Firestore Rules проверяют owner каждого snapshot в ограниченном списке.
 const portfolioDocumentLimit = 20;
 
-/// Проект остаётся в общей Library; документ хранит только связь и свои флаги.
+/// Проект остаётся в Library; документ хранит связь, флаги и свой текст.
 final class PortfolioProjectAttachment {
   const PortfolioProjectAttachment({
     required this.projectId,
     this.visible = true,
     this.featured = false,
+    this.titleOverride,
+    this.descriptionOverride,
+    this.contributionOverride,
   });
 
   final String projectId;
   final bool visible;
   final bool featured;
 
+  /// null наследует Library; пустой текст явно убирает описание или вклад.
+  final String? titleOverride;
+  final String? descriptionOverride;
+  final String? contributionOverride;
+
   PortfolioProjectAttachment copyWith({
     String? projectId,
     bool? visible,
     bool? featured,
+    String? titleOverride,
+    String? descriptionOverride,
+    String? contributionOverride,
+    bool clearTitleOverride = false,
+    bool clearDescriptionOverride = false,
+    bool clearContributionOverride = false,
   }) => PortfolioProjectAttachment(
     projectId: projectId ?? this.projectId,
     visible: visible ?? this.visible,
     featured: featured ?? this.featured,
+    titleOverride: clearTitleOverride
+        ? null
+        : titleOverride ?? this.titleOverride,
+    descriptionOverride: clearDescriptionOverride
+        ? null
+        : descriptionOverride ?? this.descriptionOverride,
+    contributionOverride: clearContributionOverride
+        ? null
+        : contributionOverride ?? this.contributionOverride,
   );
 
   @override
@@ -33,10 +56,20 @@ final class PortfolioProjectAttachment {
       other is PortfolioProjectAttachment &&
       other.projectId == projectId &&
       other.visible == visible &&
-      other.featured == featured;
+      other.featured == featured &&
+      other.titleOverride == titleOverride &&
+      other.descriptionOverride == descriptionOverride &&
+      other.contributionOverride == contributionOverride;
 
   @override
-  int get hashCode => Object.hash(projectId, visible, featured);
+  int get hashCode => Object.hash(
+    projectId,
+    visible,
+    featured,
+    titleOverride,
+    descriptionOverride,
+    contributionOverride,
+  );
 }
 
 /// Независимый snapshot профиля/секций; изменения общей базы его не меняют.
@@ -144,6 +177,9 @@ PortfolioContent resolveDocumentContent(
         );
       }
       return project.copyWith(
+        title: attachment.titleOverride,
+        description: attachment.descriptionOverride,
+        contribution: attachment.contributionOverride,
         visible: attachment.visible,
         featured: attachment.featured,
       );

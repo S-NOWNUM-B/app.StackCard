@@ -43,7 +43,10 @@ Mobile развивается по capabilities общей базы и неза�
 действующий scope/открытые проверки — в [product status](../product/product-spec.md#статус-и-границы-текущей-работы).
 Phase 11 Media и Phase 12 Location сохраняются в прежних features; карта исключена.
 Private multiple-document модель расширяет существующий aggregate/repository,
-без нового storage слоя. Публикация отдельных документов и web пока отсутствуют.
+без нового storage слоя. D048 (2026-10-08) явно разрешает web и публикацию:
+Next.js owner/public surfaces и trusted document handler работают с
+тем же workspace. Итоговые checks — в product status; deploy/live availability
+и full visual/native acceptance остаются отдельными.
 
 В monorepo есть одно Flutter-приложение в `apps/mobile`. Код Architecture
 Phase 3 реализован поверх UI foundation и basic state management;
@@ -69,7 +72,9 @@ libraries читают actual draft через Riverpod и сохраняют п
 Legacy preview/read models остаются отдельными демонстрационными сценариями. Данные сохраняются
 через Repository contracts. Firebase Auth работает через отдельный account API;
 Firestore adapter синхронизирует account draft поверх Hive. Publish/unpublish
-подготовлены отдельным transaction repository, без публичного экрана или web.
+первоначально подготовлены username-based transaction repository. D048
+использует document HTTP API и trusted server projection; legacy adapter
+сохраняется отдельно и не определяет новые permanent links.
 Контракт и последствия LWW зафиксированы до remote writes в
 [ADR 0001](../decisions/0001-firestore-sync-and-publication.md).
 
@@ -147,9 +152,10 @@ directories приложения. `.metadata` и generated-файлы вручн
 
 Mobile scope — Android и iOS; их native scaffolds сохранены, Android — первый
 release target. Desktop и Flutter web targets в `apps/mobile` отсутствуют.
-Сайт с публичными страницами и защищённым редактором планируется отдельно
-на Phase 13. В [apps/web](../../apps/web/README.md) сейчас только README;
-Next.js-приложение, его зависимости и команды запуска ещё не созданы.
+Сайт с публичными страницами и защищённым редактором создаётся отдельно в
+[apps/web](../../apps/web/README.md) по D048. Manifest/config/lockfile и env example
+принадлежат web-приложению; команды и ограничения — в
+[CONTRIBUTING](../../CONTRIBUTING.md#web-и-document-publication).
 
 Цветовая система и эскизы описаны в [design guide](../design/design-system.md).
 Local Manrope и Noto Sans fallback зарегистрированы в pubspec. `StackCardBrand`
@@ -164,7 +170,9 @@ logo originals в `assets/branding` сохранены без изменения
 Repository/DI границы — текущая основа mobile. Остальные узлы и связи вводятся на своих фазах.
 Схема описывает ответственность компонентов; Firestore schema и атомарная
 публикация определены в [ADR 0001](../decisions/0001-firestore-sync-and-publication.md).
-Web, Storage и последующие интеграции по-прежнему целевые.
+Сохранённые схемы показывают исходные границы продукта; подробный current
+document-publication contract D048 приведён ниже. Узел на схеме не доказывает
+deployment; Inbox/FCM/CI/release остаются целевыми.
 
 ### Общий обзор
 
@@ -180,9 +188,10 @@ Web, Storage и последующие интеграции по-прежнем�
 
 Публичная страница не читает private draft. GitHub поставляет предложения для
 редактора; только отдельное действие владельца обновляет published snapshot.
-Логический узел публикации реализуется client transaction с проверкой связанных
-документов в Firestore Rules. Firebase Function или отдельный endpoint для
-этого сценария не нужны; пользовательский экран вводится на своей фазе.
+Legacy username публикация использовала client transaction. D048 переносит
+доверенную validation/projection отдельных документов в authenticated HTTP
+`documentPublication` внутри `firebase/functions`; Rules запрещают direct client
+write нового public payload. Private sync не вызывает handler.
 
 ---
 
@@ -202,24 +211,33 @@ Mobile не владеет реализацией сайта или довере
 
 ### apps/web
 
-Отдельный будущий Next.js-клиент: marketing pages, защищённый редактор и
-public portfolio. Пока содержит только README. Общие data contracts связывают
-клиенты без импорта Flutter/Dart runtime в React/TypeScript.
+Отдельный Next.js-клиент: marketing/download, Auth, защищённая база/Library и
+document editors, anonymous `/d/[publicId]`. Общие data contracts связывают
+клиенты без импорта Flutter/Dart runtime в React/TypeScript. Web использует
+тот же Firebase account и cloud6 payload; readiness — в product status.
+`/account-deletion` восстанавливает pending deletion после утраты Auth через
+локальный owner/operation journal; private draft эта страница не читает.
 
 ### firebase
 
 [Каталог Firebase](../../firebase/) содержит Firestore Rules, indexes, Emulator
 Suite configuration и отдельные Rules tests с npm manifest/lockfile.
+`functions` владеет authenticated document publication, deep validation,
+immutable public media, operation recovery и delete lifecycle.
 Generated mobile configuration принадлежит `apps/mobile`; service-account
 credentials здесь не хранятся. Rules закрывают private account/draft и проверяют
-атомарность publication records. Deployment имеет явный project target и
+private owner boundary и запрет direct public writes. Server SDK обходит Rules;
+его UID/CAS/privacy invariants проверяются handler и отдельными tests.
+Deployment имеет явный project target и
 выполняется в рамках разрешённой настройки окружения.
 
 ### assets/branding
 
 Оригинальные SVG и brand kit. Mobile mark уже отрисовывается в shared widget;
-launcher icons вводятся на Phase 19. Сохранённый оригинал не заменяется
-промежуточным экспортом.
+D048 экспортирует pinned AppIcon source в 20 Android/iOS PNG через
+[exporter](../../tools/redesign/export_native_icons.mjs), provenance — в
+[native ledger](../redesign/source/native-app-icons.json). Сохранённый оригинал
+не заменяется экспортом; build/device appearance и release Phase 19 проверяются отдельно.
 
 ### docs и docs/AI
 
@@ -238,14 +256,14 @@ Runtime configs остаются рядом с кодом и сохраняют 
 | **Часть** | **Ответственность и срок введения** |
 |:---|:---|
 | `apps/mobile` | Android/iOS-редактор, offline draft и sync; функции по roadmap |
-| `apps/web` | Главная, download, кабинет и public portfolio; Phase 13–14 |
-| `firebase` | Firestore Rules, indexes и emulator tests введены на Phase 8; Storage/FCM — будущие фазы |
+| `apps/web` | D048 Next.js landing/download/Auth/owner/public document surfaces; browser/live acceptance открыта |
+| `firebase` | Firestore/Storage Rules, emulator tests и D048 trusted publication functions; FCM остаётся будущей capability |
 | `.github/workflows` — ещё не создан | Проверки и APK artifact; Phase 18 |
 
 </div>
 
 Это один продукт, поэтому один monorepo. Firebase project уже создан для mobile
-authentication; web подключится на своей фазе. Отдельный NestJS/PostgreSQL
+authentication; web использует конфигурацию того же проекта. Отдельный NestJS/PostgreSQL
 backend в v1 не нужен. Mobile не импортирует
 web-код. Публичные страницы читают только опубликованное представление; редактор
 в защищённом web-кабинете работает с private draft своего владельца.
@@ -256,22 +274,23 @@ Firebase Functions добавляются только при реальной �
 
 ## Web и общие контракты
 
-Next.js — целевой стек сайта, пока без созданного приложения и установленных
-web-зависимостей. Один Firebase backend и один аккаунт связывают mobile и web.
+Next.js — стек отдельного `apps/web` с actual manifest/config/lockfile.
+Один Firebase backend и один аккаунт связывают mobile и web.
 Клиенты разделяют правила модели, ownership, validation, sync и явной публикации;
 Dart и TypeScript реализуют их независимо в своих стеках. Общие data contracts
 не означают общий runtime-код или перенос Flutter widgets в React.
 
-Планируемые группы маршрутов, **не существующая конфигурация routing**:
+Группы маршрутов D048; точные owner paths принадлежат App Router в `apps/web/src/app`:
 
 <div align="center">
 
 | **Группа** | **Ответственность и доступ** |
 |:---|:---|
 | `/`, `/download` | Публичная информация о проекте и мобильных релизах. |
-| `/sign-in`, `/sign-up` | Authentication. |
-| Private кабинет и editor по document ID | Общая база/Library, независимые Resume/Portfolio, scoped Save/base review, preview и отдельный Publish/Unpublish; Inbox/settings своего UID. |
-| Permanent public document route | Published-only Resume/Portfolio по отдельному public ID, SEO/metadata/OpenGraph; Contact me на Phase 14. Exact path определяется до реализации. |
+| Auth routes | Sign-in/register/reset; SDK session и owner access guard. |
+| `/account-deletion` | Restricted recovery прежней deletion operation из локального journal после утраты Auth; private data не читает. |
+| Private кабинет и editor по document ID | Общая база/Library, независимые Resume/Portfolio, scoped Save/base review, preview и отдельный Publish/Unpublish; только своего UID. Inbox не реализован этим пакетом. |
+| `/d/[publicId]` | Published-only Resume/Portfolio, metadata/SEO; missing/unpublished/deleted не раскрывают private existence. Contact me/Inbox остаются Phase 14. |
 
 </div>
 
@@ -279,11 +298,11 @@ Dart и TypeScript реализуют их независимо в своих с
 и на доверенной стороне. Владелец читает/изменяет свою базу/Library и независимые документы из обоих клиентов;
 анонимный посетитель не получает account data, черновики или Inbox.
 
-Mobile сохраняет offline draft и cache. Web v1 планируется online-first с явными
+Mobile сохраняет offline draft и cache. Web v1 использует online-first с явными
 состояниями несохранённых изменений, сохранения, sync error и retry.
 Phase 8 выбирает whole-document LWW по порядку server commits и отдельные
 private/public документы; контракт — в [ADR 0001](../decisions/0001-firestore-sync-and-publication.md).
-Перед Phase 13 проверить совместимость
+Для D048 проверять совместимость
 web-редактора с текущим private aggregate/schema и общими JSON fixtures;
 не создавать вторую независимую модель данных.
 
@@ -292,7 +311,8 @@ Resume/Portfolio. Минимальный public reader и document publication �
 с mobile source до полного web editor. Trusted projection/privacy/URL/media
 контракт предшествует доступному Publish/Copy/Open; saved private schema не
 заменяет public API. D019 требует стабильного document URL после rename/republish;
-`/u/[username]` остаётся legacy prepared adapter и вопросом миграции.
+новый route `/d/[publicId]`, `/u/[username]` остаётся legacy adapter без автоматической
+alias migration. Missing production endpoint/origin — явное configuration state.
 Подробная [очередь capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-08)
 и [Phase 13](../product/product-spec.md#phase-13--website-и-web-editor) — в product spec.
 
@@ -663,10 +683,12 @@ snapshot, увеличивает revision один раз и ставит pendin
 поскольку отбрасывает несохранённые правки. `saveNotes` изменяет только notes,
 сохраняя остальной content.
 
-Hive envelope v6 допускает nullable content, private GitHub metadata, media paths,
-documents и их optional baseSnapshot. Чтение v1–v5 не мигрирует запись; v2 projects становятся manual;
+Hive envelope v7 допускает nullable content, private GitHub metadata, media paths,
+documents/optional baseSnapshot, attachment presentation и privacy fields.
+Чтение v1–v6 не мигрирует запись; v2 projects становятся manual;
 legacy content получает пустые media/documents поля. Версии до v4 отвергают media
-keys, до v5 — documents, до v6 — baseSnapshot. Действующий контракт документов описан ниже.
+keys, до v5 — documents, до v6 — baseSnapshot, до v7 — новые presentation/privacy
+keys. Действующий контракт документов описан ниже.
 Чтение v1 сохраняет точные notes
 и metadata, возвращая content null, и само не переписывает запись. Первая явная
 запись сохраняет raw owner-scoped backup исходной версии в той же box перед заменой. Ошибка backup или записи
@@ -684,7 +706,7 @@ Education, GitHub, Resume и Location опциональны; скрытие б�
 
 ## Общая база и независимые документы
 
-Действующий контракт 2026-10-07 расширяет прежний
+Действующий контракт D045/D046/D048 расширяет прежний
 [`PortfolioContent`](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_content.dart).
 Root profile/skills/experience/education/links — общая база; root projects —
 единственная Library, GitHub ignore registry принадлежит owner aggregate.
@@ -699,7 +721,7 @@ attachments и optional attachedResumeId для Portfolio. Snapshot не сод�
 documents, projects или ignore registry. В текущем private контракте максимум
 20 документов: ограничение согласовано между domain, codec и Rules.
 
-Наличие cloud schema5/Rules в repository не доказывает их deployment или live
+Наличие cloud schema6/Rules в repository не доказывает их deployment или live
 SDK sync; текущая задача не выполняет deploy/native launch. В подключённом
 окружении может потребоваться отдельно разрешённое обновление Rules.
 
@@ -722,7 +744,11 @@ Review меняет только buffer, Save остаётся отдельны�
 `resumeText` сохраняет
 старый plain text посимвольно; structured editor не выводит факты из этого текста.
 
-Каждый `PortfolioProjectAttachment` содержит projectId/visible/featured;
+Каждый `PortfolioProjectAttachment` содержит projectId/visible/featured и nullable
+titleOverride/descriptionOverride/contributionOverride; null наследует Library,
+явное значение меняет только представление этого документа. Library Project
+хранит contribution отдельно от description. Эти overrides не являются
+GitHub override flags и не изменяют общую запись.
 порядок задаётся порядком immutable списка. `resolveDocumentContent` соединяет
 snapshot с актуальной Library для preview. Поэтому проект существует один раз,
 а роль featured/visible относится к документу. Изменение Library отражается в
@@ -732,7 +758,8 @@ delete Resume очищает attachedResumeId, сохраняя Portfolio и Lib
 Новый Project внутри document editor остаётся в локальном buffer до Save.
 `saveDocument(newProjects: ...)` проверяет ID collision и записывает global
 Library Project + document relation одной repository save/revision; Cancel не
-создаёт запись. Public withdrawal/delete generation пока не реализованы.
+создаёт запись. Public withdrawal/delete lifecycle D048 описан
+[ниже](#privatepublic-schema-и-явная-публикация); private-only detach не публикует.
 
 [`PortfolioDraftController`](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_draft_controller.dart)
 сохраняет workspace через прежний repository. `saveDocument`/`saveProject`/
@@ -745,13 +772,13 @@ LWW по server commit order.
 
 [`Private codec`](../../apps/mobile/lib/features/portfolio_draft/data/portfolio_content_codec.dart)
 проверяет IDs, UTC даты, kind, snapshot nesting и существование relations.
-Hive writer **6** читает **1–6**, cloud writer **5** читает **1–5**;
+Hive writer **7** читает **1–7**, cloud writer **6** читает **1–6**;
 read-time rewrite отсутствует. Writer пропускает ключ baseSnapshot при отсутствии
 снимка; non-null baseline содержит только profile/skills/experience/education/links.
 Reader сохраняет legacy отсутствие и принимает nullable значение в текущей версии;
 Rules для нового cloud write требуют отсутствующий ключ либо объект, без explicit null.
 До замены старой Hive записи Save/ACK сохраняет
-raw backup v1 через прежний ключ, v2–v5 — через owner storageKey.vN.backup с flush.
+raw backup v1 через прежний ключ, v2–v6 — через owner storageKey.vN.backup с flush.
 Transfer journal переносит эти backups и использует прежние generation/claim/ACK
 границы. Unknown/corrupt формат блокирует перезапись. Metadata/outbox сохраняют
 прежний captured-payload ACK contract; отдельный migration CAS/journal из proposal
@@ -769,11 +796,19 @@ notes-only/пустая база не создаёт документов при
 буквальный текст, включая вложенный `\E`; это сохраняет 20 документов в лимите
 выражений Rules. Обязательные поля проверяются прямым чтением и проверкой типа;
 missing/non-map отклоняются. Client codec подробно проверяет baseline sections,
-unknown keys и relations. Это не доверенная public
-projection или безопасность нового public-document API. Public schema **1**,
-username-addressed prepared publication и web не превращаются в multiple-output
-Publish от private migration. Полный дальнейший scope — в
+unknown keys и relations. Private Rules не заменяют trusted public projection.
+Legacy `publicPortfolios` schema **1** сохраняет прежний формат; новый
+`publicDocuments` schema **1** — отдельный document contract, не расширение
+username snapshot. Полный scope — в
 [prerequisites](../redesign/prerequisites.md).
+
+`SocialLink.publishAllowed` default false задаёт разрешение общей базы,
+`visible` default true — выбор в snapshot документа. Поддержаны other/github/
+website/linkedin/email/phone/telegram; email и phone хранят typed mailto/tel ссылки,
+Telegram — https t.me. Login email/provider inventory принадлежит Auth и не
+переходит в public contacts. `PortfolioProfile.publishLocation` default false.
+Публикация проверяет разрешения и базы, и документа; изменение privacy само по
+себе не переписывает уже опубликованные snapshots — нужен Publish/Unpublish.
 
 ---
 
@@ -846,45 +881,105 @@ Local revisions защищают только записи одного устр
 revision другого клиента не определяют победителя. Одновременные изменения не
 сливаются: поздний commit, в том числе offline Save после reconnect или повтор
 после потерянного ACK, заменяет draft целиком. Mutation ID связывает local ACK,
-но не гарантирует global exactly-once. Будущий online-first web использует тот
-же envelope и последствия; сохранение обеих конкурирующих версий не обещается.
+но не гарантирует global exactly-once. D048 online-first web использует тот
+же envelope и CAS относительно прочитанного server basis. Mobile LWW сохраняется;
+новая web transaction отклоняет изменившийся basis, но не вводит global merge
+или сохранение обеих конкурирующих версий.
 
 ### Private/public schema и явная публикация
 
+D048 отделяет private cloud6 workspace от trusted document snapshot schema1.
+`Save` и sync не выполняют Publish. Mobile публикует только saved+server-ACK
+mutation; web — подтверждённую server read после online transaction. Handler
+повторно читает authoritative workspace и проверяет точную mutation, version
+документа и account lifecycle generation. Public content из клиента не принимается.
+
 | Путь | Данные и доступ |
 | --- | --- |
-| `accounts/{uid}/drafts/current` | Owner-only envelope: notes/content, mutation ID, local revision и server updatedAt |
-| `accounts/{uid}` | Owner-only pointer текущей публикации и монотонная publication version |
-| `usernames/{username}` | Уникальная reservation; authenticated get, list запрещён |
-| `publicPortfolios/{username}` | Только snapshot явной публикации; anonymous get, list запрещён |
+| `accounts/{uid}/drafts/current` | Owner-only cloud6 envelope: notes/content, mutation ID, local revision и server updatedAt; readers1–6 |
+| `accounts/{uid}` | Protected lifecycleState/generation, deletedDocumentIds; client get owner-only, write запрещён |
+| `accounts/{uid}/publications/{documentId}` | Owner inventory, permanent publicId, current version/state/sourceMutation/media refs; server-only write |
+| `accounts/{uid}/publicationOperations/{operationId}` | Private durable request fingerprint/outcome/recovery receipt; owner exact get, server-only write |
+| `publicDocuments/{publicId}` | Trusted allowlisted current document schema1; anonymous exact get, list/client write запрещены |
+| `publicMedia/{publicId}/{version}/{32hex}.jpg` | Immutable public copy, get только пока public document имеет эту version; list/client write запрещены |
+| `publicPortfolios/{username}`, `usernames/{username}` | Legacy username snapshots/reservations сохраняются для чтения; новых client writes нет, alias migration не выполняется автоматически |
 
-Username использует существующую lowercase validation 3–30 символов.
-[`FirestorePortfolioPublicationRepository`](../../apps/mobile/lib/features/portfolio_draft/data/firestore_portfolio_publication_repository.dart)
-подготовлен для online publish/unpublish. Transaction читает актуальный private
-draft и проверяет, что content совпадает с явно переданным сохранённым snapshot;
-затем меняет account pointer, reservation и public snapshot вместе. Publish
-новой версии увеличивает publication version; rename удаляет старую ссылку.
-Unpublish удаляет snapshot/reservation и обнуляет pointer, сохраняя private draft.
-Освобождённый username сможет занять другой владелец; прежняя ссылка не резервируется.
-Автоматическая синхронизация этот repository не вызывает; public UI/web не созданы.
+[HTTP function](../../firebase/functions/src/index.mjs) `documentPublication`
+принимает JSON POST с Firebase Bearer ID token. Origin browser-запроса должен
+совпадать с configured `PUBLIC_WEB_ORIGIN`; для native используется та же
+аутентификация UID. Handler не возвращает private draft посетителю. Actual
+configuration/команды — в [CONTRIBUTING](../../CONTRIBUTING.md#web-и-document-publication).
 
-[`Public projection`](../../apps/mobile/lib/features/portfolio_draft/data/portfolio_public_content_codec.dart)
-исключает hidden projects и очищает поля скрытых блоков перед записью snapshot.
-Accepted source/override fields и ignore registry удаляются из public payload.
-Private writer schema 5 читает 1–5, Rules запрещают downgrade; public schema 1
-сохраняет прежний curated contract и физически исключает private media keys,
-documents и baseSnapshot. GitHub миграция — в [ADR 0002](../decisions/0002-github-import-and-review.md),
-review базы — в [контракте документов](#общая-база-и-независимые-документы).
-Private notes не входят в content и не отправляются в public collection.
-[`Firestore Rules`](../../firebase/firestore.rules) проверяют owner, field allowlists
-и связанные post-write records через `getAfter`/`existsAfter`: частичный
-publish/rename/unpublish и захват чужого username запрещены. Полная validation
-элементов списков остаётся в codec; Rules не обещают произвольного обхода массивов.
-Детальный контракт и альтернативы — в [ADR 0001](../decisions/0001-firestore-sync-and-publication.md),
-команды Rules/native checks — в [CONTRIBUTING](../../CONTRIBUTING.md#firestore-rules-и-native-sync-acceptance).
+[Service](../../firebase/functions/src/publication.mjs) реализует `inventory`,
+`status`, `publish`, `unpublish`, `deleteDocument`, `deleteAccount` и
+ограниченный `deletionStatus` для восстановления удаления. Mutation
+содержит operationId/documentId/expectedVersion/expectedGeneration; Publish
+также expectedMutationId. Повтор с тем же operationId допускает тот же request
+fingerprint; другой payload, stale version/generation/mutation дают conflict.
+Private journal предшествует media copy; финальная transaction повторяет CAS и
+меняет public snapshot/inventory/account generation вместе. Timeout/pending/
+unknown требуют status или повтор той же операции, а не toast успешной публикации.
+Status возвращает current inventory entry, поэтому historical ACK не выдаёт
+отозванную ссылку за доступную.
 
-Suggestions вычисляются pure deterministic rules, описанными в
-[Portfolio Suggestions](#portfolio-suggestions); UI объясняет условие и действие.
+[Trusted projection](../../firebase/functions/src/projection.mjs) рекурсивно
+проверяет workspace, unknown keys, типы/limits/stable IDs, relations, URL и owner
+media paths. Затем физически исключает notes, baseSnapshot, source metadata,
+Ignore/override flags, Auth/provider data и private media references. Block
+visibility, Library/attachment visibility и document overrides применяются до
+public write. Contact допустим только если его stable ID разрешён актуальной
+базой и snapshot документа выбирает его; location требует разрешения в обоих.
+Private Resume attachment превращается в publicId только при видимой Resume
+секции и отдельной подтверждённой публикации Resume; public reader перепроверяет
+доступность target. Лимит 200 относится к каждой опубликованной skills/projects/
+experience/education/links коллекции после visibility/privacy projection.
+Большая private база не получает искусственный общий лимит200: сохраняются
+исходные field/document limits и aggregate предел Firestore1MiB.
+
+Permanent publicId закреплён за owner/document identity; `/d/<publicId>` не
+зависит от названия/username. Unpublish удаляет public payload и сохраняет mapping;
+republish использует тот же ID. Duplicate получает новый private ID, не копирует
+public mapping, version или operation. Legacy username records не превращаются
+в redirect на потенциально чужой новый username.
+
+Выбранные owner JPEG копируются в новый immutable public path. Server повторно
+проверяет MIME/size/decode limits и удаляет EXIF/GPS, не переносит download tokens.
+Public snapshot активируется после copy и повторного CAS. Draft replace/remove
+не удаляет опубликованные copies; Update/Unpublish withdraw старой version
+закрывает Storage get до cleanup. Cleanup failures сохраняют recoverable paths;
+client не управляет public bytes.
+
+Delete document сначала атомарно withdraw public snapshot, сохраняет protected
+ID tombstone и убирает private document/attachedResume refs. Library и соседние
+документы остаются. Rules отклоняют поздний draft с deleted ID; failed outbox
+сохраняется для явного recovery, а не выдаёт deleted success. Это не CRDT/merge
+или общий per-entity lifecycle sync: private workspace по-прежнему whole-document LWW.
+
+Delete account требует recent authentication. Transaction withdraw publications,
+блокирует account (`deleting`) и новые SDK writes/uploads; cleanup owner data/media
+предшествует удалению Auth identity. Bounded copy lease учитывает уже запущенный
+media handler: cleanup остаётся pending до его завершения/expiry, чтобы поздняя
+копия не создала orphan bytes после удаления. Minimal lock/receipt остаётся без content для
+lost-response recovery. До первого запроса mobile/web durable journal сохраняет
+UID, operationId/generation и случайный 256-bit recoveryKey; server хранит только
+его SHA-256 hash. `deletionStatus` после утраты Auth принимает точный owner/operation
+и key, возвращает только minimal outcome; `retry` завершает уже подготовленный
+cleanup, не начинает новое удаление. Несовпадение даёт unknown без owner data.
+Pending требует продолжения той же операции; local owner cleanup выполняется
+только после подтверждения captured UID. Guest и другой owner не очищаются.
+
+[Firestore Rules](../../firebase/firestore.rules) и
+[Storage Rules](../../firebase/storage.rules) обеспечивают private ownership,
+no-downgrade/tombstones/account lock и deny direct public writes. Admin SDK
+обходит Rules, поэтому server validation/CAS проверяются отдельными tests;
+Rules tests этого не заменяют. Legacy
+[publication adapter](../../apps/mobile/lib/features/portfolio_draft/data/firestore_portfolio_publication_repository.dart)
+сохранён как historical API; новые Rules не разрешают его client publication
+writes. Sync не вызывает ни legacy, ни document handler.
+
+Исторический sync contract — [ADR 0001](../decisions/0001-firestore-sync-and-publication.md),
+remaining requirements — [prerequisites](../redesign/prerequisites.md).
+Suggestions остаются pure deterministic rules в [Portfolio Suggestions](#portfolio-suggestions).
 
 ---
 
@@ -966,7 +1061,7 @@ Google Maps SDK, карта и marker исключены по решению п�
 | **Вопрос** | **Правило размещения или изменения** |
 |:---|:---|
 | Где добавить мобильный сценарий? | В используемую feature внутри `apps/mobile/lib`, начиная с реального владельца |
-| Где добавить страницу сайта? | В `apps/web` после создания Next.js-приложения на подтверждённой фазе |
+| Где добавить страницу сайта? | В действующем `apps/web/src/app` по Web scope и actual App Router/shared components |
 | Когда выделять общий механизм? | Когда есть реальные потребители и одинаковая ответственность |
 | Как менять data contract? | Согласовать mobile/web, private/public границы и затронутые проверки |
 | Где хранить AI-правило? | В `docs/AI/AGENTS.md` или relevant scope, обновив router и adapters |

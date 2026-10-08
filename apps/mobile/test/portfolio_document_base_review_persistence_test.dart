@@ -14,6 +14,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
+import 'support/legacy_portfolio_content.dart';
+
 void main() {
   final now = DateTime.utc(2026, 10, 7);
   late Directory directory;
@@ -128,7 +130,7 @@ void main() {
     }
   });
 
-  test('Hive6 captured outbox and newer Save survive reopen while stale ACK cannot replace baseline', () async {
+  test('current Hive captured outbox and newer Save survive reopen while stale ACK cannot replace baseline', () async {
     final repository = HivePortfolioDraftRepository(box, clock: () => now);
     final workspace = _workspace(now);
     final saved = await repository.save(
@@ -148,7 +150,10 @@ void main() {
       ],
     );
     await repository.save(latest, expectedRevision: 1, notes: saved.notes);
-    expect((jsonDecode(box.get('draft') as String) as Map)['schemaVersion'], 6);
+    expect(
+      (jsonDecode(box.get('draft') as String) as Map)['schemaVersion'],
+      HivePortfolioDraftRepository.schemaVersion,
+    );
     await reopen();
     final outbox = (await HivePortfolioSyncMetadataStore(
       box,
@@ -194,7 +199,7 @@ void main() {
         expect(box.get('draft.v5.backup'), raw);
         expect(
           (jsonDecode(box.get('draft') as String) as Map)['schemaVersion'],
-          6,
+          HivePortfolioDraftRepository.schemaVersion,
         );
         final restored = (await HivePortfolioDraftRepository(box).read())!;
         expect(
@@ -286,7 +291,7 @@ void main() {
     );
   });
 
-  test('cloud5 roundtrip and cloud4 legacy preserve baseline null, reject downgrade metadata, future schema and foreign base media', () {
+  test('cloud6 roundtrip and cloud4 legacy preserve baseline null, reject downgrade metadata, future schema and foreign base media', () {
     final workspace = _workspace(now);
     final encoded = encodeCloudPortfolioDraft(
       CloudPortfolioDraft(
@@ -297,7 +302,7 @@ void main() {
         content: workspace,
       ),
     );
-    expect(encoded['schemaVersion'], 5);
+    expect(encoded['schemaVersion'], 6);
     final stored = {...encoded, 'updatedAt': Timestamp.fromDate(now)};
     expect(
       decodeCloudPortfolioDraft(stored, ownerUid: 'owner').content,
@@ -316,7 +321,7 @@ void main() {
       isNull,
     );
     expect(old['schemaVersion'], 4);
-    for (final version in [1, 2, 3, 4, 6]) {
+    for (final version in [1, 2, 3, 4, 5, 7]) {
       expect(
         () => decodeCloudPortfolioDraft({
           ...stored,
@@ -432,6 +437,7 @@ PortfolioContent _workspace(DateTime now, {String avatarPath = _ownerAvatar}) =>
 
 Map<String, Object?> _legacyContent(PortfolioContent workspace) {
   final encoded = encodePortfolioContent(workspace);
+  removePresentationPrivacyFields(encoded);
   for (final document in encoded['documents'] as List) {
     (document as Map).remove('baseSnapshot');
   }

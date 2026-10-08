@@ -14,6 +14,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
+import 'support/legacy_portfolio_content.dart';
+
 void main() {
   late Directory directory;
   late Box<dynamic> box;
@@ -158,7 +160,7 @@ void main() {
         content: content,
       ),
     );
-    expect(encoded['schemaVersion'], 5);
+    expect(encoded['schemaVersion'], 6);
     final restored = decodeCloudPortfolioDraft({
       ...encoded,
       'updatedAt': Timestamp.fromDate(now),
@@ -192,6 +194,7 @@ void main() {
       _importedContent(now),
       includeDocuments: false,
     );
+    removePresentationPrivacyFields(legacyContent);
     (legacyContent['profile'] as Map).remove('avatarPath');
     for (final item in legacyContent['projects'] as List) {
       (item as Map).remove('imagePaths');
@@ -328,6 +331,7 @@ Map<String, Object?> _legacyContent() {
     ),
   );
   encoded.remove('documents');
+  removePresentationPrivacyFields(encoded);
   encoded.remove('ignoredGitHubRepositories');
   (encoded['profile'] as Map).remove('avatarPath');
   for (final item in encoded['projects']! as List) {

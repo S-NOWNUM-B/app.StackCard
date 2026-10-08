@@ -10,15 +10,20 @@
 поручением пользователя: mobile capabilities по Figma/концепции разрешены
 в границах product status. Исторические задачи и открытые проверки сохраняются.
 Актуальная [последовательность capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-08)
-обновлена 2026-10-08 под multiple documents/Figma. Minimal public reader не зависит
-от полного owner web editor; старый singleton roadmap не выполнять.
+обновлена 2026-10-08 под multiple documents/Figma. D048: ответ «Также реализовать
+web и публикацию» разрешает mobile/web/publication перенос без повторного phase
+approval. Minimal public reader не зависит от полного owner web editor;
+старый singleton roadmap не выполнять. Последующий ответ «Да, выполнить
+визуальную проверку web/mobile» разрешает D048 preview/browser/native checks;
+deploy/billing/Git сохраняют отдельные ограничения.
 Порядок задают [общие правила выполнения плана](AGENTS.md#разработка-по-плану).
 
 | Задача | Читать | Canonical source |
 | --- | --- | --- |
 | Разработка продукта: scope, capabilities, история фаз и сценарии | [План разработки](../product/product-spec.md#план-разработки), [Product spec](../product/product-spec.md), [правила фаз](AGENTS.md#разработка-по-плану) | Действующий scope и открытые критерии в product spec, последнее поручение пользователя и фактическая реализация |
 | Структура/зависимости mobile | [Mobile rules](scopes/mobile.md), [architecture](../architecture/architecture.md), [решения](../decisions/README.md) | `apps/mobile/pubspec.yaml`, `apps/mobile/pubspec.lock`, `apps/mobile/lib`, platform configs |
-| Структура и scope web | [Web README](../../apps/web/README.md), [architecture](../architecture/architecture.md) | `apps/web/README.md`; configs/code появятся при создании Next.js-приложения |
+| Структура и scope web | [Web scope](scopes/web.md), [Web README](../../apps/web/README.md), [architecture](../architecture/architecture.md#web-и-общие-контракты) | `apps/web/src`, `package.json`/lockfile, `next.config.ts`, `tsconfig.json`, `.env.example`; Next.js runtime |
+| Публикация отдельных документов, постоянный URL, trusted projection/media/delete | [Publication contract](../architecture/architecture.md#privatepublic-schema-и-явная-публикация), [Firebase scope](scopes/firebase.md), [Web scope](scopes/web.md), [prerequisites](../redesign/prerequisites.md#publication-url-delete--отдельный-продуктовый-пакет) | `firebase/functions`, `firebase/firestore.rules`, `firebase/storage.rules`, mobile document-publication API, web owner/public clients; подробные paths и текущая проверка — в architecture/product spec |
 | Repository, DI и feature boundaries | [Architecture](../architecture/architecture.md#mobile-modules--при-реальных-сценариях), [Mobile rules](scopes/mobile.md), [решения](../decisions/README.md) | Public feature APIs, domain contracts, feature-root providers/dependencies, data implementations |
 | Firebase Auth, session, route guards и guest/UID isolation | [Auth/local accounts contract](../architecture/architecture.md#authentication-и-изоляция-локального-draft), [Mobile rules](scopes/mobile.md), [решения Phase 7](../decisions/README.md#принято-для-phase-7) | [auth API](../../apps/mobile/lib/features/auth/auth.dart), [LocalRuntime](../../apps/mobile/lib/app/local_runtime.dart), [router](../../apps/mobile/lib/app/app_router.dart), [draft DI](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft_providers.dart), [LocalDraftAccounts](../../apps/mobile/lib/features/portfolio_draft/data/local_draft_accounts.dart), generated [Firebase options](../../apps/mobile/lib/firebase_options.dart) и native configs |
 | Firestore sync, private/public schema, Rules и Emulator Suite | [Sync/publication contract](../architecture/architecture.md#source-draft-и-публикация), [ADR 0001](../decisions/0001-firestore-sync-and-publication.md), [Firebase rules](scopes/firebase.md), [Mobile rules](scopes/mobile.md) | [sync API](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_sync.dart), [local-first repository](../../apps/mobile/lib/features/portfolio_draft/data/synced_portfolio_draft_repository.dart), [Rules](../../firebase/firestore.rules), [Firebase config](../../firebase/firebase.json), [test scripts](../../firebase/package.json); setup/acceptance в [CONTRIBUTING](../../CONTRIBUTING.md#firestore-rules-и-native-sync-acceptance) |

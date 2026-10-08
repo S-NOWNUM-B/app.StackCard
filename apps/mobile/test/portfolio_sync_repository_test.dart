@@ -87,6 +87,7 @@ void main() {
       expect(outbox.draft.content!.resumeText, content.resumeText);
       expect(remote.writes.single.completion.isCompleted, isFalse);
       expect(synced.syncState.status, PortfolioSyncStatus.pending);
+      expect(synced.syncState.confirmedMutationId, isNull);
     },
   );
 
@@ -101,6 +102,10 @@ void main() {
       await _until(() => synced.syncState.status == PortfolioSyncStatus.synced);
       expect((await synced.read())!.pendingSync, isFalse);
       expect(synced.syncState.lastSyncedAt, server.latest(uid)!.updatedAt);
+      expect(
+        synced.syncState.confirmedMutationId,
+        remote.writes.single.draft.mutationId,
+      );
       expect(
         (await HivePortfolioSyncMetadataStore(
           box,
@@ -163,6 +168,7 @@ void main() {
     expect(pending.notes, 'Second');
     expect(pending.revision, 2);
     expect(pending.pendingSync, isTrue);
+    expect(synced.syncState.confirmedMutationId, isNull);
     expect(
       (await HivePortfolioSyncMetadataStore(
         box,
@@ -174,6 +180,10 @@ void main() {
     await _until(() => synced.syncState.status == PortfolioSyncStatus.synced);
     expect((await synced.read())!.notes, 'Second');
     expect((await synced.read())!.pendingSync, isFalse);
+    expect(
+      synced.syncState.confirmedMutationId,
+      remote.writes.last.draft.mutationId,
+    );
   });
 
   test(

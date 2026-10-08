@@ -61,6 +61,25 @@ void main() {
     expect(projectPublicPortfolioContent(_visible(source, {})).links, isEmpty);
   });
 
+  test('Contact and location visibility cannot bypass private consent', () {
+    final source = _content();
+    final private = source.copyWith(
+      profile: source.profile.copyWith(publishLocation: false),
+      links: source.links
+          .map((link) => link.copyWith(publishAllowed: false))
+          .toList(),
+    );
+    final encoded = encodePublicPortfolioContent(private);
+    expect((encoded['profile'] as Map)['locationText'], isEmpty);
+    expect(encoded['links'], isEmpty);
+    expect(source.profile.locationText, isNotEmpty);
+    expect(source.links, isNotEmpty);
+    final hidden = source.copyWith(
+      links: source.links.map((link) => link.copyWith(visible: false)).toList(),
+    );
+    expect(encodePublicPortfolioContent(hidden)['links'], isEmpty);
+  });
+
   test(
     'Hidden collections and resume are absent while order/theme survive',
     () {
@@ -165,7 +184,19 @@ void main() {
       expect(encoded, isNot(contains(privatePart)), reason: privatePart);
     }
     final decoded = decodePortfolioContent(payload);
-    expect(decoded, projected);
+    // Старый public schema не содержит private consent и contribution.
+    expect(
+      decoded,
+      projected.copyWith(
+        profile: projected.profile.copyWith(publishLocation: false),
+        links: projected.links
+            .map((link) => link.copyWith(publishAllowed: false))
+            .toList(),
+        projects: projected.projects
+            .map((project) => project.copyWith(contribution: ''))
+            .toList(),
+      ),
+    );
   });
 }
 
@@ -185,6 +216,7 @@ PortfolioContent _content() => PortfolioContent(
     headline: 'Developer',
     bio: 'About text',
     locationText: 'Almaty',
+    publishLocation: true,
     avatarUrl: 'https://example.com/avatar.png',
   ),
   skills: [const Skill(id: 'dart', name: 'Dart')],
@@ -235,12 +267,14 @@ PortfolioContent _content() => PortfolioContent(
       label: 'GitHub',
       url: 'https://github.com/example',
       kind: SocialLinkKind.github,
+      publishAllowed: true,
     ),
     const SocialLink(
       id: 'website',
       label: 'Website',
       url: 'https://example.com',
       kind: SocialLinkKind.website,
+      publishAllowed: true,
     ),
   ],
   resumeText: 'Private resume',

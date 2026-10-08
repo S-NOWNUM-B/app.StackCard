@@ -389,6 +389,12 @@ final class SyncedPortfolioDraftRepository
     _state = PortfolioSyncState(
       status: status,
       lastSyncedAt: syncedAt ?? _state.lastSyncedAt,
+      confirmedMutationId:
+          status == PortfolioSyncStatus.synced &&
+              !_needsServerRefresh &&
+              _record?.pending == false
+          ? _record?.mutationId
+          : null,
     );
     _states.add(_state);
   }

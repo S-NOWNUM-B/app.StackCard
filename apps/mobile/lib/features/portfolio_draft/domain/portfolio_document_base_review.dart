@@ -6,6 +6,7 @@ enum PortfolioDocumentBaseField {
   headline,
   bio,
   locationText,
+  publishLocation,
   avatar,
   skills,
   experience,
@@ -164,6 +165,9 @@ final class PortfolioDocumentBaseReview {
         locationText: selected(PortfolioDocumentBaseField.locationText)
             ? incoming.locationText
             : null,
+        publishLocation: selected(PortfolioDocumentBaseField.publishLocation)
+            ? incoming.publishLocation
+            : null,
         avatarUrl: selected(PortfolioDocumentBaseField.avatar)
             ? incoming.avatarUrl
             : null,
@@ -195,7 +199,13 @@ final class PortfolioDocumentBaseReview {
       links: _mergeItems(
         PortfolioDocumentBaseField.links,
         local.links,
-        base.links,
+        base.links.map((incoming) {
+          final matches = local.links.where((link) => link.id == incoming.id);
+          // Выбор контакта принадлежит документу и не меняется от refresh базы.
+          return matches.isEmpty
+              ? incoming
+              : incoming.copyWith(visible: matches.single.visible);
+        }).toList(),
         (item) => item.id,
         selectedKeys,
       ),
@@ -213,6 +223,7 @@ Map<PortfolioDocumentBaseField, Object> _profileValues(
   PortfolioDocumentBaseField.headline: profile.headline,
   PortfolioDocumentBaseField.bio: profile.bio,
   PortfolioDocumentBaseField.locationText: profile.locationText,
+  PortfolioDocumentBaseField.publishLocation: profile.publishLocation,
   PortfolioDocumentBaseField.avatar: (profile.avatarUrl, profile.avatarPath),
 };
 

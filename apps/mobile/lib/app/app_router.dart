@@ -8,7 +8,6 @@ import '../features/home/home_screen.dart';
 import '../features/portfolio_draft/portfolio_draft.dart';
 import '../features/projects/projects.dart';
 import '../features/settings/settings_screen.dart';
-import '../features/settings/developer_profile_screen.dart';
 import '../shared/widgets/stackcard_states.dart';
 import 'app_shell.dart';
 
@@ -18,6 +17,7 @@ class AppRouteAccess extends ChangeNotifier {
   bool restoring = false;
   bool authenticated = false;
   bool guest = false;
+  bool pendingAccountDeletion = false;
 
   bool get canEdit => !configured || (!restoring && (authenticated || guest));
 
@@ -26,17 +26,20 @@ class AppRouteAccess extends ChangeNotifier {
     required bool restoring,
     required bool authenticated,
     required bool guest,
+    bool pendingAccountDeletion = false,
   }) {
     if (this.configured == configured &&
         this.restoring == restoring &&
         this.authenticated == authenticated &&
-        this.guest == guest) {
+        this.guest == guest &&
+        this.pendingAccountDeletion == pendingAccountDeletion) {
       return;
     }
     this.configured = configured;
     this.restoring = restoring;
     this.authenticated = authenticated;
     this.guest = guest;
+    this.pendingAccountDeletion = pendingAccountDeletion;
     notifyListeners();
   }
 }
@@ -63,6 +66,7 @@ String safeAuthDestination(String? value) {
       path == '/settings/account' ||
       path == '/settings/profile' ||
       path == '/settings/contacts' ||
+      path == '/settings/privacy' ||
       path == '/settings/contacts/links' ||
       RegExp(
         r'^/settings/profile/(identity|skills|experience|education|links)$',
@@ -94,6 +98,11 @@ GoRouter createAppRouter({
       '/reset-password',
     }.contains(path);
     if (access?.configured != true) return null;
+    if (path == '/settings/account' &&
+        access!.pendingAccountDeletion &&
+        !access.restoring) {
+      return null;
+    }
     if (authForm || path == '/github-import') {
       if (authForm && access!.authenticated && !access.restoring) {
         return safeAuthDestination(state.uri.queryParameters['from']);
@@ -137,7 +146,7 @@ GoRouter createAppRouter({
         GoRoute(
           name: 'developerProfile',
           path: 'profile',
-          builder: (_, _) => const DeveloperProfileScreen(),
+          builder: (_, _) => const SettingsProfileScreen(),
           routes: [
             GoRoute(
               name: 'developerIdentity',
@@ -169,7 +178,7 @@ GoRouter createAppRouter({
         GoRoute(
           name: 'developerContacts',
           path: 'contacts',
-          builder: (_, _) => const DeveloperProfileScreen(contactsOnly: true),
+          builder: (_, _) => const SettingsContactsScreen(),
           routes: [
             GoRoute(
               name: 'developerContactsLinks',
@@ -177,6 +186,11 @@ GoRouter createAppRouter({
               builder: (_, _) => const PortfolioLinksEditorScreen(),
             ),
           ],
+        ),
+        GoRoute(
+          name: 'settingsPrivacy',
+          path: 'privacy',
+          builder: (_, _) => const SettingsPrivacyScreen(),
         ),
         GoRoute(
           name: 'settingsAppearance',

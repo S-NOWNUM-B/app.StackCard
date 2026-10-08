@@ -163,6 +163,16 @@ void main() {
         if (route == 'profile') {
           expect(find.byKey(const ValueKey('builder_status')), findsOneWidget);
         } else {
+          expect(
+            find.byKey(const ValueKey('project.leave.discard')),
+            findsOneWidget,
+          );
+          expect(tester.takeException(), isNull);
+          await tester.ensureVisible(
+            find.byKey(const ValueKey('project.leave.discard')),
+          );
+          await tester.tap(find.byKey(const ValueKey('project.leave.discard')));
+          await tester.pumpAndSettle();
           expect(find.byKey(const ValueKey('project_search')), findsOneWidget);
         }
         expect(tester.takeException(), isNull);

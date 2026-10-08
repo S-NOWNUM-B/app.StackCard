@@ -17,11 +17,14 @@ import '../../auth/auth.dart';
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_document_base_review.dart';
 import '../domain/portfolio_draft_repository.dart';
+import '../domain/portfolio_validation.dart';
 import '../portfolio_draft_providers.dart';
 import 'builder_editor_widgets.dart';
 import 'portfolio_content_view.dart';
 import 'portfolio_draft_controller.dart';
 import 'portfolio_document_base_review_screen.dart';
+import 'portfolio_document_publication_screen.dart';
+import 'portfolio_project_presentation_editor.dart';
 
 enum _DocumentSection {
   profile,
@@ -729,7 +732,7 @@ class _PortfolioDocumentEditorScreenState
         name: 'title',
         labelKey: 'documentEditor.title',
         hintKey: 'documentEditor.titleHint',
-        maxLength: 160,
+        maxLength: 120,
         required: true,
       ),
       const BuilderFieldSpec(
@@ -820,11 +823,12 @@ class _PortfolioDocumentEditorScreenState
     children: [
       Text(_tr('contactsHint')),
       const SizedBox(height: StackCardSpacing.lg),
-      for (final link in _options(
-        workspace.links,
-        _content!.links,
-        (item) => item.id,
-      ))
+      for (final link in [
+        ..._content!.links,
+        ...workspace.links.where(
+          (item) => !_content!.links.any((local) => local.id == item.id),
+        ),
+      ]) ...[
         _selection(
           key: 'link.${link.id}',
           title: link.label,
@@ -840,6 +844,79 @@ class _PortfolioDocumentEditorScreenState
           ),
           onEdit: () => _editLink(link),
         ),
+        if (_content!.links.any((item) => item.id == link.id)) ...[
+          CheckboxListTile(
+            key: ValueKey('document.contact.visible.${link.id}'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(context.strings.tr('documentContacts.visible')),
+            subtitle: Text(
+              context.strings.tr(
+                !workspace.links.any((item) => item.id == link.id)
+                    ? 'documentContacts.localOnly'
+                    : workspace.links.any(
+                        (item) => item.id == link.id && item.publishAllowed,
+                      )
+                    ? 'documentContacts.allowed'
+                    : 'documentContacts.private',
+              ),
+            ),
+            value: _content!.links
+                .firstWhere((item) => item.id == link.id)
+                .visible,
+            onChanged: _saving
+                ? null
+                : (value) => _edit(() {
+                    _content = _content!.copyWith(
+                      links: [
+                        for (final current in _content!.links)
+                          if (current.id == link.id)
+                            current.copyWith(visible: value ?? false)
+                          else
+                            current,
+                      ],
+                    );
+                  }),
+          ),
+          Row(
+            children: [
+              IconButton(
+                tooltip: _tr('moveUp'),
+                onPressed:
+                    _content!.links.indexWhere((item) => item.id == link.id) > 0
+                    ? () => _moveLink(link.id, -1)
+                    : null,
+                icon: const StackCardIcon(name: 'arrow-up'),
+              ),
+              IconButton(
+                tooltip: _tr('moveDown'),
+                onPressed:
+                    _content!.links.indexWhere((item) => item.id == link.id) +
+                            1 <
+                        _content!.links.length
+                    ? () => _moveLink(link.id, 1)
+                    : null,
+                icon: const StackCardIcon(name: 'arrow-down'),
+              ),
+            ],
+          ),
+        ],
+      ],
+      CheckboxListTile(
+        key: const ValueKey('document.contact.location'),
+        contentPadding: EdgeInsets.zero,
+        title: Text(context.strings.tr('documentContacts.location')),
+        subtitle: Text(context.strings.tr('documentContacts.locationHint')),
+        value: _content!.profile.publishLocation,
+        onChanged: _saving
+            ? null
+            : (value) => _edit(() {
+                _content = _content!.copyWith(
+                  profile: _content!.profile.copyWith(
+                    publishLocation: value ?? false,
+                  ),
+                );
+              }),
+      ),
       StackCardButton(
         key: const Key('document.link.add'),
         label: _tr('addLink'),
@@ -847,6 +924,15 @@ class _PortfolioDocumentEditorScreenState
       ),
     ],
   );
+
+  void _moveLink(String id, int offset) => _edit(() {
+    final links = [..._content!.links];
+    final index = links.indexWhere((item) => item.id == id);
+    final target = index + offset;
+    if (index < 0 || target < 0 || target >= links.length) return;
+    links.insert(target, links.removeAt(index));
+    _content = _content!.copyWith(links: links);
+  });
 
   Future<void> _editLink([SocialLink? link]) async {
     final values = await showBuilderRecordEditor(
@@ -866,7 +952,14 @@ class _PortfolioDocumentEditorScreenState
           value: link?.url ?? '',
           maxLength: 2048,
           required: true,
-          kind: BuilderFieldKind.url,
+          validate: (context, value) => builderValidationMessage(
+            context,
+            validatePortfolioContactUrl(
+              value,
+              link?.kind ?? SocialLinkKind.other,
+            ),
+            maxLength: 2048,
+          ),
         ),
       ],
     );
@@ -878,6 +971,8 @@ class _PortfolioDocumentEditorScreenState
       label: values['label']!.trim(),
       url: values['url']!.trim(),
       kind: link?.kind ?? SocialLinkKind.other,
+      publishAllowed: link?.publishAllowed ?? false,
+      visible: link?.visible ?? true,
     );
     _edit(
       () => _content = _content!.copyWith(
@@ -1113,8 +1208,17 @@ class _PortfolioDocumentEditorScreenState
             ],
           ),
         ),
-      for (var index = 0; index < _projects.length; index++)
-        _attachment(workspace, index),
+      ReorderableListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        buildDefaultDragHandles: false,
+        itemCount: _projects.length,
+        itemBuilder: (_, index) => _attachment(workspace, index),
+        onReorderItem: (oldIndex, newIndex) => _edit(() {
+          final relation = _projects.removeAt(oldIndex);
+          _projects.insert(newIndex, relation);
+        }),
+      ),
       if (!_resume) ...[
         _heading('attachResume'),
         RadioGroup<String>(
@@ -1182,6 +1286,13 @@ class _PortfolioDocumentEditorScreenState
           },
         ),
         BuilderFieldSpec(
+          name: 'contribution',
+          labelKey: 'projectPresentation.contribution',
+          value: project?.contribution ?? '',
+          kind: BuilderFieldKind.multiline,
+          maxLength: 4000,
+        ),
+        BuilderFieldSpec(
           name: 'repositoryUrl',
           labelKey: 'builderForm.repositoryUrl',
           value: project?.repositoryUrl ?? '',
@@ -1205,6 +1316,7 @@ class _PortfolioDocumentEditorScreenState
       id: id,
       title: values['title']!.trim(),
       description: values['description']!.trim(),
+      contribution: values['contribution']!.trim(),
       technologies: _projectTechnologies(values['technologies']!),
       repositoryUrl: values['repositoryUrl']!.trim(),
       liveUrl: values['liveUrl']!.trim(),
@@ -1261,15 +1373,57 @@ class _PortfolioDocumentEditorScreenState
         .where((item) => item.id == relation.projectId)
         .firstOrNull;
     return Padding(
+      key: ValueKey('document.attachment.${relation.projectId}'),
       padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.sm),
       child: StackCardCard(
-        key: ValueKey('document.attachment.${relation.projectId}'),
+        outlined: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              project?.title ?? _tr('missing'),
-              style: Theme.of(context).textTheme.titleMedium,
+            Row(
+              children: [
+                ReorderableDragStartListener(
+                  key: ValueKey('document.drag.${relation.projectId}'),
+                  index: index,
+                  enabled: !_saving,
+                  child: const SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: Center(child: StackCardIcon(name: 'grip-vertical')),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        relation.titleOverride ??
+                            project?.title ??
+                            _tr('missing'),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(
+                        context.strings.tr(
+                          relation.titleOverride != null ||
+                                  relation.descriptionOverride != null ||
+                                  relation.contributionOverride != null
+                              ? 'projectPresentation.custom'
+                              : 'projectPresentation.library',
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  key: ValueKey('document.presentation.${relation.projectId}'),
+                  tooltip: context.strings.tr('projectPresentation.title'),
+                  onPressed: project == null || _saving
+                      ? null
+                      : () => _editPresentation(project, relation),
+                  icon: const StackCardIcon(name: 'pencil'),
+                ),
+              ],
             ),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
@@ -1308,7 +1462,7 @@ class _PortfolioDocumentEditorScreenState
                   icon: const StackCardIcon(name: 'arrow-down'),
                 ),
                 TextButton(
-                  onPressed: () => _edit(() => _projects.removeAt(index)),
+                  onPressed: () => _detach(relation),
                   child: Text(_tr('detach')),
                 ),
               ],
@@ -1317,6 +1471,62 @@ class _PortfolioDocumentEditorScreenState
         ),
       ),
     );
+  }
+
+  Future<void> _editPresentation(
+    PortfolioProject project,
+    PortfolioProjectAttachment relation,
+  ) async {
+    final generation = _bufferGeneration;
+    final result = await Navigator.of(context).push<PortfolioProjectAttachment>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => PortfolioProjectPresentationEditor(
+          project: project,
+          attachment: relation,
+          isActive: () => mounted && _sameOwner,
+        ),
+      ),
+    );
+    if (!mounted ||
+        !_sameOwner ||
+        result == null ||
+        generation != _bufferGeneration) {
+      return;
+    }
+    final saved = ref.read(portfolioDraftControllerProvider).draft?.content;
+    final current =
+        _newProjects.where((item) => item.id == project.id).firstOrNull ??
+        saved?.projects.where((item) => item.id == project.id).firstOrNull;
+    final index = _projects.indexWhere(
+      (item) => item.projectId == relation.projectId,
+    );
+    if (current != project || index < 0 || _projects[index] != relation) return;
+    _edit(() => _projects[index] = result);
+  }
+
+  Future<void> _detach(PortfolioProjectAttachment relation) async {
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.strings.tr('projectPresentation.removeTitle')),
+        scrollable: true,
+        content: Text(context.strings.tr('projectPresentation.removeHint')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(_tr('cancel')),
+          ),
+          TextButton(
+            key: const ValueKey('document.detach.confirm'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(_tr('detach')),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || !_sameOwner || accepted != true) return;
+    _edit(() => _projects.removeWhere((item) => item == relation));
   }
 
   void _moveProject(int index, int offset) => _edit(() {
@@ -1408,7 +1618,7 @@ class _PortfolioDocumentEditorScreenState
         if (_resume)
           _ResumePreview(content: resolved)
         else
-          PortfolioContentView(content: resolved),
+          PortfolioContentView(content: resolved, showAllProjects: true),
         if (!_resume && _resumeId != null) ...[
           const SizedBox(height: StackCardSpacing.lg),
           Text(
@@ -1426,8 +1636,24 @@ class _PortfolioDocumentEditorScreenState
         ],
         const SizedBox(height: StackCardSpacing.lg),
         StackCardButton(
+          key: const ValueKey('document.publication'),
           label: _tr('publish'),
-          unavailableReason: _tr('publishUnavailable'),
+          onPressed:
+              _expected != null &&
+                  !_dirty &&
+                  !_saving &&
+                  !_mediaBusy &&
+                  !_conflicted()
+              ? () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        PortfolioDocumentPublicationScreen(documentId: _id!),
+                  ),
+                )
+              : null,
+          unavailableReason: context.strings.tr(
+            'documentPublication.saveFirstHint',
+          ),
         ),
       ],
     );
@@ -1662,11 +1888,11 @@ class _ResumePreview extends StatelessWidget {
                 ],
               ],
       PortfolioBlockKind.links =>
-        content.links.isEmpty
+        content.links.where((item) => item.visible).isEmpty
             ? []
             : [
                 heading(tr('contacts')),
-                for (final link in content.links)
+                for (final link in content.links.where((item) => item.visible))
                   Text('${link.label}: ${link.url}'),
               ],
       PortfolioBlockKind.featuredProjects =>
@@ -1682,6 +1908,8 @@ class _ResumePreview extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   Text(project.description),
+                  if (project.contribution.isNotEmpty)
+                    Text(project.contribution),
                   Wrap(
                     spacing: StackCardSpacing.sm,
                     runSpacing: StackCardSpacing.sm,

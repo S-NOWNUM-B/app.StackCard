@@ -22,6 +22,7 @@ class PortfolioMediaEditor extends ConsumerStatefulWidget {
     this.titleKey = 'media.projectImages',
     this.enabled = true,
     this.formNoteKey = 'media.formNote',
+    this.emptyState,
   });
 
   final List<String> paths;
@@ -31,6 +32,7 @@ class PortfolioMediaEditor extends ConsumerStatefulWidget {
   final String titleKey;
   final bool enabled;
   final String formNoteKey;
+  final Widget? emptyState;
 
   @override
   ConsumerState<PortfolioMediaEditor> createState() =>
@@ -221,6 +223,12 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
       children: [
         Text(context.strings.tr(widget.titleKey), style: text.titleMedium),
         const SizedBox(height: StackCardSpacing.sm),
+        if (paths.isEmpty &&
+            _prepared == null &&
+            widget.emptyState != null) ...[
+          widget.emptyState!,
+          const SizedBox(height: StackCardSpacing.sm),
+        ],
         if (paths.isNotEmpty || _prepared != null) ...[
           Wrap(
             spacing: StackCardSpacing.sm,

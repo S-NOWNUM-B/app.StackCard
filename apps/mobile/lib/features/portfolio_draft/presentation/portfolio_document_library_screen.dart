@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,6 +13,9 @@ import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_draft_repository.dart';
 import '../portfolio_draft_providers.dart';
+import '../../auth/auth.dart';
+import '../document_publication_providers.dart';
+import 'portfolio_document_publication_screen.dart';
 import 'portfolio_draft_controller.dart';
 
 class PortfolioDocumentLibraryScreen extends ConsumerWidget {
@@ -106,6 +110,16 @@ class PortfolioDocumentCard extends ConsumerWidget {
     final strings = context.strings;
     final isResume = document.kind == PortfolioDocumentKind.resume;
     final state = ref.watch(portfolioDraftControllerProvider);
+    final publicationState = ref.watch(documentPublicationControllerProvider);
+    final publication = publicationState.forDocument(document.id);
+    final unknown = publicationState.pending?.documentId == document.id;
+    final url = unknown ? null : publication?.shareableUrl;
+    void openPublication() => Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            PortfolioDocumentPublicationScreen(documentId: document.id),
+      ),
+    );
     return StackCardCard(
       outlined: true,
       padding: EdgeInsets.zero,
@@ -181,17 +195,102 @@ class PortfolioDocumentCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        strings.tr('workspace.draft'),
-                        style: Theme.of(context).textTheme.bodySmall,
+                        strings.tr(
+                          unknown
+                              ? 'documentPublication.unknown'
+                              : publication == null
+                              ? 'workspace.draft'
+                              : 'documentPublication.${publication.visibility.name}',
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: url == null
+                              ? null
+                              : context.colors.successText,
+                        ),
                       ),
                       Text(
-                        strings.tr('workspace.linkAfterPublish'),
+                        strings.tr(
+                          unknown
+                              ? 'documentPublication.unknown'
+                              : url == null
+                              ? 'workspace.linkAfterPublish'
+                              : 'documentPublication.linkHint',
+                        ),
                         style: Theme.of(context).textTheme.bodySmall
                             ?.copyWith(color: context.colors.textMeta),
                       ),
                     ],
                   ),
                 ),
+                if (url != null)
+                  StackCardButton(
+                    key: ValueKey('document.copy.${document.id}'),
+                    label: strings.tr('documentPublication.copy'),
+                    iconWidget: const StackCardIcon(name: 'copy', size: 20),
+                    onPressed: publicationState.loading || publicationState.busy
+                        ? null
+                        : () async {
+                            final repository = ref.read(
+                              documentPublicationRepositoryProvider,
+                            );
+                            try {
+                              final current = ref.read(
+                                documentPublicationControllerProvider,
+                              );
+                              if (current.pending?.documentId == document.id ||
+                                  current
+                                          .forDocument(document.id)
+                                          ?.shareableUrl !=
+                                      url) {
+                                return;
+                              }
+                              await Clipboard.setData(
+                                ClipboardData(text: url.toString()),
+                              );
+                              if (!context.mounted ||
+                                  !identical(
+                                    repository,
+                                    ref.read(
+                                      documentPublicationRepositoryProvider,
+                                    ),
+                                  ) ||
+                                  ref
+                                          .read(
+                                            documentPublicationControllerProvider,
+                                          )
+                                          .forDocument(document.id)
+                                          ?.shareableUrl !=
+                                      url) {
+                                return;
+                              }
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    strings.tr('documentPublication.copied'),
+                                  ),
+                                ),
+                              );
+                            } on Object {
+                              if (context.mounted &&
+                                  identical(
+                                    repository,
+                                    ref.read(
+                                      documentPublicationRepositoryProvider,
+                                    ),
+                                  )) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      strings.tr(
+                                        'documentPublication.actionFailed',
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                  ),
                 PopupMenuButton<String>(
                   key: ValueKey('document.actions.${document.id}'),
                   tooltip: strings.tr('builderIntegration.edit'),
@@ -199,6 +298,10 @@ class PortfolioDocumentCard extends ConsumerWidget {
                   constraints: const BoxConstraints(minWidth: 180),
                   icon: const StackCardIcon(name: 'more-horizontal'),
                   itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 'publication',
+                      child: Text(strings.tr('documentPublication.title')),
+                    ),
                     PopupMenuItem(
                       value: 'duplicate',
                       enabled:
@@ -212,6 +315,10 @@ class PortfolioDocumentCard extends ConsumerWidget {
                     ),
                   ],
                   onSelected: (action) async {
+                    if (action == 'publication') {
+                      openPublication();
+                      return;
+                    }
                     final repository = ref.read(
                       portfolioDraftRepositoryProvider,
                     );
@@ -235,6 +342,14 @@ class PortfolioDocumentCard extends ConsumerWidget {
                         expectedRepository: repository,
                       );
                     } else {
+                      final session = ref.read(accountSessionProvider);
+                      if (!session.isLoading &&
+                          !session.hasError &&
+                          session.value?.uid != null) {
+                        // Account deletion сначала отзывает public snapshot и ставит tombstone.
+                        openPublication();
+                        return;
+                      }
                       final accepted = await showDialog<bool>(
                         context: context,
                         builder: (context) => AlertDialog(
@@ -270,12 +385,17 @@ class PortfolioDocumentCard extends ConsumerWidget {
   }
 }
 
-String workspaceDate(BuildContext context, DateTime? value) => value == null
-    ? context.strings.tr('workspace.noDate')
-    : context.strings.tr('workspace.modified', {
-        'date': MaterialLocalizations.of(context)
-            .formatMediumDate(value.toLocal()),
-      });
+String workspaceDate(BuildContext context, DateTime? value) {
+  if (value == null) return context.strings.tr('workspace.noDate');
+  final local = value.toLocal();
+  final localization = MaterialLocalizations.of(context);
+  final date = localization.formatMediumDate(local);
+  final time = localization.formatTimeOfDay(
+    TimeOfDay.fromDateTime(local),
+    alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+  );
+  return context.strings.tr('workspace.modified', {'date': '$date, $time'});
+}
 
 class WorkspaceReadGate extends ConsumerWidget {
   const WorkspaceReadGate({super.key, required this.data});

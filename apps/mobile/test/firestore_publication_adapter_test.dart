@@ -311,12 +311,12 @@ PortfolioContent _content() => PortfolioContent(
 );
 
 Map<String, dynamic> _draft(PortfolioContent content) => {
-  'schemaVersion': 3,
+  'schemaVersion': 6,
   'ownerUid': 'owner',
   'mutationId': 'saved-mutation',
   'localRevision': 4,
   'notes': 'Private notes',
-  'content': encodePortfolioContent(content, includeDocuments: false),
+  'content': encodePortfolioContent(content),
   'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 10, 4)),
 };
 

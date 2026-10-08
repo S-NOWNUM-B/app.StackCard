@@ -24,17 +24,20 @@
 
 ## Правила выполнения
 
-**Действующее поручение 2026-10-07, D045/D046:** последовательная очередь фаз на
-паузе, разрешена functional mobile работа по Figma и концепции общей базы.
-Навигация/библиотеки Resume/Portfolio/редакторы/private model совместимо
-расширяют existing draft API, Hive6/cloud5 и UID boundaries; D046 добавляет
-captured base review с отдельным Save. R7 remains
-awaiting_review; DESIGN_READY/REDESIGN_DONE и native visual gates открыты.
+**Действующее поручение 2026-10-08, D048:** «закончи перенос» и явный ответ
+«Также реализовать web и публикацию» разрешают mobile, Next.js web и publication
+независимых документов. Последовательная очередь фаз остаётся на паузе;
+existing aggregate/repository, UID boundaries и D046 captured base review
+с отдельным Save сохраняются. Реализация и проверки нового scope ведутся по
+фактам, без повторного phase approval. R7 остаётся awaiting_review;
+DESIGN_READY/REDESIGN_DONE и visual/native/user acceptance открыты.
 Actual scope/проверки — в
 [product status](../product/product-spec.md#статус-и-границы-текущей-работы),
 контракт — в [architecture](../architecture/architecture.md#общая-база-и-независимые-документы).
-Public documents/URL/web/full account пока отсутствуют. No-preview/run сохраняется;
-последним поручением commit/push/deploy не выполняются.
+Public documents/URL/web входят в D048; проверка исходников не означает live
+deployment. Последующий ответ «Да, выполнить визуальную проверку web/mobile»
+разрешает D048 preview/browser/native checks; последним поручением
+commit/push/deploy/billing не выполняются.
 
 Обновление roadmap 2026-10-08 (D047) связывает remaining mobile/settings,
 publication/URL/public reader, web owner editor и Phase 14–20 с multiple outputs.
@@ -141,8 +144,8 @@ IDs; R8/R9 уже разрешены D040. Независимая parallel ин�
 | R5 — Создание, редактирование и публикация | Все 13 задач R5.1a–R5.4c приняты одним пакетом D038; evidence D037: 83 состояния / 166 Dark/Light frames / 13 boards. Structural/contrast/bindings PASS; visual preview/run omitted D034/D036. Отдельные Save/sync/Publish и ownership сохранены. | done |
 | R6 — Web | Все четыре задачи R6.1–R6.4 приняты D040; evidence D039: 24 состояния / 96 wide-narrow Dark-Light frames / 4 boards. Structural/contrast/CTA PASS; visual preview/run omitted. Только Figma target, Next.js/runtime не создан. | done |
 | R7 — Прототип, адаптивность и приёмка дизайна | D041: source build/structural QA завершены,2736 expected bindings,723roots,328starts,6 motion pairs PASS. Package awaiting_review; visual/playback omitted, DESIGN_READY требует явной приёмки. | awaiting_review |
-| R8 — Перенос согласованного UI | D040: partial runtime — semantic Lime/Manrope/shared controls/SVG/Brand A, Projects и поддерживаемые Settings. Home/Portfolio legacy composition, 3 roots; Resume/model/media/account/publication/web ждут prerequisite scope. | in_progress |
-| R9 — Регрессия и завершение | Существующий Flutter slice:950/950 PASS, analyze0issues, 0SVGwarnings. Полная acceptance матрица, native/web и prerequisite scope не закрыты; REDESIGN_DONE не установлен. | in_progress |
+| R8 — Перенос согласованного UI | D048: four-root mobile, база/Library/независимые документы, contacts/privacy/attachment overrides, native assets, trusted publication и actual Next.js owner/public web. Source интегрирован; итоговые checks и visual/native/live приёмка фиксируются отдельно. | in_progress |
+| R9 — Регрессия и завершение | Исторический D040950-case PASS сохранён; D048 regression/server/Rules/web checks собираются в product status. Browser/native checks разрешены; final acceptance и REDESIGN_DONE открыты. | in_progress |
 
 ---
 
@@ -400,11 +403,14 @@ Baseline не является результатом новых R8 измене
 
 **Зависимости:** Авторизация переноса получена D040; D045 разрешает functional
 private mobile scope вне последовательной очереди. R7/final native acceptance
-открыты; public/URL/web/full account prerequisites ещё не реализованы.
+открыты; D048 разрешает mobile/web/publication и их совместимые dependencies.
+Source implementation и live/visual acceptance учитываются отдельно.
 
 **Входит:** Tokens/components, shell/roots/settings/editors и поддерживаемые web surfaces по одному срезу.
 
-**Не входит:** Тихая domain/backend/Rules migration, OAuth/media/публикация новых функций, смена стека, fake success.
+**Не входит:** Unrelated функции, silent data loss, смена стека, fake success,
+Inbox/FCM/QR/release/deploy/billing без отдельного scope. Private schema и trusted
+publication migration входят в D048 с сохранением compatible readers/backups.
 
 **Результат:** Реальные экраны в согласованном scope; неподдерживаемые действия обозначены честно.
 
@@ -412,33 +418,36 @@ private mobile scope вне последовательной очереди. R7/
 
 **Проверка:** По изменённому scope: format/analyze/focused tests, визуальный native run; web scripts по реальным manifests.
 
-**Решения пользователя:** R8 разрешена D040, private mobile capabilities D045;
-повторного phase approval для них нет. D042 относится к исторической Git delivery;
+**Решения пользователя:** R8 разрешена D040, private mobile capabilities D045/
+D046; mobile/web/publication D048. Повторного phase approval для них нет. D042 относится к исторической Git delivery;
 новые changes не сопровождаются commit/push/deploy автоматически.
 
-**Статус фазы:** `in_progress`: D040 shared slice сохранён, D045 расширяет mobile
-functional scope. Full public/web/account/native parity и final acceptance открыты.
+**Статус фазы:** `in_progress`: D040/D045/D046 сохранены; D048 расширяет
+source на mobile settings/attachments, trusted publication и Next.js web.
+Mobile1323/1323, backend51/projection14 и web61 PASS; browser publication и
+Android build/выбранные экраны проверены. Final analyze/build/native Share ещё
+проверяются; full live/native/browser/Figma parity и user acceptance открыты.
 
 | **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
 |:---|:---|:---|:---|:---|:---|:---|
-| R8.1 | REQ-SCOPE-01..04, REQ-PRESERVE-01..04 | audit.md gaps; actual domain/Hive/Firestore/Rules; apps/web/README.md | Сопоставить actions с actual contracts; D045/D046 private compatibility выполнять вместе с dependency slice, remaining public/web gaps сохранять. | C-SCOPE, C-MODEL, C-WEB | D045/D046 разрешают private mobile scope; PortfolioContent.documents/relations/base review, Hive6/cloud5 и compatible backups реализованы в source. Remaining public/account/web proposal не выполнен. | in_progress |
+| R8.1 | REQ-SCOPE-01..04, REQ-PRESERVE-01..04 | actual domain/Hive/Firestore/Rules/functions; apps/web/src | Сопоставить actions с actual contracts; D045/D046 private compatibility выполнять вместе с dependency slice, remaining public/web gaps сохранять. | C-SCOPE, C-MODEL, C-WEB | D048: PortfolioContent с Hive7/cloud6/privacy/attachment overrides, trusted functions и Next.js runtime. UID/queue/outbox/LWW сохранены; итоговые checks - в product status. | in_progress |
 | R8.2a | REQ-PALETTE-01..03, REQ-TYPE-01..02 | apps/mobile/lib/core/theme/stackcard_colors.dart, stackcard_theme.dart, stackcard_tokens.dart | Перенести semantic colors/type/spacing, сохранив единый theme mechanism и Material 3. | C14, C16, C-PALETTE | Semantic Dark/Light colors, Manrope400/600/700/800+Noto fallback и tokens в существующем core/theme; focused/full headless950 PASS, native preview omitted. | awaiting_review |
 | R8.2b | REQ-NAV-01..05, REQ-EDITOR-02..03 | apps/mobile/lib/shared/widgets; actual component files по approved DS | По одному shared control: button/input/back/gear/navigation/state; сохранить loading/semantics/retry. | C12, C13, C15, C16 | Existing shared button/input/state controls обновлены; focus/loading/disabled/retry/48px/scale2 headless checks PASS. Визуальный/native acceptance omitted. | awaiting_review |
 | R8.2c | REQ-TECH-01..02, REQ-PROJECT-03 | apps/mobile/lib/shared/widgets/stackcard_icon.dart, stackcard_technology_badge.dart, stackcard_brand.dart | Ввести badge icon+text/+N/wrap и entity-card presentation; проверять по одному компоненту. | C08, C14, C15, C-ASSET | StackCardIcon + StackCardTechnologyBadge/MoreTechnologies;40canonical entries+1explicit render derivative;32runtime SVG decoded, provenance strict check PASS. Native parity pending. | awaiting_review |
 | R8.3a | REQ-NAV-01..05 | apps/mobile/lib/app/app_router.dart, apps/mobile/lib/app/app_shell.dart | Shell/routes: четыре permanent labels, gear/settings nested, origin Back, guards/deep links, tablet bottom nav. | C01, C02, C11, C12, C16 | D045: StatefulShellRoute.indexedStack с Home/Resumes/Projects/Portfolios, constant labels и gear/settings origin Back. Новая native parity/приёмка открыта. | in_progress |
-| R8.3b | REQ-HOME-01..03 | apps/mobile/lib/features/home/home_screen.dart; S-HOME | Перенести только Home: три фильтра/recent mixed list и separate Copy, после готовности library модели. | C03, C04, C09, C13 | D045: mixed document/project list, Все/Резюме/Проекты, Portfolio в Все, сортировка updatedAt. Public Copy ожидает URL/publication contract; native review открыт. | in_progress |
-| R8.3c | REQ-RESUME-01, REQ-SHARE-01 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_document_library_screen.dart; portfolio_document_editor_screen.dart; /resumes | Перенести Resume list/create entry/status/link presentation только при настоящем Resume contract. | C09, C10, C13 | D045: реальная private Resume library/create/edit/duplicate/delete, draft state без fictitious URL. Publish/Copy/Open/Share и native visual parity ещё pending. | in_progress |
+| R8.3b | REQ-HOME-01..03 | apps/mobile/lib/features/home/home_screen.dart; S-HOME | Перенести только Home: три фильтра/recent mixed list и separate Copy, после готовности library модели. | C03, C04, C09, C13 | D045 mixed document/project library сохранена; D048 добавляет confirmed publication inventory/URL actions. Visual/browser/native acceptance открыта; проверка разрешена D048. | in_progress |
+| R8.3c | REQ-RESUME-01, REQ-SHARE-01 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_document_library_screen.dart; portfolio_document_editor_screen.dart; /resumes | Перенести Resume list/create entry/status/link presentation только при настоящем Resume contract. | C09, C10, C13 | D048: Resume library/editor используют real inventory, Publish/Update/Unpublish и confirmed URL actions; guest/configuration/unknown не выдают success. Device/live acceptance открыта. | in_progress |
 | R8.3d | REQ-PROJECT-01..04 | apps/mobile/lib/features/projects/presentation/projects_screen.dart; S-PROJECTS | Перенести Projects Import/Create/Search/List, без categories/hero, сохранить repository/search states. | C05, C08, C13, C15 | Projects query-only Import/Create/Search/List и badges внедрены; legacy filter provider сохранён отдельно, empty/no-results/error/retry/navigation headless PASS. Native preview omitted. | awaiting_review |
-| R8.3e | REQ-PORTFOLIO-01, REQ-SHARE-01 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_document_library_screen.dart; /portfolio | Перенести Portfolio list после multiple-output contract; настоящие actions, без mock success. | C09, C10, C13 | D045: private Portfolio library и independent snapshots/Library relations, create/edit/duplicate/delete. Permanent published links/backend и native review pending. | in_progress |
-| R8.3f | REQ-SETTINGS-01..04, REQ-NAV-05 | apps/mobile/lib/features/settings/settings_screen.dart; S-SETTINGS и children | Переносить по одному согласованному settings экрану R4.5/4.6/4.7a/b/c; поддерживаемые Save/auth actions, origin Back. | C02, C06, C12, C13, C17 | D045: settings base profile/skills/experience/education/links и scoped Save; existing appearance/account actions сохранены. Full public contacts/privacy/provider management/delete/notifications pending. | in_progress |
+| R8.3e | REQ-PORTFOLIO-01, REQ-SHARE-01 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_document_library_screen.dart; /portfolio | Перенести Portfolio list после multiple-output contract; настоящие actions, без mock success. | C09, C10, C13 | D048: независимые Portfolio snapshots/relations, permanent links и separate public lifecycle. Native/live/public reader acceptance открыта. | in_progress |
+| R8.3f | REQ-SETTINGS-01..04, REQ-NAV-05 | apps/mobile/lib/features/settings/settings_screen.dart; S-SETTINGS и children | Переносить по одному согласованному settings экрану R4.5/4.6/4.7a/b/c; поддерживаемые Save/auth actions, origin Back. | C02, C06, C12, C13, C17 | D048: typed Contacts/public eligibility/selection, Location privacy, Account lifecycle и reduced motion; unsupported notifications обозначены честно. Live Google/iOS/media и final visual acceptance открыты. | in_progress |
 | R8.4a | REQ-EDITOR-01..03 | apps/mobile/lib/features/portfolio_draft/presentation/builder_editor_widgets.dart; existing section editors | Перенести focused section scaffold/Apply/Cancel/visible Save, сохранив validation/input/retry. | C10, C12, C13, C16 | D045: новый document editor с focused sections/Save/Cancel/unsaved и input/conflict retention. Existing shared controls сохранены; final native review pending. | in_progress |
-| R8.4b | REQ-PROJECT-03..04 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_project_editor_screen.dart | Перенести manual Project create/edit после library gate, stable IDs и validation без потери ввода. | C08, C10, C12, C13 | D045: Project — единая Library запись, scoped Save/delete и relation cleanup. Document buffer + saveDocument(newProjects) создаёт Library Project и relation одной revision. Local project overrides/full native review pending. | in_progress |
+| R8.4b | REQ-PROJECT-03..04 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_project_editor_screen.dart | Перенести manual Project create/edit после library gate, stable IDs и validation без потери ввода. | C08, C10, C12, C13 | D048: одна Library запись + contribution; per-document title/description/contribution overrides. Create+attach и scoped Save сохраняют прежнюю queue/revision/UID boundary; native review pending. | in_progress |
 | R8.4c | REQ-PROJECT-04, REQ-MODEL-06 | apps/mobile/lib/features/github_import/presentation/github_import_screen.dart, github_source_cards.dart | Перенести import/review controls; dedup, Add/Accept/Ignore, stale/UID/cached behavior сохраняются. | C-GITHUB, C10, C13 | Действующий GitHub import/review использует обновлённые shared controls; Add/Accept/Ignore/cache/UID регрессии сохранены, native target walkthrough omitted. | in_progress |
-| R8.4d | REQ-RESUME-02..04, REQ-MODEL-07 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_document_library_screen.dart; portfolio_document_editor_screen.dart; /resumes | Перенести wizard и прямую правку по одному согласованному этапу R5.1; без fake structured storage. | C07, C08, C10, C12, C16 | D045: настоящий Resume snapshot, пять шагов creation и focused sections для существующего CV; фото/секции/Library/preview используют actual state. D046: captured base review сохраняет local overrides, Apply/Save раздельны. Public publication/native acceptance pending. | in_progress |
-| R8.4e | REQ-PORTFOLIO-02..03, REQ-EDITOR-01..03 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_document_editor_screen.dart; portfolio_document.dart | Перенести Portfolio sections/appearance/preview по одному flow; attach/remove только после готовой relation модели. | C-MODEL, C07, C08, C10, C12, C17 | D045: private Portfolio editor/sections/theme/Library attach/detach/order/visible/featured и private Resume ID; legacy Builder сохраняется. Public publish/native acceptance pending. | in_progress |
-| R8.5a | REQ-WEB-01..02 | apps/web; source paths после отдельно разрешённого Next.js runtime | Перенести landing/auth/download по одному accepted page, реальные CTA без отсутствующих store links. | C-WEB, C12, C13 | apps/web README-only; actual Next.js prerequisite scope proposed, runtime/build/routes отсутствуют. | blocked |
-| R8.5b | REQ-WEB-03, REQ-EDITOR-01..03 | apps/web; S-WEB-WORKSPACE, actual paths после prerequisites | Перенести supported workspace/section editor/preview, actual owner guards и explicit publication только при готовом contract. | C-WEB, C10, C13, C16 | Owner web runtime и новый shared workspace contract отсутствуют; prerequisite scope pending. | blocked |
-| R8.5c | REQ-WEB-04, REQ-SHARE-01 | apps/web; S-PUBLIC-RESUME/S-PUBLIC-PORTFOLIO, actual paths после prerequisites | Перенести публичные renderer по одному документу, anonymous unavailable и payload privacy. | C-WEB, C07, C08, C09, C17 | Public document web renderer/trusted projection/permanent IDs не внедрены; prerequisite scope pending. | blocked |
+| R8.4d | REQ-RESUME-02..04, REQ-MODEL-07 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_document_library_screen.dart; portfolio_document_editor_screen.dart; /resumes | Перенести wizard и прямую правку по одному согласованному этапу R5.1; без fake structured storage. | C07, C08, C10, C12, C16 | D045/D046 five-step Resume и captured base review сохранены; D048 добавляет contact/project overrides и explicit publication. Live/native acceptance pending. | in_progress |
+| R8.4e | REQ-PORTFOLIO-02..03, REQ-EDITOR-01..03 | apps/mobile/lib/features/portfolio_draft/presentation/portfolio_document_editor_screen.dart; portfolio_document.dart | Перенести Portfolio sections/appearance/preview по одному flow; attach/remove только после готовой relation модели. | C-MODEL, C07, C08, C10, C12, C17 | D048: sections/theme/relations/local overrides, selected Resume link только при отдельно published target, trusted explicit Publish. Legacy Builder сохраняется; native/live acceptance pending. | in_progress |
+| R8.5a | REQ-WEB-01..02 | apps/web/src/app, src/components и src/lib; Figma R6 | Перенести landing/auth/download по одному accepted page, реальные CTA без отсутствующих store links. | C-WEB, C12, C13 | D048 actual Next.js App Router/tokens/Manrope/Brand A/landing/auth/download; fake store links отсутствуют. Typecheck/tests/build и разрешённая D048 browser проверка записываются отдельно. | in_progress |
+| R8.5b | REQ-WEB-03, REQ-EDITOR-01..03 | apps/web/src/app, src/components и src/lib; Figma R6 | Перенести supported workspace/section editor/preview, actual owner guards и explicit publication только при готовом contract. | C-WEB, C10, C13, C16 | D048: UID owner SDK/online-first CAS, общий cloud6 model, base/Library/document editors/review/preview и publication API. Cross-client/security checks - в product status; browser acceptance pending. | in_progress |
+| R8.5c | REQ-WEB-04, REQ-SHARE-01 | apps/web/src/app, src/components и src/lib; Figma R6 | Перенести публичные renderer по одному документу, anonymous unavailable и payload privacy. | C-WEB, C07, C08, C09, C17 | D048: /d/[publicId], strict published-only reader, trusted server projection и immutable public media. Direct public write/list denied; live/visual acceptance pending. | in_progress |
 
 ### R9 — Регрессия и завершение
 
@@ -458,13 +467,16 @@ functional scope. Full public/web/account/native parity и final acceptance от
 
 **Решения пользователя:** Принять R9 и поставить REDESIGN_DONE; затем отдельно решить следующую продуктовую задачу.
 
-**Статус фазы:** `in_progress`, D040: actual950-case suite и analyze проверили перенесённый существующий Flutter slice; полная R9/REDESIGN_DONE ещё не закрыта.
+**Статус фазы:** `in_progress`: D040950-case evidence сохранено как история.
+D048 regression mobile1323/1323, backend51/projection14, web61 и browser
+publication PASS; Android source build и selected screens проверены. Последние
+checks/ограничения — в [product evidence](../product/product-spec.md#проверки-d048--2026-10-08). Полная R9/REDESIGN_DONE ещё не закрыта.
 
 | **ID** | **Requirements** | **Файл / route / frame** | **Изменение и готовность** | **Проверка** | **Evidence** | **Статус** |
 |:---|:---|:---|:---|:---|:---|:---|
-| R9.1 | REQ-PRESERVE-01..04, REQ-MODEL-05..08 | Existing tests в audit + CONTRIBUTING; root/nested routes | Проверить UID/auth/guest/offline/restart/review/notes/local-save/sync и данные без reset/cleanup. | C-GITHUB, C-MODEL, C10, C13 | Actual existing Flutter:950/950 PASS29s, analyze0issues3.8s;UID/Save/sync/GitHub/domain regressions preserved. New models/migration/native contracts not verified. | in_progress |
-| R9.2 | REQ-CHECK-01..02, REQ-NAV-01..05, REQ-WEB-04 | Финальные accepted Figma frames и actual UI | Сравнить layout/actions/photo/badges/links/tablet/a11y; public payload/private isolation отдельно. | C01–C17, C-WEB, C-MOTION | Supported widget scale1/2,ru/en,7viewports/buttons/SVG checks PASS; native visual/browser/private-public acceptance и полнота target scope pending. | in_progress |
-| R9.3 | REQ-WORKFLOW-07..08 | Этот журнал, README.md, product-spec.md | Записать limitations/accepted scope, приёмку REDESIGN_DONE и предложение вернуться перед Phase 11. | C-SCOPE | Ограничения и proposed prerequisites записаны; user scope/final acceptance ещё pending, REDESIGN_DONE не установлен. | in_progress |
+| R9.1 | REQ-PRESERVE-01..04, REQ-MODEL-05..08 | Existing tests в audit + CONTRIBUTING; root/nested routes | Проверить UID/auth/guest/offline/restart/review/notes/local-save/sync и данные без reset/cleanup. | C-GITHUB, C-MODEL, C10, C13 | Historical D040950-case evidence сохранено; D048 full mobile1323/1323/root-focused45, backend51/projection14 и web61 PASS. Browser CAS/Publish/Unpublish/republish/Copy и Android build/screens проверены; full native/live gates отдельно. | in_progress |
+| R9.2 | REQ-CHECK-01..02, REQ-NAV-01..05, REQ-WEB-04 | Финальные accepted Figma frames и actual UI | Сравнить layout/actions/photo/badges/links/tablet/a11y; public payload/private isolation отдельно. | C01–C17, C-WEB, C-MOTION | D048 inspected native Home/Project editor/Resume editor/Contacts Dark-Light и browser publication/anonymous HTML. Full Figma journey/a11y/device matrix и user acceptance pending; tests/source checks её не заменяют. | in_progress |
+| R9.3 | REQ-WORKFLOW-07..08 | Этот журнал, README.md, product-spec.md | Записать limitations/accepted scope, приёмку REDESIGN_DONE и предложение вернуться перед Phase 11. | C-SCOPE | D048 scope согласован явным ответом web + publication; limitations и current contracts синхронизируются. Final user acceptance открыта, REDESIGN_DONE не установлен. | in_progress |
 
 ---
 
@@ -477,18 +489,18 @@ nav/editor и совместимые private adapters. Этот scope больш
 outbox/LWW сохраняются. Детали — в architecture и actual subset
 [prerequisites](prerequisites.md).
 
-Public multioutput snapshots/permanent URLs/trusted projection, full account,
-contact/privacy, actual web/native sharing остаются prerequisites. Captured
-base review реализован D046 в private mobile. Наличие private schema5 не реализует
-оставшиеся public/account/web capabilities. Таблица ниже сохраняет зависимости;
-фазовая привязка описывает историю/план, действующий mobile scope — D045.
+D048 включает public multioutput snapshots/permanent URLs/trusted projection,
+contacts/privacy/attachments и actual web/native link actions. Captured base
+review D046 сохранён. Private schema6 не заменяет public security или
+live/device acceptance. Таблица сохраняет зависимости и требования; фазовая
+привязка описывает историю/план, действующий scope - D048.
 
 | **Зависимость из audit** | **Основной roadmap / решение перед R8** |
 |:---|:---|
 | GAP-DATA-01..03 | Общая база/library/multiple documents/association/profile-review: предлагаемые дополнения к domain/persistence/sync tasks Phase 6/8 и web 13b, без отмены прежней приёмки |
 | GAP-MEDIA-01 | Phase 11 Media: camera/gallery/upload/media lifecycle/Storage; дизайн состояний возможен раньше |
 | GAP-PUB-01, GAP-PUB-02 | Phase 8 publication contract + Phase 13c public UI: multiple snapshots/URL и отдельное public validation hardening; не считать client codec доказательством server security |
-| GAP-URL-01 | Политика принята D019: постоянный адрес документа, независимый от username/названия; unpublish закрывает доступ, повторный Publish использует тот же адрес. Спроектировать route scheme и миграцию: нынешний adapter удаляет старый username snapshot/claim; target-контракт ещё не реализован |
+| GAP-URL-01 | Политика принята D019; D048 реализует owner/document→opaque publicId и /d/<publicId>. Rename/republish сохраняют ID, duplicate его не наследует. Legacy username snapshot read-only без автоматической alias migration; live/browser acceptance отдельно |
 | GAP-AUTH-01, GAP-ACCOUNT-01 | Открытая Phase 7 и отдельно спланированные account management/linking/reauth/delete; Google sign-in не означает provider linking |
 | GAP-CONTACT-01 | Public contact/privacy contract отдельно; Inbox/Contact/FCM — Phase 14, location integrations — Phase 12 |
 | GAP-WEB-01 | Phase 13: минимальный runtime + публикация/public reader до полного owner editor; зависимости по актуальному roadmap: новый Next.js runtime/owner/public scenarios; R6 — только дизайн |
@@ -507,36 +519,36 @@ base review реализован D046 в private mobile. Наличие private 
 
 Прослеживаемость: requirement → task в таблицах выше и requirements → S-* в
 screens → C-* ниже → actual evidence. Таблица сохраняет результаты R0/D040;
-новый D045 functional source и проверки ведутся отдельно в product status.
+новый D045/D046/D048 functional source и проверки ведутся отдельно в product status.
 Исторический PASS не является новым document-model PASS. Поиск текста в source
 не подтверждает выполнение визуального требования.
 
-| **Check** | **Способ проверки и ожидаемый результат** | **Задача / экран** | **Результат R0** |
+| **Check** | **Способ проверки и ожидаемый результат** | **Задача / экран** | **Source / evidence по дате** |
 |:---|:---|:---|:---|
 | C01 | Render + walkthrough: на roots нет greeting/logout/STACKCARD DEMO | R4.1..4, R8.3; roots | Target не выполнен; source/Figma conflicts в audit |
 | C02 | Нажать gear на каждом root, открыть нужные settings/back | R1.2, R4.5, R4.6, R4.7a..c, R8.3; S-SETTINGS | D045: gear/standalone Settings доступны с четырёх stateful roots; новая native/visual review остаётся открытой |
 | C03 | Нажать ровно Все/Резюме/Проекты; Все включает Portfolio | R4.1, R7.1, R8.3; S-HOME | D045 source: три Home filters реализованы, Portfolio включён в Все; итоговые проверки в product status |
-| C04 | Визуально проверить Home без readiness/progress/old quick actions | R4.1, R9.2; S-HOME | D045 source: Home заменён mixed library без readiness dashboard; native visual review не выполнен |
+| C04 | Визуально проверить Home без readiness/progress/old quick actions | R4.1, R9.2; S-HOME | D048: Home mixed library без readiness dashboard; actual Android Dark-Light screens просмотрены. Full Figma/a11y/journey acceptance отдельно |
 | C05 | Проверить порядок actions/search/list без categories/hero | R4.3, R9.2; S-PROJECTS | Projects query-only Import/Create/Search/List внедрён; UI не применяет legacy categories, search/empty/retry tests PASS; native preview omitted |
-| C06 | Изменить имя/ник/фото/contacts/links, validation+save+reopen | R4.5, R4.6, R4.7a..c, R8.3; Settings groups | Полный сценарий отсутствует |
-| C07 | Выбрать/убрать фото; проверить Resume editor и preview | R5.1a,d, R9.2; Resume | Avatar URL есть; нужного photo flow/renderer нет |
+| C06 | Изменить имя/ник/фото/contacts/links, validation+save+reopen | R4.5, R4.6, R4.7a..c, R8.3; Settings groups | D048 source: typed contacts/privacy/settings/account действия; scoped Save/ownership preserved. Headless checks - в product status, live/native acceptance открыта. |
+| C07 | Выбрать/убрать фото; проверить Resume editor и preview | R5.1a,d, R9.2; Resume | Existing media feature и document photo/preview сохранены; D048 public copies отдельны. Native picker/permissions/live bucket не проверены этим source transfer. |
 | C08 | Inspect semantics + render icon/text/+N/wrap TechnologyBadge | R3.2, R4.3, R9.2; cards/detail | StackCardTechnologyBadge +StackCardMoreTechnologies внедрены; живой text/wrap,32runtimeSVGdecoded,+N/unknownlabel headless PASS |
-| C09 | Published card/detail: Copy/Open/Share после повторного открытия; draft без URL | R5.4b,c, R9.2; S-SHARE/cards | Document link UI отсутствует |
-| C10 | Change→local Save→sync ACK→explicit Publish; previous public snapshot unchanged | R5.4a, R8.4, R9.1; editors/publish | Save/sync contracts есть; user publication flow нет |
+| C09 | Published card/detail: Copy/Open/Share после повторного открытия; draft без URL | R5.4b,c, R9.2; S-SHARE/cards | D048 confirmed inventory/URL, browser Copy UI PASS; timeout/unknown не выдаёт success. Native Share ещё проверяется; live/full device links отдельно. |
+| C10 | Change→local Save→sync ACK→explicit Publish; previous public snapshot unchanged | R5.4a, R8.4, R9.1; editors/publish | D048: browser fixture→CAS Save→Publish→anonymous HTML PASS; Save изменённой роли сохранил старый public snapshot, explicit republish сохранил ID. Mobile ACK/UID regressions входят в1323 PASS; live sync отдельно. |
 | C11 | Tablet portrait/landscape: та же bottom nav, нет sidebar/rail | R7.2, R8.3, R9.2; roots | D045: четыре stateful roots сохраняют bottom nav без rail; historical D040 responsive PASS не аттестует новую native parity |
 | C12 | Back/close, system navigation, cancel/unsaved handling и возврат origin | R1, R5, R7.1, R9.1; nested | Existing nested Back есть; новая IA не проверена |
 | C13 | Empty/loading/error/retry/offline/long content; ввод и previous success не теряются | R3.4, R7.3, R9.1; все | R3.4 StatePanel5 + LifecycleStatus13 static PASS; полный flow/runtime pending |
 | C14 | sRGB contrast всех actual text/surface/disabled/focus pairs; normal text >=4.5:1 | R3.1, R7.3, R9.2; DS/UI | Shared controls/theme actual Dark/Light contrast widget checks PASS; полный target/newbackend/public/native UI не аттестован |
 | C15 | Metadata/hit tests реальных tap regions >=48×48 logical px, включая Copy/back/gear | R3, R7.2, R9.2; controls | Shared button/gear/+N/control external targets≥48 проверены headless; полный target и native hit regions pending |
 | C16 | Text scale1/2 и OS увеличенный текст, ru/en, узкие экраны/keyboard | R7.2, группы R8.3–R8.5, R9.2 | Supported5routes×7viewports×Dark/Light×scale1/2 иru/en headless PASS; OS/native keyboard/font acceptance omitted |
-| C17 | Anonymous payload/renderer без private notes/contacts/account/editor; absent/unpublished | R6.4, R9.2; public | Client projection есть, web отсутствует; server hardening gap |
-| C-MODEL | Один Project в разных outputs; create+attach/remove relation; profile diff/local override | R1.1, R5.1c, R5.3b, R8.1 | Singleton source, migration pending |
+| C17 | Anonymous payload/renderer без private notes/contacts/account/editor; absent/unpublished | R6.4, R9.2; public | D048 backend51/projection14 PASS; real anonymous published HTML без private fields, withdrawn403 friendly unavailable проверены browser E2E. Production deploy/live/full visual acceptance отдельно. |
+| C-MODEL | Один Project в разных outputs; create+attach/remove relation; profile diff/local override | R1.1, R5.1c, R5.3b, R8.1 | D045/D046 core и base review сохранены; D048 document overrides/Hive7/cloud6 совместимы. Normalized storage migration не вводится. |
 | C-GITHUB | Selection/Add/reimport/Accept/Ignore/stale/UID/offline; curated fields сохраняются | R5.2b,c, R9.1 | Existing import/review/domain/UID/cache regressions входят в950PASS; новый native target walkthrough не выполнялся |
-| C-ASSET | License/provenance fonts/icons/photos; настоящий текст badges, editable Figma | R2.2, R3.2, R7.3 | 40canonical records+1explicit Flutter derivative,9originalBrandASVG,4ManropeTTF imported; strict provenance PASS. Native font/AppIcon acceptance pending |
+| C-ASSET | License/provenance fonts/icons/photos; настоящий текст badges, editable Figma | R2.2, R3.2, R7.3 | Pinned source/font/SVG provenance сохранён; D048 AppIcon exports 20 native assets и source ledger. Packaging source не доказывает device visual acceptance. |
 | C-PALETTE | Exact dark HEX/semantic roles, lime primary, error red; light actual pairs | R2.1, R3.1, R8.2 | Semantic Lime/ink Dark-Light и Manrope перенесены в единый core/theme; focused controls contrast PASS, full target/native parity pending |
-| C-WEB | Полный visitor/owner/public path, реальные CTA и download availability | R6.1..4, R8.5 | Web source отсутствует; legacy concepts не runtime |
-| C-MOTION | 180–280 ms, ввод доступен, reduced/static variants и Copy feedback | R3.4, R7.3, R9.2 | R3.4 static spec и R7 шесть standard/reduced graph pairs с одинаковыми targets PASS; prototype playback/native motion pending |
-| C-SCOPE | Изменения только разрешённой фазы; сохранены user edits/assets/history/stack | R0.5, R8.1, R9.3 | R7/R8/R9 авторизованы D040; supported UI partial перенесён/950tests PASS; prerequisites proposed, backend/model/web не выполнены; Git delivery в dev разрешена D042 |
+| C-WEB | Полный visitor/owner/public path, реальные CTA и download availability | R6.1..4, R8.5 | D048 real Auth/mobile fixture/CAS Save/publication/anonymous reader browser E2E PASS; typecheck/web61 PASS, final build pending. Full Figma/device/live acceptance отдельно. |
+| C-MOTION | 180–280 ms, ввод доступен, reduced/static variants и Copy feedback | R3.4, R7.3, R9.2 | D048 persisted reducedMotion и OS disableAnimations учитываются в mobile/nav и web CSS; prototype/native playback pending. |
+| C-SCOPE | Изменения только разрешённой фазы; сохранены user edits/assets/history/stack | R0.5, R8.1, R9.3 | D048 разрешает mobile/web/publication. Deploy/billing/commit/push не выполнены, D042 историческая Git delivery; final acceptance открыта. |
 
 Обычный текст проверяется по 4.5:1 даже при небольших metadata размерах.
 48 logical px — критерий этого проекта. WCAG web target-size и Flutter logical
@@ -549,7 +561,9 @@ macOS, zsh/bash, cwd `apps/mobile`: `dart format --output=none --set-exit-if-cha
 Rules tests из cwd `firebase`: `npm run test:rules` только при отдельно разрешённом
 изменении backend contract. Native live acceptance имеет отдельные предусловия
 и opt-in; обычный test не доказывает Android/iOS/web readiness.
-Web checks назначаются по созданным manifests, отсутствующие npm scripts не придумываются.
+Web: cwd `apps/web`, `npm run typecheck`, `npm test`, `npm run build`; handler:
+cwd `firebase/functions`, `npm run check`, `npm test`. Commands/env - в CONTRIBUTING.
+Headless build не является запуском browser или live deployment.
 
 ### Фактические результаты R0
 
@@ -1495,13 +1509,16 @@ DESIGN_READY/REDESIGN_DONE не установлены, Phase11 автомати
 | D045 / 2026-10-07 | Пользователь просматривает dev и Figma, указывает на отсутствие новой навигации/логики и просит поставить разработку по фазам на паузу, развивая функционал под Figma и идею программы | Разрешён capability-based private mobile scope: stateful four roots, mixed Home/library, independent Resume/Portfolio snapshots/relations/editors, Developer base и compatible Hive5/cloud4 adapters. История фаз/R7 awaiting_review сохранена. Public multioutput Publish/URL/web/full account/native review остаются pending; no-preview/run сохранён. Полная Design v2 acceptance, commit/push/deploy этим поручением не выполнены. |
 | D046 / 2026-10-07 | «продолжи разработку», затем явный выбор «Продолжить mobile по Figma» | Продолжен D045 private mobile scope: captured base review для Resume/Portfolio по R5.1c194:2999/3051, выбор field/stable-ID updates с сохранением local overrides и отдельным Save; совместимые Hive6/cloud5. Web/публикация/commit/push/deploy не начаты, no-preview/run и полная Design v2 acceptance открыты. Проверки — в product spec. |
 | D047 / 2026-10-08 | Пользователь уточнил полноту переноса/функций и поручил обновить основные пункты разработки под Figma и ранее присланную концепцию | Основной roadmap обновлён под общую базу/Library и multiple Resume/Portfolio: remaining mobile/settings, trusted publication/permanent URL/public reader, web кабинет, Inbox/Share и качество/выпуск. История Phase 0–12/D045/D046 сохранена; full Figma acceptance и возобновление старой очереди не объявлены. В этом шаге только документы/source audit, без runtime/deploy/Git mutations. |
+| D048 / 2026-10-08 | «закончи перенос», затем явный ответ «Также реализовать web и публикацию» | Разрешён full transfer capability scope mobile + Next.js owner/public web + trusted document publication/permanent URL, совместимая private migration, privacy/attachments/account действия. Product evidence: mobile1323/1323/root-focused45, backend51/projection14 и web61 PASS; real browser Auth/fixture/CAS Save/Publish/anonymous HTML/dirty Unpublish/republish/Copy и Android build/selected Dark-Light screens проверены. Final analyze/build/native Share ещё проверяются. R7 awaiting_review, DESIGN_READY/REDESIGN_DONE и native/visual/user acceptance открыты; последующий ответ «Да, выполнить визуальную проверку web/mobile» разрешил preview/browser/native checks. Исторические no-preview skips сохранены. Inbox/FCM/QR/release не подменяются success. Deploy/billing/commit/push не запрошены. |
 
 Новый scope change записывается отдельной строкой с причиной, requirement IDs,
 влиянием на задачи/gaps и явным решением пользователя. Исторические результаты
 не переписываются. R6 принята D040; R7 source/graph QA PASS D041,
 весь пакет awaiting_review, явная приёмка/DESIGN_READY pending.
 D040 independent slice и historical R9 Flutter950/analyze evidence сохранены.
-D045 разрешает private mobile functional work и ставит phase queue на паузу.
+D045 разрешает private mobile functional work и ставит phase queue на паузу;
+D048 расширяет действующий scope на web и publication.
 Actual subset/remaining proposal разделены в [prerequisites](prerequisites.md).
-No-preview/run сохранён, DESIGN_READY/REDESIGN_DONE и full acceptance открыты.
+D048 preview/browser/native checks разрешены последующим явным ответом;
+DESIGN_READY/REDESIGN_DONE и full acceptance открыты.
 D042 Git delivery историческая; новые commit/push/deploy не выполнены.

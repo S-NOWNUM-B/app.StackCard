@@ -114,7 +114,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(repository.stored.language, AppLanguage.en);
       expect(find.text('Unable to save settings'), findsNothing);
-      final descriptionSwitch = find.byType(SwitchListTile);
+      final descriptionSwitch = find.byKey(
+        const Key('settings.sourceDescriptions'),
+      );
       await tester.ensureVisible(descriptionSwitch);
       await tester.tap(descriptionSwitch);
       await tester.pumpAndSettle();
@@ -144,7 +146,16 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text(item.heading), findsWidgets);
+      expect(
+        item.route == '/projects'
+            ? find.byWidgetPredicate(
+                (widget) =>
+                    widget is Semantics &&
+                    widget.properties.label == item.heading,
+              )
+            : find.text(item.heading),
+        findsWidgets,
+      );
       expect(tester.takeException(), isNull);
     });
   }

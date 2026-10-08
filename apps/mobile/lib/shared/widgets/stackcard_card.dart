@@ -23,21 +23,27 @@ class StackCardCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final contained = elevated || outlined;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: elevated
-            ? colors.surfaceElevated
-            : outlined
-            ? colors.surface
-            : Colors.transparent,
-        borderRadius: contained
-            ? BorderRadius.circular(StackCardRadius.large)
-            : null,
-        border: contained
-            ? Border.all(color: colors.border)
-            : Border(bottom: BorderSide(color: colors.borderSubtle)),
+    return Material(
+      type: MaterialType.transparency,
+      borderRadius: contained
+          ? BorderRadius.circular(StackCardRadius.large)
+          : null,
+      child: Ink(
+        decoration: BoxDecoration(
+          color: elevated
+              ? colors.surfaceElevated
+              : outlined
+              ? colors.surface
+              : Colors.transparent,
+          borderRadius: contained
+              ? BorderRadius.circular(StackCardRadius.large)
+              : null,
+          border: contained
+              ? Border.all(color: colors.border)
+              : Border(bottom: BorderSide(color: colors.borderSubtle)),
+        ),
+        child: Padding(padding: padding, child: child),
       ),
-      child: Padding(padding: padding, child: child),
     );
   }
 }

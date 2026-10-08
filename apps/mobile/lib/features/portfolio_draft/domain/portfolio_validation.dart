@@ -53,7 +53,7 @@ PortfolioValidationCode? validatePortfolioUrl(String value) {
       ?.group(1);
   if (uri == null ||
       value != value.trim() ||
-      RegExp(r'\s').hasMatch(value) ||
+      RegExp(r'[\s\x00-\x1f\x7f]').hasMatch(value) ||
       (uri.scheme != 'http' && uri.scheme != 'https') ||
       !uri.hasAuthority ||
       uri.host.isEmpty ||
@@ -63,6 +63,40 @@ PortfolioValidationCode? validatePortfolioUrl(String value) {
     return PortfolioValidationCode.invalidUrl;
   }
   return null;
+}
+
+/// Контакт имеет явный тип; URL аккаунта входа не становится контактом.
+PortfolioValidationCode? validatePortfolioContactUrl(
+  String value,
+  SocialLinkKind kind,
+) {
+  if (value.isEmpty) return PortfolioValidationCode.required;
+  if (value.length > 2048) return PortfolioValidationCode.tooLong;
+  if (value != value.trim() || RegExp(r'[\x00-\x20\x7f]|\s').hasMatch(value)) {
+    return PortfolioValidationCode.invalidUrl;
+  }
+  final uri = Uri.tryParse(value);
+  if (uri == null || uri.hasQuery || uri.hasFragment) {
+    if (kind == SocialLinkKind.email ||
+        kind == SocialLinkKind.phone ||
+        kind == SocialLinkKind.telegram) {
+      return PortfolioValidationCode.invalidUrl;
+    }
+  }
+  final valid = switch (kind) {
+    SocialLinkKind.email =>
+      uri != null &&
+          !uri.hasAuthority &&
+          RegExp(
+            r"^mailto:[A-Za-z0-9.!$&'*+/=_^`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$",
+          ).hasMatch(value),
+    SocialLinkKind.phone => RegExp(r'^tel:\+[0-9]{7,15}$').hasMatch(value),
+    SocialLinkKind.telegram =>
+      validatePortfolioUrl(value) == null &&
+          RegExp(r'^https://t\.me/[A-Za-z0-9_]{1,64}$').hasMatch(value),
+    _ => validatePortfolioUrl(value) == null,
+  };
+  return valid ? null : PortfolioValidationCode.invalidUrl;
 }
 
 /// Незаполненный профиль допустим; добавленные элементы имеют обязательные поля.
@@ -104,6 +138,7 @@ List<PortfolioValidationCode> validatePortfolioContent(
     }
     text(project.title, 120, required: true);
     text(project.description, 4000);
+    text(project.contribution, 4000);
     if (project.technologies.length > 20) {
       issues.add(PortfolioValidationCode.invalidStructure);
     }
@@ -163,7 +198,7 @@ List<PortfolioValidationCode> validatePortfolioContent(
   for (final link in content.links) {
     text(link.label, 80, required: true);
     add(validatePortfolioText(link.url, required: true, maxLength: 2048));
-    add(validatePortfolioUrl(link.url));
+    add(validatePortfolioContactUrl(link.url, link.kind));
   }
   text(content.resumeText, 20000);
   if (content.documents.length > portfolioDocumentLimit) {
@@ -196,6 +231,14 @@ List<PortfolioValidationCode> validatePortfolioContent(
       issues.addAll(validatePortfolioContent(data));
     }
     ids(document.projects.map((attachment) => attachment.projectId));
+    for (final attachment in document.projects) {
+      final title = attachment.titleOverride;
+      if (title != null) text(title, 120, required: true);
+      final description = attachment.descriptionOverride;
+      if (description != null) text(description, 4000);
+      final contribution = attachment.contributionOverride;
+      if (contribution != null) text(contribution, 4000);
+    }
     if (document.projects.any(
       (attachment) => !libraryIds.contains(attachment.projectId),
     )) {

@@ -91,7 +91,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Проекты: 1'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.label == 'Проекты: 1',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Replacement case'), findsOneWidget);
       expect(find.text('Atlas UI Kit'), findsNothing);
       final container = ProviderScope.containerOf(
@@ -143,7 +149,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Recovered case'), findsOneWidget);
-      expect(find.text('Проекты: 1'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.label == 'Проекты: 1',
+        ),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     },
   );
@@ -163,7 +175,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Проекты: 0'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.label == 'Проекты: 0',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Пока нет проектов'), findsOneWidget);
       expect(find.text('Ничего не найдено'), findsNothing);
       expect(find.text('Очистить поиск'), findsNothing);
@@ -175,7 +193,13 @@ void main() {
       await tester.ensureVisible(find.text('Очистить поиск'));
       await tester.tap(find.text('Очистить поиск'));
       await tester.pumpAndSettle();
-      expect(find.text('Проекты: 0'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.label == 'Проекты: 0',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Пока нет проектов'), findsOneWidget);
       expect(find.text('Очистить поиск'), findsNothing);
       expect(tester.takeException(), isNull);

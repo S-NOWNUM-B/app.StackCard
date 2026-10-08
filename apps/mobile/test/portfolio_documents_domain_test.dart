@@ -218,7 +218,14 @@ void main() {
       );
       expect((storedDocument['content'] as Map)['projects'], isEmpty);
       expect(storedDocument['projects'], [
-        {'projectId': project.id, 'visible': true, 'featured': true},
+        {
+          'projectId': project.id,
+          'visible': true,
+          'featured': true,
+          'titleOverride': null,
+          'descriptionOverride': null,
+          'contributionOverride': null,
+        },
       ]);
       expect(workspace.projects.single.updatedAt, now);
       expect(

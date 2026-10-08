@@ -1,4 +1,4 @@
-enum SocialLinkKind { other, github, website, linkedin }
+enum SocialLinkKind { other, github, website, linkedin, email, phone, telegram }
 
 enum PortfolioBlockKind {
   profile,
@@ -117,6 +117,8 @@ final class SocialLink {
     required this.label,
     required this.url,
     this.kind = SocialLinkKind.other,
+    this.publishAllowed = false,
+    this.visible = true,
   });
 
   final String id;
@@ -124,19 +126,29 @@ final class SocialLink {
   final String url;
   final SocialLinkKind kind;
 
+  /// Разрешение общей базы; публикация также проверяет актуальный контакт по ID.
+  final bool publishAllowed;
+
+  /// Выбор контакта внутри собственного snapshot документа.
+  final bool visible;
+
   SocialLink copyWith({
     String? id,
     String? label,
     String? url,
     SocialLinkKind? kind,
+    bool? publishAllowed,
+    bool? visible,
   }) => SocialLink(
     id: id ?? this.id,
     label: label ?? this.label,
     url: url ?? this.url,
     kind: kind ?? this.kind,
+    publishAllowed: publishAllowed ?? this.publishAllowed,
+    visible: visible ?? this.visible,
   );
 
-  Object get _fields => (id, label, url, kind);
+  Object get _fields => (id, label, url, kind, publishAllowed, visible);
 
   @override
   bool operator ==(Object other) =>

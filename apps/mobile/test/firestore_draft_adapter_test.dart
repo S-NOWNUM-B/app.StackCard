@@ -7,6 +7,8 @@ import 'package:app_stackcard/features/portfolio_draft/domain/portfolio_sync.dar
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/legacy_portfolio_content.dart';
+
 void main() {
   test(
     'Cloud codec keeps private notes separate and uses server timestamp',
@@ -61,11 +63,11 @@ void main() {
   });
 
   test(
-    'Legacy cloud schema remains readable and next write upgrades to version 5',
+    'Legacy cloud schema remains readable and next write upgrades to version 6',
     () {
       final legacy = decodeCloudPortfolioDraft(_data(), ownerUid: 'owner');
       final upgraded = encodeCloudPortfolioDraft(legacy);
-      expect(upgraded['schemaVersion'], 5);
+      expect(upgraded['schemaVersion'], 6);
       expect(upgraded['notes'], legacy.notes);
       expect(upgraded['mutationId'], legacy.mutationId);
       expect(upgraded['localRevision'], legacy.localRevision);
@@ -100,20 +102,22 @@ void main() {
       content: content,
     );
     final encoded = encodeCloudPortfolioDraft(draft);
-    expect(encoded['schemaVersion'], 5);
+    expect(encoded['schemaVersion'], 6);
     final restored = decodeCloudPortfolioDraft({
       ...encoded,
       'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 10, 7)),
     }, ownerUid: 'owner');
     expect(restored.content, content);
     for (final version in [3, 4]) {
+      final legacyContent = encodePortfolioContent(
+        content,
+        includeDocuments: version >= 4,
+      );
+      removePresentationPrivacyFields(legacyContent);
       final legacy = {
         ..._data(),
         'schemaVersion': version,
-        'content': encodePortfolioContent(
-          content,
-          includeDocuments: version >= 4,
-        ),
+        'content': legacyContent,
       };
       expect(
         decodeCloudPortfolioDraft(legacy, ownerUid: 'owner').content,
@@ -149,7 +153,7 @@ void main() {
   });
 
   test('Cloud legacy versions reject media fields and future schemas', () {
-    for (final version in [1, 2, 6]) {
+    for (final version in [1, 2, 7]) {
       expect(
         () => decodeCloudPortfolioDraft({
           ..._data(),
@@ -357,6 +361,7 @@ Map<String, Object?> _legacyContent() {
     PortfolioContent(),
     includeDocuments: false,
   );
+  removePresentationPrivacyFields(encoded);
   (encoded['profile'] as Map).remove('avatarPath');
   return encoded;
 }

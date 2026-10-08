@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -18,6 +20,10 @@ import '../features/portfolio_draft/data/synced_portfolio_draft_repository.dart'
 import '../features/portfolio_draft/domain/portfolio_draft_repository.dart';
 import '../features/portfolio_draft/domain/portfolio_draft.dart';
 import '../features/portfolio_draft/domain/portfolio_sync.dart';
+import '../features/portfolio_draft/domain/document_publication.dart';
+import '../features/portfolio_draft/data/http_document_publication_repository.dart';
+import '../features/portfolio_draft/data/shared_preferences_document_publication_operation_store.dart';
+import '../features/settings/settings_providers.dart';
 import '../features/auth/auth.dart';
 import '../features/media/media.dart';
 import '../firebase_options.dart';
@@ -33,6 +39,7 @@ final class LocalRuntime {
     this.firestore,
     this.accountAuth,
     this.mediaStorage,
+    this.pendingDeletionOwner,
   });
 
   final AppSettings settings;
@@ -42,6 +49,58 @@ final class LocalRuntime {
   final FirebaseFirestore? firestore;
   final FirebaseAuth? accountAuth;
   final FirebaseStorage? mediaStorage;
+  final String? pendingDeletionOwner;
+
+  late final _publicationPreferences = SharedPreferencesAsync();
+  final Set<String> _deletedAccountUids = {};
+
+  Future<void> clearConfirmedDeletedUser(String uid) async {
+    final currentUid = accountAuth?.currentUser?.uid;
+    if (currentUid != null && currentUid != uid) {
+      throw const DocumentPublicationFailure(
+        DocumentPublicationFailureKind.unauthenticated,
+      );
+    }
+    _deletedAccountUids.add(uid);
+    await draftAccounts.clearConfirmedDeletedUser(uid);
+    await publicationOperationStoreForUser(uid).clear();
+    await accountDeletionJournalForUser(uid).clear();
+  }
+
+  DocumentPublicationRepository? publicationRepositoryForUser(String uid) {
+    const configured = String.fromEnvironment('STACKCARD_PUBLICATION_API_URL');
+    final endpoint = Uri.tryParse(configured);
+    final auth = accountAuth;
+    if (configured.isEmpty || endpoint == null) {
+      return null;
+    }
+    return HttpDocumentPublicationRepository(
+      dio: Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 30),
+        ),
+      ),
+      endpoint: endpoint,
+      ownerUid: uid,
+      token: (ownerUid) async {
+        final user = auth?.currentUser;
+        if (user == null || user.uid != ownerUid) return null;
+        final token = await user.getIdToken();
+        return auth?.currentUser?.uid == ownerUid ? token : null;
+      },
+    );
+  }
+
+  DocumentPublicationOperationStore publicationOperationStoreForUser(
+    String uid,
+  ) => SharedPreferencesDocumentPublicationOperationStore(
+    _publicationPreferences,
+    ownerUid: uid,
+  );
+
+  AccountDeletionJournal accountDeletionJournalForUser(String uid) =>
+      SharedPreferencesAccountDeletionJournal(_publicationPreferences, uid);
 
   PortfolioMediaRepository? mediaRepositoryForUser(String uid) {
     final images = mediaStorage;
@@ -53,7 +112,9 @@ final class LocalRuntime {
       storage: images,
       ownerUid: uid,
       isActive: () =>
-          storage.portfolioDraft.isOpen && auth.currentUser?.uid == uid,
+          storage.portfolioDraft.isOpen &&
+          !_deletedAccountUids.contains(uid) &&
+          auth.currentUser?.uid == uid,
     );
   }
 
@@ -77,7 +138,9 @@ final class LocalRuntime {
       ),
       remote: FirestorePortfolioDraftRepository(firestore: database, uid: uid),
       isActive: () =>
-          storage.portfolioDraft.isOpen && auth.currentUser?.uid == uid,
+          storage.portfolioDraft.isOpen &&
+          !_deletedAccountUids.contains(uid) &&
+          auth.currentUser?.uid == uid,
     );
   }
 
@@ -151,6 +214,12 @@ final class LocalRuntime {
     final settings = await repository.load();
     final storage = await LocalStorage.open(directory: directory);
     try {
+      final pendingDeletionOwner =
+          configureAuth
+          ? await SharedPreferencesAccountDeletionJournal.readPendingOwner(
+              SharedPreferencesAsync(),
+            )
+          : null;
       AccountAuthRepository? authRepository;
       FirebaseFirestore? firestore;
       FirebaseAuth? accountAuth;
@@ -193,7 +262,7 @@ final class LocalRuntime {
         if (firestoreHost.isNotEmpty) {
           const firestorePort = int.fromEnvironment(
             'FIRESTORE_EMULATOR_PORT',
-            defaultValue: 8080,
+            defaultValue: 8085,
           );
           firestore.useFirestoreEmulator(firestoreHost, firestorePort);
         }
@@ -206,6 +275,7 @@ final class LocalRuntime {
         firestore: firestore,
         accountAuth: accountAuth,
         mediaStorage: mediaStorage,
+        pendingDeletionOwner: pendingDeletionOwner,
       );
     } catch (_) {
       await storage.close();

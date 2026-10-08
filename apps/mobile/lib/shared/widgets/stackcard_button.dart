@@ -17,12 +17,15 @@ class StackCardButton extends StatefulWidget {
     this.loading = false,
     this.role,
     this.unavailableReason,
-  }) : assert(icon == null || iconWidget == null);
+    this.iconSize = 18,
+  }) : assert(icon == null || iconWidget == null),
+       assert(iconSize > 0);
 
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
   final Widget? iconWidget;
+  final double iconSize;
   final bool primary;
   final bool loading;
 
@@ -168,12 +171,15 @@ class _StackCardButtonState extends State<StackCardButton> {
                       ] else if (widget.icon != null ||
                           widget.iconWidget != null) ...[
                         SizedBox.square(
-                          dimension: 18,
+                          dimension: widget.iconSize,
                           child: IconTheme.merge(
-                            data: IconThemeData(color: foreground, size: 18),
+                            data: IconThemeData(
+                              color: foreground,
+                              size: widget.iconSize,
+                            ),
                             child:
                                 widget.iconWidget ??
-                                Icon(widget.icon, size: 18),
+                                Icon(widget.icon, size: widget.iconSize),
                           ),
                         ),
                         const SizedBox(width: StackCardSpacing.sm),

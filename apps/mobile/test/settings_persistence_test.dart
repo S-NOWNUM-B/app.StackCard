@@ -16,6 +16,7 @@ void main() {
       theme: AppTheme.system,
       language: AppLanguage.en,
       showSourceDescriptions: false,
+      reducedMotion: true,
     );
     await SharedPreferencesSettingsRepository(_Preferences(storage))
         .save(settings);
@@ -39,7 +40,7 @@ void main() {
       null,
       '{broken',
       '[]',
-      '{"version":2,"theme":"light"}',
+      '{"version":3,"theme":"light"}',
       '{"version":1.0,"theme":"light"}',
       '{"version":1,"theme":false,"language":42,"showSourceDescriptions":"false"}',
     ]) {
@@ -64,6 +65,39 @@ void main() {
         await SharedPreferencesSettingsRepository(_Preferences(storage)).load(),
         const AppSettings(language: AppLanguage.en),
       );
+    },
+  );
+
+  test(
+    'Version 1 settings preserve choices and add reduced motion false',
+    () async {
+      final storage = {
+        SharedPreferencesSettingsRepository.storageKey: '{"version":1,"theme":"light","language":"en","showSourceDescriptions":false}',
+      };
+      expect(
+        await SharedPreferencesSettingsRepository(_Preferences(storage)).load(),
+        const AppSettings(
+          theme: AppTheme.light,
+          language: AppLanguage.en,
+          showSourceDescriptions: false,
+        ),
+      );
+    },
+  );
+
+  test(
+    'Reduced motion persists and a failed preference write retries',
+    () async {
+      final repository = _Settings()..failNext = true;
+      final controller = AppearanceController(settingsRepository: repository);
+      addTearDown(controller.dispose);
+      await controller.setReducedMotion(true);
+      expect(controller.reducedMotion, isTrue);
+      expect(controller.saveFailure, isNotNull);
+      expect(repository.stored.reducedMotion, isFalse);
+      await controller.retrySave();
+      expect(controller.saveFailure, isNull);
+      expect(repository.stored.reducedMotion, isTrue);
     },
   );
 
