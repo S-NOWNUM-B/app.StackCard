@@ -121,9 +121,10 @@ Next.js `apps/web` создаёт marketing/download/Auth/owner editors и anony
 Нет production endpoint/domain/store links без настроенного окружения.
 
 [Проверки D048](../product/product-spec.md#проверки-d048--2026-10-08):
-mobile1323/1323, backend51/projection14 и web61 PASS; real browser publication
-и Android build/выбранные Dark-Light screens проверены. Final analyze/build и
-native Share ещё проверяются. R7 awaiting_review, DESIGN_READY/REDESIGN_DONE,
+mobile1323/1323, backend51/projection14 и web62/check/format/audit0 PASS; real browser publication
+и Android isolated build/current Home/Resume/Share проверены; Project/Contacts
+Dark-Light screenshots intermediate до последних UI правок. Final analyze0 и
+Android Share sheet PASS. R7 awaiting_review, DESIGN_READY/REDESIGN_DONE,
 full Figma/native/browser и live Google/iOS/media/location acceptance открыты. Inbox/FCM, QR/DeveloperCard, release и billing не входят
 в реализованный source от одного разрешения web/publication.
 
@@ -340,7 +341,7 @@ Tests перечислены по actual source inventory, не объявляю
 Добавить содержательные cases: exact lossless mapping всех versions; crash journal phases; two-device idempotency; old/new ACK + pending payload; stale generation delete; private/public/foreignUID/anonymous/list; malicious nested payload direct SDK; contacts/account separation; base review override preservation; duplicate no publication; rename/unpublish/republish same ID; unknown operation read-resolution; new schema downgrade denial; cross-client fixtures; media linked published asset not deleted from draft removal.
 
 Обычные checks после разрешённого diff: macOS zsh/bash, cwd apps/mobile: dart format --output=none --set-exit-if-changed lib test integration_test, flutter analyze, flutter test; cwd firebase: npm run test:all-rules; cwd firebase/functions: npm run check и npm test;
-cwd apps/web: npm run typecheck, npm test и npm run build по actual manifests. Native Google/reset/iOS/media/share/device acceptance pending; D048 разрешает
+cwd apps/web: npm run typecheck, npm test и npm run build по actual manifests. Native Google/reset/iOS/media/Open/full device acceptance pending; Android Share sheet PASS; D048 разрешает
 visual/browser/native checks, actual ограничения среды фиксируются отдельно.
 Headless tests этого не доказывают.
 

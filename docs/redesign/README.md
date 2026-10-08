@@ -32,8 +32,10 @@ inventory/operation recovery/permanent `/d/<publicId>`/public media/delete lifec
 Текущие source/results - в [product status](../product/product-spec.md#статус-и-границы-текущей-работы)
 и [prerequisites](prerequisites.md#перенос-d048--2026-10-08).
 [Проверки D048](../product/product-spec.md#проверки-d048--2026-10-08): mobile1323/1323,
-backend51/projection14 и web61 PASS; browser publication и Android build/screens
-проверены. Последний analyze/build и native Share ещё проверяются; full acceptance отдельно.
+backend51/projection14 и web62/check/format/audit0 PASS; browser publication и Android isolated actual-app build/Home/Resume/Share
+проверены. Final analyze0 и Android Share sheet PASS; запрошенная D048
+implementation/local verification выполнены, full acceptance/release отдельно.
+[Verification report](source/d048-transfer-verification.json) хранит результаты и screenshot digests.
 
 R7 остаётся awaiting_review; DESIGN_READY/REDESIGN_DONE не установлены.
 Последующий ответ «Да, выполнить визуальную проверку web/mobile» разрешает

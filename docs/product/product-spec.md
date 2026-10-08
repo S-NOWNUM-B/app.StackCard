@@ -4,7 +4,7 @@
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage full transfer in progress](https://raster.shields.io/badge/Stage-full_transfer_in_progress-111111?style=for-the-badge)
+![Stage local transfer verified](https://raster.shields.io/badge/Stage-local_transfer_verified-111111?style=for-the-badge)
 ![Mobile + Web source](https://raster.shields.io/badge/Mobile_%2B_Web-source-C7FF1A?style=for-the-badge)
 
 </div>
@@ -33,9 +33,10 @@
 
 **2026-10-08, D048:** поручение «закончи перенос» и явный ответ «Также реализовать
 web и публикацию» разрешают завершение mobile-сценариев, actual Next.js web и
-публикацию независимых Resume/Portfolio. Source пакета реализован; текущие
-headless/emulator/browser/Android результаты ниже отделены от full acceptance
-и live availability. Deploy/billing/
+публикацию независимых Resume/Portfolio. Запрошенная реализация D048 выполнена
+и локально проверена: mobile, trusted publication и web работают в текущем
+source. Headless/emulator/browser/Android evidence ниже отделён от release,
+full device/Figma acceptance и live availability. Deploy/billing/
 commit/push не запрошены. Последующий явный ответ «Да, выполнить визуальную
 проверку web/mobile» разрешает D048 preview/browser/native checks; результаты
 и ограничения среды записываются отдельно.
@@ -107,6 +108,11 @@ Functions/web ещё не подтверждены. Inbox/FCM, QR/Developer Card
 
 ### Проверки D048 — 2026-10-08
 
+Компактный [verification report](../redesign/source/d048-transfer-verification.json)
+сохраняет команды, результаты и hash/size/local paths logs/screenshots. Logs и
+images — optional evidence; native argv использовал временный isolated fixture
+с Memory repository и actual StackCardApp, а не production dataset/entry point.
+
 Результаты ведущего по текущему пакету; emulator/browser использовали demo
 accounts и fixture, production данные/публикации не менялись. Числа отдельных
 focused прогонов не суммируются с полным suite.
@@ -114,19 +120,21 @@ focused прогонов не суммируются с полным suite.
 | Проверка | Фактический результат |
 | --- | --- |
 | Mobile regression | Полный `flutter test --no-pub --reporter expanded` — **1323/1323 PASS**; run log `/private/tmp/stackcard-full-tests-final2.log`. Root-focused проверки — **45 PASS**. |
-| Mobile static | Предыдущий final2 `flutter analyze --no-pub` — **0 issues**; final3 повтор ещё выполняется. Его итог не подменяется предыдущим PASS. |
+| Mobile static | Финальный whole-app `flutter analyze --no-pub` — **0 issues**, 4.4s; log `/private/tmp/stackcard-analysis-final3.log`. |
 | Assets | Strict `check_imports.py --require-brand --require-imported` — **41 files PASS**; `export_native_icons.mjs --check` с `SHARP_MODULE_ROOT=firebase/functions/node_modules` — **20 exact PNG PASS**. |
 | Backend | `npm run test:all-rules` — **51 PASS**: Firestore30, actual Admin-SDK service11, Storage10. Focused barrier/race service run — **11 PASS**; latest pure projection suite — **14 PASS**. |
-| Web static/contracts | Последний завершённый `npm test` — **61 PASS**, typecheck — **PASS**. Final production build ещё ожидает завершения browser session; новый build PASS не заявлен. |
-| Browser E2E | Actual demo Auth → mobile cloud6 fixture → web CAS Save → Publish → anonymous HTML. HTML не содержит private fields. Save новой роли сохранил прежний public snapshot; dirty Unpublish сохранил ввод, withdrawn403 дал friendly unavailable state; Save+Republish сохранили publicId. Реальный Copy UI показал success. |
-| Native Android | Debug build текущего source — **PASS**. Изолированная demo session: Home, Project editor, Resume editor и Contacts Dark/Light запущены; screenshots просмотрены ведущим. Native Share sheet ещё проверяется. |
+| Web static/contracts | Финальный `npm run check` — **PASS**: typecheck, **62/62 tests**, production build11 routes; `npm run format:check` — **PASS**, `npm audit` — **0 vulnerabilities**. Final log file не сохранён; actual tool output записан в report, прежний log не используется как новый. |
+| Browser E2E | Actual demo Auth → mobile cloud6 fixture → web CAS Save → Publish → anonymous HTML. HTML не содержит private fields. Save новой роли сохранил прежний public snapshot; dirty Unpublish сохранил ввод, withdrawn Next page404 дала friendly unavailable state; Save+Republish сохранили publicId. Реальный Copy UI показал success. Fresh workspace390px: four tabs + header Settings, actual Settings click, scrollWidth390/390; public1280px:1280/1280, console errors=[] после Next Script fix. |
+| Native Android | Debug source build и isolated actual StackCardApp launch — **PASS**. Actual isolated demo Home/Resume editor и native Share screenshots просмотрены. Системное Share sheet открылось с настоящим emulator publication URL; адресат не выбран, сообщение не отправлено. Project editor/Contacts Dark-Light просмотрены на промежуточных screenshots до последних Save-label/helper/counter правок; они не объявляются final exact renders. |
+| Figma visual comparison | Actual screenshot206:28992, R6.4 public Resume no-photo wide Dark1440×1513, сопоставлен с published web1280px: Brand A header, open600px document column, Manrope, flat sections, badges и Share panel согласованы. Количество секций соответствует projected fixture. Это одно конкретное сравнение; full matrix/user acceptance отдельно. |
 | Documentation | 11 updated files: оформление/local links — **PASS**; hero/badges и TOC order семи guides — **PASS**; owned-document `git diff --check` clean. |
 
 Проверены реальный web service flow и выбранные Android экраны. Полная Figma
 parity/journey matrix и user acceptance не объявляются завершёнными. iOS runtime
 недоступен: нет полного Xcode/simctl. Actual native Auth/Google, camera/picker,
-успешная geolocation, native Share/Open и live cloud6/Rules/Functions/web deployment
-этим evidence пока не закрыты. R7 awaiting_review, DESIGN_READY/REDESIGN_DONE
+успешная geolocation, native Open/handoff и live cloud6/Rules/Functions/web deployment
+этим evidence не закрыты. Temporary web/Firebase/Flutter task processes остановлены;
+использованный existing Android emulator-5554 сохранён. Commit/push/deploy не выполнялись. R7 awaiting_review, DESIGN_READY/REDESIGN_DONE
 сохраняются; Inbox/FCM/QR/release остаются будущим scope.
 
 **Проверки функционального обновления 2026-10-07, macOS zsh:**
@@ -629,9 +637,9 @@ web-редактор и публичные Resume/Portfolio. Этот разде
 План обновлён под Figma и концепцию общей базы. Полный перенос не завершён:
 D045/D046 private core сохранён, D048 явно разрешает mobile/web/publication.
 Contacts/privacy/Project overrides, actual Next.js owner/public runtime и trusted
-publication source используют Hive7/cloud6. Mobile1323/1323, backend51 и
-projection14 PASS; actual browser publication и Android source/screen smoke
-проверены, final analyze/build и native Share ещё ожидают итога.
+publication source используют Hive7/cloud6. Mobile1323/1323/analyze0, backend51/
+projection14, web62/typecheck/production build/format/audit0 PASS; actual browser
+publication, Android build/Home/Resume/native Share локально проверены.
 R7 user acceptance и full native/browser/Figma parity остаются открытыми.
 Ожидание REDESIGN_DONE не блокирует разрешённые capabilities; новая source
 реализация не означает deployment или запуск всех будущих сервисов.
@@ -830,7 +838,7 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 10 — Portfolio Suggestions | Завершена; pure rules, объяснения ru/en, явные Preview/editor actions и Android-запуск проверены |
 | Phase 11 — Media | Реализована; 1013 Flutter/40 Rules/Android SDK PASS; полная device/live приёмка открыта |
 | Phase 12 — Location | Реализована без карты; 1068 Flutter/2 native cases PASS; device geolocation/iOS приёмка открыта |
-| Phase 13a — Public shell | D048 source реализован: Next.js shell/landing/download; browser runtime проверен, final build/full Figma acceptance отдельно |
+| Phase 13a — Public shell | D048 source реализован: Next.js shell/landing/download; browser runtime и production build PASS; full Figma/release acceptance отдельно |
 | Phase 13b — Auth и редактор | D048 source реализован: Auth/UID owner база/Library/document editors; mobile fixture/web CAS browser flow PASS, full cross-client/live acceptance отдельно |
 | Phase 13c — Public Resume/Portfolio | D048 source реализован: trusted publication/permanent URL/public media/reader; backend51/projection14 и browser Publish/Unpublish/republish/Copy PASS, live acceptance отдельно |
 | Phase 14 — Contact / Inbox / FCM | Запланирована |

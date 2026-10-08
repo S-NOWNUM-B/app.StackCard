@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "evidenceId": "d048-transfer-verification-2026-10-08",
-  "status": "verification_in_progress",
-  "recordedAtUtc": "2026-10-08T08:35:08.773005+00:00",
+  "status": "verified_local_transfer_scope",
+  "recordedAtUtc": "2026-10-08T08:37:07.511262+00:00",
   "evidenceRecordedBy": "documentation agent from integration lead results and checked local artifact bytes",
   "scope": {
     "description": "Local mobile/web/document-publication implementation and verification; full device/Figma/live acceptance remains separate.",
@@ -17,14 +17,18 @@
       "Trusted document publication, permanent publicId, operation recovery, public media and deletion lifecycle",
       "Next.js owner/public runtime and Firebase account actions",
       "Native Open/Share adapters, persisted reduced motion and pinned AppIcon packaging"
-    ]
+    ],
+    "requestedD048ImplementationDelivered": true
   },
   "environment": {
     "platform": "macOS",
     "shell": "zsh",
     "firebaseTarget": "local demo Emulator Suite",
     "productionDataChanged": false,
-    "runtimeChecksAuthorized": true
+    "runtimeChecksAuthorized": true,
+    "temporaryTaskProcessesStopped": true,
+    "existingAndroidEmulatorPreserved": "emulator-5554",
+    "androidDeviceAcquisition": "Task start failed because the AVD was already running; the existing device was used and preserved."
   },
   "checks": {
     "mobileFullSuite": {
@@ -70,7 +74,6 @@
       "status": "PASS",
       "passed": 45,
       "failed": 0,
-      "includedInFullSuiteCount": false,
       "countsMustNotBeSummed": true,
       "log": {
         "name": "stackcard-root-focus-final.log",
@@ -78,7 +81,8 @@
         "sha256": "bfa6715808051f164db591eeebbc00f138866374a6252ffc6642ffd51678ef93",
         "bytes": 8700,
         "requiredToRunChecks": false
-      }
+      },
+      "includedInFullSuiteCount": true
     },
     "importedAssets": {
       "cwd": ".",
@@ -142,20 +146,38 @@
     },
     "webLatestCompleted": {
       "cwd": "apps/web",
-      "tests": {
-        "status": "PASS",
-        "passed": 61
-      },
+      "command": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "status": "PASS",
       "typecheck": {
         "status": "PASS"
       },
-      "finalCheck": {
-        "command": [
-          "npm",
-          "run",
-          "check"
-        ],
-        "status": "pending"
+      "tests": {
+        "status": "PASS",
+        "passed": 62,
+        "failed": 0
+      },
+      "productionBuild": {
+        "status": "PASS",
+        "compiler": "Next16.4 webpack",
+        "compileSecondsReported": 2.9,
+        "staticGeneration": "10/10",
+        "routes": [
+          "/",
+          "/_not-found",
+          "/account-deletion",
+          "/d/[publicId]",
+          "/download",
+          "/examples/portfolio",
+          "/examples/resume",
+          "/reset-password",
+          "/sign-in",
+          "/sign-up",
+          "/workspace/[[...path]]"
+        ]
       },
       "formatCheck": {
         "command": [
@@ -163,7 +185,23 @@
           "run",
           "format:check"
         ],
-        "status": "not_recorded_here"
+        "status": "PASS"
+      },
+      "audit": {
+        "command": [
+          "npm",
+          "audit"
+        ],
+        "status": "PASS",
+        "vulnerabilities": 0
+      },
+      "evidence": {
+        "kind": "actual tool output verified by integration lead",
+        "sessionId": 81237,
+        "checkChunk": "c65d91",
+        "exit0AndFormatChunk": "4d95a7",
+        "auditJsonChunk": "fcc990",
+        "logFileSaved": false
       }
     },
     "browserActualE2E": {
@@ -174,7 +212,7 @@
         "CAS Save then explicit Publish",
         "Read anonymous HTML without private fields",
         "Save a changed role while published snapshot stays unchanged",
-        "Unpublish with dirty input preserved; withdrawn403 becomes friendly unavailable",
+        "Unpublish with dirty input preserved; withdrawn Next page404 becomes friendly unavailable",
         "Save and republish using the same publicId",
         "Copy UI displays actual success"
       ],
@@ -191,7 +229,20 @@
     "nativeAndroid": {
       "debugBuild": {
         "status": "PASS",
-        "exactArgvNotRecordedHere": true
+        "cwd": "apps/mobile",
+        "command": [
+          "flutter",
+          "run",
+          "--debug",
+          "--no-pub",
+          "-d",
+          "emulator-5554",
+          "-t",
+          "/private/tmp/stackcard_visual_main.dart"
+        ],
+        "temporaryTarget": "isolated Memory repository with actual StackCardApp",
+        "productionEntryPointExecuted": false,
+        "personalDatasetUsed": false
       },
       "runtime": "isolated demo session on Android emulator",
       "share": {
@@ -211,7 +262,14 @@
         "Contacts Dark before helper correction",
         "Contacts Light before counters removal"
       ],
-      "finalIntermediateScreenCorrectionsCoveredBySourceAndTests": true
+      "intermediateScreensFinalRecaptureAsserted": false,
+      "temporaryEntrypoint": {
+        "localPath": "/private/tmp/stackcard_visual_main.dart",
+        "sha256": "17ae69387e61a2c06b3ad1d55c78e9b174024e1e3bfbcd773cc8304d4d1c9c48",
+        "bytes": 2100,
+        "canonicalProductionEntry": false,
+        "requiredForExactRecordedArgv": true
+      }
     },
     "documentation": {
       "status": "PASS",
@@ -219,6 +277,27 @@
       "heroAndBadgesGuides": 7,
       "tocOrderGuides": 7,
       "ownedDocumentDiffCheck": "clean"
+    },
+    "selectedFigmaVisualComparison": {
+      "status": "consistent_for_selected_frame",
+      "figmaNodeId": "206:28992",
+      "frame": "R6.4 public Resume no-photo wide Dark",
+      "figmaDimensions": {
+        "width": 1440,
+        "height": 1513
+      },
+      "runtimeViewportWidth": 1280,
+      "comparedBy": "integration lead using actual Figma screenshot and actual published page",
+      "consistentElements": [
+        "Brand A header",
+        "Open600px document column",
+        "Manrope",
+        "Flat section backgrounds",
+        "Technology badges",
+        "Share panel"
+      ],
+      "sectionCount": "Matches selected projected test fixture",
+      "fullMatrixAcceptanceAsserted": false
     }
   },
   "runtimeScreenshots": [
@@ -314,7 +393,6 @@
     "publicResumeAttachmentRequiresVisibleSectionAndSeparatelyPublishedTarget": true
   },
   "openGates": [
-    "Final npm run check after browser dev server stop",
     "Full Figma parity/journey/a11y matrix and explicit user acceptance",
     "iOS build/runtime: full Xcode/simctl unavailable",
     "Actual native Auth/Google, camera/picker/permissions and successful geolocation",
