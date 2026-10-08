@@ -8,6 +8,8 @@ export 'auth_providers.dart'
 export 'data/firebase_account_auth_repository.dart'
     show FirebaseAccountAuthRepository;
 export 'domain/account_auth_repository.dart' show AccountAuthRepository;
+export 'domain/account_management_repository.dart';
+export 'auth_providers.dart' show accountManagementRepositoryProvider;
 export 'domain/auth_failure.dart' show AuthFailure, AuthFailureKind;
 export 'domain/auth_repository.dart' show AuthRepository;
 export 'domain/auth_user.dart' show AuthUser;

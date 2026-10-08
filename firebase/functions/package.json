@@ -1,0 +1,16 @@
+{
+  "name": "stackcard-publication-functions",
+  "private": true,
+  "type": "module",
+  "main": "src/index.mjs",
+  "engines": { "node": "22" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check src/index.mjs && node --check src/publication.mjs && node --check src/projection.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "14.5.0",
+    "firebase-functions": "7.4.0",
+    "sharp": "0.35.5"
+  }
+}

@@ -268,16 +268,20 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
   /// База профиля не переписывает snapshots уже созданных документов.
   Future<bool> saveDeveloperProfile({
     required PortfolioDraftRepository expectedRepository,
+    PortfolioContent? profileData,
+    PortfolioContent? expectedProfileData,
   }) {
     final working = state.content;
-    if (working == null) return Future.value(false);
-    final baseline = state.draft?.content ?? PortfolioContent();
+    final captured = profileData ?? working;
+    if (captured == null) return Future.value(false);
+    final baseline =
+        expectedProfileData ?? state.draft?.content ?? PortfolioContent();
     PortfolioContent base(PortfolioContent content) => content.copyWith(
-      profile: working.profile,
-      skills: working.skills,
-      experience: working.experience,
-      education: working.education,
-      links: working.links,
+      profile: captured.profile,
+      skills: captured.skills,
+      experience: captured.experience,
+      education: captured.education,
+      links: captured.links,
     );
     return _saveScope(
       expectedRepository: expectedRepository,
@@ -288,7 +292,33 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
         return base(content);
       },
       // Новая правка базы во время записи не должна исчезать после ACK.
-      mergeWorking: (content) => content,
+      mergeWorking: (content) =>
+          profileData != null &&
+              developerProfileData(content) ==
+                  developerProfileData(working ?? PortfolioContent())
+          ? base(content)
+          : content,
+    );
+  }
+
+  /// Сервер уже удалил документ; локальный buffer очищается без нового Save.
+  /// Остальные несохранённые секции остаются у своего владельца.
+  void acceptConfirmedDocumentDeletion(
+    String documentId, {
+    required PortfolioDraftRepository expectedRepository,
+  }) {
+    if (!state.canEdit ||
+        !identical(
+          ref.read(portfolioDraftRepositoryProvider),
+          expectedRepository,
+        )) {
+      return;
+    }
+    final content = state.content;
+    if (content == null) return;
+    state = state.copyWith(
+      content: _withoutDocument(content, documentId),
+      remoteUpdateAvailable: true,
     );
   }
 

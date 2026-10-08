@@ -9,6 +9,7 @@ final class PortfolioProject {
     required this.title,
     required this.description,
     required List<String> technologies,
+    this.contribution = '',
     this.repositoryUrl = '',
     this.liveUrl = '',
     this.featured = false,
@@ -23,6 +24,7 @@ final class PortfolioProject {
   final String id;
   final String title;
   final String description;
+  final String contribution;
   final List<String> technologies;
   final String repositoryUrl;
   final String liveUrl;
@@ -40,6 +42,7 @@ final class PortfolioProject {
     String? id,
     String? title,
     String? description,
+    String? contribution,
     List<String>? technologies,
     String? repositoryUrl,
     String? liveUrl,
@@ -53,6 +56,7 @@ final class PortfolioProject {
     id: id ?? this.id,
     title: title ?? this.title,
     description: description ?? this.description,
+    contribution: contribution ?? this.contribution,
     technologies: technologies ?? this.technologies,
     repositoryUrl: repositoryUrl ?? this.repositoryUrl,
     liveUrl: liveUrl ?? this.liveUrl,
@@ -92,6 +96,7 @@ final class PortfolioProject {
       id: id,
       title: edited.title,
       description: edited.description,
+      contribution: edited.contribution,
       technologies: edited.technologies,
       repositoryUrl: edited.repositoryUrl,
       liveUrl: edited.liveUrl,
@@ -108,6 +113,7 @@ final class PortfolioProject {
     id,
     title,
     description,
+    contribution,
     repositoryUrl,
     liveUrl,
     featured,

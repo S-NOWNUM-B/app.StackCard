@@ -23,19 +23,24 @@
 
 ## Цель и статус
 
-**Действующее поручение 2026-10-07 (D045):** последовательная разработка по
-фазам поставлена на паузу; разрешено функциональное развитие mobile по Figma
-и концепции общей базы/нескольких документов. Private slice включает четыре
-stateful roots, mixed Home library, независимые Resume/Portfolio, scoped Save
-и явный review обновлений базы с сохранением local overrides, совместимые
-Hive6/cloud5 adapters. Публичные documents/URL, web и full account
-пока отсутствуют; подробный scope/проверки — в
-[product status](../product/product-spec.md#статус-и-границы-текущей-работы).
+**Действующее поручение 2026-10-08 (D048):** «закончи перенос» и явный ответ
+«Также реализовать web и публикацию» разрешают mobile + actual Next.js web +
+trusted publication независимых документов. Очередь фаз остаётся на паузе;
+D045/D046 private core, captured base review и отдельный Save сохраняются.
+D048 расширяет модель до Hive7/cloud6/privacy/attachment overrides, server
+inventory/operation recovery/permanent `/d/<publicId>`/public media/delete lifecycle.
+Текущие source/results - в [product status](../product/product-spec.md#статус-и-границы-текущей-работы)
+и [prerequisites](prerequisites.md#перенос-d048--2026-10-08).
+[Проверки D048](../product/product-spec.md#проверки-d048--2026-10-08): mobile1323/1323,
+backend51/projection14 и web61 PASS; browser publication и Android build/screens
+проверены. Последний analyze/build и native Share ещё проверяются; full acceptance отдельно.
+
 R7 остаётся awaiting_review; DESIGN_READY/REDESIGN_DONE не установлены.
-No-preview/run ограничение сохраняется; headless evidence не означает native parity.
-Roadmap обновлён 2026-10-08 под [capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-08):
-разрешённая функциональная mobile работа продолжается при открытой visual/native
-приёмке; это не утверждение о завершении полного переноса.
+Последующий ответ «Да, выполнить визуальную проверку web/mobile» разрешает
+D048 preview/browser/native проверки; headless evidence не означает
+visual/device/live parity, actual результаты фиксируются отдельно. Deploy/billing/commit/push не запрошены.
+[Capabilities roadmap](../product/product-spec.md#актуальная-последовательность-2026-10-08)
+разделяет current source, открытую приёмку и следующие Inbox/FCM/QR/release задачи.
 
 Дальнейшие записи о состоянии 2026-10-05 — история переноса D040–D042.
 Последующие Phase 11 Media и Phase 12 Location без карты сохраняют свои
@@ -132,7 +137,7 @@ states/motion/adaptive собраны и проверены в review D033, за
 | Визуальные макеты Design v2 | [Бренд A](screens.md#r23--принятый-бренд-и-направление) принят D024; R3.1 done D028, Manrope. [Navigation/cards/badges R3.2](screens.md#r32--навигация-карточки-и-technologybadge) приняты D030; [Forms/stepper/photo/sections R3.3](screens.md#r33--формы-stepper-фото-и-секции) приняты D032; [States/motion/adaptive R3.4](screens.md#r34--состояния-motion-и-адаптивность) приняты D034; [все девять задач R4](screens.md#r4--основные-экраны-и-настройки) приняты D036; [весь пакет R5](screens.md#r5--создание-редактирование-и-публикация) принят D038; [весь пакет R6](screens.md#r6--веб-поверхности) принят D040; R7 awaiting_review D041, R8/R9 partial авторизованы D040 |
 | Интерактивный прототип Design v2 | R7 source graph/structural QA завершены D041; package awaiting_review. Playback/visual omitted, DESIGN_READY pending |
 | Реализованный Design v2 UI | D040 shared slice сохранён; D045 private mobile navigation/libraries/editor реализуются на той же DS. Полная Figma/native/public/web parity не подтверждена |
-| Backend новых сценариев | Private documents schema5 расширяет прежний draft sync и хранит baseline review; новый public-document backend/URL/web отсутствует |
+| Backend новых сценариев | D048 private cloud6 и trusted document publication functions с permanent ID/public media/delete lifecycle; actual Next.js owner/public runtime. Live deployment/acceptance не подтверждены |
 
 ---
 
@@ -153,7 +158,7 @@ states/motion/adaptive собраны и проверены в review D033, за
 
 ## Остановка основной разработки
 
-**Действующий режим D045:** очередь фаз на паузе, функциональный mobile scope
+**Действующий режим D048:** очередь фаз на паузе, mobile/web/publication scope
 по концепции/Figma разрешён. История ниже описывает первоначальную остановку
 2026-10-05 перед Phase11, а не запрет нынешних mobile changes.
 
@@ -206,14 +211,15 @@ Design v2 нельзя честно реализовать. Перед R8 пол
 
 Сначала прочитать этот README, [plan.md](plan.md) и
 [текущий product scope](../product/product-spec.md#статус-и-границы-текущей-работы).
-Последнее поручение D045 разрешает mobile навигацию, документы, базу и
-совместимую private migration без повторного phase approval. Existing contracts
+Последнее поручение D048 разрешает mobile/web/publication, compatible private
+migration и trusted lifecycle без повторного phase approval. Existing contracts
 описаны в [architecture](../architecture/architecture.md#общая-база-и-независимые-документы);
 [prerequisites](prerequisites.md) показывает реализованный subset и remaining
-public/account/web proposal. Работа ведётся по проверяемым capabilities.
+remaining requirements и actual D048 source. Работа ведётся по проверяемым capabilities.
 
 Результаты D040/D041/R9-supported остаются историческими; проверки новой модели
 фиксируются по фактам в product spec. R7 awaiting_review/DESIGN_READY pending,
 полная R8/R9/public web/security/native visual parity и итоговая пользовательская
-приёмка ещё открыты. No-preview/run сохраняется. Commit/push/deploy не выполнены
+приёмка ещё открыты. D048 preview/browser/native checks разрешены последующим
+явным ответом пользователя; historical skip evidence сохраняется. Commit/push/deploy не выполнены
 последним поручением; D042 относится к прежней Git delivery.

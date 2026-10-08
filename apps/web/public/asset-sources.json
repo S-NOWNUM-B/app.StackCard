@@ -1,0 +1,194 @@
+{
+  "assets": [
+    {
+      "path": "branding/stackcard-v2-wordmark-accent.svg",
+      "source": "apps/mobile/assets/branding/design_v2/stackcard-v2-wordmark-accent.svg",
+      "sha256": "5d3cd27f3149c295d3a40cce6450772d66852509a0158b22d893a69930adb99b"
+    },
+    {
+      "path": "branding/stackcard-v2-wordmark-ink.svg",
+      "source": "apps/mobile/assets/branding/design_v2/stackcard-v2-wordmark-ink.svg",
+      "sha256": "8a3f1fbb1794e4ab66d933ffb5dabafd741f0dfea31f64b75fe45bc79583893e"
+    },
+    {
+      "path": "branding/stackcard-v2-app-icon-accent.svg",
+      "source": "apps/mobile/assets/branding/design_v2/stackcard-v2-app-icon-accent.svg",
+      "sha256": "f50ee34fb9070f7debfa69ef6f2f8320d9d9a670198a8543b3654ec2a452a229"
+    },
+    {
+      "path": "branding/stackcard-v2-wordmark-paper.svg",
+      "source": "apps/mobile/assets/branding/design_v2/stackcard-v2-wordmark-paper.svg",
+      "sha256": "a11d7fa98ef9c6b9440f4b58b19312c7e0748c0ab3a4ed8d4e2eab289fe2a390"
+    },
+    {
+      "path": "branding/stackcard-v2-app-icon-mono-light.svg",
+      "source": "apps/mobile/assets/branding/design_v2/stackcard-v2-app-icon-mono-light.svg",
+      "sha256": "bac339eb46764f74f405a3e8f63e17b0cf1a30ace36949bce58be47e0ee6ba1a"
+    },
+    {
+      "path": "branding/stackcard-v2-mark-accent.svg",
+      "source": "apps/mobile/assets/branding/design_v2/stackcard-v2-mark-accent.svg",
+      "sha256": "58f88e4d403ceec0e196e590db3b03f791d2822c6448d65f200c31d933035484"
+    },
+    {
+      "path": "branding/stackcard-v2-mark-ink.svg",
+      "source": "apps/mobile/assets/branding/design_v2/stackcard-v2-mark-ink.svg",
+      "sha256": "1dd7ec27b2030f01e9d61d01968e8e5bcc3d07fb599c4472d704d3f6eef457b1"
+    },
+    {
+      "path": "branding/stackcard-v2-app-icon-mono-dark.svg",
+      "source": "apps/mobile/assets/branding/design_v2/stackcard-v2-app-icon-mono-dark.svg",
+      "sha256": "1fb1b65463cdc8bde9fecc8b27edbf946dae7ea39ec64b95c4ff0e706115123c"
+    },
+    {
+      "path": "branding/stackcard-v2-mark-paper.svg",
+      "source": "apps/mobile/assets/branding/design_v2/stackcard-v2-mark-paper.svg",
+      "sha256": "039b12deee5669c56bf5084b8fa2e0a506600c3e8260aca714a5db534e8eaef3"
+    },
+    {
+      "path": "icons/technology/flutter.render.svg",
+      "source": "apps/mobile/assets/icons/technology/flutter.render.svg",
+      "sha256": "5e1c9d22047a24928ec93bd67d278fc4e178a56d69d14d3877d5f154760c5532"
+    },
+    {
+      "path": "icons/technology/flutter.svg",
+      "source": "apps/mobile/assets/icons/technology/flutter.svg",
+      "sha256": "e84889cedbe669bf58daa0fc69dcf73a238d4dbc772b8cf1ab48743224690a2e"
+    },
+    {
+      "path": "icons/technology/dart.svg",
+      "source": "apps/mobile/assets/icons/technology/dart.svg",
+      "sha256": "6db2db9a19496ee8c0005dd226a24a762c648e82e859afa1b469c3999a6b3e42"
+    },
+    {
+      "path": "icons/technology/typescript.svg",
+      "source": "apps/mobile/assets/icons/technology/typescript.svg",
+      "sha256": "7f023e8d1e767370306ec9437d2de5d5af97491d6208dd7799a3808a7c10a36a"
+    },
+    {
+      "path": "icons/technology/react.svg",
+      "source": "apps/mobile/assets/icons/technology/react.svg",
+      "sha256": "ab9136a1a4a8be72ac6743e1bdd1912d878bd68d57787ea7a6c6838e3b23c01c"
+    },
+    {
+      "path": "icons/lucide/search.svg",
+      "source": "apps/mobile/assets/icons/lucide/search.svg",
+      "sha256": "283d371c2e433817bb9c0c8310caa6c77fa4177c0f4f1168d9c83b97af7389dc"
+    },
+    {
+      "path": "icons/lucide/arrow-down.svg",
+      "source": "apps/mobile/assets/icons/lucide/arrow-down.svg",
+      "sha256": "2b641c7a59d39450edfed72067fcc9940a1a316a737346af23b4b9103c0689f2"
+    },
+    {
+      "path": "icons/lucide/home.svg",
+      "source": "apps/mobile/assets/icons/lucide/home.svg",
+      "sha256": "28216c479005731ef5e382e7d8627eda2b129b019eb1f3d9de9f5915576d448e"
+    },
+    {
+      "path": "icons/lucide/more-horizontal.svg",
+      "source": "apps/mobile/assets/icons/lucide/more-horizontal.svg",
+      "sha256": "4f495cc72013ffdfec677f03b33a150f7b4dd741979283fd6853a09024bca112"
+    },
+    {
+      "path": "icons/lucide/chevron-down.svg",
+      "source": "apps/mobile/assets/icons/lucide/chevron-down.svg",
+      "sha256": "66ea878e72ed3488bb3b464c39dfdccee8d1f78e560dccea40e5e12da0e87e87"
+    },
+    {
+      "path": "icons/lucide/panels-top-left.svg",
+      "source": "apps/mobile/assets/icons/lucide/panels-top-left.svg",
+      "sha256": "321a2a5500f2b814a2e62eb73c4b01dc65c7334fe2e6f7d77517239383e26bb1"
+    },
+    {
+      "path": "icons/lucide/file-text.svg",
+      "source": "apps/mobile/assets/icons/lucide/file-text.svg",
+      "sha256": "52ca55846c202335fb870c8aa23e9345630ec10489303756d62e750f7109605c"
+    },
+    {
+      "path": "icons/lucide/settings.svg",
+      "source": "apps/mobile/assets/icons/lucide/settings.svg",
+      "sha256": "0ae27fd0f81999229e3127ac96c5b32edfea448e291d509e76212b917551d66b"
+    },
+    {
+      "path": "icons/lucide/plus.svg",
+      "source": "apps/mobile/assets/icons/lucide/plus.svg",
+      "sha256": "7f6af73bf1ff6c4bca3f18351c8d1bdec6749c0c2530c4de5da85d520c21df17"
+    },
+    {
+      "path": "icons/lucide/check.svg",
+      "source": "apps/mobile/assets/icons/lucide/check.svg",
+      "sha256": "7f33acc9a77a61659531044525fc008edebe215bf4dcf1c789c8674ad3277db0"
+    },
+    {
+      "path": "icons/lucide/copy.svg",
+      "source": "apps/mobile/assets/icons/lucide/copy.svg",
+      "sha256": "ea80e566c7a12628a447cb53179b19aea4f60b9143e2becd0d0f20bf260e5718"
+    },
+    {
+      "path": "icons/lucide/image.svg",
+      "source": "apps/mobile/assets/icons/lucide/image.svg",
+      "sha256": "619c9db58c879dce6250376ba67d9c9102ca6dbb3b1efb9294c9f180e22273a5"
+    },
+    {
+      "path": "icons/lucide/camera.svg",
+      "source": "apps/mobile/assets/icons/lucide/camera.svg",
+      "sha256": "ebbb3178dd80dfd942770a2237fe7bfc3515c55c7daa9d3666933a656d2790e3"
+    },
+    {
+      "path": "icons/lucide/user-round.svg",
+      "source": "apps/mobile/assets/icons/lucide/user-round.svg",
+      "sha256": "84870f26f3faf8da45da84174517519e81b9e8f00319c78954fcbb74f50038a1"
+    },
+    {
+      "path": "icons/lucide/pencil.svg",
+      "source": "apps/mobile/assets/icons/lucide/pencil.svg",
+      "sha256": "7e1ca7a6f5c1eb949671df762f2baadd32f5bd841d43153c3a15279af7d78d0c"
+    },
+    {
+      "path": "icons/lucide/arrow-up.svg",
+      "source": "apps/mobile/assets/icons/lucide/arrow-up.svg",
+      "sha256": "8c22c25874c80bb062bef985d207d8f1d4a4d7847237d0a8cf720a3235968518"
+    },
+    {
+      "path": "icons/lucide/arrow-left.svg",
+      "source": "apps/mobile/assets/icons/lucide/arrow-left.svg",
+      "sha256": "c5f4b88076108eb1a0d95336e1aa7e7bb1419a3a92af96f6247d88cd3456f933"
+    },
+    {
+      "path": "icons/lucide/grip-vertical.svg",
+      "source": "apps/mobile/assets/icons/lucide/grip-vertical.svg",
+      "sha256": "ddf3a20c45869614f7b49dd14c5cbaba026d4155382e30b0ae8418f31c1ce2c5"
+    },
+    {
+      "path": "icons/lucide/folder.svg",
+      "source": "apps/mobile/assets/icons/lucide/folder.svg",
+      "sha256": "f0d92b94b797a8ab7d4c4ae33c3236c47f64068351b4e14bdb5014ee42898a39"
+    },
+    {
+      "path": "fonts/Manrope-SemiBold.ttf",
+      "source": "apps/mobile/assets/fonts/Manrope-SemiBold.ttf",
+      "sha256": "e80a2c37e47ec09bff5a9960257bf9001e87d5fb7bf35719ef4958763a0c70ac"
+    },
+    {
+      "path": "fonts/Manrope-ExtraBold.ttf",
+      "source": "apps/mobile/assets/fonts/Manrope-ExtraBold.ttf",
+      "sha256": "2522cd61b754100a42a53024148a134c63efc5d114447474a7f13519966cfad5"
+    },
+    {
+      "path": "fonts/Manrope-Regular.ttf",
+      "source": "apps/mobile/assets/fonts/Manrope-Regular.ttf",
+      "sha256": "2d9a9960fd191a7f1d9060768818074dd2b76ba84a64a35efd2c22bf39030903"
+    },
+    {
+      "path": "fonts/Manrope-Bold.ttf",
+      "source": "apps/mobile/assets/fonts/Manrope-Bold.ttf",
+      "sha256": "2da33eb378d59e6314ed7afdfa837cdcb60e41ac8b1f5d3c4909471b95fcf7d9"
+    }
+  ],
+  "demoPortrait": {
+    "path": "images/demo-portrait.png",
+    "source": "Figma R6 landing 204:13 original generated asset slot",
+    "sha256": "4579846cf4006cfb403562a1ecfb9ee4920da4e9e9c2fc8f974b9509487ff67d"
+  }
+}

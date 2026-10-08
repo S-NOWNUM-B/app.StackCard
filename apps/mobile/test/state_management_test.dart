@@ -59,7 +59,13 @@ void main() {
       await tester.enterText(find.byType(TextFormField), 'React');
       await tester.pumpAndSettle();
       expect(find.text('Readme Studio'), findsOneWidget);
-      expect(find.text('Проекты: 1'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.label == 'Проекты: 1',
+        ),
+        findsOneWidget,
+      );
       expect(find.byType(ChoiceChip), findsNothing);
       await tester.enterText(find.byType(TextFormField), 'missing');
       await tester.pumpAndSettle();
@@ -108,7 +114,13 @@ void main() {
             .text,
         isEmpty,
       );
-      expect(find.text('Проекты: 4'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.label == 'Проекты: 4',
+        ),
+        findsOneWidget,
+      );
       expect(
         container.read(projectFiltersProvider).filter,
         ProjectFilter.manual,
@@ -166,12 +178,24 @@ void main() {
         .controller!;
     expect(controller.text, 'Atlas');
     expect(controller.selection, const TextSelection.collapsed(offset: 5));
-    expect(find.text('Проекты: 1'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics && widget.properties.label == 'Проекты: 1',
+      ),
+      findsOneWidget,
+    );
 
     notifier.reset();
     await tester.pumpAndSettle();
     expect(controller.text, isEmpty);
-    expect(find.text('Проекты: 4'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics && widget.properties.label == 'Проекты: 4',
+      ),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -210,7 +234,13 @@ void main() {
             .text,
         isEmpty,
       );
-      expect(find.text('Проекты: 4'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.label == 'Проекты: 4',
+        ),
+        findsOneWidget,
+      );
       expect(
         Theme.of(tester.element(find.byType(TextFormField))).brightness,
         Brightness.dark,

@@ -24,7 +24,7 @@ void main() {
           country: ' Казахстан ',
         );
         final content = PortfolioContent(
-          profile: PortfolioProfile(locationText: place.displayText),
+          profile: PortfolioProfile(locationText: place.displayText, publishLocation: true),
         );
         await HivePortfolioDraftRepository(box)
             .save(content, expectedRevision: 0, notes: 'private notes');
@@ -43,6 +43,7 @@ void main() {
           'locationText',
           'avatarUrl',
           'avatarPath',
+          'publishLocation',
         });
         await box.close();
         box = await Hive.openBox<dynamic>('location', path: directory.path);

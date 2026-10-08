@@ -1,0 +1,301 @@
+{
+  "schemaVersion": 6,
+  "ownerUid": "owner",
+  "mutationId": "schema6-fixture",
+  "localRevision": 3,
+  "notes": "Private notes never published",
+  "content": {
+    "profile": {
+      "name": "Owner",
+      "username": "",
+      "headline": "",
+      "bio": "",
+      "locationText": "Almaty",
+      "publishLocation": true,
+      "avatarUrl": "",
+      "avatarPath": ""
+    },
+    "skills": [],
+    "projects": [
+      {
+        "id": "project",
+        "title": "Library title",
+        "description": "Library description",
+        "contribution": "Library contribution",
+        "technologies": [
+          "Dart"
+        ],
+        "repositoryUrl": "",
+        "liveUrl": "",
+        "featured": false,
+        "visible": true,
+        "imagePaths": [],
+        "source": "manual",
+        "githubMetadata": null
+      }
+    ],
+    "experience": [],
+    "education": [],
+    "links": [
+      {
+        "id": "email",
+        "label": "Work email",
+        "url": "mailto:owner@example.com",
+        "kind": "email",
+        "publishAllowed": true,
+        "visible": true
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "profile",
+        "visible": true
+      },
+      {
+        "kind": "about",
+        "visible": true
+      },
+      {
+        "kind": "skills",
+        "visible": true
+      },
+      {
+        "kind": "featuredProjects",
+        "visible": true
+      },
+      {
+        "kind": "experience",
+        "visible": true
+      },
+      {
+        "kind": "education",
+        "visible": true
+      },
+      {
+        "kind": "github",
+        "visible": true
+      },
+      {
+        "kind": "links",
+        "visible": true
+      },
+      {
+        "kind": "resume",
+        "visible": true
+      },
+      {
+        "kind": "location",
+        "visible": true
+      }
+    ],
+    "resumeText": "",
+    "theme": "dark",
+    "ignoredGitHubRepositories": [],
+    "documents": [
+      {
+        "id": "first",
+        "title": "First",
+        "kind": "resume",
+        "createdAt": "2026-10-08T00:00:00.000Z",
+        "updatedAt": "2026-10-08T00:00:00.000Z",
+        "content": {
+          "profile": {
+            "name": "Owner",
+            "username": "",
+            "headline": "",
+            "bio": "",
+            "locationText": "Almaty",
+            "publishLocation": true,
+            "avatarUrl": "",
+            "avatarPath": ""
+          },
+          "skills": [],
+          "projects": [],
+          "experience": [],
+          "education": [],
+          "links": [
+            {
+              "id": "email",
+              "label": "Work email",
+              "url": "mailto:owner@example.com",
+              "kind": "email",
+              "publishAllowed": true,
+              "visible": false
+            }
+          ],
+          "blocks": [
+            {
+              "kind": "profile",
+              "visible": true
+            },
+            {
+              "kind": "about",
+              "visible": true
+            },
+            {
+              "kind": "skills",
+              "visible": true
+            },
+            {
+              "kind": "featuredProjects",
+              "visible": true
+            },
+            {
+              "kind": "experience",
+              "visible": true
+            },
+            {
+              "kind": "education",
+              "visible": true
+            },
+            {
+              "kind": "github",
+              "visible": true
+            },
+            {
+              "kind": "links",
+              "visible": true
+            },
+            {
+              "kind": "resume",
+              "visible": true
+            },
+            {
+              "kind": "location",
+              "visible": true
+            }
+          ],
+          "resumeText": "",
+          "theme": "dark",
+          "ignoredGitHubRepositories": []
+        },
+        "projects": [
+          {
+            "projectId": "project",
+            "visible": true,
+            "featured": true,
+            "titleOverride": "Document title",
+            "descriptionOverride": "",
+            "contributionOverride": "Document contribution"
+          }
+        ],
+        "attachedResumeId": null,
+        "baseSnapshot": {
+          "profile": {
+            "name": "Owner",
+            "username": "",
+            "headline": "",
+            "bio": "",
+            "locationText": "Almaty",
+            "publishLocation": true,
+            "avatarUrl": "",
+            "avatarPath": ""
+          },
+          "skills": [],
+          "experience": [],
+          "education": [],
+          "links": [
+            {
+              "id": "email",
+              "label": "Work email",
+              "url": "mailto:owner@example.com",
+              "kind": "email",
+              "publishAllowed": true,
+              "visible": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "second",
+        "title": "Second",
+        "kind": "portfolio",
+        "createdAt": "2026-10-08T00:00:00.000Z",
+        "updatedAt": "2026-10-08T00:00:00.000Z",
+        "content": {
+          "profile": {
+            "name": "Owner",
+            "username": "",
+            "headline": "",
+            "bio": "",
+            "locationText": "Almaty",
+            "publishLocation": true,
+            "avatarUrl": "",
+            "avatarPath": ""
+          },
+          "skills": [],
+          "projects": [],
+          "experience": [],
+          "education": [],
+          "links": [
+            {
+              "id": "email",
+              "label": "Work email",
+              "url": "mailto:owner@example.com",
+              "kind": "email",
+              "publishAllowed": true,
+              "visible": true
+            }
+          ],
+          "blocks": [
+            {
+              "kind": "profile",
+              "visible": true
+            },
+            {
+              "kind": "about",
+              "visible": true
+            },
+            {
+              "kind": "skills",
+              "visible": true
+            },
+            {
+              "kind": "featuredProjects",
+              "visible": true
+            },
+            {
+              "kind": "experience",
+              "visible": true
+            },
+            {
+              "kind": "education",
+              "visible": true
+            },
+            {
+              "kind": "github",
+              "visible": true
+            },
+            {
+              "kind": "links",
+              "visible": true
+            },
+            {
+              "kind": "resume",
+              "visible": true
+            },
+            {
+              "kind": "location",
+              "visible": true
+            }
+          ],
+          "resumeText": "",
+          "theme": "dark",
+          "ignoredGitHubRepositories": []
+        },
+        "projects": [
+          {
+            "projectId": "project",
+            "visible": true,
+            "featured": false,
+            "titleOverride": null,
+            "descriptionOverride": null,
+            "contributionOverride": null
+          }
+        ],
+        "attachedResumeId": null
+      }
+    ]
+  },
+  "updatedAt": "2026-10-08T00:00:00.000Z"
+}

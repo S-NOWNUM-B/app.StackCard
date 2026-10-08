@@ -118,9 +118,11 @@ class AppShell extends StatelessWidget {
                       textScaler: textScaler,
                       textDirection: Directionality.of(context),
                     )..layout(
-                      maxWidth:
-                          constraints.maxWidth / _destinations.length -
-                          StackCardSpacing.lg,
+                      maxWidth: math.max(
+                        0.0,
+                        constraints.maxWidth / _destinations.length -
+                            StackCardSpacing.lg,
+                      ),
                     );
                 labelHeight = math.max(labelHeight, painter.height);
                 painter.dispose();
@@ -129,7 +131,9 @@ class AppShell extends StatelessWidget {
                 height: math.max(72.0, labelHeight + 56),
                 selectedIndex: index,
                 onDestinationSelected: navigate,
-                animationDuration: StackCardMotion.fast,
+                animationDuration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : StackCardMotion.fast,
                 labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
                 destinations: [
                   for (var i = 0; i < _destinations.length; i++)

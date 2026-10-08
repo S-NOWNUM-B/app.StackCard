@@ -18,8 +18,9 @@
 Shared theme/controls/assets перенесены D040. Функциональный mobile scope
 2026-10-07 использует четыре stateful roots, смешанную Home library,
 независимые Resume/Portfolio и секционные редакторы с прежними shared controls.
-Legacy Builder/resumeText сохранены для совместимости. Public/web/full account
-контракты остаются в [prerequisites](../redesign/prerequisites.md);
+Legacy Builder/resumeText сохранены для совместимости. D048 (2026-10-08)
+добавляет mobile privacy/attachments/publication и Next.js owner/public surfaces;
+контракты/remaining acceptance — в [prerequisites](../redesign/prerequisites.md);
 R7 source QA PASS D041/awaiting_review,
 DESIGN_READY/REDESIGN_DONE не установлены. Старые recolor S/DM Sans/greeting/
 categories/artwork требования не переопределяют Design v2.
@@ -55,8 +56,16 @@ Manrope400/600/700/800 — живой UI font с Noto Sans fallback; регис�
 Оригинальный outlined Wordmark A сохраняет Noto ExtraBold36/44 source geometry:
 [StackCardBrand](../../apps/mobile/lib/shared/widgets/stackcard_brand.dart)
 выбирает один Wordmark (уже содержит Mark) либо compact Mark, Dark paper/
-Light ink, contain/no tint/no дублирующий Text.9BrandA SVG импортированы,
-но native AppIcon packaging не заменено.
+Light ink, contain/no tint/no дублирующий Text.9BrandA SVG импортированы.
+D048 экспортирует pinned AppIcon source в existing Android mipmaps и iOS
+AppIcon set: 5 Android + 15 iOS PNG. Source geometry/fills/bytes не меняются;
+iOS transparent corners flattened на исходный #070708 и RGB без alpha.
+[Generator](../../tools/redesign/export_native_icons.mjs) и
+[ledger](../redesign/source/native-app-icons.json) фиксируют source/output SHA,
+размеры и преобразование. D048 exact check20 PNG и Android debug build PASS;
+Home/Project editor/Resume editor/Contacts Dark-Light screenshots просмотрены.
+Full device/icon/Figma acceptance и iOS runtime отдельно; actual evidence — в
+[product checks](../product/product-spec.md#проверки-d048--2026-10-08).
 
 [StackCardIcon](../../apps/mobile/lib/shared/widgets/stackcard_icon.dart)
 загружает pinned Lucide/technology SVG; tint применим только к monochrome Lucide.
@@ -70,8 +79,11 @@ SHA/provenance; portable [check_imports](../../tools/redesign/check_imports.py)
 
 Controls используют внешний tap target≥48, input height56 и content max600;
 focus/loading/disabled/error сохраняют доступное имя и input. Timing constants
-180/240/280ms существуют в StackCardMotion; сами константы не доказывают full
-prototype/runtime animations или persisted reduced-motion preference.
+180/240/280ms существуют в StackCardMotion. D048 добавляет persisted
+`AppSettings.reducedMotion` в прежний SharedPreferences snapshot: runtime
+объединяет его с OS `MediaQuery.disableAnimations`, nav duration становится zero.
+Web сочетает `prefers-reduced-motion` с local preference из Account settings;
+prototype/native playback отдельно.
 Shell сохраняет bottom navigation на phone/tablet и четыре stateful roots
 Home/Resumes/Projects/Portfolios с постоянными labels. Settings открывается gear;
 редакторы/appearance/account standalone. Home — mixed library с тремя фильтрами,
@@ -80,9 +92,17 @@ categories; GitHub Import filter contract отдельно. Resume/Portfolio roo
 private libraries, с настоящими create/edit/duplicate/delete actions.
 Resume creation использует пять шагов, затем focused section editing; private
 preview использует существующий content renderer/theme. Saved private documents
-показывают draft; публичные Copy/Open/Share ожидают publication/URL контракт,
-фиктивная ссылка или success не отображаются. Это функциональный slice;
+используют real publication inventory; Copy/Open/Share доступны только для
+confirmed published URL `/d/<publicId>`. Configuration/unknown/guest не выдают
+фиктивную ссылку или success. Это функциональный source slice;
 полная Figma/native visual parity не подтверждена.
+
+Web tokens/shared controls находятся в `apps/web/src/app/globals.css` и
+`src/components/ui.tsx`, original Manrope/Brand A — в `apps/web/public`.
+Figma R6 target переиспользует тот же visual language; React не импортирует
+Flutter runtime. Wide/narrow layout, focus и state implementation проверяются
+headless contracts/build; visual/browser/native проверка D048 разрешена
+последующим явным ответом пользователя. Actual acceptance/evidence отдельно.
 
 Исторический supported UI результат D040:950headless tests PASS/analyze0issues,
 Dark/Light,ru/en,scale1/2,7viewports включая320×568/568×320;32runtime SVGdecoded,

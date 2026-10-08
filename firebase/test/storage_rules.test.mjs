@@ -15,6 +15,7 @@ import {
   updateMetadata,
   uploadBytes,
 } from 'firebase/storage';
+import { deleteDoc, doc, setDoc } from 'firebase/firestore';
 
 const projectId = 'demo-stackcard-test';
 const imageId = '0123456789abcdef0123456789abcdef.jpg';
@@ -26,6 +27,10 @@ let environment;
 before(async () => {
   environment = await initializeTestEnvironment({
     projectId,
+    firestore: {
+      host: '127.0.0.1', port: 8085,
+      rules: await readFile(new URL('../firestore.rules', import.meta.url), 'utf8'),
+    },
     storage: {
       host: '127.0.0.1',
       port: 9199,
@@ -35,6 +40,7 @@ before(async () => {
 });
 
 beforeEach(async () => {
+  await environment.clearFirestore();
   // clearStorage() установленного SDK удаляет только файлы корня, не вложенные prefixes.
   await environment.withSecurityRulesDisabled(async (context) => {
     async function clearPrefix(prefix) {
@@ -56,6 +62,45 @@ function storage(uid = 'alice') {
 function upload(client, objectPath = path, bytes = jpeg, metadata = jpegMetadata) {
   return uploadBytes(ref(client, objectPath), bytes, metadata);
 }
+
+test('public media requires the exact current publication version and closes on withdrawal', async () => {
+  const publicId = 'a'.repeat(32);
+  const current = `publicMedia/${publicId}/1/${imageId}`;
+  const stale = `publicMedia/${publicId}/2/${imageId}`;
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await upload(context.storage(), current);
+    await upload(context.storage(), stale);
+    await setDoc(doc(context.firestore(), `publicDocuments/${publicId}`), { schemaVersion: 1, publicId, version: 1 });
+  });
+  const anonymous = storage(null);
+  await assertSucceeds(getBytes(ref(anonymous, current)));
+  await assertFails(getBytes(ref(anonymous, stale)));
+  await assertFails(upload(storage(), `publicMedia/${publicId}/1/${'f'.repeat(32)}.jpg`));
+  await assertFails(deleteObject(ref(storage(), current)));
+  await assertFails(listAll(ref(anonymous, `publicMedia/${publicId}/1`)));
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), `publicDocuments/${publicId}`), { schemaVersion: 1, publicId, version: 2 });
+  });
+  await assertFails(getBytes(ref(anonymous, current)));
+  await assertSucceeds(getBytes(ref(anonymous, stale)));
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await deleteDoc(doc(context.firestore(), `publicDocuments/${publicId}`));
+  });
+  await assertFails(getBytes(ref(anonymous, stale)));
+});
+
+test('account deletion lock denies all owner private media writes', async () => {
+  const alice = storage();
+  await upload(alice);
+  for (const lifecycleState of ['deleting', 'deleted']) {
+    await environment.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'accounts/alice'), { ownerUid: 'alice', lifecycleState, lifecycleGeneration: 2 });
+    });
+    await assertFails(upload(alice, `accounts/alice/media/${'4'.repeat(32)}.jpg`));
+    await assertFails(deleteObject(ref(alice, path)));
+    await assertFails(getBytes(ref(alice, path)));
+  }
+});
 
 test('owner creates, reads bytes and metadata, and deletes a private JPEG', async () => {
   const alice = storage();

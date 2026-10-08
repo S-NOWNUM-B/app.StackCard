@@ -16,6 +16,9 @@ import '../auth/auth.dart';
 import '../portfolio_draft/portfolio_draft.dart';
 import '../profile/profile.dart';
 import 'account_settings_section.dart';
+export 'settings_account_screen.dart';
+export 'settings_base_editor_screen.dart';
+export 'settings_providers.dart';
 
 class SettingsScreen extends riverpod.ConsumerWidget {
   const SettingsScreen({super.key});
@@ -67,7 +70,8 @@ class SettingsScreen extends riverpod.ConsumerWidget {
           key: const Key('settings.group.privacy'),
           icon: Icons.lock_outline_rounded,
           title: strings.tr('settings.privacy'),
-          subtitle: strings.tr('settings.privacyUnavailable'),
+          subtitle: strings.tr('settingsManagement.privacyHint'),
+          onPressed: () => context.push('/settings/privacy'),
         ),
         _SettingsRow(
           key: const Key('settings.group.appearance'),
@@ -88,7 +92,7 @@ class SettingsScreen extends riverpod.ConsumerWidget {
           key: const Key('settings.deleteAccount'),
           label: strings.tr('settings.deleteAccount'),
           role: StackCardButtonRole.danger,
-          unavailableReason: strings.tr('settings.deleteAccountUnavailable'),
+          onPressed: () => context.push('/settings/account'),
         ),
       ],
     );
@@ -204,56 +208,19 @@ class SettingsAppearanceScreen extends StatelessWidget {
           title: strings.tr('settings.notifications'),
           subtitle: strings.tr('settings.notificationsUnavailable'),
         ),
-        _SettingsRow(
-          icon: Icons.motion_photos_off_outlined,
-          title: strings.tr('settings.reducedMotion'),
-          subtitle: strings.tr('settings.reducedMotionUnavailable'),
-        ),
-      ],
-    );
-  }
-}
-
-/// Route /settings/account: account actions без существующего API недоступны.
-class SettingsAccountScreen extends StatelessWidget {
-  const SettingsAccountScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = context.strings;
-    return _SettingsPage(
-      titleKey: 'settings.accountSecurity',
-      children: [
-        StackCardStateView(
-          kind: StackCardViewState.unavailable,
-          title: strings.tr('settings.accountManagementUnavailable'),
-          message: strings.tr('settings.accountManagementReason'),
-        ),
-        _SettingsRow(
-          icon: Icons.email_outlined,
-          title: strings.tr('settings.changeLoginEmail'),
-          subtitle: strings.tr('settings.changeLoginEmailUnavailable'),
-        ),
-        _SettingsRow(
-          icon: Icons.password_rounded,
-          title: strings.tr('settings.changePassword'),
-          subtitle: strings.tr('settings.changePasswordUnavailable'),
-        ),
-        _SettingsRow(
-          icon: Icons.link_rounded,
-          title: strings.tr('settings.manageGoogle'),
-          subtitle: strings.tr('settings.manageGoogleUnavailable'),
-        ),
-        const SizedBox(height: StackCardSpacing.xl),
-        StackCardButton(
-          label: strings.tr('settings.backToSession'),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/settings');
-            }
-          },
+        SwitchListTile.adaptive(
+          key: const Key('settings.reducedMotion'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(strings.tr('settings.reducedMotion')),
+          subtitle: Text(
+            strings.tr(
+              MediaQuery.disableAnimationsOf(context)
+                  ? 'settingsManagement.systemMotion'
+                  : 'settingsManagement.reducedHint',
+            ),
+          ),
+          value: appearance.reducedMotion,
+          onChanged: appearance.setReducedMotion,
         ),
       ],
     );

@@ -18,6 +18,7 @@ import '../domain/project.dart';
 import '../domain/project_filters.dart';
 import '../projects_providers.dart';
 import 'project_filters.dart';
+import 'project_library_card.dart';
 
 class ProjectsScreen extends ConsumerStatefulWidget {
   const ProjectsScreen({super.key});
@@ -55,9 +56,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         .whenData(
           (projects) => ProjectFilters(query: filters.query).apply(projects),
         );
-    final suggestions = ref.watch(portfolioSuggestionsProvider);
-    final draftState = ref.watch(portfolioDraftControllerProvider);
-    final hasDraft = ref.watch(portfolioWorkingContentProvider) != null;
+    final content = ref.watch(portfolioWorkingContentProvider);
     ref.listen(projectFiltersProvider.select((filters) => filters.query), (
       previous,
       query,
@@ -75,7 +74,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         padding: EdgeInsets.all(
           constraints.maxWidth >= 700
               ? StackCardSpacing.xl
-              : StackCardSpacing.lg,
+              : StackCardSpacing.cardPadding,
         ),
         child: Align(
           alignment: Alignment.topCenter,
@@ -100,7 +99,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                       child: StackCardButton(
                         label: context.strings.tr('project.create'),
                         primary: true,
-                        iconWidget: const StackCardIcon(name: 'plus', size: 18),
                         onPressed: () => context.push('/projects/new'),
                       ),
                     ),
@@ -110,13 +108,14 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                 StackCardInput(
                   key: const ValueKey('project_search'),
                   label: context.strings.tr('projects.search'),
-                  hint: context.strings.tr('projects.searchHint'),
+                  hint: context.strings.tr('projects.search'),
                   showLabel: false,
                   controller: _searchController,
                   prefixIconWidget: const StackCardIcon(
                     name: 'search',
-                    size: 20,
+                    size: 24,
                   ),
+                  prefixIconSize: 24,
                   textInputAction: TextInputAction.search,
                   onChanged: (value) =>
                       ref.read(projectFiltersProvider.notifier).setQuery(value),
@@ -128,86 +127,60 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                     ref.read(portfolioDraftControllerProvider.notifier).load();
                     ref.invalidate(projectsProvider);
                   },
-                  data: (projects) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          context.strings.tr('projects.count', {
-                            'count': projects.length,
-                          }),
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: context.colors.textMeta),
-                        ),
-                      ),
-                      const SizedBox(height: StackCardSpacing.sm),
-                      if (projects.isEmpty)
-                        StackCardCard(
-                          child: Column(
-                            children: [
-                              StackCardStateView(
-                                kind: filters.query.trim().isEmpty
-                                    ? StackCardViewState.empty
-                                    : StackCardViewState.noResults,
-                                title: context.strings.tr(
-                                  filters.query.trim().isEmpty
-                                      ? 'project.emptyTitle'
-                                      : 'project.noResultsTitle',
-                                ),
-                                message: context.strings.tr(
-                                  filters.query.trim().isEmpty
-                                      ? 'project.emptyMessage'
-                                      : 'project.noResultsMessage',
-                                ),
-                              ),
-                              if (filters.query.trim().isNotEmpty)
-                                StackCardButton(
-                                  label: context.strings.tr(
-                                    'project.clearSearch',
+                  data: (projects) => Semantics(
+                    container: true,
+                    explicitChildNodes: true,
+                    liveRegion: true,
+                    label: context.strings.tr('projects.count', {
+                      'count': projects.length,
+                    }),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (projects.isEmpty)
+                          StackCardCard(
+                            child: Column(
+                              children: [
+                                StackCardStateView(
+                                  kind: filters.query.trim().isEmpty
+                                      ? StackCardViewState.empty
+                                      : StackCardViewState.noResults,
+                                  title: context.strings.tr(
+                                    filters.query.trim().isEmpty
+                                        ? 'project.emptyTitle'
+                                        : 'project.noResultsTitle',
                                   ),
-                                  onPressed: _clearSearch,
+                                  message: context.strings.tr(
+                                    filters.query.trim().isEmpty
+                                        ? 'project.emptyMessage'
+                                        : 'project.noResultsMessage',
+                                  ),
                                 ),
-                            ],
-                          ),
-                        )
-                      else
-                        for (final project in projects)
-                          _ProjectCard(project: project),
-                    ],
-                  ),
-                ),
-                if (hasDraft) ...[
-                  const SizedBox(height: StackCardSpacing.xl),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: StackCardButton(
-                      label: context.strings.tr('githubSync.openBuilder'),
-                      iconWidget: const StackCardIcon(
-                        name: 'panels-top-left',
-                        size: 18,
-                      ),
-                      onPressed: () => context.push('/portfolio/builder'),
+                                if (filters.query.trim().isNotEmpty)
+                                  StackCardButton(
+                                    label: context.strings.tr(
+                                      'project.clearSearch',
+                                    ),
+                                    onPressed: _clearSearch,
+                                  ),
+                              ],
+                            ),
+                          )
+                        else
+                          for (final project in projects) ...[
+                            _ProjectCard(
+                              project: project,
+                              libraryProject: _libraryProject(
+                                content,
+                                project.id,
+                              ),
+                            ),
+                            const SizedBox(height: StackCardSpacing.lg),
+                          ],
+                      ],
                     ),
                   ),
-                ],
-                if (suggestions.isNotEmpty &&
-                    draftState.canEdit &&
-                    !draftState.saving) ...[
-                  const SizedBox(height: StackCardSpacing.xl),
-                  PortfolioSuggestionList(
-                    key: const ValueKey('projects_suggestions'),
-                    suggestions: suggestions,
-                    onAction: (suggestion) {
-                      final id = suggestion.projectId;
-                      if (id != null) {
-                        context.push(
-                          '/projects/${Uri.encodeComponent(id)}/edit',
-                        );
-                      }
-                    },
-                  ),
-                ],
+                ),
               ],
             ),
           ),
@@ -217,96 +190,39 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   }
 }
 
-class _ProjectCard extends StatelessWidget {
-  const _ProjectCard({required this.project});
+PortfolioProject? _libraryProject(PortfolioContent? content, String? id) {
+  if (content == null || id == null) return null;
+  for (final project in content.projects) {
+    if (project.id == id) return project;
+  }
+  return null;
+}
 
+class _ProjectCard extends StatelessWidget {
+  const _ProjectCard({required this.project, this.libraryProject});
   final Project project;
+  final PortfolioProject? libraryProject;
 
   @override
-  Widget build(BuildContext context) {
-    final metadata = [
-      if (project.featured) context.strings.tr('filter.featured'),
-      if (!project.visible) context.strings.tr('builderIntegration.hidden'),
-    ].join(' · ');
-    return StackCardCard(
-      padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _ProjectImage(project: project),
-              const SizedBox(width: StackCardSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      project.title,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: StackCardSpacing.xs),
-                    Text(
-                      project.source.labelFor(context),
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: context.colors.sourceText),
-                    ),
-                    if (metadata.isNotEmpty) ...[
-                      const SizedBox(height: StackCardSpacing.xs),
-                      Text(
-                        metadata,
-                        style: Theme.of(context).textTheme.bodySmall
-                            ?.copyWith(color: context.colors.textMeta),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+  Widget build(BuildContext context) => ProjectLibraryCard(
+    key: ValueKey('projects.card.${project.id ?? project.title}'),
+    openKey: ValueKey('project_preview_${project.id ?? project.title}'),
+    title: project.title,
+    description: project.description,
+    technologies: project.technologies,
+    sourceLabel: libraryProject?.githubMetadata?.acceptedSource == null
+        ? project.source.labelFor(context)
+        : 'GitHub · ${libraryProject!.githubMetadata!.acceptedSource.fullName}',
+    imagePaths: project.imagePaths,
+    updatedAt: libraryProject?.updatedAt,
+    liveUrl: libraryProject?.liveUrl ?? '',
+    onOpen: project.id == null
+        ? () => _showProjectDetails(context, project)
+        : () => context.push(
+            '/projects/${Uri.encodeComponent(project.id!)}/edit',
           ),
-          if (project.description.isNotEmpty) ...[
-            const SizedBox(height: StackCardSpacing.md),
-            Text(
-              project.description,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: context.colors.textSecondary),
-            ),
-          ],
-          if (project.technologies.isNotEmpty) ...[
-            const SizedBox(height: StackCardSpacing.md),
-            _ProjectTechnologyList(project: project, compact: true),
-          ],
-          const SizedBox(height: StackCardSpacing.md),
-          Wrap(
-            spacing: StackCardSpacing.sm,
-            runSpacing: StackCardSpacing.sm,
-            children: [
-              StackCardButton(
-                key: ValueKey('project_preview_${project.id ?? project.title}'),
-                label: context.strings.tr('githubSync.preview'),
-                iconWidget: const StackCardIcon(
-                  name: 'panels-top-left',
-                  size: 18,
-                ),
-                onPressed: () => _showProjectDetails(context, project),
-              ),
-              if (project.id != null)
-                StackCardButton(
-                  label: context.strings.tr('builderIntegration.edit'),
-                  iconWidget: const StackCardIcon(name: 'pencil', size: 18),
-                  onPressed: () => context.push(
-                    '/projects/${Uri.encodeComponent(project.id!)}/edit',
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+    onShowTechnologies: () => _showProjectDetails(context, project),
+  );
 }
 
 class _ProjectImagePlaceholder extends StatelessWidget {
@@ -353,14 +269,13 @@ class _ProjectImage extends StatelessWidget {
 }
 
 class _ProjectTechnologyList extends StatelessWidget {
-  const _ProjectTechnologyList({required this.project, this.compact = false});
+  const _ProjectTechnologyList({required this.project});
 
   final Project project;
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final shown = compact ? project.technologies.take(4) : project.technologies;
+    final shown = project.technologies;
     final remaining = project.technologies.length - shown.length;
     return Wrap(
       spacing: StackCardSpacing.sm,

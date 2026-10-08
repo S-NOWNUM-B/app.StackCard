@@ -23,11 +23,15 @@ final class PortfolioSyncState {
     required this.status,
     this.failure,
     this.lastSyncedAt,
+    this.confirmedMutationId,
   });
 
   final PortfolioSyncStatus status;
   final PortfolioSyncFailure? failure;
   final DateTime? lastSyncedAt;
+
+  /// Только exact ACK текущего durable snapshot разрешает явный Publish.
+  final String? confirmedMutationId;
 }
 
 /// A whole-document mutation. Revision is local to one device, not a clock.

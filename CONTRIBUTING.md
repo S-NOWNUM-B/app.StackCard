@@ -5,7 +5,7 @@
 **Процесс работы, проверки и правила внесения согласованных изменений**
 
 ![Contributing guide](https://raster.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
-![Scope Phase 12 in progress](https://raster.shields.io/badge/Scope-Phase_12_in_progress-FF0012?style=for-the-badge)
+![Scope mobile web publication](https://raster.shields.io/badge/Scope-mobile_web_publication-C7FF1A?style=for-the-badge)
 
 </div>
 
@@ -18,6 +18,7 @@
 - [Требования к изменениям](#требования-к-изменениям)
 - [Быстрый старт](#быстрый-старт)
 - [Firebase configuration и окружение](#firebase-configuration-и-окружение)
+- [Web и document publication](#web-и-document-publication)
 - [Основные команды](#основные-команды)
 - [Проверки](#проверки)
 - [Коммиты](#коммиты)
@@ -42,7 +43,10 @@ Phase 11 реализована с открытой device/live приёмкой
 [План](docs/product/product-spec.md#план-разработки) сохраняет историю и acceptance;
 действующий scope — в product status и
 [исключении общих правил](docs/AI/AGENTS.md#разработка-по-плану).
-Web/publication/deploy/commit/push не стартуют автоматически.
+D048 (2026-10-08) явно разрешает mobile/web/document publication перенос.
+Deploy/billing/commit/push не выполняются автоматически. Последующий явный
+ответ «Да, выполнить визуальную проверку web/mobile» разрешает D048 browser/
+native/preview checks; headless checks не доказывают live/Figma acceptance.
 
 <div align="center">
 
@@ -51,7 +55,8 @@ Web/publication/deploy/commit/push не стартуют автоматичес�
 | Документация | Уточнение сценариев, границ, источников и способов работы |
 | Mobile UI и storage | Builder/preview, ручные и импортированные проекты, private notes, GitHub Import/review/ignore с offline copy и app settings |
 | Mobile authentication | Firebase email/password, registration/reset, Google sign-in, session restoration/sign out; именованные защищённые routes и явный guest/UID draft transfer |
-| Firestore synchronization | Account draft поверх Hive, durable outbox, pending/synced/error/retry, multi-device LWW; private/public Rules и подготовка atomic publication без public UI |
+| Sync и publication | Hive7/cloud6, durable outbox/exact ACK/LWW; trusted document publication с permanent ID, privacy/media/delete lifecycle и deny client public writes |
+| Web | Next.js landing/download/Auth/UID owner editors и anonymous /d/[publicId], совместимый cloud6 model; online-first Save/CAS и publication API |
 | Mobile state и architecture | Provider для ThemeMode/Locale/preferences; Riverpod для repository loading/actions, DI и filters; pure Dart contracts и data adapters, учебные patches вне runtime |
 | Структура | Согласование путей, ignore rules и общего AI-контекста |
 | Brand assets | Сохранение оригиналов и описания их применения |
@@ -68,10 +73,11 @@ Cache имеет hard TTL 7 дней и проверяется сетью при
 и Library relations; plain `resumeText` остаётся legacy-compatible. Scoped Save
 сохраняет документ/проект/базу без соседнего unsaved ввода;
 прочитанные данные не добавляются автоматически в curated-портфолио.
-В `apps/web` подготовлен README; Next.js-приложение появится на Phase 13.
-Firebase Auth остаётся account boundary; Firestore sync относится к Phase 8.
-Publish/unpublish repository подготовлен для отдельного явного действия,
-public UI и web dependencies вводятся на своих фазах.
+В `apps/web` находится отдельный Next.js runtime; manifests/lockfile/env принадлежат
+этому приложению. `firebase/functions` владеет trusted publication HTTP handler.
+Firebase Auth остаётся account boundary; Firestore sync не вызывает Publish.
+Legacy username adapter сохранён, но новые Rules закрывают его client writes.
+Document actions используют только confirmed inventory/permanent URL.
 
 ---
 
@@ -295,6 +301,90 @@ native iOS build/приёмка недоступны при неполном Xco
 
 ---
 
+## Web и document publication
+
+D048 связывает [web](apps/web/README.md),
+[trusted functions](firebase/functions/package.json) и mobile тем же Firebase
+проектом. Runtime values хранятся в env/config; private content не передаётся
+SSR/public props. Подробный data/lifecycle contract - в
+[architecture](docs/architecture/architecture.md#privatepublic-schema-и-явная-публикация).
+
+Для установки и headless checks нужен Node, совместимый с обоими manifests;
+Functions используют Node22. macOS zsh/bash, cwd `apps/web`:
+
+```zsh
+npm ci
+npm run format:check
+npm run typecheck
+npm test
+npm run build
+```
+
+Для server handler, macOS zsh/bash, cwd `firebase/functions`:
+
+```zsh
+npm ci
+npm run check
+npm test
+```
+
+`check` проверяет синтаксис server modules; `test` проверяет actual contract/
+security fixtures. Tests, требующие Emulator Suite, запускаются только по
+предусловиям actual scripts; unit/fake tests не доказывают production deployment.
+Полный emulator gate: macOS zsh/bash, cwd `firebase`, `npm run test:all-rules`
+запускает Auth/Firestore/Storage и весь test glob, включая Rules и Admin-SDK
+publication service integration. Для focused service: `npm run test:service`;
+Rules-only: `npm run test:rules` (Firestore), `npm run test:storage` (Storage).
+`next build` не запускает browser/device и не подтверждает visual parity.
+
+Web setup: скопировать [.env.example](apps/web/.env.example) в локальный
+`.env.local` и заполнить public Firebase web app configuration того же проекта,
+`NEXT_PUBLIC_PUBLICATION_API_URL` и настоящий `NEXT_PUBLIC_WEB_ORIGIN`.
+Public config не является service-account credential; tokens/passwords не
+записываются приложением. Для demo emulators включить
+`NEXT_PUBLIC_USE_EMULATORS=true`, адреса/порты согласовать с
+[firebase.json](firebase/firebase.json). Live и emulator services не смешивать.
+Неполная конфигурация показывает unavailable/configuration state, не fake data.
+
+Functions [.env.example](firebase/functions/.env.example) задаёт
+`PUBLIC_WEB_ORIGIN`: exact origin без trailing slash/path, например настоящий
+origin настроенного web. Browser CORS разрешает только его. Live требует HTTPS;
+локальный HTTP принимается только emulator mode. URL endpoint получается от
+отдельно настроенного handler, production domain здесь не выдумывается.
+
+Mobile использует Dart define `STACKCARD_PUBLICATION_API_URL` при разрешённом
+build/run. `LocalRuntime` фиксирует UID и перепроверяет Auth session после
+асинхронного получения ID token. Missing endpoint отключает publication adapter;
+guest сохраняет local-only доступ. Durable request journal сохраняется отдельно
+по UID до POST; unknown/pending/reopen разрешаются через тот же operation ID.
+`SharedPreferencesDocumentPublicationOperationStore` и account deletion journal
+не содержат password/token/public draft copy. Save/sync остаются отдельными.
+`SharedPreferencesAccountDeletionJournal` также сохраняет случайный 256-bit
+recovery key до подтверждённого результата. После утраты Auth ограниченный
+`deletionStatus` продолжает только прежнюю operation; server хранит hash key.
+Local journal очищается после подтверждения captured UID.
+
+`npm run dev`/`npm start` находятся в web manifest для обычной локальной работы;
+D048 browser/native/preview checks разрешены последующим явным ответом
+пользователя; результаты запуска фиксируются в product spec. Историческое
+no-preview/run не переопределяет это разрешение.
+Deploy Functions/Rules/web и billing требуют отдельного поручения. Generated
+native AppIcon assets не доказывают выполненный build/device acceptance.
+
+Для воспроизводимой проверки pinned native AppIcons после `npm ci` в
+`firebase/functions`, macOS zsh/bash, cwd корень monorepo:
+
+```zsh
+SHARP_MODULE_ROOT="$PWD/firebase/functions/node_modules" node tools/redesign/export_native_icons.mjs --check
+```
+
+`--check` ничего не переписывает: сверяет source hash, existing Android/iOS PNG,
+размеры/alpha и [ledger](docs/redesign/source/native-app-icons.json). Без `--check`
+script заменяет только существующие AppIcon exports и ledger; original SVG и
+splash не меняются. iOS output opaque RGB, фон исходный #070708.
+
+---
+
 ## Основные команды
 
 macOS — zsh/bash, команды выполняются из `apps/mobile`:
@@ -366,7 +456,7 @@ snapshot restore, очередь записей/retry, ru/en UI и увелич�
 `test/portfolio_draft_repository_test.dart`, `test/portfolio_draft_controller_test.dart`
 и `test/portfolio_draft_widget_test.dart` проверяют saved notes, revisions,
 сохранность ввода при ошибках, unknown schema и экран локального draft.
-Builder domain/repository tests проверяют validation/completion, schema v1–v5→v6
+Builder domain/repository tests проверяют validation/completion, schema v1–v6→v7
 и сохранность private notes/documents; controller/forms/preview/integration tests проверяют
 CRUD, рабочее состояние, сохранение и единые проекции. Визуальные проверки
 Builder находятся в `test/portfolio_builder_visual_test.dart`.
@@ -439,11 +529,12 @@ npm ci
 npm run test:rules
 ```
 
-`test:rules` запускает Firestore Emulator, затем `npm test` с client SDK Rules
+`test:rules` запускает Firestore Emulator, затем `npm run test:firestore` с client SDK Rules
 contexts и завершает сервис. Отдельный `npm test` требует уже запущенный emulator
 и корректный `FIRESTORE_EMULATOR_HOST`. Проверяются owner access, foreign/anonymous
-denial, public snapshot, username uniqueness и atomic publish/rename/unpublish,
-включая отказ partial writes. Результаты запуска фиксируются в product spec;
+denial, public exact get/list denial, direct client public write denial,
+no-downgrade, deleted-document tombstones и account deletion lock. Trusted
+projection/CAS/media/operation handler проверяется отдельной functions suite. Результаты запуска фиксируются в product spec;
 наличие tests не подтверждает успешную приёмку.
 
 Для разрешённого dev deployment сначала выполни Rules tests, проверь project
@@ -490,8 +581,9 @@ flutter test integration_test/firestore_runtime_test.dart -d emulator-5554 --no-
 Если пара прервана, disposable account/test storage остаются до завершения
 `check` на том же устройстве. Emulator Rules, mocked Dart SDK, live Android и
 iOS acceptance — разные проверки; результаты не заменяют друг друга.
-Prepared publication repository не означает наличия public UI или выполненной
-публикации портфолио пользователя.
+Legacy prepared publication repository не определяет D048 public API и новые
+Rules не разрешают его writes. Document UI/handler source не означает deployment
+или выполненную production публикацию пользователя.
 
 ### Location и native acceptance
 
@@ -541,7 +633,7 @@ Phase 11 использует `features/media`, Storage paths в private draft �
 bucket, но это само по себе не доказывает его существование. Billing upgrade
 и deployment не выполняются автоматически. Перед live запуском после отдельного
 разрешения должны быть deployed и Storage Rules, и обновлённые Firestore Rules
-(private schema 5). Старые writers после нового schema update получат отказ.
+(private schema 6). Старые writers после нового schema update получат отказ.
 
 macOS — zsh/bash, cwd `firebase`, для локальной проверки без billing:
 
@@ -595,7 +687,8 @@ flutter test --no-pub test/portfolio_document_base_review_test.dart test/portfol
 legacy без baseline, raw backups, UID transition и stale captured base. Rules
 проверяются отдельной командой `npm run test:rules` из `firebase`, включая все
 20 документов с baseline. Headless результаты не доказывают visual/native или
-live sync нового payload; действующее no-preview/run ограничение сохраняется.
+live sync нового payload. D048 visual/browser/native checks разрешены
+последующим явным ответом пользователя; результаты и ограничения среды отдельно.
 
 Для сфокусированной проверки storage и настроек из той же директории:
 
@@ -634,7 +727,8 @@ dart format lib test integration_test
 При изменении архитектурной схемы обнови Mermaid-исходник в `docs/diagrams/`
 и его PNG вместе. Изображение должно сохранять узлы, направления и подписи связей
 исходника; проверь читаемость схемы и badges в используемом preview.
-Команды проверки web будут выбраны по реальным configs при создании приложения.
+Actual web/functions commands и env описаны в
+[Web и document publication](#web-и-document-publication).
 
 ---
 

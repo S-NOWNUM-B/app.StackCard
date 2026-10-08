@@ -12,7 +12,8 @@ guides. Этот файл дополняет их только для Flutter-п
 задаёт target; [product status](../../product/product-spec.md#статус-и-границы-текущей-работы)
 задаёт разрешённый scope. С 2026-10-07 очередь фаз на паузе, разрешено развитие
 mobile capabilities: четыре root tabs, смешанная Home library, независимые
-Resume/Portfolio и общая база. Механизм сохраняет existing draft repository,
+Resume/Portfolio и общая база. D048 (2026-10-08) также разрешает завершение
+mobile settings/attachments и публикацию вместе с web. Механизм сохраняет existing draft repository,
 UID boundaries, Hive queue и outbox, без второго runtime/write store.
 Media и location используют прежние features; карта/Maps исключены.
 [Prerequisites](../../redesign/prerequisites.md) разделяет фактически реализованный
@@ -54,7 +55,10 @@ headless проверки не закрывают native visual, public/web ил
   сохраняет живой label/wrap; +N — настоящий control с полным списком.
   [StackCardBrand](../../../apps/mobile/lib/shared/widgets/stackcard_brand.dart)
   использует один original outlined Wordmark A либо compact Mark, paper/ink,
-  contain/no tint. NativeAppIcon exports не заменяют native packaging.
+  contain/no tint. D048 native AppIcon PNG экспортированы в existing Android
+  mipmaps/iOS set; [ledger](../../redesign/source/native-app-icons.json) фиксирует
+  pinned source, hashes/dimensions/alpha. Packaging source не означает native
+  build/launch/parity.
   Provenance — [source-manifest.json](../../../apps/mobile/assets/design_v2/source-manifest.json),
   Figma variables/styles — [figma-design-v2.json](../../redesign/source/figma-design-v2.json),
   portable strict checker — [check_imports.py](../../../tools/redesign/check_imports.py).
@@ -74,7 +78,8 @@ headless проверки не закрывают native visual, public/web ил
 - Settings persistence:
   [SharedPreferencesSettingsRepository](../../../apps/mobile/lib/features/settings/data/shared_preferences_settings_repository.dart)
   использует SharedPreferencesAsync для одного versioned snapshot theme/language/
-  source descriptions. Controller последовательно сохраняет последнее состояние;
+  source descriptions/reducedMotion. Runtime объединяет reducedMotion с OS
+  disableAnimations; nav duration становится zero. Controller последовательно сохраняет последнее состояние;
   failure оставляет выбор в UI с retry. Corrupt/unknown preferences дают defaults;
   пользовательский draft не хранится в preferences.
 - Feature APIs: [auth.dart](../../../apps/mobile/lib/features/auth/auth.dart),
@@ -151,7 +156,7 @@ headless проверки не закрывают native visual, public/web ил
   не меняет content. Save сохраняет захваченный snapshot, более новый ввод
   остаётся unsaved; повторная запись одновременно не выполняется.
   [HivePortfolioDraftRepository](../../../apps/mobile/lib/features/portfolio_draft/data/hive_portfolio_draft_repository.dart)
-  последовательно проверяет expected revision и пишет envelope v6; v1–v5 читаются
+  последовательно проверяет expected revision и пишет envelope v7; v1–v6 читаются
   без eager migration, explicit Save/ACK пишет текущую версию. Conflict
   сохраняет несохранённые правки и требует явного решения перечитать durable draft.
   `saveNotes` изменяет только notes, сохраняя content. Чтение v1 не пишет migration:
@@ -166,7 +171,7 @@ headless проверки не закрывают native visual, public/web ил
   в Settings; configured runtime требует online claim и пустой local/cloud target,
   offline cache miss не означает cloud emptiness. LocalRuntime server-only preflight
   пропускается только для своего pending journal; transaction закрывает race.
-  Source envelope/revision/notes/content и raw backups v1–v5 сохраняются;
+  Source envelope/revision/notes/content и raw backups v1–v6 сохраняются;
   v1 не мигрируется при чтении, ACK после явного transfer пишет текущую версию.
   Durable journal резервирует source одному UID до online create-if-absent claim;
   retry допускает только тот же mutation ID/notes/content. Remote ACK metadata
@@ -214,9 +219,15 @@ headless проверки не закрывают native visual, public/web ил
   local-only записи и порядок остаются. Apply сохраняет captured baseline в buffer,
   Save отдельный; Cancel/UID transition/stale base/изменённый buffer не применяют
   captured выбор. Нельзя брать unsaved общую базу или записывать другой документ.
+  Attachments содержат optional title/description/contribution overrides;
+  null наследует Library, явное значение относится только к документу.
+  `SocialLink` отделяет разрешение базы `publishAllowed` (default false) от
+  выбора в документе `visible` (default true); email/phone/telegram — typed kinds.
+  Login email не является contact. `profile.publishLocation` default false;
+  server projection повторно проверяет актуальное разрешение общей базы.
   Pure domain validation/completion живут в `features/portfolio_draft/domain`;
-  процент вычисляется, скрытие блоков его не увеличивает. Remote sync и prepared
-  publication принадлежат Phase 8; public UI/web остаются отдельными фазами.
+  процент вычисляется, скрытие блоков его не увеличивает. Remote sync сохраняет
+  existing Phase 8 boundary; document publication в D048 — отдельное действие.
   Контракт зафиксирован в [ADR 0001](../../decisions/0001-firestore-sync-and-publication.md).
 - Smart GitHub Sync: [ADR 0002](../../decisions/0002-github-import-and-review.md),
   [pure rules](../../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_github_sync.dart)
@@ -254,8 +265,10 @@ headless проверки не закрывают native visual, public/web ил
   Private bytes cache memory-only и исчезает при UID transition; external public
   avatars используют cached_network_image. Не удалять прежние durable paths
   при замене/ACK: offline/LWW может ещё ссылаться на них. Public projection
-  исключает media fields, publication не вызывается. Hive writer v6/private
-  cloud writer5 читают legacy versions без read-time rewrite; downgrade запрещён.
+  legacy codec исключает media fields, sync не публикует. Новый trusted handler
+  копирует выбранные изображения в immutable public namespace отдельно от private
+  объектов. Hive writer v7/private cloud writer6 читают legacy versions без
+  read-time rewrite; downgrade запрещён.
 - Location: [public API](../../../apps/mobile/lib/features/location/location.dart) и
   [контракт](../../architecture/architecture.md#выбор-города-и-страны--phase-12).
   Picker подтверждает город/страну, manual input работает без permissions.
@@ -277,12 +290,22 @@ headless проверки не закрывают native visual, public/web ил
   hydration. Guest local-only; UID guard/dispose прекращают прежние subscriptions
   и retry. Permission/invalid-data failures требуют explicit retry; network
   retry не блокирует local Save и не ожидает бесконечно offline SDK future.
-- Publication: [pure contract](../../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_publication.dart)
-  и [Firestore repository](../../../apps/mobile/lib/features/portfolio_draft/data/firestore_portfolio_publication_repository.dart)
-  подготовлены для отдельного explicit action, sync их не вызывает. Public
-  [projection](../../../apps/mobile/lib/features/portfolio_draft/data/portfolio_public_content_codec.dart)
-  исключает hidden data/private notes. Rules/schema/atomicity — в
-  [Firebase scope](firebase.md); public UI/web не вводить вне разрешённой фазы.
+- Publication D048: [pure document API](../../../apps/mobile/lib/features/portfolio_draft/domain/document_publication.dart),
+  [HTTP adapter](../../../apps/mobile/lib/features/portfolio_draft/data/http_document_publication_repository.dart)
+  и [UID-bound providers](../../../apps/mobile/lib/features/portfolio_draft/document_publication_providers.dart)
+  используют authenticated trusted service. Inventory/read-resolution и durable
+  operation ID отделены от Save/точного server ACK. Unknown/timeout не показывать
+  как success; Copy/Open/Share используют только confirmed published URL.
+  Server читает saved workspace, deep validation/privacy/media projection
+  выполняет до public write. Старый username-based `portfolio_publication.dart`
+  остаётся legacy API, sync не вызывает ни один publication adapter.
+  Account deletion journal сохраняет captured UID/operation/generation и случайный
+  256-bit recoveryKey перед первым запросом. После утраты Auth ограниченный
+  deletionStatus разрешает только outcome/retry прежней prepared operation;
+  local owner cleanup выполняется после подтверждения, guest/другой UID сохраняются.
+  Permanent URL/delete/security — в [architecture](../../architecture/architecture.md#privatepublic-schema-и-явная-публикация)
+  и [Firebase scope](firebase.md). Endpoint/origin/deployment отсутствуют в live
+  окружении, пока это не подтверждено отдельной проверкой.
 - [PortfolioOverview](../../../apps/mobile/lib/features/portfolio/presentation/portfolio_overview.dart)
   объединяет profile/projects для Home и demo Portfolio; query/filter Projects
   не влияет на полный или featured список других экранов. Это presentation read model,
@@ -341,7 +364,7 @@ headless проверки не закрывают native visual, public/web ил
   `test/portfolio_draft_controller_test.dart`, `test/portfolio_draft_widget_test.dart`:
   revision, input retention, unknown schema, Save failures и навигация.
   Builder checks дополнительно проверяют validation/completion, CRUD, порядок/
-  видимость/тему preview, v1–v5 → v6 compatibility, stale revision и сохранение новых
+  видимость/тему preview, v1–v6 → v7 compatibility, stale revision и сохранение новых
   правок во время Save; имена актуальных tests — в `apps/mobile/test`.
 - Локальные шрифты и лицензии: [assets/fonts](../../../apps/mobile/assets/fonts/);
   регистрация остаётся в pubspec. Manrope400/600/700/800 и OFL/pinned hashes
@@ -352,7 +375,8 @@ headless проверки не закрывают native visual, public/web ил
 
 Flutter/Dart-команды выполнять из `apps/mobile`; Git — из корня monorepo.
 Платформы приложения — только Android и iOS; platform directories — `android/`
-и `ios/`. Сайт и web-редактор планируются отдельно в `apps/web` на Next.js.
+и `ios/`. Сайт и web-редактор находятся отдельно в `apps/web` на Next.js;
+их правила — [Web scope](web.md).
 Проверки format/analyze/tests и порядок разработки описаны в
 [CONTRIBUTING](../../../CONTRIBUTING.md); запуск — в его
 [быстром старте](../../../CONTRIBUTING.md#быстрый-старт).
@@ -377,4 +401,6 @@ async UID/refresh — `stackcard_async_view_test.dart`. Сравнивать ф�
 выбранный loader path/canonical geometry/opacity; unsupported SVG warnings
 не игнорировать. Headless scale1/2/ru/en/keyboard/viewport checks не подменяют
 native font/SVG/AppIcon, device smoke или live backend acceptance. Результаты
-и no-preview/run ограничения фиксируются в canonical plan/product spec.
+и фактические runtime ограничения фиксируются в canonical plan/product spec.
+D048 visual/browser/native проверки разрешены последующим явным ответом пользователя;
+исторические skipped checks не становятся выполненными автоматически.

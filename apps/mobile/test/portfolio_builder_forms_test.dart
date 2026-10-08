@@ -189,6 +189,7 @@ void main() {
       expect(find.text('Заполните поле.'), findsOneWidget);
       await _enter(tester, 'title', 'My project');
       await _enter(tester, 'description', 'Local case\nSecond line');
+      await _enter(tester, 'contribution', 'Built the accessible interface');
       await _enter(
         tester,
         'technologies',
@@ -216,6 +217,7 @@ void main() {
       expect(project.id, isNotEmpty);
       expect(project.title, 'My project');
       expect(project.description, 'Local case\nSecond line');
+      expect(project.contribution, 'Built the accessible interface');
       expect(project.technologies, ['Flutter', 'Dart']);
       expect(project.repositoryUrl, 'https://github.com/example/project');
       expect(project.liveUrl, 'https://example.com/demo');
@@ -278,6 +280,12 @@ void main() {
     final h = await _pumpEditor(tester, const PortfolioProjectEditorScreen());
     await _enter(tester, 'title', 'Discarded project');
     await _tap(tester, const ValueKey('builder_form_cancel'));
+    expect(find.byKey(const ValueKey('project.leave.stay')), findsOneWidget);
+    await _tap(tester, const ValueKey('project.leave.stay'));
+    expect(_textController(tester, 'title').text, 'Discarded project');
+    await _tap(tester, const ValueKey('builder_form_cancel'));
+    await _tap(tester, const ValueKey('project.leave.discard'));
+    expect(find.text('Back destination'), findsOneWidget);
     expect(h.content.projects, isEmpty);
   });
 
@@ -769,6 +777,9 @@ TextEditingController _textController(WidgetTester tester, String field) =>
 
 Future<void> _enter(WidgetTester tester, String field, String value) async {
   final target = find.byKey(ValueKey('builder_form_$field'));
+  if (field == 'technologies' && target.evaluate().isEmpty) {
+    await _tap(tester, const ValueKey('project.technologies.edit'));
+  }
   await tester.ensureVisible(target);
   await tester.enterText(target, value);
   await tester.pump();

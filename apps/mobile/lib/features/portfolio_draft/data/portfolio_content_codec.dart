@@ -12,6 +12,7 @@ Map<String, Object?> encodePortfolioContent(
     'headline': content.profile.headline,
     'bio': content.profile.bio,
     'locationText': content.profile.locationText,
+    'publishLocation': content.profile.publishLocation,
     'avatarUrl': content.profile.avatarUrl,
     'avatarPath': content.profile.avatarPath,
   },
@@ -24,6 +25,7 @@ Map<String, Object?> encodePortfolioContent(
           'id': item.id,
           'title': item.title,
           'description': item.description,
+          'contribution': item.contribution,
           'technologies': item.technologies,
           'repositoryUrl': item.repositoryUrl,
           'liveUrl': item.liveUrl,
@@ -68,6 +70,8 @@ Map<String, Object?> encodePortfolioContent(
           'label': item.label,
           'url': item.url,
           'kind': item.kind.name,
+          'publishAllowed': item.publishAllowed,
+          'visible': item.visible,
         },
       )
       .toList(),
@@ -108,6 +112,9 @@ Map<String, Object?> _encodePortfolioDocument(PortfolioDocument document) {
             'projectId': attachment.projectId,
             'visible': attachment.visible,
             'featured': attachment.featured,
+            'titleOverride': attachment.titleOverride,
+            'descriptionOverride': attachment.descriptionOverride,
+            'contributionOverride': attachment.contributionOverride,
           },
         )
         .toList(),
@@ -129,7 +136,10 @@ Map<String, Object?> _encodeBaseSnapshot(PortfolioContent snapshot) {
   };
 }
 
-PortfolioContent _decodeBaseSnapshot(Object? raw) {
+PortfolioContent _decodeBaseSnapshot(
+  Object? raw, {
+  required bool allowPresentationPrivacy,
+}) {
   final json = _map(raw);
   _fields(json, {'profile', 'skills', 'experience', 'education', 'links'});
   _fields(_map(json['profile']), {
@@ -140,33 +150,51 @@ PortfolioContent _decodeBaseSnapshot(Object? raw) {
     'locationText',
     'avatarUrl',
     'avatarPath',
+    if (allowPresentationPrivacy &&
+        _map(json['profile']).containsKey('publishLocation'))
+      'publishLocation',
   });
   for (final key in ['skills', 'experience', 'education', 'links']) {
-    final fields = switch (key) {
-      'skills' => {'id', 'name'},
-      'experience' => {'id', 'role', 'organization', 'period', 'description'},
-      'education' => {
-        'id',
-        'institution',
-        'qualification',
-        'period',
-        'description',
-      },
-      _ => {'id', 'label', 'url', 'kind'},
-    };
     for (final item in _list(json, key)) {
+      final fields = switch (key) {
+        'skills' => {'id', 'name'},
+        'experience' => {'id', 'role', 'organization', 'period', 'description'},
+        'education' => {
+          'id',
+          'institution',
+          'qualification',
+          'period',
+          'description',
+        },
+        _ => {
+          'id',
+          'label',
+          'url',
+          'kind',
+          if (allowPresentationPrivacy &&
+              _map(item).containsKey('publishAllowed'))
+            'publishAllowed',
+          if (allowPresentationPrivacy && _map(item).containsKey('visible'))
+            'visible',
+        },
+      };
       _fields(_map(item), fields);
     }
   }
-  return decodePortfolioContent({
-    ...encodePortfolioContent(PortfolioContent(), includeDocuments: false),
-    ...json,
-  }, allowDocuments: false);
+  return decodePortfolioContent(
+    {
+      ...encodePortfolioContent(PortfolioContent(), includeDocuments: false),
+      ...json,
+    },
+    allowDocuments: false,
+    allowPresentationPrivacy: allowPresentationPrivacy,
+  );
 }
 
 PortfolioDocument _decodePortfolioDocument(
   Object? raw, {
   required bool allowBaseSnapshot,
+  required bool allowPresentationPrivacy,
 }) {
   final item = _map(raw);
   _fields(item, {
@@ -201,8 +229,15 @@ PortfolioDocument _decodePortfolioDocument(
     'locationText',
     'avatarUrl',
     'avatarPath',
+    if (allowPresentationPrivacy &&
+        _map(rawSnapshot['profile']).containsKey('publishLocation'))
+      'publishLocation',
   });
-  final snapshot = decodePortfolioContent(rawSnapshot, allowDocuments: false);
+  final snapshot = decodePortfolioContent(
+    rawSnapshot,
+    allowDocuments: false,
+    allowPresentationPrivacy: allowPresentationPrivacy,
+  );
   if (snapshot.projects.isNotEmpty ||
       snapshot.ignoredGitHubRepositories.isNotEmpty) {
     throw const FormatException('Документ содержит копии проектов');
@@ -216,17 +251,38 @@ PortfolioDocument _decodePortfolioDocument(
     content: snapshot,
     projects: _list(item, 'projects').map((raw) {
       final attachment = _map(raw);
-      _fields(attachment, {'projectId', 'visible', 'featured'});
+      _fields(attachment, {
+        'projectId',
+        'visible',
+        'featured',
+        if (allowPresentationPrivacy && attachment.containsKey('titleOverride'))
+          'titleOverride',
+        if (allowPresentationPrivacy &&
+            attachment.containsKey('descriptionOverride'))
+          'descriptionOverride',
+        if (allowPresentationPrivacy &&
+            attachment.containsKey('contributionOverride'))
+          'contributionOverride',
+      });
       return PortfolioProjectAttachment(
         projectId: _string(attachment, 'projectId'),
         visible: _bool(attachment, 'visible'),
         featured: _bool(attachment, 'featured'),
+        titleOverride: _nullableString(attachment, 'titleOverride'),
+        descriptionOverride: _nullableString(attachment, 'descriptionOverride'),
+        contributionOverride: _nullableString(
+          attachment,
+          'contributionOverride',
+        ),
       );
     }).toList(),
     attachedResumeId: _nullableString(item, 'attachedResumeId'),
     baseSnapshot: item['baseSnapshot'] == null
         ? null
-        : _decodeBaseSnapshot(item['baseSnapshot']),
+        : _decodeBaseSnapshot(
+            item['baseSnapshot'],
+            allowPresentationPrivacy: allowPresentationPrivacy,
+          ),
   );
 }
 
@@ -235,6 +291,7 @@ PortfolioContent decodePortfolioContent(
   bool allowMedia = true,
   bool allowDocuments = true,
   bool allowBaseSnapshot = true,
+  bool allowPresentationPrivacy = true,
 }) {
   final json = _map(raw);
   if (!allowDocuments && json.containsKey('documents')) {
@@ -244,6 +301,9 @@ PortfolioContent decodePortfolioContent(
   if (!allowMedia && profile.containsKey('avatarPath')) {
     throw const FormatException('Media требует новую версию draft');
   }
+  if (!allowPresentationPrivacy && profile.containsKey('publishLocation')) {
+    throw const FormatException('Privacy требует новую версию draft');
+  }
   final content = PortfolioContent(
     profile: PortfolioProfile(
       name: _string(profile, 'name'),
@@ -251,6 +311,9 @@ PortfolioContent decodePortfolioContent(
       headline: _string(profile, 'headline'),
       bio: _string(profile, 'bio'),
       locationText: _string(profile, 'locationText'),
+      publishLocation: profile.containsKey('publishLocation')
+          ? _bool(profile, 'publishLocation')
+          : false,
       avatarUrl: _string(profile, 'avatarUrl'),
       avatarPath: profile.containsKey('avatarPath')
           ? _string(profile, 'avatarPath')
@@ -282,11 +345,34 @@ PortfolioContent decodePortfolioContent(
     }).toList(),
     links: _list(json, 'links').map((raw) {
       final item = _map(raw);
+      if (!allowPresentationPrivacy &&
+          (item.containsKey('publishAllowed') ||
+              item.containsKey('visible') ||
+              !const [
+                'other',
+                'github',
+                'website',
+                'linkedin',
+              ].contains(item['kind']))) {
+        throw const FormatException('Contacts требуют новую версию draft');
+      }
+      _fields(item, {
+        'id',
+        'label',
+        'url',
+        'kind',
+        if (item.containsKey('publishAllowed')) 'publishAllowed',
+        if (item.containsKey('visible')) 'visible',
+      });
       return SocialLink(
         id: _string(item, 'id'),
         label: _string(item, 'label'),
         url: _string(item, 'url'),
         kind: _enum(item, 'kind', SocialLinkKind.values),
+        publishAllowed: item.containsKey('publishAllowed')
+            ? _bool(item, 'publishAllowed')
+            : false,
+        visible: item.containsKey('visible') ? _bool(item, 'visible') : true,
       );
     }).toList(),
     projects: _list(json, 'projects').map((raw) {
@@ -294,10 +380,18 @@ PortfolioContent decodePortfolioContent(
       if (!allowMedia && item.containsKey('imagePaths')) {
         throw const FormatException('Media требует новую версию draft');
       }
+      if (!allowPresentationPrivacy && item.containsKey('contribution')) {
+        throw const FormatException(
+          'Project presentation требует новую версию draft',
+        );
+      }
       return PortfolioProject(
         id: _string(item, 'id'),
         title: _string(item, 'title'),
         description: _string(item, 'description'),
+        contribution: item.containsKey('contribution')
+            ? _string(item, 'contribution')
+            : '',
         technologies: _list(item, 'technologies').map((value) {
           if (value is! String) {
             throw const FormatException('Некорректная технология');
@@ -353,6 +447,7 @@ PortfolioContent decodePortfolioContent(
                 (raw) => _decodePortfolioDocument(
                   raw,
                   allowBaseSnapshot: allowBaseSnapshot,
+                  allowPresentationPrivacy: allowPresentationPrivacy,
                 ),
               )
               .toList(),

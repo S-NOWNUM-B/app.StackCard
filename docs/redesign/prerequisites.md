@@ -5,7 +5,7 @@
 **Конкретный scope модели, миграции, публикации, media и web для решения пользователя**
 
 ![Status partial implementation](https://raster.shields.io/badge/Status-partial_implementation-111111?style=for-the-badge)
-![Scope private mobile](https://raster.shields.io/badge/Scope-private_mobile-14161B?style=for-the-badge)
+![Scope mobile web publication](https://raster.shields.io/badge/Scope-mobile_web_publication-14161B?style=for-the-badge)
 
 </div>
 
@@ -15,6 +15,7 @@
 
 - [Рекомендация и границы решения](#рекомендация-и-границы-решения)
 - [Действующий private slice 2026-10-07](#действующий-private-slice-2026-10-07)
+- [Перенос D048 — 2026-10-08](#перенос-d048--2026-10-08)
 - [Проверенный источник и пригодный механизм](#проверенный-источник-и-пригодный-механизм)
 - [Предлагаемая модель](#предлагаемая-модель)
 - [Migration PR-MIG-01 — один recoverable переход, без потерь](#migration-pr-mig-01--один-recoverable-переход-без-потерь)
@@ -32,17 +33,19 @@
 Figma/концепции и поставил последовательную очередь фаз на паузу. Private
 модель/навигация/документы развиваются через existing aggregate; принятый ниже
 subset отличается от полного proposal. Это не полная приёмка PR-* пакета:
-trusted publication/URL, full account/privacy, web и advanced migration/lifecycle
-остаются proposed/pending. Deploy/commit/push этим документом не разрешены.
+D048 (2026-10-08) явно разрешает mobile + web + publication перенос. Trusted
+handler/permanent URL/privacy/attachments и actual Next.js runtime реализуются
+в этом scope; итоговые проверки фиксируются в product status. Advanced migration
+из полного proposal не вводится автоматически. Deploy/billing/commit/push не разрешены.
 [Product status](../product/product-spec.md#статус-и-границы-текущей-работы)
 владеет actual scope и проверками; [R0–R9](plan.md) сохраняет историю acceptance.
 
 Рекомендую полную целевую модель с одним UID workspace aggregate: DeveloperProfile, Projects Library и несколько независимых Resume/Portfolio. Сохранить имеющиеся Riverpod composition, Hive очередь и UID namespaces, outbox, server-commit whole-document LWW. Public snapshots хранить отдельно по постоянному opaque public document ID. Никаких CRDT, event bus, нового sync framework, per-screen write stores или второго mobile runtime.
 
-Полный вариант ниже остаётся proposal для remaining capabilities. D045 разрешает
-private mobile subset; его реализация не ждёт повторного phase approval. Новый
-public lifecycle, trusted handler и actual Next.js runtime требуют конкретного
-контракта/реализации; их нельзя считать существующими из private schema update.
+Полный вариант ниже сохраняет remaining requirements и историю предложения.
+D045/D046 private core повторно не строится; D048 расширяет его на публикацию и
+web без повторного phase approval. Наличие private schema само по себе не
+доказывает public lifecycle или live availability.
 
 Историческая альтернатива UI-only до D045: перенести foundations/shared controls, поддерживаемые auth/forms/settings/GitHub и оформление существующих singleton screens. Multiple documents, structured Resume, relation semantics, full Account, real media, permanent publications и web остаются blocked либо явно исключаются пользователем. Это не завершение полной R8/R9.
 
@@ -52,6 +55,10 @@ public lifecycle, trusted handler и actual Next.js runtime требуют ко�
 ---
 
 ## Действующий private slice 2026-10-07
+
+Исторический D045/D046 subset; D048 изменения и actual schema7/6 описаны
+[ниже](#перенос-d048--2026-10-08). Pending формулировки этого snapshot
+не отменяют новое разрешение web/publication.
 
 Реализация расширяет `PortfolioContent`, не вводит новый WorkspaceContent/repository:
 общая база в root, одна Projects Library и `documents` со snapshot секций,
@@ -88,6 +95,40 @@ final native visual acceptance остаются pending. Media/location испо
 
 ---
 
+## Перенос D048 — 2026-10-08
+
+Действующий source slice использует прежний `PortfolioContent`, Hive7/readers1–7
+и cloud6/readers1–6. Advanced normalized workspace/migration CAS из первоначального
+proposal не вводятся: shared Box queue, UID namespaces, raw backups1–6,
+guest transfer journal и exact outbox ACK остаются прежними.
+
+Attachments получили nullable title/description/contribution overrides;
+Library хранит contribution отдельно. Contacts используют `publishAllowed=false`
+по умолчанию и document `visible=true`, typed email/phone/telegram/links;
+location — отдельный opt-in. Разрешение актуальной базы перепроверяется server
+projection, private Auth email/providers не становятся public contacts.
+
+Authenticated HTTP `documentPublication` расположен в `firebase/functions`:
+trusted nested validation/privacy projection, authoritative saved mutation,
+permanent owner/document ID, inventory/version/generation, durable operation
+fingerprint, immutable public JPEG copies, withdrawal/delete/tombstones и
+account deletion lock. Client public writes запрещены. Runtime paths и
+подробный lifecycle — в [architecture](../architecture/architecture.md#privatepublic-schema-и-явная-публикация).
+
+Next.js `apps/web` создаёт marketing/download/Auth/owner editors и anonymous
+`/d/[publicId]` по тому же aggregate. Commands/env принадлежат actual manifest
+и безопасным examples, setup — в [CONTRIBUTING](../../CONTRIBUTING.md#web-и-document-publication).
+Нет production endpoint/domain/store links без настроенного окружения.
+
+[Проверки D048](../product/product-spec.md#проверки-d048--2026-10-08):
+mobile1323/1323, backend51/projection14 и web61 PASS; real browser publication
+и Android build/выбранные Dark-Light screens проверены. Final analyze/build и
+native Share ещё проверяются. R7 awaiting_review, DESIGN_READY/REDESIGN_DONE,
+full Figma/native/browser и live Google/iOS/media/location acceptance открыты. Inbox/FCM, QR/DeveloperCard, release и billing не входят
+в реализованный source от одного разрешения web/publication.
+
+---
+
 ## Проверенный источник и пригодный механизм
 
 <div align="center">
@@ -95,14 +136,14 @@ final native visual acceptance остаются pending. Media/location испо
 | **Сейчас** | **Файл и проверенный контракт** |
 |:---|:---|
 | PortfolioContent aggregate | domain/portfolio_content.dart и portfolio_document.dart: общая база/Library, independent documents snapshots/relations, legacy blocks/theme/resumeText и Ignore |
-| Private envelope | domain/portfolio_draft.dart и data/hive_portfolio_draft_repository.dart: notes вне content, local revision, pendingSync; writer6 / readers1–6; read не делает eager migration; corrupt/unknown не перезаписываются |
+| Private envelope | domain/portfolio_draft.dart и data/hive_portfolio_draft_repository.dart: notes вне content, local revision, pendingSync; writer7 / readers1–7; read не делает eager migration; corrupt/unknown не перезаписываются |
 | Local owner boundary | data/local_draft_accounts.dart: guest generation, UID key, shared Box queue, reserved transfer journal, raw backup, metadata-first ACK, syncPrepared, exact retry payload, committed-before-cleanup |
 | Outbox / ACK | data/synced_portfolio_draft_repository.dart и data/hive_portfolio_sync_metadata_store.dart: mutation + captured snapshot, cache-before-metadata recovery; older ACK не подтверждает newer Save; metadata version1 |
-| Cloud | data/firestore_portfolio_draft_repository.dart: accounts/UID/drafts/current, writer5/readers1–5; server timestamp, captured UID, online create-if-absent transfer claim |
-| Prepared publication | data/firestore_portfolio_publication_repository.dart: username-based transaction; domain API publish(username, content)/unpublish; нет UI/DI или stable document inventory |
+| Cloud | data/firestore_portfolio_draft_repository.dart: accounts/UID/drafts/current, writer6/readers1–6; server timestamp, captured UID, online create-if-absent transfer claim |
+| Publication | domain/document_publication.dart, HTTP adapter/providers и firebase/functions: owner inventory, exact saved mutation, operation recovery, permanent publicId; username adapter сохраняется как legacy, client writes закрыты |
 | Source review | domain/portfolio_project.dart / portfolio_github_sync.dart; github_portfolio_providers.dart: acceptedSource, manual overrideFields, Ignore fingerprints, stale owner/read checks; cache отдельный |
-| Ownership / Rules | firebase/firestore.rules: own UID draft get, no list; atomic username/account/public transitions; nested lists проверяются контейнером |
-| Web / account / settings | apps/web сейчас README; AuthUser UID/email/displayName; API sign-in/register/reset/Google/signOut; AppSettings theme/language/source descriptions |
+| Ownership / Rules | firebase/firestore.rules/storage.rules: own UID draft, owner inventory, anonymous exact public get, deny public writes/list, account lock/deleted IDs/current public media version; deep projection отдельно server |
+| Web / account / settings | apps/web/src + actual manifest/env; Firebase SDK account/session, shared cloud6 model, online-first CAS Save и document publication API; mobile Auth/AppSettings сохраняют своих владельцев |
 
 </div>
 
@@ -112,7 +153,10 @@ final native visual acceptance остаются pending. Media/location испо
 
 ## Предлагаемая модель
 
-Все модели pure Dart, immutable, equality/validation по существующему стилю. JSON contracts и fixtures общие для будущего web; React не импортируется в Flutter.
+Таблица сохраняет первоначальный полный proposal: normalized `WorkspaceContent`
+не создан. Actual source использует `PortfolioContent` с root lists и documents,
+как в D045/D046/D048 выше. Модели Flutter pure Dart/immutable; JSON fixtures
+согласуются с TypeScript, React не импортируется в Flutter.
 
 <div align="center">
 
@@ -148,7 +192,8 @@ Public projections для Publish разрешаются из сохранённ
 
 Полный proposal первоначально предлагал отдельный workspace payload. D045
 реализует совместимое расширение существующего content: paths/keys прежние,
-Hive6/private cloud5 уже используются, metadata/public schemas прежние.
+Hive7/private cloud6 используются в D048; metadata version1 и legacy public schema1
+сохраняются, новый publicDocuments schema1 — отдельный contract.
 Версии будущего workspace/public lifecycle не назначаются здесь заранее.
 Old writers не могут downgrade upgraded private cloud schema.
 
@@ -184,21 +229,35 @@ Audit/test fixtures: v1 notes-only, v2 content/resumeText, v3 manual+GitHub with
 
 ## Publication, URL, delete — отдельный продуктовый пакет
 
-PR-PUB-01 заменяет username-addressed API документным контрактом: read publication state, explicit publish, update, unpublish, resolve outcome, Copy/Open/Share only confirmed URL. Одна current snapshot на документ; integer publication version не превращается в сложную историю версий. Service получает documentId + expected saved mutation/generation + operationId и сам читает authoritative private workspace. Он не доверяет public content из запроса клиента.
+D048 реализует этот пакет в `firebase/functions` и document clients; source
+и checks не означают deployed/live capability. Подробный contract владеет
+[architecture](../architecture/architecture.md#privatepublic-schema-и-явная-публикация).
 
-Предлагаемые новые paths (ещё не созданы): accounts/UID/publications/privateDocumentId для permanent mapping/current operation; publicDocuments/publicId для current public payload. Anonymous только get exact published record; list и любой private/account/notes read запрещены. Missing/unpublished/deleted дают одинаковое не раскрывающее private existence состояние. Реальный production host берётся из config после доступного окружения; example.com/d/ID остаётся примером, не live URL.
+- PR-PUB-01: explicit Publish/Update/Unpublish сохранённого документа,
+  server inventory/version, durable operation ID/fingerprint, timeout/unknown
+  status/retry той же операции. Sync и Save не публикуют.
+- PR-PUB-02: authenticated handler сам читает exact saved mutation, рекурсивно
+  валидирует workspace и удаляет private/hidden данные до public write. Клиент
+  не присылает public payload. Размещение в Firebase Functions принято в D048;
+  первоначальная рекомендация Next.js handler больше не задаёт runtime.
+- PR-URL-01: `accounts/UID/publications/documentId` владеет mapping;
+  `publicDocuments/publicId` — current snapshot, route `/d/<publicId>`.
+  Rename/username change/unpublish→republish сохраняют ID, duplicate его не наследует.
+  Legacy username records не перенаправляются и не мигрируют автоматически.
+- PR-PUB-03: withdrawal/delete transaction, protected deletedDocumentIds,
+  publication CAS generation и account deletion lock. Private Rules запрещают
+  поздний draft с удалённым ID; whole-document LWW не становится entity merge.
+- PR-MEDIA-01 public slice: server copy выбранных JPEG в immutable public path,
+  очистка EXIF/GPS/tokens и current-version Storage access. Draft removal не
+  удаляет published media; withdraw закрывает чтение до cleanup.
 
-PR-PUB-02: глубокий recursive allowlist/type validation и projection на trusted стороне. Исключить notes, login email/provider inventory, source snapshots/override flags/Ignore/cache, unselected/hidden contacts/sections/projects и private photo references до public write. Direct SDK public writes deny; SSR props/readers получают только public schema. Нынешние Rules проверяют list/map контейнеры; это не доказательство безопасности всех nested элементов. Официальная документация подтверждает отсутствие общей проверки типов всех элементов: [Firebase field validation](https://firebase.google.com/docs/firestore/security/rules-fields).
-
-Рекомендуемое размещение trusted handler — один authenticated handler в отдельно разрешённом Phase13 Next.js runtime, поскольку полный web всё равно нужен. Не создавать отдельный backend/functions до этого решения. Если требуется mobile publication раньше или web исключён, отдельный минимальный trusted-service вариант потребует явного scope PR-PUB-02-SERVICE. Выбор hosting/deploy/billing не включён автоматически. Server SDK обходит Rules, поэтому handler сам проверяет ID token/UID, lifecycle, source mutation, full schema и transaction invariants; Rules tests не заменяют его unit/security tests. Источник: [Firebase server/Rules boundary](https://firebase.google.com/docs/firestore/security/rules-fields).
-
-PR-URL-01: opaque publicId закрепляется за original document, rename/username change не меняют URL, unpublish удаляет public payload и сохраняет private mapping, republish использует тот же publicId. Duplicate создаёт новый private ID, копирует только draft config/content/relations/local overrides, оставляет global Project IDs, сбрасывает publication/version/op/publicId.
-
-Legacy /u/username: текущий adapter удаляет старый snapshot/reservation при rename. До миграции инвентаризировать owner/account/public record и сохранить approved exact payload/version. Рекомендуемый alias только на permanent ID с permanent ownership/tombstone, имя никогда не перенаправляется на чужой позже занятый username. При отсутствии согласованной alias policy legacy public records не трогать. Новый alias и current username reservation имеют разные назначения.
-
-PR-PUB-03: delete document сначала confirmed public withdrawal, затем private removal/attachment cleanup; Library/прочие outputs не удаляются. Delete global Project перечисляет affected attachments, removes them and Project once, не стирает GitHub cache. Монотонный lifecycle generation сохраняется в protected owner record и фиксируется в workspace/outbox; destructive transaction увеличивает его. Rules/adapter отвергают поздний Save старого поколения — иначе whole-document LWW воскресит удалённый entity. Старый outbox остаётся conflict/recovery с несохранёнными данными, не автоматически retries и не считается deleted success. Generation guard новый contract отдельной задачи, а не уже реализованная возможность.
-
-Publish/update/unpublish/delete имеют request operation identity и read-resolution. Timeout → unknown; retry/read той же операции, никаких false success toasts. After unpublish/delete reader не раскрывает private draft. Media withdrawal/references участвуют в том же lifecycle по PR-MEDIA-01.
+Account deletion withdraw всех outputs до owner cleanup и Auth deletion,
+с minimal recovery receipt/lock без content и hash случайного recovery key.
+Durable client journal и restricted deletionStatus позволяют завершить прежнюю
+операцию после утраты Auth. Recent authentication обязательна для её начала;
+partial cleanup/pending не отображаются как success. Private Resume attachment
+раскрывает link только к отдельно published Resume. Legacy alias policy,
+normalized stores/CRDT, Inbox/FCM и production deploy не добавляются этим пакетом.
 
 ---
 
@@ -215,17 +274,17 @@ Publish/update/unpublish/delete имеют request operation identity и read-re
 | PR-DATA-03 | GAP-DATA-03; Phase6/8 | New-doc base suggestion, captured-baseline review, selections/local overrides, preserve existing/public content. Owner domain/controller/forms; Blocks R8.4d/e |
 | PR-CONTACT-01 | GAP-CONTACT-01; новый contact/privacy contract | Public contact fields/link reorder/selection/local overrides/privacy, login email separate; inherited links retained. Owner domain/projection/settings. Inbox/contact-request/anti-spam/FCM не включаются этим ID |
 | PR-PUB-01 | GAP-PUB-01; дополнение Phase8 +13c | Multiple Resume/Portfolio snapshots, inventory/status/Save-ACK-Publish/unknown/reopen. Owner publication domain/data/DI; Blocks R8.3c/e,4d/e,5b/c |
-| PR-PUB-02 | GAP-PUB-02; Phase8 security | Trusted validation/projection + deny direct public writes + malicious nested fixtures. Owner chosen handler + firebase Rules/tests. Требует явно выбранного runtime размещения; Blocks public security acceptance |
+| PR-PUB-02 | GAP-PUB-02; Phase8 security | Trusted validation/projection + deny direct public writes + malicious nested fixtures. Owner firebase/functions + firebase Rules/tests. Runtime выбран D048; Blocks public security acceptance |
 | PR-PUB-03 | GAP-PUB-01; delete consequences | Withdraw+remove + generation anti-resurrection + operation recovery + unaffected Library/other docs. Owner publication/workspace transaction, adapters/Rules. Blocks delete/account consequences |
 | PR-URL-01 | GAP-URL-01; D019 implementation | Permanent publicId mapping, rename/unpublish/republish/duplicate policy, legacy alias ownership migration. Owner publication/route schema. Blocks real persistent URLs/Copy/Open/Share |
-| PR-AUTH-01 | GAP-AUTH-01; открытая Phase7 | Real Google/reset/native config and iOS acceptance. Owner existing auth adapter/platform config/tests. No-launch сохраняет native acceptance pending, mocked tests не закрывают его |
+| PR-AUTH-01 | GAP-AUTH-01; открытая Phase7 | Real Google/reset/native config and iOS acceptance. Owner existing auth adapter/platform config/tests. D048 разрешает native/browser проверки; фактические SDK/OAuth/iOS результаты и ограничения среды фиксируются отдельно, mocked tests не закрывают acceptance |
 | PR-ACCOUNT-01 | GAP-ACCOUNT-01; дополнение Phase7 | SDK provider inventory/email verification+change/password+reauth/link/unlink/last-provider guard. Owner auth API/data/controller. Только supported providers; Blocks full Account |
 | PR-ACCOUNT-02 | GAP-ACCOUNT-01; new deletion contract | Capture UID; withdraw all public, revoke generation/stop sync, recoverably delete owner data/media, Auth identity last; only confirmed same-UID local cleanup. Owner auth + workspace/publication/media; Blocks Delete account |
-| PR-MEDIA-01 | GAP-MEDIA-01; Phase11 | Camera/gallery/pick/permission/validation/upload/retry/replace/remove, immutable owner/public media refs, cleanup/reuse protection, Storage Rules. Owner future real media adapter + platform configs; existing no-photo UI раньше разрешён |
+| PR-MEDIA-01 | GAP-MEDIA-01; Phase11 | Camera/gallery/pick/permission/validation/upload/retry/replace/remove, immutable owner/public media refs, cleanup/reuse protection, Storage Rules. Owner existing features/media + trusted public copies + platform configs; device/live acceptance отдельно |
 | PR-PREF-01 | GAP-PREF-01; app settings addition | Versioned persisted reduced motion + OS static behavior; preserve theme/locale/source preferences write retry. Owner core/state + existing settings repository |
 | PR-NOTIFY-14 | GAP-PREF-01/contact-request part GAP-CONTACT-01; Phase14 | Connected notifications require actual ContactRequest/Inbox/anti-spam/mobile FCM service and permissions. Это отдельный choice, не bool-toggle или default backend scaffold. До согласования/службы honest unavailable state, acceptance exclusion явно записать |
-| PR-SHARE-15A | native share; subset Phase15 | Confirmed URL Clipboard/Open + Android MethodChannel/Kotlin ACTION_SEND; iOS отдельно. Owner narrow platform adapter; QR/DeveloperCard/fullPhase15 не входят автоматически |
-| PR-WEB-13A | GAP-WEB-01; Phase13a | Actual Next.js manifest/config/tokens/shared controls/landing/download with honest CTA; no fake store/releases. Owner apps/web only after scope |
+| PR-SHARE-15A | native share; subset Phase15 | Confirmed URL Clipboard/Open + Android MethodChannel/Kotlin ACTION_SEND и iOS Swift share adapter. Owner narrow platform adapter; native device acceptance отдельно, QR/DeveloperCard/fullPhase15 не входят автоматически |
+| PR-WEB-13A | GAP-WEB-01; Phase13a | Actual Next.js manifest/config/tokens/shared controls/landing/download with honest CTA; no fake store/releases. Owner apps/web; scope разрешён D048 |
 | PR-WEB-13B | GAP-WEB-01; Phase13b | Real auth/owner UID guards/workspace versioned contract/online-first Save/reopen/preview/publication API/mobile↔web compatibility. Owner web editor/data; Blocks R8.5b |
 | PR-WEB-13C | GAP-WEB-01; Phase13c | Anonymous permanent route published-only renderer/metadata/missing state/visitor Copy/Open/WebShare; SSR private exclusion. Owner web public readers; Blocks R8.5c |
 
@@ -264,11 +323,13 @@ Publish/update/unpublish/delete имеют request operation identity и read-re
 5. Account deletion требует withdraw/cleanup; Inbox — actual contact service,
    FCM — Inbox/device permissions, Developer Card/QR — подтверждённый permanent URL.
 6. R9 contract/unit/widget/Rules checks идут с каждой capability. Visual/native/live
-   evidence и user acceptance остаются отдельными gates с сохранённым no-preview/run.
+   evidence и user acceptance остаются отдельными gates; D048 visual/browser/native
+   checks разрешены последующим явным ответом пользователя.
 
-Обновление roadmap не разворачивает Rules/Functions/web и не разрешает billing,
-commit/push или сообщения другим людям. D045/D046 private mobile scope остаётся
-разрешённым; remaining proposal не считается реализованным по факту обновления плана.
+D048 разрешает source mobile/web/publication, но не разворачивает Rules/Functions/
+web и не разрешает billing, commit/push или сообщения другим людям. Remaining
+requirements не считаются выполненными по одному source diff; actual checks
+и ограничения фиксируются в product status.
 
 ---
 
@@ -278,7 +339,10 @@ Tests перечислены по actual source inventory, не объявляю
 
 Добавить содержательные cases: exact lossless mapping всех versions; crash journal phases; two-device idempotency; old/new ACK + pending payload; stale generation delete; private/public/foreignUID/anonymous/list; malicious nested payload direct SDK; contacts/account separation; base review override preservation; duplicate no publication; rename/unpublish/republish same ID; unknown operation read-resolution; new schema downgrade denial; cross-client fixtures; media linked published asset not deleted from draft removal.
 
-Обычные checks после разрешённого diff: macOS zsh/bash, cwd apps/mobile: dart format --output=none --set-exit-if-changed lib test integration_test, flutter analyze, flutter test; cwd firebase: npm run test:rules по actual manifest. Web commands задаются только новым actual manifest. Native Google/reset/iOS/media/share/device acceptance сейчас pending из-за no-launch; headless tests этого не доказывают.
+Обычные checks после разрешённого diff: macOS zsh/bash, cwd apps/mobile: dart format --output=none --set-exit-if-changed lib test integration_test, flutter analyze, flutter test; cwd firebase: npm run test:all-rules; cwd firebase/functions: npm run check и npm test;
+cwd apps/web: npm run typecheck, npm test и npm run build по actual manifests. Native Google/reset/iOS/media/share/device acceptance pending; D048 разрешает
+visual/browser/native checks, actual ограничения среды фиксируются отдельно.
+Headless tests этого не доказывают.
 
 Документ проверяется как actual private subset плюс remaining proposal: existing
 paths/schema версии сверены с source, proposed paths отмечены отдельно, нет

@@ -27,6 +27,7 @@ class AppearanceController extends ChangeNotifier {
   };
   Locale get locale => Locale(_settings.language.name);
   bool get showSourceDescriptions => _settings.showSourceDescriptions;
+  bool get reducedMotion => _settings.reducedMotion;
   bool get isSaving => _isSaving;
   SettingsFailure? get saveFailure => _saveFailure;
 
@@ -38,6 +39,9 @@ class AppearanceController extends ChangeNotifier {
 
   Future<void> setShowSourceDescriptions(bool value) =>
       _update(_settings.copyWith(showSourceDescriptions: value));
+
+  Future<void> setReducedMotion(bool value) =>
+      _update(_settings.copyWith(reducedMotion: value));
 
   Future<void> _update(AppSettings next) {
     if (_disposed || next == _settings) return Future.value();

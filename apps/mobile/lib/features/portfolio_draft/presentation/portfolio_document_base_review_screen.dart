@@ -38,7 +38,11 @@ class _PortfolioDocumentBaseReviewScreenState
   late final Set<String> _selectedKeys;
   var _ownerLost = false;
 
-  String _tr(String key) => context.strings.tr('baseReview.$key');
+  String _tr(String key) => context.strings.tr(
+    key == 'field.publishLocation'
+        ? 'documentContacts.location'
+        : 'baseReview.$key',
+  );
 
   @override
   void initState() {
@@ -338,6 +342,11 @@ class _PortfolioDocumentBaseReviewScreenState
   String _format(Object? value, {required bool incoming}) {
     if (value == null) return _tr(incoming ? 'removed' : 'missing');
     final text = switch (value) {
+      bool value => context.strings.tr(
+        value
+            ? 'documentContacts.permissionGranted'
+            : 'documentContacts.permissionDenied',
+      ),
       String value => value,
       Skill value => value.name,
       Experience value => _join([

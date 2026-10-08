@@ -3,11 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test test/*.test.mjs",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "test:publication": "npm --prefix functions test",
+    "test:service": "firebase emulators:exec --only auth,firestore,storage --project demo-stackcard-test 'node --test test/publication_service.test.mjs'",
+    "check:functions": "npm --prefix functions run check",
     "test:firestore": "node --test test/firestore_rules.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-stackcard-test 'npm run test:firestore'",
-    "test:storage": "firebase emulators:exec --only storage --project demo-stackcard-test 'node --test test/storage_rules.test.mjs'",
-    "test:all-rules": "firebase emulators:exec --only firestore,storage --project demo-stackcard-test 'npm test'"
+    "test:storage": "firebase emulators:exec --only firestore,storage --project demo-stackcard-test 'node --test test/storage_rules.test.mjs'",
+    "test:all-rules": "firebase emulators:exec --only auth,firestore,storage --project demo-stackcard-test 'npm test'"
   },
   "engines": {
     "node": ">=20"

@@ -5,6 +5,7 @@ final class PortfolioProfile {
     this.headline = '',
     this.bio = '',
     this.locationText = '',
+    this.publishLocation = false,
     this.avatarUrl = '',
     this.avatarPath = '',
   });
@@ -14,6 +15,7 @@ final class PortfolioProfile {
   final String headline;
   final String bio;
   final String locationText;
+  final bool publishLocation;
   final String avatarUrl;
   final String avatarPath;
 
@@ -23,6 +25,7 @@ final class PortfolioProfile {
     String? headline,
     String? bio,
     String? locationText,
+    bool? publishLocation,
     String? avatarUrl,
     String? avatarPath,
   }) => PortfolioProfile(
@@ -31,12 +34,21 @@ final class PortfolioProfile {
     headline: headline ?? this.headline,
     bio: bio ?? this.bio,
     locationText: locationText ?? this.locationText,
+    publishLocation: publishLocation ?? this.publishLocation,
     avatarUrl: avatarUrl ?? this.avatarUrl,
     avatarPath: avatarPath ?? this.avatarPath,
   );
 
-  Object get _fields =>
-      (name, username, headline, bio, locationText, avatarUrl, avatarPath);
+  Object get _fields => (
+    name,
+    username,
+    headline,
+    bio,
+    locationText,
+    publishLocation,
+    avatarUrl,
+    avatarPath,
+  );
 
   @override
   bool operator ==(Object other) =>

@@ -7,6 +7,7 @@ import '../../../core/theme/stackcard_theme.dart';
 import '../../../shared/widgets/stackcard_brand.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_input.dart';
+import '../../settings/settings_providers.dart';
 import '../domain/demo_session.dart';
 import '../auth_providers.dart';
 import 'account_auth_form.dart';
@@ -45,6 +46,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     final accountConfigured = ref.watch(accountAuthRepositoryProvider) != null;
+    final pendingDeletionOwner = ref.watch(accountPendingDeletionOwnerProvider);
     final baseTheme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
@@ -154,6 +156,18 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                       ),
                                     ),
                                   ),
+                            if (pendingDeletionOwner != null) ...[
+                              const SizedBox(height: 20),
+                              StackCardButton(
+                                key: const Key('account.deletionRecovery'),
+                                label: context.strings.tr(
+                                  'settingsManagement.deleteCheck',
+                                ),
+                                role: StackCardButtonRole.secondary,
+                                onPressed: () =>
+                                    context.push('/settings/account'),
+                              ),
+                            ],
                           ],
                         ),
                       ),

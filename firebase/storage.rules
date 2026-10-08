@@ -9,9 +9,15 @@ service firebase.storage {
       return imageId.matches('^[0-9a-f]{32}[.]jpg$');
     }
 
+    function activeAccount(uid) {
+      return !firestore.exists(/databases/(default)/documents/accounts/$(uid))
+        || firestore.get(/databases/(default)/documents/accounts/$(uid)).data.get('lifecycleState', 'active') == 'active';
+    }
+
     match /accounts/{uid}/media/{imageId} {
-      allow get, delete: if owner(uid) && validImageName(imageId);
-      allow create: if owner(uid) && validImageName(imageId) && resource == null
+      allow get: if owner(uid) && validImageName(imageId) && activeAccount(uid);
+      allow delete: if owner(uid) && validImageName(imageId) && activeAccount(uid);
+      allow create: if owner(uid) && validImageName(imageId) && activeAccount(uid) && resource == null
         && request.resource.size > 0
         && request.resource.size <= 2 * 1024 * 1024
         && request.resource.contentType == 'image/jpeg';
@@ -19,7 +25,14 @@ service firebase.storage {
       allow list, update: if false;
     }
 
-    // Public media открывается только вместе с отдельной реализацией явной публикации.
+    match /publicMedia/{publicId}/{version}/{imageId} {
+      allow get: if publicId.matches('^[0-9a-f]{32}$')
+        && version.matches('^[1-9][0-9]*$') && validImageName(imageId)
+        && firestore.exists(/databases/(default)/documents/publicDocuments/$(publicId))
+        && firestore.get(/databases/(default)/documents/publicDocuments/$(publicId)).data.version == int(version);
+      allow list, write: if false;
+    }
+
     match /{path=**} {
       allow read, write: if false;
     }

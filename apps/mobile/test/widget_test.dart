@@ -73,7 +73,16 @@ void main() {
         await tester.tap(_destination(item.label));
         await tester.pumpAndSettle();
         expect(router.routeInformationProvider.value.uri.path, item.path);
-        expect(find.text(item.title), findsOneWidget);
+        expect(
+          item.path == '/projects'
+              ? find.byWidgetPredicate(
+                  (widget) =>
+                      widget is Semantics &&
+                      widget.properties.label == item.title,
+                )
+              : find.text(item.title),
+          findsOneWidget,
+        );
         expect(
           tester
               .widget<NavigationBar>(find.byType(NavigationBar))
@@ -207,7 +216,13 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextFormField), 'React');
       await tester.pumpAndSettle();
-      expect(find.text('Проекты: 1'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.label == 'Проекты: 1',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Readme Studio'), findsOneWidget);
       expect(find.text('Atlas UI Kit'), findsNothing);
       await tester.enterText(find.byType(TextFormField), 'no-such-project');
@@ -216,7 +231,13 @@ void main() {
       await tester.ensureVisible(find.text('Очистить поиск'));
       await tester.tap(find.text('Очистить поиск'));
       await tester.pumpAndSettle();
-      expect(find.text('Проекты: 4'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.label == 'Проекты: 4',
+        ),
+        findsOneWidget,
+      );
       final preview = find.byKey(
         const ValueKey('project_preview_Atlas UI Kit'),
       );
@@ -308,7 +329,13 @@ void main() {
       expect(focused, isTrue, reason: 'Tab reaches the Projects destination');
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
-      expect(find.text('Проекты: 4'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.label == 'Проекты: 4',
+        ),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     },
   );

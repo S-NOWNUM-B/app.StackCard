@@ -20,7 +20,7 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
   }) : _clock = clock ?? DateTime.now;
 
   static const storageKey = 'draft';
-  static const schemaVersion = 6;
+  static const schemaVersion = 7;
   static const legacyBackupKey = 'draft.v1.backup';
 
   final Box<dynamic> _box;
@@ -170,6 +170,7 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
         version != 3 &&
         version != 4 &&
         version != 5 &&
+        version != 6 &&
         version != schemaVersion) {
       throw const PortfolioDraftFailure(
         PortfolioDraftFailureKind.unsupportedVersion,
@@ -209,6 +210,7 @@ final class HivePortfolioDraftRepository implements PortfolioDraftRepository {
             allowMedia: version >= 4,
             allowDocuments: version >= 5,
             allowBaseSnapshot: version >= 6,
+            allowPresentationPrivacy: version >= 7,
           );
         } on FormatException {
           throw _corrupted;

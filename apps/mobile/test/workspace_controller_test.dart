@@ -389,6 +389,56 @@ void main() {
     );
   });
 
+  test('Settings buffer Save updates only base after successful write', () async {
+    final repository = MemoryPortfolioDraftRepository();
+    final base = PortfolioContent(
+      profile: const PortfolioProfile(name: 'Saved'),
+      documents: [_document('a')],
+    );
+    await repository.save(base, expectedRevision: 0, notes: 'Saved notes');
+    final scope = await _scope(repository);
+    scope.controller.updateNotes('Unsaved notes');
+    final edited = base.copyWith(
+      profile: const PortfolioProfile(name: 'Contact settings buffer'),
+    );
+    expect(scope.controller.workingContent!.profile.name, 'Saved');
+    expect(
+      await scope.controller.saveDeveloperProfile(
+        expectedRepository: repository,
+        profileData: edited,
+        expectedProfileData: base,
+      ),
+      isTrue,
+    );
+    expect(scope.controller.workingContent!.profile.name, edited.profile.name);
+    final saved = (await repository.read())!;
+    expect(saved.content!.documents.single, base.documents.single);
+    expect(saved.notes, 'Saved notes');
+    expect(scope.container.read(portfolioDraftControllerProvider).notes, 'Unsaved notes');
+  });
+
+  test('Stale Settings buffer cannot overwrite newer durable base', () async {
+    final repository = MemoryPortfolioDraftRepository();
+    final base = PortfolioContent(profile: const PortfolioProfile(name: 'Saved'));
+    await repository.save(base, expectedRevision: 0, notes: '');
+    final scope = await _scope(repository);
+    await repository.save(
+      base.copyWith(profile: const PortfolioProfile(name: 'Other device')),
+      expectedRevision: 1,
+      notes: '',
+    );
+    expect(
+      await scope.controller.saveDeveloperProfile(
+        expectedRepository: repository,
+        profileData: base.copyWith(profile: const PortfolioProfile(name: 'Stale')),
+        expectedProfileData: base,
+      ),
+      isFalse,
+    );
+    expect((await repository.read())!.content!.profile.name, 'Other device');
+    expect(scope.controller.workingContent!.profile.name, 'Saved');
+  });
+
   test(
     'Owner switch during authoritative read prevents writing either owner',
     () async {

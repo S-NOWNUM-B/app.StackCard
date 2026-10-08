@@ -108,7 +108,13 @@ void main() {
       await tester.tap(_destination('Проекты'));
       await tester.pumpAndSettle();
       expect(find.text('Replacement Project'), findsOneWidget);
-      expect(find.text('Проекты: 1'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.label == 'Проекты: 1',
+        ),
+        findsOneWidget,
+      );
       expect(
         container.read(featuredProjectsProvider).requireValue.single.title,
         'Replacement Project',
@@ -255,7 +261,13 @@ void main() {
     expect(repository.calls, 0);
     await tester.tap(_destination('Проекты'));
     await tester.pumpAndSettle();
-    expect(find.text('Проекты: 0'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics && widget.properties.label == 'Проекты: 0',
+      ),
+      findsOneWidget,
+    );
     expect(repository.calls, 1);
     expect(tester.takeException(), isNull);
   });
