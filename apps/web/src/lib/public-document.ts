@@ -434,7 +434,8 @@ export async function readPublicDocument(
 ): Promise<PublicDocument | null> {
   if (!isPublicId(publicId)) return null;
   const projectId = options.projectId ?? process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  if (!projectId || !/^[a-z][a-z0-9-]{4,62}$/.test(projectId)) return null;
+  if (!projectId || !/^[a-z][a-z0-9-]{4,62}$/.test(projectId))
+    throw new PublicDocumentUnavailable('Публичный reader не настроен.');
   let origin = 'https://firestore.googleapis.com';
   const emulator =
     options.emulatorOrigin ??
@@ -492,12 +493,14 @@ export async function readPublicDocument(
 
 export function publicDocumentMetadata(document: PublicDocument) {
   const label = document.kind === 'resume' ? 'Резюме' : 'Портфолио';
+  const normalize = (value: string) => value.trim().replace(/\s+/g, ' ');
+  const title = normalize(document.title);
   return {
-    title: `${document.content.profile.name || document.title} — ${label} | StackCard`,
+    title: `${normalize(document.content.profile.name) || title} — ${label} | StackCard`,
     description: (
-      document.content.profile.headline ||
-      document.content.profile.bio ||
-      document.title
+      normalize(document.content.profile.headline) ||
+      normalize(document.content.profile.bio) ||
+      title
     ).slice(0, 200),
   };
 }

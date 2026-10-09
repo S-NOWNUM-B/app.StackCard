@@ -14,6 +14,9 @@
   online-first: server read, CAS transaction по captured basis, ошибки сохраняют
   ввод. Unknown fields/schema, malformed data и foreign media блокируют запись.
   Draft save не публикует. Нельзя добавлять второй private schema или SSR private data.
+  Save фиксирует basis/content/notes/mutation ID до transaction; unknown retry
+  сначала подтверждает ту же операцию. Новые правки во время Save/после ошибки
+  остаются в buffer и требуют отдельного Save; ACK не заменяет поздний ввод.
 - `src/lib/publication.ts` вызывает trusted Firebase HTTP API с ID token;
   operation ID, inventory version/generation и saved mutation защищают retry/races.
   UID-scoped metadata receipts сохраняются в `localStorage` с readback и защитой
@@ -23,6 +26,9 @@
 - `/d/[publicId]` читает только anonymous `publicDocuments` snapshot; отсутствие
   и withdrawn отображаются без private lookup. Public parser allowlist и безопасные
   media/contact URL обязательны; никогда не вставлять raw HTML.
+  Metadata и body используют один request-scoped snapshot без постоянного cache.
+  OG/Twitter фото проходит public media guard; config/service failure имеет
+  unavailable/noindex state, missing/withdrawn — 404/noindex.
 - Auth route guard служит UX; права обеспечивают Rules и trusted backend. Смена UID
   очищает private state, несохранённый ввод требует подтверждения перед discard.
 - Проверять typecheck, meaningful contract tests и build из `apps/web`.

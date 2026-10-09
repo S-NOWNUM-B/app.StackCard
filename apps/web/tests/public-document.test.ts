@@ -268,7 +268,7 @@ test('reader does only one anonymous no-store GET of publicDocuments', async () 
   assert.equal(calls[0].init?.redirect, 'error');
   assert.equal(calls[0].init?.headers, undefined);
 });
-test('malformed IDs/config do not request any document', async () => {
+test('malformed IDs/config do not request any document and config failure is unavailable', async () => {
   let requests = 0;
   const fetcher: typeof fetch = async () => {
     requests++;
@@ -278,9 +278,9 @@ test('malformed IDs/config do not request any document', async () => {
     await readPublicDocument('../accounts', { projectId: 'demo-stackcard', fetch: fetcher }),
     null,
   );
-  assert.equal(
-    await readPublicDocument(publicId, { projectId: '../../accounts', fetch: fetcher }),
-    null,
+  await assert.rejects(
+    () => readPublicDocument(publicId, { projectId: '../../accounts', fetch: fetcher }),
+    PublicDocumentUnavailable,
   );
   assert.equal(requests, 0);
 });

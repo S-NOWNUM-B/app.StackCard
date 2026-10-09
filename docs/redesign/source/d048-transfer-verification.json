@@ -407,5 +407,149 @@
     "Emulator service and local browser verification do not prove production deployment",
     "Android verification does not prove iOS readiness"
   ],
-  "canonicalStatus": "docs/product/product-spec.md#проверки-d048--2026-10-08"
+  "canonicalStatus": "docs/product/product-spec.md#проверки-d048--2026-10-08",
+  "followUps": [
+    {
+      "evidenceId": "phase13-continuation-2026-10-09",
+      "recordedAtUtc": "2026-10-09T18:29:25Z",
+      "status": "verified_local_phase13_subset",
+      "canonicalStatus": "docs/product/product-spec.md#проверки-продолжения-phase-13--2026-10-09",
+      "scope": {
+        "phaseCompletionAsserted": false,
+        "fullFigmaAcceptanceAsserted": false,
+        "productionDataChanged": false,
+        "commitPushDeployPerformed": false
+      },
+      "changes": [
+        "Web Save captures immutable basis/content/notes/mutation and acknowledges the same operation on unknown retry",
+        "Save ACK preserves later working input; next Save writes that input separately",
+        "Published metadata has one brand title, safe selected OG/Twitter photo and request-scoped snapshot",
+        "Missing configuration returns unavailable/retry instead of pretending the document is missing",
+        "Actual TypeScript and Dart codecs tested in both directions without a new fixture or runtime schema"
+      ],
+      "environment": {
+        "firebaseProject": "demo-stackcard-test",
+        "browser": "Installed Google Chrome via Playwright, isolated temporary profile",
+        "web": "Local Next.js dev server",
+        "functionsRuntime": "Emulator used host Node24 instead of manifest Node22; production Node22 not verified",
+        "temporaryTaskProcessesStopped": true
+      },
+      "checks": {
+        "web": {
+          "command": "npm run check",
+          "cwd": "apps/web",
+          "status": "PASS",
+          "tests": 74,
+          "failed": 0,
+          "typecheck": "PASS",
+          "productionBuild": "PASS",
+          "routes": 11,
+          "formatCheck": "PASS"
+        },
+        "crossClient": {
+          "command": "flutter test --no-pub --reporter expanded test/web_workspace_contract_test.dart",
+          "cwd": "apps/mobile",
+          "status": "PASS",
+          "tests": 1,
+          "direction": "web helpers -> actual Dart cloud decode/reencode -> scoped Dart edit -> web parser",
+          "prerequisites": "Node and installed apps/web dependencies",
+          "focusedAnalyzeIssues": 0,
+          "fullMobileSuiteRepeated": false
+        },
+        "browser": {
+          "status": "PASS",
+          "scriptLocalPath": "/private/tmp/stackcard-phase13-save-smoke.mjs",
+          "scenarios": [
+            "Held successful Firestore transaction response preserves newer typed role, then next Save writes it",
+            "Committed Save with injected error response replays identical mutation, preserves later input and then saves it separately",
+            "Sibling document, Library projects and private notes retained",
+            "Dark wide1440 editor/preview visible together; narrow390 modes switch and no horizontal overflow",
+            "Real demo trusted Publish opens anonymous page200 with single-brand title, Twitter summary and no-photo without OG image",
+            "Private notes/baseSnapshot absent from public HTML",
+            "Real Unpublish and missing ID return404/noindex"
+          ],
+          "uncaughtPageErrors": 0,
+          "comprehensiveConsoleCleanAsserted": false,
+          "screenshotsVisuallyInspected": true
+        },
+        "publicMetadata": {
+          "newContractTests": 11,
+          "covered": [
+            "Exact HTTPS canonical origin",
+            "Safe selected published avatar version; no-photo/private/foreign media",
+            "Published-only metadata and no raw HTML",
+            "Missing/withdrawn404/noindex and service/config retry/noindex"
+          ],
+          "actualHttpsCrawlerImageVerified": false,
+          "requestScopedCacheRuntimeReadCountVerified": false
+        },
+        "projectContext": "OK"
+      },
+      "artifacts": [
+        {
+          "name": "stackcard-phase13-web-check.log",
+          "localPath": "/private/tmp/stackcard-phase13-web-check.log",
+          "bytes": 8230,
+          "sha256": "d5d372d5de691322846d3b6cbfde420db46881f568ae8e8cf4ff92f28972f3fb",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-format.log",
+          "localPath": "/private/tmp/stackcard-phase13-format.log",
+          "bytes": 192,
+          "sha256": "634f978403fd93bbb7cf1b9fa13fa42a95a10ef3c6a76184fa805379f35e4eb8",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-cross-client.log",
+          "localPath": "/private/tmp/stackcard-phase13-cross-client.log",
+          "bytes": 234,
+          "sha256": "672a19e33f4f804c7d0bf32fe8f5542ac37b8c3c16b41a956c0c419cd7d4f716",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-mobile-analyze.log",
+          "localPath": "/private/tmp/stackcard-phase13-mobile-analyze.log",
+          "bytes": 96,
+          "sha256": "3857f19fac5f7dd16d56c087a746fc0d6842d9f304c59807bb389ec2a97d8c06",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-save-smoke.mjs",
+          "localPath": "/private/tmp/stackcard-phase13-save-smoke.mjs",
+          "bytes": 9367,
+          "sha256": "fa877abfa47044dd32cff3debdf7ba47808a4133815c0f74b4c5c4475179db57",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-save-smoke.log",
+          "localPath": "/private/tmp/stackcard-phase13-save-smoke.log",
+          "bytes": 2278,
+          "sha256": "f824323418813fd3c1d2ae64e355bd0bad97f0ff729ef3e9bcb1722aba4e6f81",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-editor-wide.png",
+          "localPath": "/private/tmp/stackcard-phase13-editor-wide.png",
+          "bytes": 86765,
+          "sha256": "a31a0b89f825f49d6e57512d0e1cacd10fc42f42d311e7cc708e69bd62b0299f",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-editor-narrow.png",
+          "localPath": "/private/tmp/stackcard-phase13-editor-narrow.png",
+          "bytes": 52251,
+          "sha256": "d8f3ead9b4b71d1ee630a7564791d03a66e7ba4946cbd9bd9fd751693ccb500c",
+          "requiredToRunChecks": false
+        }
+      ],
+      "limitations": [
+        "Focused counts overlap the web suite; do not sum them",
+        "No native device run, full mobile suite, live mobile-web sync or full Figma/accessibility matrix in this continuation",
+        "Local HTTP intentionally omits canonical; actual HTTPS canonical/photo crawler remains open",
+        "Dev404 client transition emitted a Next/React script warning; no raw script tag exists in app source (next/script is used)",
+        "Logs/images are optional local artifacts; source/build availability does not assert final user acceptance"
+      ]
+    }
+  ]
 }

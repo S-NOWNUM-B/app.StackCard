@@ -37,6 +37,7 @@ import {
   resolveDocument,
   safeHttpUrl,
   uid,
+  validateWorkspace,
   type DraftEnvelope,
   type PortfolioDocument,
   type WorkspaceContent,
@@ -119,6 +120,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     [loading, setLoading] = useState(true),
     [blocked, setBlocked] = useState(false),
     [busy, setBusy] = useState(false),
+    [saving, setSaving] = useState(false),
     [error, setError] = useState(''),
     [message, setMessage] = useState(''),
     [view, setView] = useState<View>(initialView as View),
@@ -133,9 +135,12 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   const reviewDialog = useRef<HTMLElement | null>(null);
   const saveAttempt = useRef<{
     mutationId: string;
+    basis: DraftEnvelope | null;
     content: WorkspaceContent;
     notes: string;
   } | null>(null);
+  const input = useRef({ content, notes });
+  input.current = { content, notes };
   const activeUid = useRef(user.uid);
   const dirty = !equal(content, basis?.content ?? emptyContent()) || notes !== (basis?.notes ?? '');
   const dirtyRef = useRef(dirty);
@@ -291,35 +296,56 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   async function save() {
     if (blocked || busy || !owned()) return;
     setBusy(true);
+    setSaving(true);
     setError('');
     setMessage('');
     try {
       let attempt = saveAttempt.current;
-      if (!attempt || !equal(attempt.content, content) || attempt.notes !== notes) {
+      // После неизвестного ответа сначала подтверждаем прежнюю операцию,
+      // даже если пользователь уже продолжил редактирование.
+      if (!attempt) {
         attempt = {
           mutationId: `web-${uid()}`,
-          content: clone(content),
+          basis,
+          content: clone(validateWorkspace(content, user.uid)),
           notes,
         };
         saveAttempt.current = attempt;
       }
       const saved = await saveDraft(
         user,
-        basis,
+        attempt.basis,
         attempt.content,
         attempt.notes,
         attempt.mutationId,
       );
       if (!owned()) return;
+      const hasNewerInput =
+        !equal(input.current.content, attempt.content) || input.current.notes !== attempt.notes;
       setBasis(saved);
-      setContent(saved.content ?? emptyContent());
-      setNotes(saved.notes);
+      setContent((current) =>
+        equal(current, attempt.content) ? (saved.content ?? emptyContent()) : current,
+      );
+      setNotes((current) => (current === attempt.notes ? saved.notes : current));
       saveAttempt.current = null;
-      setMessage('Сохранено и подтверждено сервером. Публикация не изменилась.');
+      setMessage(
+        hasNewerInput
+          ? 'Сохранение подтверждено. Более поздние правки остались в форме; сохраните их отдельно.'
+          : 'Сохранено и подтверждено сервером. Публикация не изменилась.',
+      );
     } catch (e) {
-      if (owned()) setError(errorMessage(e));
+      if (owned())
+        setError(
+          errorMessage(e) +
+            (saveAttempt.current
+              ? ' Повтор Save подтвердит предыдущую версию; более поздние правки останутся в форме.'
+              : ''),
+        );
     } finally {
-      if (owned()) setBusy(false);
+      if (owned()) {
+        setBusy(false);
+        setSaving(false);
+      }
     }
   }
   function storePending(operation: PendingOperation | null, completedOperationId?: string) {
@@ -448,6 +474,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     });
   }
   function create(kind: PortfolioDocument['kind']) {
+    if (busy) return;
     try {
       const document = createDocument(
         content,
@@ -461,6 +488,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     }
   }
   function duplicate(document: PortfolioDocument) {
+    if (busy) return;
     if (content.documents.length >= 20) {
       setError('Можно сохранить не больше 20 документов.');
       return;
@@ -600,7 +628,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                       </Button>
                     </div>
                   )}
-                  <fieldset disabled={busy} className="workspace-fieldset">
+                  <fieldset disabled={busy && !saving} className="workspace-fieldset">
                     {view === 'home' && (
                       <section className="stack">
                         <h2>Общая профессиональная база</h2>
@@ -681,7 +709,11 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                                 >
                                   Редактировать
                                 </Button>
-                                <Button variant="quiet" onClick={() => duplicate(d)}>
+                                <Button
+                                  variant="quiet"
+                                  disabled={busy}
+                                  onClick={() => duplicate(d)}
+                                >
                                   Создать копию
                                 </Button>
                                 {p?.state === 'published' && p.url && (
@@ -1036,7 +1068,11 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                                   публикаций.
                                 </small>
                               )}
-                              <Button variant="quiet" onClick={() => duplicate(activeDocument)}>
+                              <Button
+                                variant="quiet"
+                                disabled={busy}
+                                onClick={() => duplicate(activeDocument)}
+                              >
                                 Создать копию
                               </Button>
                               <Button
@@ -1110,8 +1146,11 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
           >
             Отмена / перезагрузить
           </Button>
-          <Button disabled={busy || loading || blocked || !dirty} onClick={() => void save()}>
-            Сохранить
+          <Button
+            disabled={busy || loading || blocked || (!dirty && !saveAttempt.current)}
+            onClick={() => void save()}
+          >
+            {saving ? 'Сохраняем…' : 'Сохранить'}
           </Button>
           <Button variant="quiet" disabled={busy} onClick={() => void exit()}>
             Выйти
