@@ -550,6 +550,139 @@
         "Dev404 client transition emitted a Next/React script warning; no raw script tag exists in app source (next/script is used)",
         "Logs/images are optional local artifacts; source/build availability does not assert final user acceptance"
       ]
+    },
+    {
+      "evidenceId": "phase13-base-review-uid-2026-10-09",
+      "recordedAtUtc": "2026-10-09T18:48:02.767070+00:00",
+      "scope": "Captured web base review, atomic avatar choice and UID guards around publication token/recovery",
+      "phaseCompletionAsserted": false,
+      "environment": {
+        "platform": "macOS",
+        "shell": "zsh",
+        "firebaseProject": "demo-stackcard-test",
+        "browser": "Installed Google Chrome via Playwright, isolated temporary profile",
+        "functionsRuntime": "Emulator used host Node24 instead of manifest Node22; production Node22 not verified",
+        "temporaryTaskProcessesStopped": true,
+        "productionDataChanged": false
+      },
+      "checks": {
+        "web": {
+          "cwd": "apps/web",
+          "commands": [
+            "npm test",
+            "npm run typecheck",
+            "npm run build",
+            "npm run format:check"
+          ],
+          "status": "PASS",
+          "tests": 89,
+          "failed": 0,
+          "newReviewRegressionTests": 15,
+          "routes": 11,
+          "typecheck": "PASS",
+          "productionBuild": "PASS",
+          "formatCheck": "PASS",
+          "redBeforeFix": "Three avatar/captured-value regression cases failed before model fix"
+        },
+        "crossClient": {
+          "cwd": "apps/mobile",
+          "command": "flutter test --no-pub --reporter expanded test/web_workspace_contract_test.dart",
+          "status": "PASS",
+          "tests": 1,
+          "fullMobileSuiteRepeated": false
+        },
+        "browser": {
+          "status": "PASS",
+          "scriptLocalPath": "/private/tmp/stackcard-phase13-review-uid-smoke.mjs",
+          "scenarios": [
+            "Local override not preselected; Escape/Cancel preserves input and restores focus; footer inert",
+            "Selected Apply changes buffer only; separate Save preserves sibling, Library and notes",
+            "Held successful Storage upload ACK leaves review rows unchanged; stale Apply rejected and later photo/input retained",
+            "Second tab signs out during held getIdToken response; no mutation POST, same UID publication receipt retained",
+            "Review dialog1440px and390px inspected; narrow scrollWidth390"
+          ],
+          "uncaughtPageErrors": 0,
+          "comprehensiveConsoleCleanAsserted": false,
+          "screenshotsVisuallyInspected": true
+        },
+        "documentation": {
+          "updatedMarkdownFiles": 4,
+          "linksAndFormat": "PASS",
+          "projectContext": "OK",
+          "gitDiffCheck": "PASS"
+        }
+      },
+      "artifacts": [
+        {
+          "name": "stackcard-phase13-review-tests.log",
+          "localPath": "/private/tmp/stackcard-phase13-review-tests.log",
+          "bytes": 8655,
+          "sha256": "c229687190966c817f1be6f3a9ae453b46fb54b8a16dc5eec88b5491e2f2a069",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-review-typecheck.log",
+          "localPath": "/private/tmp/stackcard-phase13-review-typecheck.log",
+          "bytes": 50,
+          "sha256": "734f27b98bc0fda815d2f631742265ecb0c25440b04490b9dfb267b3edb0511c",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-review-build.log",
+          "localPath": "/private/tmp/stackcard-phase13-review-build.log",
+          "bytes": 976,
+          "sha256": "ee287f19c3156cdb73f7afa405a36458f2d3e8d2ec3b5efc5e0867d86ce02f8b",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-review-format.log",
+          "localPath": "/private/tmp/stackcard-phase13-review-format.log",
+          "bytes": 192,
+          "sha256": "634f978403fd93bbb7cf1b9fa13fa42a95a10ef3c6a76184fa805379f35e4eb8",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-review-cross-client.log",
+          "localPath": "/private/tmp/stackcard-phase13-review-cross-client.log",
+          "bytes": 234,
+          "sha256": "672a19e33f4f804c7d0bf32fe8f5542ac37b8c3c16b41a956c0c419cd7d4f716",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-review-uid-smoke.mjs",
+          "localPath": "/private/tmp/stackcard-phase13-review-uid-smoke.mjs",
+          "bytes": 10006,
+          "sha256": "56c2d3f602462b019809f027e4b4ecbcfa8182004f3976d864860427a2e61427",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-review-uid-smoke.log",
+          "localPath": "/private/tmp/stackcard-phase13-review-uid-smoke.log",
+          "bytes": 304,
+          "sha256": "9c8092179ce1a877f84370a51e9d13cbcedcb2fe16165434bb7d68ccea60a23a",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-review-wide.png",
+          "localPath": "/private/tmp/stackcard-phase13-review-wide.png",
+          "bytes": 90799,
+          "sha256": "7f78a88c408f472bf5cb57cac6b492e618b3671082a0cbcbbb5fc66d7a4b9939",
+          "requiredToRunChecks": false
+        },
+        {
+          "name": "stackcard-phase13-review-narrow.png",
+          "localPath": "/private/tmp/stackcard-phase13-review-narrow.png",
+          "bytes": 48004,
+          "sha256": "40326c62855d47ab0eaa9834d1ffe746a7ddf035815dc720fe0be492a1da82a9",
+          "requiredToRunChecks": false
+        }
+      ],
+      "limitations": [
+        "Focused counts overlap web suite; do not sum them",
+        "No native device run, full mobile suite, live mobile-web SDK flow, iOS or full Figma/accessibility matrix",
+        "Apply uses captured loaded server basis; concurrent remote writes are rejected by CAS during Save, not continuously polled by review",
+        "No commit, push or production deploy performed in this continuation"
+      ]
     }
   ]
 }

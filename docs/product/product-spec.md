@@ -47,7 +47,10 @@ R7 awaiting_review, DESIGN_READY/REDESIGN_DONE и пользовательска
 Media/Location/mobile/web/publication. Продолжена проверка уже разрешённого scope:
 web Save сохраняет поздний ввод и повторяет прежнюю операцию после потерянного
 ACK; public metadata и unavailable states исправлены. Двусторонний cloud6
-контракт web→Dart→web подтверждён. Новые результаты — [ниже](#проверки-продолжения-phase-13--2026-10-09);
+контракт web→Dart→web подтверждён. Последующее продолжение исправляет captured
+base review/атомарный выбор фото и выход из аккаунта во время получения token;
+[отдельные результаты](#проверки-base-review-и-uid--2026-10-09) не заменяют live приёмку.
+Результаты предыдущего продолжения — [ниже](#проверки-продолжения-phase-13--2026-10-09);
 вся Phase 13 и native/live/Figma приёмка остаются открытыми.
 
 **2026-10-07: последовательная разработка по фазам поставлена на паузу**
@@ -113,6 +116,34 @@ Functions/web ещё не подтверждены. Inbox/FCM, QR/Developer Card
 Наличие кода не подтверждает проверку нового сценария. Итоговые проверки этой
 работы фиксируются здесь по фактам; прежние 950/1068 PASS относятся к своим
 историческим версиям и не доказывают новую document модель.
+
+### Проверки base review и UID — 2026-10-09
+
+Следующий пакет Phase13b использует существующие mobile review/CAS/UID contracts.
+Web сравнивает captured saved base/document/buffer; avatar URL/path — одна замена.
+Apply не сохраняет и не публикует, Cancel оставляет прежние данные. Изменение
+buffer, выбранного saved document, base или UID отклоняет прежний выбор.
+Изменение Library/соседнего документа не отменяет сравнение. Перед HTTP POST
+проверяется UID после ожидания ID token; recovery/inventory callbacks проверяют
+активную owner session перед следующим действием.
+
+| Проверка | Фактический результат |
+| --- | --- |
+| Web static/contracts | `npm test` — **89/89 PASS**, в том числе 15 новых review regression cases; `npm run typecheck`, `npm run format:check`, `npm run build` — **PASS**. До fix три focused avatar/captured-value cases падали. Production build11 routes. |
+| Browser review | Actual Chrome + demo Auth/Firestore/Storage/Functions: local override не выбран автоматически; Escape/Cancel сохраняют форму и возвращают focus; footer inert. Apply меняет buffer, отдельный Save пишет выбранный документ, sibling/Library/notes остаются прежними. |
+| Позднее фото | Удержан ACK реально загруженного Storage объекта. Открытый dialog сохраняет captured строки; после ACK фото остаётся в buffer, устаревший Apply отклоняется. Серверный документ не изменён. |
+| Browser UID | Второй tab завершает вход, пока первый ждёт ответ `getIdToken(true)`. Mutation POST не отправлен, прежняя UID-scoped publication receipt сохранена. Uncaught page errors — **0**; comprehensive console audit не выполнялся. |
+| Двусторонний contract | Actual web→Dart→web focused Flutter test — **1/1 PASS** после model changes. Полный mobile suite/native SDK/live обмен не повторялся. |
+| Layout | Dialog1440px/390px просмотрен; narrow scrollWidth390, кнопки доступны, background actions блокируются. Это локальные screenshots, новый Figma/a11y matrix не выполнен. |
+
+Browser script/log — `/private/tmp/stackcard-phase13-review-uid-smoke.mjs` и `.log`;
+screenshots — `/private/tmp/stackcard-phase13-review-wide.png` и `-narrow.png`.
+Локальные artifacts optional; checks используют disposable demo accounts.
+Functions emulator использовал host Node24 вместо manifest Node22. Task servers
+остановлены; production данные и deployment не затронуты. Результаты сохранены
+отдельным follow-up в [verification report](../redesign/source/d048-transfer-verification.json).
+Phase13/live/mobile-device/iOS/Figma/user acceptance остаются открытыми;
+commit/push/deploy в этом продолжении не выполнялись.
 
 ### Проверки продолжения Phase 13 — 2026-10-09
 
@@ -1804,6 +1835,8 @@ trusted validation → public reader → доступные Publish/Copy/Open д
   независимыми документами, общей Library, privacy и scoped правкой.
 - [x] Проверить newer input during Save и retry после потерянного ACK в actual
   browser + Firestore emulator; более поздние правки требуют отдельного Save.
+- [x] Проверить captured web base review, атомарный avatar и stale buffer через
+  contract tests/actual Storage ACK; проверить выход во время token refresh до POST.
 - [ ] Проверить live mobile↔web SDK обмен, UID transitions,
   повреждённые/неизвестные данные и последствия whole-aggregate LWW на устройствах.
 

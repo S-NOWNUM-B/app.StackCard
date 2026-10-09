@@ -27,8 +27,8 @@ import {
   writePublicationReceipt,
 } from '@/lib/publication-contract';
 import {
-  acceptBaseChanges,
-  baseChanges,
+  applyDocumentBaseReview,
+  createDocumentBaseReview,
   clone,
   createDocument,
   duplicateDocument,
@@ -42,6 +42,7 @@ import {
   type PortfolioDocument,
   type WorkspaceContent,
   type DocumentContent,
+  type DocumentBaseReview,
 } from '@/lib/model';
 type View =
   'home' | 'resumes' | 'projects' | 'portfolios' | 'base' | 'settings' | `document/${string}`;
@@ -66,6 +67,8 @@ function reviewText(value: unknown): string {
     kind: 'Тип контакта',
     publishAllowed: 'Разрешено публиковать',
     visible: 'Показывать',
+    avatarUrl: 'Ссылка на фото',
+    avatarPath: 'Приватное фото',
   };
   const kinds: Record<string, string> = {
     email: 'Почта',
@@ -130,7 +133,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     [pending, setPending] = useState<PendingOperation | null>(null),
     [receiptError, setReceiptError] = useState(''),
     [search, setSearch] = useState(''),
-    [review, setReview] = useState(false),
+    [review, setReview] = useState<DocumentBaseReview | null>(null),
     [selected, setSelected] = useState<Set<string>>(new Set());
   const reviewDialog = useRef<HTMLElement | null>(null);
   const saveAttempt = useRef<{
@@ -154,8 +157,10 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     : undefined;
   const publishReady =
     !dirty && !!basis && !!publications && !pending && !receiptError && !!activeDocument;
-  const owned = () => firebaseServices().auth.currentUser?.uid === activeUid.current;
+  const owned = () =>
+    activeUid.current === user.uid && firebaseServices().auth.currentUser?.uid === user.uid;
   async function refreshInventory() {
+    if (!owned()) return;
     try {
       const result = await inventory(user);
       if (!owned()) return;
@@ -166,6 +171,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     }
   }
   async function reload() {
+    if (!owned()) return;
     setLoading(true);
     setError('');
     setBlocked(false);
@@ -242,7 +248,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     function key(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         event.preventDefault();
-        setReview(false);
+        setReview(null);
       }
       if (event.key === 'Tab') {
         const nodes = focusable(),
@@ -264,7 +270,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     };
   }, [review]);
   function navigate(next: View, preserve = false) {
-    if (busy) return;
+    if (busy || review) return;
     if (
       !preserve &&
       dirty &&
@@ -278,7 +284,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     }
     setView(next);
     setMode('edit');
-    setReview(false);
+    setReview(null);
     window.history.replaceState(null, '', `/workspace#${encodeURIComponent(next)}`);
   }
   function update(next: WorkspaceContent) {
@@ -293,8 +299,42 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       ),
     });
   }
+  function openBaseReview() {
+    if (busy || loading || blocked || !owned() || !activeDocument) return;
+    if (!basis?.content) {
+      setError('Сначала сохраните общую базу, затем откройте обновление документа.');
+      return;
+    }
+    const captured = createDocumentBaseReview(user.uid, basis.content, activeDocument);
+    setSelected(new Set(captured.changes.filter((c) => !c.localOverride).map((c) => c.id)));
+    setReview(captured);
+  }
+  function applyBaseReview() {
+    if (!review || !owned()) return;
+    try {
+      if (!basis?.content || !activeDocument)
+        throw new Error('Данные изменились. Откройте обновление из базы заново.');
+      updateDocument(
+        applyDocumentBaseReview(review, user.uid, basis.content, activeDocument, selected),
+      );
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+    setReview(null);
+  }
+  function reviewValue(id: string, value: unknown) {
+    const path =
+      id === 'profile.avatarPath' && value && typeof value === 'object'
+        ? (value as { avatarPath?: unknown }).avatarPath
+        : null;
+    return typeof path === 'string' && path ? (
+      <PrivateImage user={user} path={path} />
+    ) : (
+      <pre>{reviewText(value)}</pre>
+    );
+  }
   async function save() {
-    if (blocked || busy || !owned()) return;
+    if (blocked || busy || review || !owned()) return;
     setBusy(true);
     setSaving(true);
     setError('');
@@ -349,6 +389,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     }
   }
   function storePending(operation: PendingOperation | null, completedOperationId?: string) {
+    if (!owned()) return;
     try {
       if (operation) {
         writePublicationReceipt(localStorage, operationKey, operation);
@@ -361,6 +402,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     }
   }
   async function completeOperation(result: OperationResult, operation: PendingOperation) {
+    if (!owned()) return;
     if (result.status !== 'completed') {
       setMessage(
         result.status === 'pending'
@@ -374,6 +416,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     storePending(null, operation.operationId);
     setMessage('Сервер подтвердил операцию.');
     await refreshInventory();
+    if (!owned()) return;
     if (operation.action === 'deleteDocument') {
       if (dirtyRef.current) {
         setContent((current) => ({
@@ -402,6 +445,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
           action: 'status',
           operationId: operation.operationId,
         });
+        if (!owned()) return;
         if (status.status === 'completed' || status.status === 'pending') {
           if (status.action !== operation.action)
             throw new Error('Сервис подтвердил другую операцию.');
@@ -417,6 +461,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         if (isDefinitivePublicationError(e)) {
           storePending(null, operation.operationId);
           await refreshInventory();
+          if (!owned()) return;
           setError(
             errorMessage(e) +
               ' Операция отклонена; введённые данные сохранены. Сверьте серверную версию перед повтором.',
@@ -498,7 +543,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     navigate(`document/${copy.id}`, true);
   }
   async function exit() {
-    if (busy) return;
+    if (busy || review || !owned()) return;
     if (dirty && !window.confirm('Отбросить несохранённые изменения и выйти?')) return;
     try {
       await signOut(firebaseServices().auth);
@@ -535,14 +580,14 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
             variant="quiet"
             aria-label="Настройки"
             aria-current={view === 'settings' ? 'page' : undefined}
-            disabled={busy || review}
+            disabled={busy || !!review}
             onClick={() => navigate('settings')}
           >
             <Icon name="settings" />
           </Button>
         }
       />
-      <div className="workspace-body" inert={review}>
+      <div className="workspace-body" inert={!!review}>
         <nav className="workspace-nav" aria-label="Рабочая область">
           {(
             [
@@ -986,16 +1031,8 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                                 />
                                 <Button
                                   variant="secondary"
-                                  onClick={() => {
-                                    setReview(true);
-                                    setSelected(
-                                      new Set(
-                                        baseChanges(content, activeDocument)
-                                          .filter((c) => !c.localOverride)
-                                          .map((c) => c.id),
-                                      ),
-                                    );
-                                  }}
+                                  disabled={busy}
+                                  onClick={openBaseReview}
                                 >
                                   Обновить из базы
                                 </Button>
@@ -1124,7 +1161,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
           )}
         </main>
       </div>
-      <footer className="workspace-footer">
+      <footer className="workspace-footer" inert={!!review}>
         <small className="muted">
           {dirty
             ? 'Есть несохранённые изменения'
@@ -1137,7 +1174,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         <div className="row">
           <Button
             variant="secondary"
-            disabled={busy || loading}
+            disabled={busy || loading || !!review}
             onClick={() => {
               if (dirty && !window.confirm('Отбросить изменения и загрузить серверную версию?'))
                 return;
@@ -1147,17 +1184,17 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
             Отмена / перезагрузить
           </Button>
           <Button
-            disabled={busy || loading || blocked || (!dirty && !saveAttempt.current)}
+            disabled={busy || loading || blocked || !!review || (!dirty && !saveAttempt.current)}
             onClick={() => void save()}
           >
             {saving ? 'Сохраняем…' : 'Сохранить'}
           </Button>
-          <Button variant="quiet" disabled={busy} onClick={() => void exit()}>
+          <Button variant="quiet" disabled={busy || !!review} onClick={() => void exit()}>
             Выйти
           </Button>
         </div>
       </footer>
-      {review && activeDocument && (
+      {review && (
         <div className="dialog-backdrop">
           <section
             ref={reviewDialog}
@@ -1167,8 +1204,10 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
             aria-labelledby="review-title"
           >
             <h2 id="review-title">Обновление из общей базы</h2>
-            <p>Выберите изменения. Локальные варианты остаются, если их не выбрать.</p>
-            {baseChanges(content, activeDocument).map((c) => (
+            <p>
+              Выберите изменения сохранённой базы. После применения сохраните документ отдельно.
+            </p>
+            {review.changes.map((c) => (
               <div key={c.id} className="section stack">
                 <label className="checkbox">
                   <input
@@ -1186,38 +1225,21 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                 <div className="review-comparison">
                   <div>
                     <small className="muted">В документе</small>
-                    {c.id === 'profile.avatarPath' && typeof c.current === 'string' && c.current ? (
-                      <PrivateImage user={user} path={c.current} />
-                    ) : (
-                      <pre>{reviewText(c.current)}</pre>
-                    )}
+                    {reviewValue(c.id, c.current)}
                   </div>
                   <div>
                     <small className="muted">В общей базе</small>
-                    {c.id === 'profile.avatarPath' &&
-                    typeof c.incoming === 'string' &&
-                    c.incoming ? (
-                      <PrivateImage user={user} path={c.incoming} />
-                    ) : (
-                      <pre>{reviewText(c.incoming)}</pre>
-                    )}
+                    {reviewValue(c.id, c.incoming)}
                   </div>
                 </div>
               </div>
             ))}
-            {!baseChanges(content, activeDocument).length && <p>Новых изменений базы нет.</p>}
+            {!review.changes.length && <p>Новых изменений базы нет.</p>}
             <div className="row">
-              <Button variant="secondary" onClick={() => setReview(false)}>
+              <Button variant="secondary" onClick={() => setReview(null)}>
                 Отмена
               </Button>
-              <Button
-                onClick={() => {
-                  updateDocument(acceptBaseChanges(content, activeDocument, selected));
-                  setReview(false);
-                }}
-              >
-                Применить выбранное
-              </Button>
+              <Button onClick={applyBaseReview}>Применить выбранное</Button>
             </div>
           </section>
         </div>

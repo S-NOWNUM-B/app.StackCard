@@ -70,6 +70,7 @@ export async function publicationRequest<T>(user: User, body: Record<string, unk
   const endpoint = endpointUrl();
   if (firebaseServices().auth.currentUser?.uid !== user.uid) throw new Error('Аккаунт изменился.');
   const token = await user.getIdToken(true);
+  if (firebaseServices().auth.currentUser?.uid !== user.uid) throw new Error('Аккаунт изменился.');
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
