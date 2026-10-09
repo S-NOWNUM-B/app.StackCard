@@ -4,9 +4,14 @@ import { readFileSync } from 'node:fs';
 import { Timestamp } from 'firebase/firestore';
 import {
   acceptBaseChanges,
+  applyDocumentBaseReview,
   assertWriteBasis,
   baseChanges,
+  baseData,
   clone,
+  ContractError,
+  createDocument,
+  createDocumentBaseReview,
   decodeDraft,
   duplicateDocument,
   resolveDocument,
@@ -16,6 +21,8 @@ import {
   validateWorkspace,
   withProjectEdits,
   type GitHubSource,
+  type PortfolioDocument,
+  type WorkspaceContent,
 } from '../src/lib/model';
 import { documentPreview } from '../src/lib/preview';
 const fixture = JSON.parse(
@@ -128,6 +135,210 @@ test('stale baseline review can remove a base item but does not affect sibling d
   const applied = acceptBaseChanges(w, d, new Set(['links.email']));
   assert.equal(applied.content.links.length, 0);
   assert.equal(w.documents[1].content.links.length, 1);
+});
+test('base review replaces external avatar and private media path as one atomic choice', () => {
+  const w = draft().content!;
+  const d = w.documents[0];
+  d.baseSnapshot!.profile.avatarUrl = 'https://example.com/old.jpg';
+  d.content.profile.avatarUrl = 'https://example.com/old.jpg';
+  w.profile.avatarPath = `accounts/owner/media/${'a'.repeat(32)}.jpg`;
+  const changes = baseChanges(baseData(w), d);
+  const avatars = changes.filter((c) => c.id.startsWith('profile.avatar'));
+  assert.deepEqual(
+    avatars.map((c) => c.id),
+    ['profile.avatarPath'],
+  );
+  assert.deepEqual(avatars[0].before, { avatarUrl: 'https://example.com/old.jpg', avatarPath: '' });
+  assert.deepEqual(avatars[0].current, avatars[0].before);
+  assert.deepEqual(avatars[0].incoming, { avatarUrl: '', avatarPath: w.profile.avatarPath });
+  assert.equal(avatars[0].localOverride, false);
+  const applied = acceptBaseChanges(baseData(w), d, new Set(['profile.avatarPath']));
+  assert.equal(applied.content.profile.avatarUrl, '');
+  assert.equal(applied.content.profile.avatarPath, w.profile.avatarPath);
+  assert.equal(d.content.profile.avatarUrl, 'https://example.com/old.jpg');
+});
+test('avatar local override is detected when only one member of the pair was edited', () => {
+  for (const field of ['avatarUrl', 'avatarPath'] as const) {
+    const w = draft().content!;
+    const d = w.documents[0];
+    w.profile.avatarPath = `accounts/owner/media/${'a'.repeat(32)}.jpg`;
+    d.content.profile[field] =
+      field === 'avatarUrl'
+        ? 'https://example.com/local.jpg'
+        : `accounts/owner/media/${'b'.repeat(32)}.jpg`;
+    const avatar = baseChanges(baseData(w), d).find((c) => c.id === 'profile.avatarPath')!;
+    assert.equal(avatar.localOverride, true, field);
+    assert.deepEqual(avatar.current, {
+      avatarUrl: d.content.profile.avatarUrl,
+      avatarPath: d.content.profile.avatarPath,
+    });
+  }
+});
+test('base change values and closures retain the compared snapshot after caller mutations', () => {
+  const w = draft().content!;
+  const d = w.documents[0];
+  w.links[0].label = 'Captured label';
+  const comparedBase = baseData(w);
+  const changes = baseChanges(comparedBase, d);
+  const link = changes.find((c) => c.id === 'links.email')!;
+  const capturedCurrent = clone(link.current);
+  const capturedDocument = clone(d);
+  comparedBase.links[0].label = 'Later base label';
+  d.content.links[0].visible = true;
+  d.baseSnapshot!.links[0].label = 'Mutated baseline';
+  assert.deepEqual(link.current, capturedCurrent);
+  assert.equal((link.before as { label: string }).label, 'Work email');
+  const applied = link.apply(capturedDocument);
+  assert.equal(applied.content.links[0].label, 'Captured label');
+  assert.equal(applied.content.links[0].visible, false);
+});
+test('captured review applies only selected changes to its buffer and never writes saved workspace', () => {
+  const saved = draft().content!;
+  saved.profile.name = 'Changed base name';
+  saved.links[0].label = 'Captured contact';
+  const buffer = clone(saved.documents[0]);
+  buffer.content.profile.name = 'Local buffer name';
+  const review = createDocumentBaseReview('owner', saved, buffer);
+  const expectedBase = baseData(saved);
+  const expectedSavedDocument = clone(saved.documents[0]);
+  const expectedBuffer = clone(buffer);
+  assert.notEqual(review.base, saved);
+  assert.notEqual(review.document, buffer);
+  assert.notEqual(review.savedDocument, saved.documents[0]);
+  saved.profile.name = 'Later base name';
+  saved.links[0].label = 'Later contact';
+  saved.documents[0].title = 'Later saved title';
+  buffer.content.profile.name = 'Later buffer name';
+  assert.deepEqual(review.base, expectedBase);
+  assert.deepEqual(review.document, expectedBuffer);
+  assert.deepEqual(review.savedDocument, expectedSavedDocument);
+  const currentSaved = {
+    ...saved,
+    ...expectedBase,
+    documents: [expectedSavedDocument, saved.documents[1]],
+  };
+  const beforeApply = clone(currentSaved);
+  const applied = applyDocumentBaseReview(
+    review,
+    'owner',
+    currentSaved,
+    expectedBuffer,
+    new Set(['links.email']),
+  );
+  assert.equal(applied.content.profile.name, 'Local buffer name');
+  assert.equal(applied.content.links[0].label, 'Captured contact');
+  assert.equal(applied.content.links[0].visible, false);
+  assert.deepEqual(applied.projects, expectedBuffer.projects);
+  assert.deepEqual(applied.content.blocks, expectedBuffer.content.blocks);
+  assert.deepEqual(applied.baseSnapshot, expectedBase);
+  assert.deepEqual(currentSaved, beforeApply);
+  assert.deepEqual(review.document, expectedBuffer);
+});
+const staleReviewCases: {
+  name: string;
+  owner?: string;
+  mutate?: (saved: WorkspaceContent, buffer: PortfolioDocument) => void;
+}[] = [
+  { name: 'owner transition', owner: 'other' },
+  {
+    name: 'saved profile update',
+    mutate: (saved) => {
+      saved.profile.bio = 'Later base bio';
+    },
+  },
+  {
+    name: 'saved stable-ID collection update',
+    mutate: (saved) => {
+      saved.links[0].url = 'mailto:later@example.com';
+    },
+  },
+  {
+    name: 'saved selected document update',
+    mutate: (saved) => {
+      saved.documents[0].title = 'Concurrent saved title';
+    },
+  },
+  {
+    name: 'saved selected document deletion',
+    mutate: (saved) => {
+      saved.documents.shift();
+    },
+  },
+  {
+    name: 'new buffer input',
+    mutate: (_, buffer) => {
+      buffer.content.profile.headline = 'New input';
+    },
+  },
+  {
+    name: 'buffer attachment update',
+    mutate: (_, buffer) => {
+      buffer.projects[0].titleOverride = 'New presentation';
+    },
+  },
+  {
+    name: 'different buffer document',
+    mutate: (_, buffer) => {
+      buffer.id = 'another-document';
+    },
+  },
+];
+for (const { name, owner, mutate } of staleReviewCases) {
+  test(`captured base review rejects ${name} without changing caller data`, () => {
+    const saved = draft().content!;
+    saved.profile.name = 'Incoming name';
+    const buffer = clone(saved.documents[0]);
+    const review = createDocumentBaseReview('owner', saved, buffer);
+    mutate?.(saved, buffer);
+    const beforeApply = clone({ saved, buffer });
+    assert.throws(
+      () =>
+        applyDocumentBaseReview(review, owner ?? 'owner', saved, buffer, new Set(['profile.name'])),
+      ContractError,
+    );
+    assert.deepEqual({ saved, buffer }, beforeApply);
+  });
+}
+test('Library and sibling changes do not invalidate a base review of the selected document', () => {
+  const saved = draft().content!;
+  saved.profile.name = 'Incoming name';
+  const buffer = clone(saved.documents[0]);
+  const review = createDocumentBaseReview('owner', saved, buffer);
+  saved.projects[0].title = 'New Library title';
+  saved.documents[1].title = 'New sibling title';
+  saved.theme = 'light';
+  const applied = applyDocumentBaseReview(
+    review,
+    'owner',
+    saved,
+    buffer,
+    new Set(['profile.name']),
+  );
+  assert.equal(applied.content.profile.name, 'Incoming name');
+  assert.equal(saved.projects[0].title, 'New Library title');
+  assert.equal(saved.documents[1].title, 'New sibling title');
+  assert.equal(saved.documents[0].content.profile.name, 'Owner');
+});
+test('declining all base changes acknowledges the captured baseline without replacing buffer content', () => {
+  const saved = draft().content!;
+  saved.profile.name = 'Incoming name';
+  const buffer = clone(saved.documents[0]);
+  const review = createDocumentBaseReview('owner', saved, buffer);
+  const applied = applyDocumentBaseReview(review, 'owner', saved, buffer, new Set());
+  assert.deepEqual(applied.content, buffer.content);
+  assert.deepEqual(applied.baseSnapshot, baseData(saved));
+});
+test('a new document review rejects a concurrent document appearing with the captured ID', () => {
+  const saved = draft().content!;
+  const buffer = createDocument(saved, 'resume', 'New Resume');
+  const review = createDocumentBaseReview('owner', saved, buffer);
+  assert.equal(review.savedDocument, undefined);
+  assert.doesNotThrow(() => applyDocumentBaseReview(review, 'owner', saved, buffer, new Set()));
+  saved.documents.push(clone(buffer));
+  assert.throws(
+    () => applyDocumentBaseReview(review, 'owner', saved, buffer, new Set()),
+    ContractError,
+  );
 });
 test('duplicate gets new identity and dates and never inherits a public metadata field', () => {
   const d = draft().content!.documents[0];

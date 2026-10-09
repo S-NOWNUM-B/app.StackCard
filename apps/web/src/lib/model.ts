@@ -748,11 +748,10 @@ export type BaseChange = {
   localOverride: boolean;
   apply: (d: PortfolioDocument) => PortfolioDocument;
 };
-export function baseChanges(
-  workspace: WorkspaceContent,
-  document: PortfolioDocument,
-): BaseChange[] {
-  const base = document.baseSnapshot;
+export function baseChanges(workspace: BaseData, document: PortfolioDocument): BaseChange[] {
+  const incomingBase = baseData(workspace);
+  const capturedDocument = clone(document);
+  const base = capturedDocument.baseSnapshot;
   const changes: BaseChange[] = [];
   const profileLabels: Record<keyof Profile, string> = {
     name: 'Имя',
@@ -764,10 +763,11 @@ export function baseChanges(
     avatarPath: 'Фотография',
     publishLocation: 'Публикация местоположения',
   };
-  for (const key of Object.keys(workspace.profile) as (keyof Profile)[]) {
-    const incoming = workspace.profile[key],
+  for (const key of Object.keys(incomingBase.profile) as (keyof Profile)[]) {
+    if (key === 'avatarUrl' || key === 'avatarPath') continue;
+    const incoming = incomingBase.profile[key],
       before = base?.profile[key],
-      current = document.content.profile[key];
+      current = capturedDocument.content.profile[key];
     if (!equal(before, incoming))
       changes.push({
         id: 'profile.' + key,
@@ -785,10 +785,30 @@ export function baseChanges(
         }),
       });
   }
+  const avatar = (profile: Profile) => ({
+    avatarUrl: profile.avatarUrl,
+    avatarPath: profile.avatarPath,
+  });
+  const incomingAvatar = avatar(incomingBase.profile);
+  const beforeAvatar = base ? avatar(base.profile) : undefined;
+  const currentAvatar = avatar(capturedDocument.content.profile);
+  if (!equal(beforeAvatar, incomingAvatar))
+    changes.push({
+      id: 'profile.avatarPath',
+      label: profileLabels.avatarPath,
+      before: beforeAvatar,
+      current: currentAvatar,
+      incoming: incomingAvatar,
+      localOverride: !base || !equal(currentAvatar, beforeAvatar),
+      apply: (d) => ({
+        ...d,
+        content: { ...d.content, profile: { ...d.content.profile, ...incomingAvatar } },
+      }),
+    });
   for (const key of ['skills', 'experience', 'education', 'links'] as const) {
-    const incomingItems = workspace[key] as { id: string }[],
+    const incomingItems = incomingBase[key] as { id: string }[],
       beforeItems = (base?.[key] ?? []) as { id: string }[],
-      currentItems = document.content[key] as { id: string }[];
+      currentItems = capturedDocument.content[key] as { id: string }[];
     for (const id of new Set([...incomingItems, ...beforeItems].map((i) => i.id))) {
       const incoming = incomingItems.find((i) => i.id === id),
         before = beforeItems.find((i) => i.id === id),
@@ -825,7 +845,7 @@ export function baseChanges(
   return changes;
 }
 export function acceptBaseChanges(
-  workspace: WorkspaceContent,
+  workspace: BaseData,
   document: PortfolioDocument,
   selected: Set<string>,
 ): PortfolioDocument {
@@ -837,4 +857,48 @@ export function acceptBaseChanges(
     baseSnapshot: baseData(workspace),
     updatedAt: new Date().toISOString(),
   };
+}
+
+export type DocumentBaseReview = {
+  ownerUid: string;
+  base: BaseData;
+  document: PortfolioDocument;
+  savedDocument: PortfolioDocument | undefined;
+  changes: BaseChange[];
+};
+export function createDocumentBaseReview(
+  ownerUid: string,
+  savedWorkspace: WorkspaceContent,
+  document: PortfolioDocument,
+): DocumentBaseReview {
+  const capturedBase = baseData(savedWorkspace);
+  const capturedDocument = clone(document);
+  return {
+    ownerUid,
+    base: capturedBase,
+    document: capturedDocument,
+    savedDocument: clone(savedWorkspace.documents.find((d) => d.id === document.id)),
+    changes: baseChanges(capturedBase, capturedDocument),
+  };
+}
+export function applyDocumentBaseReview(
+  review: DocumentBaseReview,
+  ownerUid: string,
+  savedWorkspace: WorkspaceContent,
+  currentDocument: PortfolioDocument,
+  selected: Set<string>,
+): PortfolioDocument {
+  if (
+    review.ownerUid !== ownerUid ||
+    !equal(review.base, baseData(savedWorkspace)) ||
+    !equal(
+      review.savedDocument,
+      savedWorkspace.documents.find((d) => d.id === review.document.id),
+    ) ||
+    !equal(review.document, currentDocument)
+  )
+    throw new ContractError(
+      'Аккаунт, сохранённая база или документ изменились. Откройте сравнение заново.',
+    );
+  return acceptBaseChanges(review.base, review.document, selected);
 }

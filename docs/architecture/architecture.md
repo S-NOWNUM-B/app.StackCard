@@ -756,6 +756,15 @@ Profile fields и stable-ID элементы skills/experience/education/links �
 Review меняет только buffer, Save остаётся отдельным scope действием. Cancel
 оставляет buffer и baseline прежними. При смене owner или изменении captured
 базы/документа/ввода результат отбрасывается; unsaved база не становится источником.
+Web [`createDocumentBaseReview`/`applyDocumentBaseReview`](../../apps/web/src/lib/model.ts)
+фиксируют UID, base из последней загруженной server basis, saved document и
+его текущий buffer. Строки сравнения не пересчитываются после открытия;
+avatar URL/path выбираются вместе. Поздняя загрузка фото сохраняется в buffer,
+но прежний выбор отклоняется. Фоновые Save/Cancel/exit блокируются dialog.
+Обновление Library или соседнего документа само по себе review не отменяет.
+Новая remote версия проверяется прежним CAS при Save; Apply не записывает сервер.
+Trusted web API повторно проверяет UID после ожидания ID token перед POST;
+recovery и поздний inventory response не очищают journal другой owner session.
 `resumeText` сохраняет
 старый plain text посимвольно; structured editor не выводит факты из этого текста.
 

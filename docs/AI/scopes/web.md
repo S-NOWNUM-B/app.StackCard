@@ -17,12 +17,18 @@
   Save фиксирует basis/content/notes/mutation ID до transaction; unknown retry
   сначала подтверждает ту же операцию. Новые правки во время Save/после ошибки
   остаются в buffer и требуют отдельного Save; ACK не заменяет поздний ввод.
+  Document base review захватывает UID, сохранённую basis base, saved document и
+  buffer. Apply проверяет их неизменность, фото URL/path переносит одной парой;
+  dialog показывает captured строки и блокирует фоновые Save/Cancel/exit.
+  Поздний media ACK сохраняет ввод, но делает прежний review устаревшим.
 - `src/lib/publication.ts` вызывает trusted Firebase HTTP API с ID token;
   operation ID, inventory version/generation и saved mutation защищают retry/races.
   UID-scoped metadata receipts сохраняются в `localStorage` с readback и защитой
   от другой вкладки; неизвестный результат повторяется с тем же ID. Квитанция
   доказывает действие, текущая publication metadata может уже отражать другой клиент.
   Не хранить password/token в приложении, не выводить credentials.
+  После получения ID token повторно проверять UID до отправки HTTP mutation;
+  поздние ответы не изменяют состояние/квитанцию завершённой owner session.
 - `/d/[publicId]` читает только anonymous `publicDocuments` snapshot; отсутствие
   и withdrawn отображаются без private lookup. Public parser allowlist и безопасные
   media/contact URL обязательны; никогда не вставлять raw HTML.
