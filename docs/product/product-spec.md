@@ -42,6 +42,14 @@ commit/push не запрошены. Последующий явный отве�
 и ограничения среды записываются отдельно.
 R7 awaiting_review, DESIGN_READY/REDESIGN_DONE и пользовательская приёмка открыты.
 
+**2026-10-09: продолжение незавершённого D048 / Phase 13b–13c.** Проверка текущего
+`dev` подтвердила историческую остановку после Phase 10 и позднейшие реализации
+Media/Location/mobile/web/publication. Продолжена проверка уже разрешённого scope:
+web Save сохраняет поздний ввод и повторяет прежнюю операцию после потерянного
+ACK; public metadata и unavailable states исправлены. Двусторонний cloud6
+контракт web→Dart→web подтверждён. Новые результаты — [ниже](#проверки-продолжения-phase-13--2026-10-09);
+вся Phase 13 и native/live/Figma приёмка остаются открытыми.
+
 **2026-10-07: последовательная разработка по фазам поставлена на паузу**
 по прямому поручению пользователя. Действующая работа — развитие mobile по Figma
 и концепции «общая профессиональная база → несколько резюме и портфолио»:
@@ -105,6 +113,29 @@ Functions/web ещё не подтверждены. Inbox/FCM, QR/Developer Card
 Наличие кода не подтверждает проверку нового сценария. Итоговые проверки этой
 работы фиксируются здесь по фактам; прежние 950/1068 PASS относятся к своим
 историческим версиям и не доказывают новую document модель.
+
+### Проверки продолжения Phase 13 — 2026-10-09
+
+macOS zsh; текущая implementation проверена локально, без production deploy.
+Новые результаты добавлены к [verification report](../redesign/source/d048-transfer-verification.json),
+исторические D048 результаты сохранены отдельно.
+
+| Проверка | Фактический результат |
+| --- | --- |
+| Web gate | `npm run check` — typecheck, **74/74 tests** и production build **PASS**; `npm run format:check` — **PASS**. Log `/private/tmp/stackcard-phase13-web-check.log`. |
+| Двусторонний contract | Actual web helpers → Dart `decodeCloudPortfolioDraft`/`encodeCloudPortfolioDraft` → web parser: **1/1 Flutter test PASS**, focused analyze **0 issues**. Два независимых Resume, Portfolio/attached Resume, одна Library запись, nullable/empty overrides, privacy, captured base review/baseline и точные Unicode notes/text сохранены. Scoped mobile правка меняет только один документ. |
+| Browser Save | Actual Auth/Firestore/Functions demo emulators и отдельный account. Удержанный ответ принятой transaction не заменил поздний ввод. Искусственно потерянный ACK → retry сохранил прежний mutation ID; новые правки остались в форме и записались следующим Save. Sibling/Library/notes сохранились. |
+| Browser/public UI | Dark editor1440px показывает editor/preview рядом; narrow390px переключает modes, scrollWidth390. Publish → anonymous page200: бренд в title один раз, Twitter summary, no-photo без OG image, private notes/baseline отсутствуют. Unpublish → friendly404/noindex; missing404. Uncaught page errors — **0**. Screenshots wide/narrow просмотрены; новый Figma comparison не выполнялся. |
+| Public metadata/errors | 11 новых contract tests: canonical exact HTTPS origin, выбранное фото той же public version, скрытый/чужой/private payload, no-photo, missing/withdrawn404/noindex и config/service unavailable/retry. Metadata/body читают один request-scoped snapshot; отсутствие постоянного cache сохранено. Actual HTTPS canonical/OG crawler-photo и concurrent publication runtime требуют отдельной приёмки. |
+
+Browser script/log — `/private/tmp/stackcard-phase13-save-smoke.mjs` и `.log`;
+images — `/private/tmp/stackcard-phase13-editor-wide.png` и `-narrow.png`.
+Локальные artifacts optional; test не требует production credentials. Полный
+mobile suite/native device/live sync и Figma/a11y matrix в этом продолжении не
+повторялись. Контрактный Flutter test требует Node и установленных `apps/web`
+dependencies; предусловия обновлены в CONTRIBUTING. Dev404 transition выдал
+Next/React script warning; отсутствие всех console warnings этим прогоном не заявляется.
+Phase13/R7/full R8/R9 и user acceptance не закрыты. Commit/push/deploy не выполнялись.
 
 ### Проверки D048 — 2026-10-08
 
@@ -1769,8 +1800,12 @@ trusted validation → public reader → доступные Publish/Copy/Open д
   attachment order/visible/featured, attached Resume и выборочный base review.
 - [x] Использовать совместимые versioned JSON fixtures/private schema;
   сохранять только выбранный scope, показывать dirty/saving/error/retry/conflict.
-- [ ] Проверить обмен mobile↔web, newer input during Save, UID transitions,
-  повреждённые/неизвестные данные и последствия whole-aggregate LWW.
+- [x] Проверить двусторонний cloud6 contract web→mobile→web с actual codecs,
+  независимыми документами, общей Library, privacy и scoped правкой.
+- [x] Проверить newer input during Save и retry после потерянного ACK в actual
+  browser + Firestore emulator; более поздние правки требуют отдельного Save.
+- [ ] Проверить live mobile↔web SDK обмен, UID transitions,
+  повреждённые/неизвестные данные и последствия whole-aggregate LWW на устройствах.
 
 **Проверки и приёмка**
 
@@ -1806,8 +1841,10 @@ trusted validation → public reader → доступные Publish/Copy/Open д
   duplicate начинает отдельный draft без URL исходника.
 - [x] Публичное Portfolio может ссылаться только на отдельно published Resume;
   private/unpublished/deleted Resume attachment не раскрывается посетителю.
-- [ ] Проверить metadata/SEO/OpenGraph, безопасные missing/unpublished states и
-  одинаковую выбранную версию на mobile preview и public web.
+- [x] Проверить published-only metadata/SEO/OpenGraph/Twitter и безопасные
+  missing/unpublished/config/service states contract tests и локальным browser.
+- [ ] Проверить actual HTTPS canonical/OG-photo crawler и одинаковую выбранную
+  версию на mobile preview и public web в live окружении.
 
 **Проверки и приёмка**
 

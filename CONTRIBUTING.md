@@ -412,6 +412,12 @@ Firebase/env contract описан в [разделе configuration](#firebase-c
 
 ## Проверки
 
+Перед полным Flutter suite установите зависимости web через `npm ci` в
+`apps/web` и обеспечьте Node из его manifest. Cross-client test
+`web_workspace_contract_test.dart` запускает actual TypeScript helpers через
+установленный `tsx`, затем Dart cloud codec и обратный web parser. Новых сервисов,
+эмуляторов или production credentials для этого contract test не требуется.
+
 Для изменения Flutter UI сначала разреши зависимости, затем проверь
 формат, анализ и значимое поведение. macOS — zsh/bash; Windows — WSL/Ubuntu.
 Рабочая директория — `apps/mobile`:

@@ -300,11 +300,26 @@ Dart и TypeScript реализуют их независимо в своих с
 
 Mobile сохраняет offline draft и cache. Web v1 использует online-first с явными
 состояниями несохранённых изменений, сохранения, sync error и retry.
+Save захватывает server basis, content, notes и mutation ID. После неизвестного
+ответа повтор сначала подтверждает эту же операцию; дальнейший ввод остаётся в
+форме и сохраняется отдельным следующим Save. Подтверждение не заменяет более
+поздний buffer. Validation выполняется до захвата операции, поэтому исправление
+невалидного ввода не требует повторять прежний невалидный snapshot.
 Phase 8 выбирает whole-document LWW по порядку server commits и отдельные
 private/public документы; контракт — в [ADR 0001](../decisions/0001-firestore-sync-and-publication.md).
 Для D048 проверять совместимость
 web-редактора с текущим private aggregate/schema и общими JSON fixtures;
 не создавать вторую независимую модель данных.
+Двусторонний test `apps/mobile/test/web_workspace_contract_test.dart` использует
+actual TypeScript helpers и Dart cloud codec, проверяет reencode и scoped mobile
+правку с обратным чтением в web. Его Node/web prerequisites описаны в CONTRIBUTING;
+это проверка контракта, а не live sync двух устройств.
+
+Public reader берёт metadata и body из одного request-scoped published snapshot;
+между запросами cache отсутствует. Title, OpenGraph и Twitter используют только
+выбранные public поля и безопасное фото той же версии. Canonical появляется
+только при exact HTTPS origin из web env. Missing/withdrawn дают 404/noindex;
+ненастроенный или недоступный reader показывает retry/noindex без private fallback.
 
 В roadmap 2026-10-08 Phase 13 объединяет public shell, owner editor и published
 Resume/Portfolio. Минимальный public reader и document publication могут работать

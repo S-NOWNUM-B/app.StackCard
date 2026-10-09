@@ -63,7 +63,8 @@ Phase 7 добавила Firebase Auth, защищённые именованн�
 доступ выбирается явно. Google flow, полный password reset и iOS приёмка остаются
 открытыми. Отдельно разрешённая Phase 8 завершена: Firestore sync поверх local
 Hive draft с durable outbox и pending/synced/error/retry. Publication repository
-подготовлен для отдельного явного действия; public UI/web ещё не созданы.
+Phase 8 сохранён как legacy API. D048 реализует отдельную trusted document
+publication, permanent URL и Next.js reader; live deployment/приёмка открыты.
 Phase 9 завершена: явные Add/Review/Ignore для GitHub repositories проверены;
 source metadata и ручные overrides сохраняются раздельно в том же draft.
 Phase 10 завершена: read-only подсказки объясняют новый repository, обновления,
@@ -281,6 +282,8 @@ MethodChannel относятся к Android. Клиент не публикуе�
 Flutter/Dart-команды выполняются здесь, Git — из корня monorepo.
 Предусловия и запуск описаны в [быстром старте](../../CONTRIBUTING.md#быстрый-старт),
 проверки — в [CONTRIBUTING](../../CONTRIBUTING.md#проверки).
+Для полного test suite также нужны Node и установленные зависимости `apps/web`:
+cross-client test проверяет actual web→Dart→web codecs без сервера.
 Firebase CLI generation, provider setup и optional Auth/Firestore Emulator defines — в
 [configuration guide](../../CONTRIBUTING.md#firebase-configuration-и-окружение),
 отдельный native acceptance — в
