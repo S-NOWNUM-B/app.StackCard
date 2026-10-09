@@ -37,6 +37,15 @@
   unavailable/noindex state, missing/withdrawn — 404/noindex.
 - Auth route guard служит UX; права обеспечивают Rules и trusted backend. Смена UID
   очищает private state, несохранённый ввод требует подтверждения перед discard.
+- Phase 14 Contact/Inbox — [ADR 0004](../../decisions/0004-contact-inbox-notifications.md).
+  ContactForm только при visible projected typed contact; server проверяет текущую
+  публикацию повторно. `contact-repository.ts` получает limited-use App Check token;
+  emulator bypass ограничен demo project. Captured submit/requestId сохраняются при
+  unknown retry, поздний ввод не стирается ACK. Ответ не содержит owner UID.
+  Private Inbox читает server-only `accounts/UID/contactRequests`, ≤50 newest-first,
+  strict parser принимает exact10 fields; update только readAt serverTimestamp.
+  Inbox доступен из Settings/hash, не зависит от draft и не добавляет root-вкладку.
+  После awaited чтения проверять UID и generation; browser push не подключён.
 - Проверять typecheck, meaningful contract tests и build из `apps/web`.
   Prettier config/scripts в `apps/web` задают формат новых TS/CSS. `agentRules:false`
   в Next config сохраняет тонкий AGENTS adapter; AI guidance остаётся в `docs/AI`.

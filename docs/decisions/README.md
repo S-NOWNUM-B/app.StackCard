@@ -221,13 +221,20 @@ Hive v4/private cloud schema 3 и политика сохранения заме
 Контракт — в [architecture](../architecture/architecture.md#выбор-города-и-страны--phase-12),
 задачи и приёмка — в [product spec](../product/product-spec.md#phase-12--location).
 
+## Принято для Phase 14
+
+[ADR 0004](0004-contact-inbox-notifications.md) определяет ContactRequest,
+published-contact privacy gate, consumed App Check/HMAC quotas, owner Inbox и
+trusted generic FCM. Private collections отдельны от cloud6 draft; single-owner
+device bindings и UID generation защищают смену аккаунта. Live device/deploy
+приёмка не следует из локальных тестов.
+
 ## Решить перед соответствующими фазами
 
 - Перед Phase 13 проверить совместимость web с принятыми Firestore envelope,
   ownership, LWW и publication contracts; пересмотр strategy требует нового ADR.
 - Перед изменением storage schema определить явную migration пользовательского
   draft и совместимость revisions; cache можно воспроизвести из source API.
-- Contact spam/rate limiting и доверенная отправка notifications.
 - Application IDs, signing и release configuration до публикации.
 - Точные web routes, зависимости, способы auth/session и проверки определить
   перед Phase 13 по реальному Next.js/Firebase стеку. Browser push и равенство

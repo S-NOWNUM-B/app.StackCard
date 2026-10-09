@@ -37,6 +37,17 @@ Scope и фактическая приёмка остаются в [product spec
 
 ## Изменение и проверка
 
+- Phase 14 `contactInbox` и trusted FCM sender следуют
+  [ADR 0004](../../decisions/0004-contact-inbox-notifications.md). Anonymous submit
+  требует consumed App Check intended appId и HMAC secret; bypass только actual
+  Functions emulator + demo project. Transaction перепроверяет active account,
+  current publication/contact privacy, idempotency и quotas. Owner collection
+  contactRequests отдельна от draft, exact10 fields; list ≤50, update только readAt.
+  Private hashed device bindings допускают один UID на token; register/revoke
+  authenticated, sender использует только актуальную active binding. Generic push
+  без имени/email/message; delivery failure не удаляет обращение. Account cleanup
+  удаляет и глобальные bindings. Emulator/mocks не доказывают live FCM delivery.
+
 - Private notes/account data не смешивать с public snapshot; hidden content
   удаляется public projection перед записью, а не только скрывается renderer.
   Source snapshots, override flags и Ignore registry также private и удаляются

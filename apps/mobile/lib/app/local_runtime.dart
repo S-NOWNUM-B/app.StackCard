@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import '../core/state/app_settings.dart';
 import '../core/state/settings_repository.dart';
@@ -28,6 +29,11 @@ import '../features/auth/auth.dart';
 import '../features/media/media.dart';
 import '../firebase_options.dart';
 import '../features/settings/data/shared_preferences_settings_repository.dart';
+import '../features/inbox/inbox.dart';
+import '../features/inbox/data/firestore_inbox_repository.dart';
+import '../features/notifications/notifications.dart';
+import '../features/notifications/data/firebase_push_messaging.dart';
+import '../features/notifications/data/http_push_device_registration.dart';
 
 /// Composition root открывает disk-адаптеры до первого экрана приложения.
 final class LocalRuntime {
@@ -40,6 +46,7 @@ final class LocalRuntime {
     this.accountAuth,
     this.mediaStorage,
     this.pendingDeletionOwner,
+    this.notifications,
   });
 
   final AppSettings settings;
@@ -50,9 +57,30 @@ final class LocalRuntime {
   final FirebaseAuth? accountAuth;
   final FirebaseStorage? mediaStorage;
   final String? pendingDeletionOwner;
+  final NotificationsController? notifications;
 
   late final _publicationPreferences = SharedPreferencesAsync();
   final Set<String> _deletedAccountUids = {};
+
+  InboxRepository? inboxRepositoryForUser(String uid) {
+    final database = firestore, auth = accountAuth;
+    if (database == null || auth == null || auth.currentUser?.uid != uid) {
+      return null;
+    }
+    return FirestoreInboxRepository(
+      firestore: database,
+      ownerUid: uid,
+      isActive: () =>
+          storage.portfolioDraft.isOpen &&
+          !_deletedAccountUids.contains(uid) &&
+          auth.currentUser?.uid == uid,
+    );
+  }
+
+  Future<void> close() async {
+    await notifications?.dispose();
+    await storage.close();
+  }
 
   Future<void> clearConfirmedDeletedUser(String uid) async {
     final currentUid = accountAuth?.currentUser?.uid;
@@ -214,8 +242,7 @@ final class LocalRuntime {
     final settings = await repository.load();
     final storage = await LocalStorage.open(directory: directory);
     try {
-      final pendingDeletionOwner =
-          configureAuth
+      final pendingDeletionOwner = configureAuth
           ? await SharedPreferencesAccountDeletionJournal.readPendingOwner(
               SharedPreferencesAsync(),
             )
@@ -224,6 +251,7 @@ final class LocalRuntime {
       FirebaseFirestore? firestore;
       FirebaseAuth? accountAuth;
       FirebaseStorage? mediaStorage;
+      NotificationsController? notifications;
       if (configureAuth) {
         final app = Firebase.apps.isEmpty
             ? await Firebase.initializeApp(
@@ -266,6 +294,35 @@ final class LocalRuntime {
           );
           firestore.useFirestoreEmulator(firestoreHost, firestorePort);
         }
+        const contactUrl = String.fromEnvironment('CONTACT_INBOX_API_URL');
+        final endpoint = Uri.tryParse(contactUrl);
+        notifications = NotificationsController(
+          messaging: FirebasePushMessaging(FirebaseMessaging.instance),
+          consent: SharedPreferencesPushConsentStore(SharedPreferencesAsync()),
+          registrationForOwner: (uid) => contactUrl.isEmpty || endpoint == null
+              ? null
+              : HttpPushDeviceRegistration(
+                  dio: Dio(
+                    BaseOptions(
+                      connectTimeout: const Duration(seconds: 15),
+                      receiveTimeout: const Duration(seconds: 30),
+                      sendTimeout: const Duration(seconds: 15),
+                    ),
+                  ),
+                  endpoint: endpoint,
+                  ownerUid: uid,
+                  platform: Platform.isIOS ? 'ios' : 'android',
+                  allowDemoHttp:
+                      app.options.projectId.startsWith('demo-') &&
+                      emulatorHost.isNotEmpty,
+                  idToken: (ownerUid) async {
+                    final user = auth.currentUser;
+                    if (user == null || user.uid != ownerUid) return null;
+                    final token = await user.getIdToken();
+                    return auth.currentUser?.uid == ownerUid ? token : null;
+                  },
+                ),
+        );
       }
       return LocalRuntime(
         settings: settings,
@@ -276,6 +333,7 @@ final class LocalRuntime {
         accountAuth: accountAuth,
         mediaStorage: mediaStorage,
         pendingDeletionOwner: pendingDeletionOwner,
+        notifications: notifications,
       );
     } catch (_) {
       await storage.close();

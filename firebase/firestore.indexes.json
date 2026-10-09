@@ -2,6 +2,26 @@
   "indexes": [],
   "fieldOverrides": [
     {
+      "collectionGroup": "publications",
+      "fieldPath": "publicId",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION" },
+        { "order": "DESCENDING", "queryScope": "COLLECTION" },
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }
+      ]
+    },
+    {
+      "collectionGroup": "contactRateLimits",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    { "collectionGroup": "contactRequests", "fieldPath": "name", "indexes": [] },
+    { "collectionGroup": "contactRequests", "fieldPath": "email", "indexes": [] },
+    { "collectionGroup": "contactRequests", "fieldPath": "message", "indexes": [] },
+    { "collectionGroup": "contactRequests", "fieldPath": "documentTitle", "indexes": [] },
+    { "collectionGroup": "pushDevices", "fieldPath": "token", "indexes": [] },
+    {
       "collectionGroup": "drafts",
       "fieldPath": "content",
       "indexes": []

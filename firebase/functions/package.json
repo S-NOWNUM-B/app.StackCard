@@ -6,7 +6,7 @@
   "engines": { "node": "22" },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "check": "node --check src/index.mjs && node --check src/publication.mjs && node --check src/projection.mjs"
+    "check": "node --check src/index.mjs && node --check src/publication.mjs && node --check src/projection.mjs && node --check src/contact-contract.mjs && node --check src/contact-service.mjs && node --check src/contact-http.mjs"
   },
   "dependencies": {
     "firebase-admin": "14.5.0",

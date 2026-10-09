@@ -17,6 +17,7 @@ import 'document_editor_strings.dart';
 import 'settings_management_strings.dart';
 import 'document_publication_strings.dart';
 import 'mobile_parity_strings.dart';
+import 'inbox_strings.dart';
 
 class AppStrings {
   const AppStrings(this.locale);
@@ -317,6 +318,7 @@ const russianAppStrings = <String, String>{
   ...russianSettingsManagementStrings,
   ...russianDocumentPublicationStrings,
   ...russianMobileParityStrings,
+  ...russianInboxStrings,
   ...russianDraftStrings,
   ...builderRussianStrings,
   ...builderFormRussianStrings,
@@ -553,6 +555,7 @@ const englishAppStrings = <String, String>{
   ...englishSettingsManagementStrings,
   ...englishDocumentPublicationStrings,
   ...englishMobileParityStrings,
+  ...englishInboxStrings,
   ...englishDraftStrings,
   ...builderEnglishStrings,
   ...builderFormEnglishStrings,
