@@ -8,6 +8,7 @@ import { ContentEditor } from './content-editor';
 import { AttachmentsEditor, emptyProject, GitHubImporter, ProjectForm } from './project-editor';
 import { DocumentView } from './document-view';
 import { AccountSettings } from './account-settings';
+import { Inbox } from './inbox';
 import { MediaUpload, PrivateImage } from './media-upload';
 import { firebaseServices } from '@/lib/firebase';
 import { loadDraft, saveDraft } from '@/lib/draft-repository';
@@ -45,7 +46,15 @@ import {
   type DocumentBaseReview,
 } from '@/lib/model';
 type View =
-  'home' | 'resumes' | 'projects' | 'portfolios' | 'base' | 'settings' | `document/${string}`;
+  | 'home'
+  | 'resumes'
+  | 'projects'
+  | 'portfolios'
+  | 'base'
+  | 'settings'
+  | 'inbox'
+  | `inbox/${string}`
+  | `document/${string}`;
 type PendingOperation = PublicationMutation;
 function errorMessage(e: unknown) {
   return e instanceof Error ? e.message : 'Действие не завершено. Повторите попытку.';
@@ -149,6 +158,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   const dirtyRef = useRef(dirty);
   dirtyRef.current = dirty;
   const operationKey = `stackcard.publication.${user.uid}`;
+  const inboxView = view === 'inbox' || view.startsWith('inbox/');
   const activeDocument = view.startsWith('document/')
     ? content.documents.find((d) => d.id === view.slice(9))
     : undefined;
@@ -200,7 +210,9 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       const hash = decodeURIComponent(window.location.hash.slice(1));
       if (
         hash &&
-        /^(home|resumes|projects|portfolios|base|settings|document\/[A-Za-z0-9_-]+)$/.test(hash)
+        /^(home|resumes|projects|portfolios|base|settings|inbox|inbox\/[a-f0-9]{32}|document\/[A-Za-z0-9_-]+)$/.test(
+          hash,
+        )
       )
         setView(hash as View);
     } catch (e) {
@@ -615,8 +627,23 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
             </Button>
           ))}
         </nav>
-        <main id="main" className="workspace-main stack" aria-busy={loading || busy}>
-          {loading ? (
+        <main
+          id="main"
+          className="workspace-main stack"
+          aria-busy={(!inboxView && loading) || busy}
+        >
+          {inboxView ? (
+            <>
+              <h1>Входящие</h1>
+              <Inbox
+                key={`${user.uid}:${view}`}
+                user={user}
+                requestId={view.startsWith('inbox/') ? view.slice(6) : undefined}
+                onOpen={(id) => navigate(`inbox/${id}`, true)}
+                onBack={() => navigate(view === 'inbox' ? 'settings' : 'inbox', true)}
+              />
+            </>
+          ) : loading ? (
             <Notice>Загружаем серверную версию…</Notice>
           ) : (
             <>
@@ -637,6 +664,15 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                               ? `${mode === 'preview' ? 'Просмотр' : 'Редактор'} ${activeDocument.kind === 'resume' ? 'резюме' : 'портфолио'}`
                               : 'Документ не найден'}
               </h1>
+              {view === 'settings' && (
+                <section className="section stack">
+                  <h2>Обращения</h2>
+                  <p>Сообщения из опубликованных документов доступны во входящих.</p>
+                  <Button variant="secondary" onClick={() => navigate('inbox')}>
+                    Открыть входящие
+                  </Button>
+                </section>
+              )}
               {error && <Notice error>{error}</Notice>}
               {message && <Notice>{message}</Notice>}
               {blocked && (
@@ -1161,39 +1197,41 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
           )}
         </main>
       </div>
-      <footer className="workspace-footer" inert={!!review}>
-        <small className="muted">
-          {dirty
-            ? 'Есть несохранённые изменения'
-            : busy
-              ? 'Выполняем действие…'
-              : basis
-                ? 'Серверная версия загружена; публикация обновляется отдельно'
-                : 'Новая база'}
-        </small>
-        <div className="row">
-          <Button
-            variant="secondary"
-            disabled={busy || loading || !!review}
-            onClick={() => {
-              if (dirty && !window.confirm('Отбросить изменения и загрузить серверную версию?'))
-                return;
-              void reload();
-            }}
-          >
-            Отмена / перезагрузить
-          </Button>
-          <Button
-            disabled={busy || loading || blocked || !!review || (!dirty && !saveAttempt.current)}
-            onClick={() => void save()}
-          >
-            {saving ? 'Сохраняем…' : 'Сохранить'}
-          </Button>
-          <Button variant="quiet" disabled={busy || !!review} onClick={() => void exit()}>
-            Выйти
-          </Button>
-        </div>
-      </footer>
+      {!inboxView && (
+        <footer className="workspace-footer" inert={!!review}>
+          <small className="muted">
+            {dirty
+              ? 'Есть несохранённые изменения'
+              : busy
+                ? 'Выполняем действие…'
+                : basis
+                  ? 'Серверная версия загружена; публикация обновляется отдельно'
+                  : 'Новая база'}
+          </small>
+          <div className="row">
+            <Button
+              variant="secondary"
+              disabled={busy || loading || !!review}
+              onClick={() => {
+                if (dirty && !window.confirm('Отбросить изменения и загрузить серверную версию?'))
+                  return;
+                void reload();
+              }}
+            >
+              Отмена / перезагрузить
+            </Button>
+            <Button
+              disabled={busy || loading || blocked || !!review || (!dirty && !saveAttempt.current)}
+              onClick={() => void save()}
+            >
+              {saving ? 'Сохраняем…' : 'Сохранить'}
+            </Button>
+            <Button variant="quiet" disabled={busy || !!review} onClick={() => void exit()}>
+              Выйти
+            </Button>
+          </div>
+        </footer>
+      )}
       {review && (
         <div className="dialog-backdrop">
           <section

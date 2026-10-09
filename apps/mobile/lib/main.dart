@@ -15,6 +15,8 @@ import 'core/theme/stackcard_theme.dart';
 import 'features/github_import/github_import.dart';
 import 'features/auth/auth.dart';
 import 'features/media/media.dart';
+import 'features/inbox/inbox.dart';
+import 'features/notifications/notifications.dart';
 import 'features/portfolio_draft/portfolio_draft.dart';
 import 'features/projects/projects.dart';
 import 'features/settings/settings_providers.dart';
@@ -50,7 +52,7 @@ class _StackCardBootstrapState extends State<StackCardBootstrap> {
         await (widget.loadRuntime?.call() ??
             LocalRuntime.load(configureAuth: true));
     if (!mounted) {
-      await runtime.storage.close();
+      await runtime.close();
     } else {
       _loaded = runtime;
     }
@@ -60,7 +62,7 @@ class _StackCardBootstrapState extends State<StackCardBootstrap> {
   @override
   void dispose() {
     // После удаления дерева уже нет UI для close failure; обе boxes закрываются.
-    _loaded?.storage.close().ignore();
+    _loaded?.close().ignore();
     super.dispose();
   }
 
@@ -82,6 +84,12 @@ class _StackCardBootstrapState extends State<StackCardBootstrap> {
             ),
             portfolioMediaRepositoryFactoryProvider.overrideWithValue(
               runtime.mediaRepositoryForUser,
+            ),
+            inboxRepositoryFactoryProvider.overrideWithValue(
+              runtime.inboxRepositoryForUser,
+            ),
+            notificationsControllerProvider.overrideWithValue(
+              runtime.notifications,
             ),
             documentPublicationRepositoryFactoryProvider.overrideWithValue(
               runtime.publicationRepositoryForUser,
@@ -203,7 +211,8 @@ class _RoutedStackCardApp extends riverpod.ConsumerStatefulWidget {
 }
 
 class _RoutedStackCardAppState
-    extends riverpod.ConsumerState<_RoutedStackCardApp> {
+    extends riverpod.ConsumerState<_RoutedStackCardApp>
+    with WidgetsBindingObserver {
   final _access = AppRouteAccess();
   late final GoRouter _router;
   String _identity = 'local';
@@ -211,6 +220,7 @@ class _RoutedStackCardAppState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _updateAccess();
     _router = createAppRouter(
       initialLocation: widget.initialLocation,
@@ -242,6 +252,9 @@ class _RoutedStackCardAppState
       pendingAccountDeletion:
           ref.read(accountPendingDeletionOwnerProvider) != null,
     );
+    if (!session.isLoading) {
+      ref.read(notificationsControllerProvider)?.setOwner(user?.uid).ignore();
+    }
   }
 
   void _sessionChanged() {
@@ -258,7 +271,15 @@ class _RoutedStackCardAppState
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(notificationsControllerProvider)?.refreshPermission().ignore();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _router.dispose();
     _access.dispose();
     super.dispose();
@@ -272,6 +293,24 @@ class _RoutedStackCardAppState
       accountPendingDeletionOwnerProvider,
       (_, _) => _sessionChanged(),
     );
+    ref.listen(notificationStateProvider, (previous, next) {
+      final state = next.value;
+      final user = ref.read(accountSessionProvider).value;
+      if (state == null ||
+          user == null ||
+          !_access.authenticated ||
+          state.ownerUid != user.uid) {
+        return;
+      }
+      if (state.foregroundCount != (previous?.value?.foregroundCount ?? 0)) {
+        ref.invalidate(inboxControllerProvider);
+      }
+      final id = state.pendingRequestId;
+      if (id != null && isContactRequestId(id)) {
+        ref.read(notificationsControllerProvider)?.consumeTap(user.uid, id);
+        _router.push('/inbox/$id');
+      }
+    });
     return Selector<AppearanceController, (ThemeMode, Locale, bool)>(
       selector: (_, controller) =>
           (controller.themeMode, controller.locale, controller.reducedMotion),

@@ -31,6 +31,12 @@
 
 ## Статус и границы текущей работы
 
+**2026-10-09: переход к Phase14 разрешён** прямым поручением «переходи к следующей
+фазе разработки». Активная разработка — ContactRequest/Contact me, private Inbox
+в mobile/web и mobile FCM по [ADR0004](../decisions/0004-contact-inbox-notifications.md).
+Переход не закрывает открытые Phase13/live/iOS/Figma проверки. Следующие фазы,
+commit/push/deploy/billing этим поручением автоматически не разрешаются.
+
 **2026-10-08, D048:** поручение «закончи перенос» и явный ответ «Также реализовать
 web и публикацию» разрешают завершение mobile-сценариев, actual Next.js web и
 публикацию независимых Resume/Portfolio. Запрошенная реализация D048 выполнена
@@ -505,12 +511,12 @@ Publish/Share в этом пути — план до проверяемого pu
 | Projects | Единая Library: import, manual create, query-only поиск, фото и technology badges; featured/visible задаются в attachment документа. |
 | Portfolios | Независимые визитки, content/appearance/preview, выбор Library projects и Resume; постоянный адрес после публикации. |
 | Settings через gear | DeveloperProfile, контакты/ссылки, аккаунт/безопасность, приложение, приватность, sign out/delete; группы реализованы частично. |
-| Inbox | Будущие обращения по published документу; не дополнительная root-вкладка. |
+| Inbox | Phase 14: owner-only обращения по published документу, standalone из Settings; не дополнительная root-вкладка. |
 
 </div>
 
 Четыре root-вкладки остаются на телефоне и планшете. Settings, focused editors,
-GitHub Import, location picker, base review и будущие Share/Inbox открываются
+GitHub Import, location picker, base review, Share и Inbox открываются
 отдельно. Назад возвращает к исходному разделу; private state изолирован по UID.
 
 ### Сайт и web-редактор
@@ -903,7 +909,7 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 13a — Public shell | D048 source реализован: Next.js shell/landing/download; browser runtime и production build PASS; full Figma/release acceptance отдельно |
 | Phase 13b — Auth и редактор | D048 source реализован: Auth/UID owner база/Library/document editors; mobile fixture/web CAS browser flow PASS, full cross-client/live acceptance отдельно |
 | Phase 13c — Public Resume/Portfolio | D048 source реализован: trusted publication/permanent URL/public media/reader; backend51/projection14 и browser Publish/Unpublish/republish/Copy PASS, live acceptance отдельно |
-| Phase 14 — Contact / Inbox / FCM | Запланирована |
+| Phase 14 — Contact / Inbox / FCM | В разработке; локальный Contact/Inbox и Android SDK сценарий PASS 2026-10-10, live FCM/APNs и production setup открыты |
 | Phase 15 — Developer Card и native sharing | Запланирована |
 | Phase 16 — Performance | Запланирована |
 | Phase 17 — Testing | Запланирована |
@@ -1901,10 +1907,10 @@ trusted validation → public reader → доступные Publish/Copy/Open д
 
 **Задачи**
 
-- [ ] Добавить web Contact me с name/email/message и validation; определить
+- [x] Добавить web Contact me с name/email/message и validation; определить
   anti-spam/rate limiting до публичного открытия формы. Форма относится к выбранному
   published документу и учитывает его contact/privacy selection.
-- [ ] Создать ContactRequest и Inbox в mobile/web; обращения читает только владелец.
+- [x] Создать ContactRequest и Inbox в mobile/web; обращения читает только владелец.
   Проверить переход к обращению без добавления пятой root-вкладки и передачу
   только разрешённых полей; private owner identity не раскрывать отправителю.
 - [ ] Настроить mobile FCM: device tokens, permissions и переход из уведомления
@@ -1914,16 +1920,63 @@ trusted validation → public reader → доступные Publish/Copy/Open д
 
 **Проверки и приёмка**
 
-- [ ] Валидное обращение с public page появляется в mobile/web Inbox;
-  validation, anti-spam и rate limiting проверены до публичного открытия формы.
-- [ ] Обращение читает только владелец; отказ постороннему подтверждён
-  проверками доступа.
+- [x] В локальном demo окружении валидное обращение с public page появляется
+  в mobile/web Inbox; validation, honeypot, transaction rate limits и безопасный
+  retry проверены. Production App Check и публичное открытие остаются отдельным gate.
+- [x] Обращение читает только владелец; отказ постороннему подтверждён
+  actual emulator SDK Rules/service tests и native Android SDK acceptance.
 - [ ] FCM доставлен на устройство, переход открывает обращение;
   отказ в notifications и смена аккаунта проверены, без push обращение остаётся в Inbox.
 
 **Готово, когда:** обращение с public page появляется в обоих кабинетах,
 владелец получает mobile notification, посторонний не читает Inbox. Это не чат;
 browser push автоматически в scope не добавляется.
+
+**Фактический прогресс — 2026-10-10**
+
+[ADR 0004](../decisions/0004-contact-inbox-notifications.md) фиксирует принятый
+contract; [архитектура](../architecture/architecture.md#contact-inbox-и-уведомления--phase-14)
+и [инструкция запуска](../../CONTRIBUTING.md#contactinboxfcm--phase-14)
+обновлены по текущему source. Private draft остаётся Hive7/cloud6; Inbox и device
+registrations находятся в отдельных owner-only collections.
+
+- Contact form доступна только при открытом projected typed contact выбранного
+  published документа. Trusted submit проверяет exact payload, privacy, active
+  owner, honeypot и quotas; отправитель получает только receipt без owner UID/email.
+  Повтор accepted payload с тем же requestId не дублирует обращение или notification.
+- Mobile/web Inbox доступны из Settings, без пятой root-вкладки. Server pagination
+  ограничена 50 записями; клиент меняет только readAt. UID transition и поздние
+  ответы не раскрывают прежний Inbox. UI отмечает неподтверждённые sender name/email.
+- Mobile FCM runtime и trusted sender реализованы: явный permission, token refresh,
+  register/unregister, single-UID binding, foreground/cold/background tap guards,
+  generic payload и cleanup. Fake transport/SDK tests проверяют эти переходы;
+  live notification delivery ими не подтверждается. Inbox сохраняется при сбое push.
+
+| Проверка | Фактический результат |
+| --- | --- |
+| Web | **95/95 tests PASS**, typecheck, format:check и production build (11 routes) PASS. |
+| Backend | Functions syntax check и **25/25 pure tests PASS**; actual Auth/Firestore/Storage Rules и service suite **68/68 PASS**, без skipped. Canonical indexes прошли проверку installed Firebase CLI. |
+| Mobile | Полный `flutter test --no-pub --reporter expanded` — **1352/1352 PASS**; `flutter analyze --no-pub` — 0 issues; format всех 24 затронутых Dart файлов PASS. |
+| Browser | Actual trusted Publish → anonymous submit → owner web Inbox/readAt PASS; accepted ACK после позднего ввода, lost ACK/retry без duplicate, honeypot/unknown fields, email quota и новый submit после Unpublish проверены. Page errors 0; 390px без horizontal overflow. |
+| Native Android | **1/1 integration test PASS** на `main_phone`: actual trusted browser request, server pagination 50+4, readAt idempotency, foreign/anonymous denial и session guards. Обычный debug APK собран и восстановлен через install -r после test APK. |
+| iOS | Info.plist, entitlements и project syntax PASS; compilation, signing, APNs и device delivery не проверены. |
+
+Raw local logs сохранены в `/private/tmp/stackcard-phase14-mobile-full-tests.log`,
+`stackcard-phase14-mobile-analysis.log`, `stackcard-phase14-mobile-changed-format.log`,
+`stackcard-phase14-web-tests.log`, `stackcard-phase14-web-build.log`,
+`stackcard-phase14-native-inbox.log` и `stackcard-phase14-browser.log`.
+Полный backend 68-test result зафиксирован в tool output; отдельный raw log для
+этого прогона не сохранялся. Общий mobile format gate выявил четыре прежних файла
+вне Phase 14: `local_draft_accounts.dart`, `portfolio_public_content_codec.dart`,
+`portfolio_location_persistence_test.dart`, `workspace_controller_test.dart`;
+они не изменены этой фазой.
+
+**Открыто:** production App Check provider/site key/intended app ID, token verifier
+IAM и HMAC secret; deployment Rules/indexes/Functions/web; реальная FCM доставка,
+permission denial/revocation и tap на устройстве; iOS compilation/signing/APNs
+и доставка. Уже открытые live/iOS/Figma и пользовательская приёмка Phase 13
+не закрываются этими результатами. Phase 14 целиком не завершена; Phase 15
+автоматически не начата. Config/deploy/billing требуют отдельного поручения.
 
 ### Phase 15 — Developer Card и native sharing
 

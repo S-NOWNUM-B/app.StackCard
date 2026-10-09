@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import sharp from 'sharp';
 import { PublicationError, permanentPublicId, projectPublicDocument, publicOrigin, validateRequest } from './projection.mjs';
+import { removeAccountPushBindings } from './contact-service.mjs';
 
 const conflict = () => { throw new PublicationError('conflict', 'State changed; reload before retry', 409); };
 const stateOf = (account) => account?.lifecycleState ?? 'active';
@@ -347,6 +348,7 @@ export function createPublicationService({ database, bucket, auth, origin, emula
       }
       for (const publicId of publicIds) await bucket.deleteFiles({ prefix: `publicMedia/${publicId}/`, force: true });
       await bucket.deleteFiles({ prefix: `accounts/${uid}/`, force: true });
+      await removeAccountPushBindings(database, uid);
       for (const collection of await accountRef(uid).listCollections()) {
         if (collection.id === 'publicationOperations') {
           const operations = await collection.get();

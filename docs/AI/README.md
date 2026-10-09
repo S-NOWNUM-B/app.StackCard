@@ -16,10 +16,14 @@ approval. Minimal public reader не зависит от полного owner we
 старый singleton roadmap не выполнять. Последующий ответ «Да, выполнить
 визуальную проверку web/mobile» разрешает D048 preview/browser/native checks;
 deploy/billing/Git сохраняют отдельные ограничения.
+Прямой переход пользователя 2026-10-09 разрешает Phase 14 Contact/Inbox/FCM;
+контракт — [ADR 0004](../decisions/0004-contact-inbox-notifications.md).
+Открытые проверки прошлых фаз и следующий переход остаются в product spec.
 Порядок задают [общие правила выполнения плана](AGENTS.md#разработка-по-плану).
 
 | Задача | Читать | Canonical source |
 | --- | --- | --- |
+| Contact form, private Inbox и native FCM | [ADR 0004](../decisions/0004-contact-inbox-notifications.md), [Contact contract](../architecture/architecture.md#contact-inbox-и-уведомления--phase-14), web/mobile/firebase scopes | `firebase/functions/src/contact-*.mjs`, Rules/indexes; web contact contract/repository/form/Inbox; mobile `features/inbox`, `features/notifications`, LocalRuntime/router |
 | Разработка продукта: scope, capabilities, история фаз и сценарии | [План разработки](../product/product-spec.md#план-разработки), [Product spec](../product/product-spec.md), [правила фаз](AGENTS.md#разработка-по-плану) | Действующий scope и открытые критерии в product spec, последнее поручение пользователя и фактическая реализация |
 | Структура/зависимости mobile | [Mobile rules](scopes/mobile.md), [architecture](../architecture/architecture.md), [решения](../decisions/README.md) | `apps/mobile/pubspec.yaml`, `apps/mobile/pubspec.lock`, `apps/mobile/lib`, platform configs |
 | Структура и scope web | [Web scope](scopes/web.md), [Web README](../../apps/web/README.md), [architecture](../architecture/architecture.md#web-и-общие-контракты) | `apps/web/src`, `package.json`/lockfile, `next.config.ts`, `tsconfig.json`, `.env.example`; Next.js runtime |

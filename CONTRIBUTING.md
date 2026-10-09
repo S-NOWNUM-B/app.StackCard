@@ -301,6 +301,77 @@ native iOS build/приёмка недоступны при неполном Xco
 
 ---
 
+## Contact/Inbox/FCM — Phase 14
+
+Data/privacy contract — [ADR 0004](docs/decisions/0004-contact-inbox-notifications.md).
+Новые collections не меняют draft schema; account deletion удаляет Inbox/device
+subcollections и UID-owned global token bindings.
+
+Web [.env.example](apps/web/.env.example): `NEXT_PUBLIC_CONTACT_INBOX_API_URL`
+для `contactInbox` и `NEXT_PUBLIC_APP_CHECK_SITE_KEY` для зарегистрированного
+reCAPTCHA v3 App Check web provider. Functions [.env.example](firebase/functions/.env.example):
+exact `PUBLIC_WEB_ORIGIN` и intended `CONTACT_APP_CHECK_APP_ID` того же web app.
+`CONTACT_RATE_HMAC_KEY` (≥32 символа) — Secret Manager `defineSecret`, не public
+env/репозиторий. Production дополнительно требует App Check token-consumption
+Token Verifier IAM permissions и отдельно развёрнутых Rules/indexes/Functions/web.
+[Firebase replay protection](https://firebase.google.com/docs/app-check/custom-resource-backend#replay_protection_beta)
+описывает consumed limited-use проверку; обычный reusable token не заменяет её.
+Отсутствующая конфигурация закрывает submit. Demo bypass ограничен actual Functions
+emulator + demo project, не произвольным client flag или production project.
+
+Canonical indexes включают collection-group `publications.publicId` для private
+lookup, TTL `contactRateLimits.expiresAt` и отключённое индексирование visitor PII/
+FCM tokens. TTL очищает истёкшие rate docs асинхронно; фиксированные windows
+определяет server clock, а не момент TTL deletion.
+
+Mobile получает `CONTACT_INBOX_API_URL` через Dart define; adapter принимает HTTPS,
+demo HTTP только при demo Firebase app+Auth emulator configuration. Firebase Messaging
+native auto-init выключен до явного разрешения владельца. Settings показывает
+реальные permission/registration/cleanup states; permission denied не скрывает Inbox.
+FCM live setup требует действующего Firebase Android app и устройства с Google Play
+services; для iOS — Xcode signing, Push Notifications capability/aps entitlement,
+APNs key в Firebase и физического устройства. Наличие manifest/entitlement не
+подтверждает delivery. [Firebase Flutter receive](https://firebase.google.com/docs/cloud-messaging/flutter/receive-messages)
+задаёт permission, foreground, background/terminated tap scenarios.
+
+macOS zsh/bash, cwd `firebase/functions`: `npm run check` и `npm test`.
+macOS zsh/bash, cwd `firebase`: `npm run test:all-rules` запускает actual SDK Rules/
+service tests; focused `npm run test:contact` использует только Firestore emulator.
+Не запускайте эти тесты поверх browser fixtures: они очищают demo Firestore.
+Для локального browser сценария, macOS zsh/bash, cwd `firebase`:
+
+```zsh
+PUBLIC_WEB_ORIGIN=http://127.0.0.1:3000 firebase emulators:start --only auth,firestore,storage,functions --project demo-stackcard-test
+```
+
+Web запускается с отдельной demo config из `.env.example`, обоими HTTP endpoint
+URLs, emulator flag и local origin. Secret/real App Check/FCM transport для demo
+не требуются; notification trigger в demo не отправляет live FCM. Web проверки —
+`typecheck`, `test`, `format:check`, `build` из `apps/web` (macOS zsh/bash).
+Mobile проверки — format/analyze/tests из `apps/mobile` по существующему gate.
+Live acceptance проверяет валидное обращение в обоих Inbox, чужой UID, отказ/
+revocation permissions, token refresh, delivery/tap из background и terminated,
+смену UID во время enable/cleanup и сохранение Inbox при transport failure.
+Emulator и fake messaging tests не заменяют этот gate; deploy/billing отдельно.
+
+Opt-in native Inbox acceptance использует только именованные SDK apps с `demo-`
+project и localhost/Android host, не default/live session. Подготовьте temporary
+define JSON вне Git: `RUN_INBOX_EMULATOR_ACCEPTANCE=true`, `INBOX_EMULATOR_PROJECT`,
+`INBOX_EMULATOR_HOST`, `INBOX_AUTH_EMULATOR_PORT`, `INBOX_FIRESTORE_EMULATOR_PORT`,
+`INBOX_OWNER_EMAIL/PASSWORD` из disposable demo account и `INBOX_REQUEST_ID`
+обращения, принятого trusted HTTP. Для обязательной проверки двух страниц нужны
+минимум 51 exact-contract records в этом demo Inbox; тестовые extras создаются
+только emulator Admin fixture. Эти параметры не являются live credentials.
+macOS zsh/bash, cwd `apps/mobile`, при запущенных demo эмуляторах и Android:
+
+```zsh
+flutter test integration_test/inbox_runtime_test.dart -d "<android-id>" --no-pub --no-uninstall --dart-define-from-file="<temporary-demo-defines.json>"
+```
+
+Тест проверяет actual Dart SDK server reads/cursor/readAt, foreign/anonymous
+denial и UID guards. `--no-uninstall` сохраняет данные приложения; после тестового
+APK восстановите обычный debug APK через build и `adb install -r`, не uninstall.
+
 ## Web и document publication
 
 D048 связывает [web](apps/web/README.md),

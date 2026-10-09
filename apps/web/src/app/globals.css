@@ -352,6 +352,17 @@ select {
   padding: 48px 64px;
   margin: auto;
 }
+.contact-honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.contact-message {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .notice {
   padding: 12px 16px;
   border: 1px solid var(--border);

@@ -19,6 +19,7 @@ import 'account_settings_section.dart';
 export 'settings_account_screen.dart';
 export 'settings_base_editor_screen.dart';
 export 'settings_providers.dart';
+export 'settings_editor_scaffold.dart';
 
 class SettingsScreen extends riverpod.ConsumerWidget {
   const SettingsScreen({super.key});
@@ -79,6 +80,20 @@ class SettingsScreen extends riverpod.ConsumerWidget {
           title: strings.tr('settings.application'),
           subtitle: strings.tr('settings.applicationNote'),
           onPressed: () => context.push('/settings/appearance'),
+        ),
+        _SettingsRow(
+          key: const Key('settings.group.inbox'),
+          icon: Icons.inbox_outlined,
+          title: strings.tr('inbox.title'),
+          subtitle: strings.tr('inbox.hint'),
+          onPressed: () => context.push('/inbox'),
+        ),
+        _SettingsRow(
+          key: const Key('settings.group.notifications'),
+          icon: Icons.notifications_none_rounded,
+          title: strings.tr('settings.notifications'),
+          subtitle: strings.tr('notifications.hint'),
+          onPressed: () => context.push('/settings/notifications'),
         ),
         const SizedBox(height: StackCardSpacing.xl),
         _SettingsHeading(title: strings.tr('settings.session')),
@@ -206,7 +221,8 @@ class SettingsAppearanceScreen extends StatelessWidget {
         _SettingsRow(
           icon: Icons.notifications_none_rounded,
           title: strings.tr('settings.notifications'),
-          subtitle: strings.tr('settings.notificationsUnavailable'),
+          subtitle: strings.tr('notifications.hint'),
+          onPressed: () => context.push('/settings/notifications'),
         ),
         SwitchListTile.adaptive(
           key: const Key('settings.reducedMotion'),

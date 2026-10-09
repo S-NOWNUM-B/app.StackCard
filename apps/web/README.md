@@ -97,8 +97,11 @@ Web online-first: загрузка идёт с сервера; Save выполн
 Настройки аккаунта работают через Firebase SDK с повторным подтверждением
 личности для чувствительных действий. `/account-deletion` восстанавливает
 статус уже подтверждённого удаления по локальной квитанции после потери сессии.
-Квитанции не содержат password или Firebase token. Contact requests/Inbox
-явно недоступны до отдельной реализации сервиса.
+Квитанции не содержат password или Firebase token. Из настроек доступен Inbox
+(`/workspace#inbox`, обращение — `#inbox/32hex`): server-only чтение своего UID,
+50 newest-first с пагинацией и явная отметка прочтения. Inbox независим от draft;
+неподдерживаемые данные блокируют отображение обращения. Смена UID/страницы
+не применяет поздние ответы к новой сессии.
 
 ### Посмотреть опубликованный документ
 
@@ -108,6 +111,16 @@ allowlist выбранных данных; private draft не служит fallb
 Отсутствующий или отозванный документ и недоступность сервиса имеют честные
 состояния. Прикреплённое резюме открывается только пока оно независимо опубликовано.
 Public media ограничены данным ID/версией; private paths и bearer URLs не принимаются.
+
+Contact form появляется только при открытом projected email/phone/Telegram
+и visible links block. `NEXT_PUBLIC_CONTACT_INBOX_API_URL` указывает на
+trusted `contactInbox`; production требует `NEXT_PUBLIC_APP_CHECK_SITE_KEY`
+зарегистрированного reCAPTCHA v3 provider и consumed limited-use token. Отсутствие
+конфигурации показывает unavailable. Server повторно проверяет публикацию/privacy,
+применяет honeypot/validation и transactional HMAC quotas по
+[ADR 0004](../../docs/decisions/0004-contact-inbox-notifications.md). Unknown retry
+использует прежний requestId и payload; ACK сохраняет более поздний текст.
+Anonymous receipt не раскрывает UID/почту автора. Browser push не подключён.
 Metadata и body используют один snapshot в пределах запроса. OpenGraph/Twitter
 берут выбранное опубликованное фото; отсутствующий сервис показывает retry/noindex,
 снятая или отсутствующая публикация — 404/noindex.

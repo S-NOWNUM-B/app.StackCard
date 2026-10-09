@@ -118,6 +118,12 @@
 
 ## Разработка по плану
 
+Прямое поручение пользователя 2026-10-09 разрешает Phase 14 Contact/Inbox/FCM
+по [ADR 0004](../decisions/0004-contact-inbox-notifications.md). Scope и фактическая
+приёмка находятся в product spec; новые фазы не разрешены этим переходом.
+Обращения и device registrations — отдельные private collections, не часть draft.
+Push не заменяет durable Inbox; demo/default runtime не обещает живой FCM.
+
 **Действующее исключение D045/D046/D048:** по прямому поручению пользователя
 последовательная очередь фаз поставлена на паузу. Разрешённый mobile/web/publication scope
 из [product spec](../product/product-spec.md#статус-и-границы-текущей-работы)

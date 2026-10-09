@@ -126,6 +126,20 @@ service cloud.firestore {
         || !get(accountPath(uid)).data.keys().hasAny(['lifecycleGeneration']);
     }
 
+    function validContactRequest(data, requestId) {
+      return data.keys().hasOnly(['schemaVersion', 'requestId', 'publicId',
+          'documentId', 'documentTitle', 'name', 'email', 'message', 'createdAt', 'readAt'])
+        && data.schemaVersion == 1 && data.requestId == requestId
+        && requestId.matches('^[0-9a-f]{32}$')
+        && data.publicId is string && data.publicId.matches('^[0-9a-f]{32}$')
+        && data.documentId is string && data.documentId.size() > 0 && data.documentId.size() <= 200
+        && data.documentTitle is string && data.documentTitle.size() > 0 && data.documentTitle.size() <= 120
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 254
+        && data.message is string && data.message.size() > 0 && data.message.size() <= 4000
+        && data.createdAt is timestamp && (data.readAt == null || data.readAt is timestamp);
+    }
+
     match /accounts/{uid} {
       allow get: if owner(uid);
       // Публикация/lock/tombstones принадлежат authenticated trusted service.
@@ -170,6 +184,17 @@ service cloud.firestore {
       match /publicationOperations/{operationId} {
         allow get: if owner(uid);
         allow list, write: if false;
+      }
+
+      match /contactRequests/{requestId} {
+        allow get: if owner(uid) && activeAccount(uid);
+        allow list: if owner(uid) && activeAccount(uid)
+          && request.query.limit is int && request.query.limit > 0 && request.query.limit <= 50;
+        allow update: if owner(uid) && activeAccount(uid)
+          && validContactRequest(request.resource.data, requestId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt'])
+          && request.resource.data.readAt == request.time;
+        allow create, delete: if false;
       }
     }
 

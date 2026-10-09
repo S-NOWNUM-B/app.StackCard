@@ -1,5 +1,14 @@
 # Правила StackCard Mobile
 
+Phase 14 Contact/Inbox/FCM — [ADR 0004](../../decisions/0004-contact-inbox-notifications.md).
+`features/inbox` владеет ContactRequest и UID-bound repository; `features/notifications`
+владеет pure messaging/device contracts и controller, SDK только в data adapters.
+LocalRuntime создаёт dependencies; Inbox standalone из Settings, без пятого root.
+Permissions запрашиваются явно, disabled/unavailable не означают FCM enabled.
+Token cleanup/registration сериализованы, captured UID/generation защищают late
+responses и tap. Смена UID очищает private Inbox и pending notification navigation.
+Default/demo runtime не создаёт fake requests/tokens; device/live gate отдельный.
+
 Область этих правил — `apps/mobile/`.
 
 Общие правила и границы текущей фазы наследуются из [общих правил](../AGENTS.md).

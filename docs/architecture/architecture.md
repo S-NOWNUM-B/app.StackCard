@@ -172,7 +172,8 @@ Repository/DI границы — текущая основа mobile. Остал�
 публикация определены в [ADR 0001](../decisions/0001-firestore-sync-and-publication.md).
 Сохранённые схемы показывают исходные границы продукта; подробный current
 document-publication contract D048 приведён ниже. Узел на схеме не доказывает
-deployment; Inbox/FCM/CI/release остаются целевыми.
+deployment; Contact/Inbox/FCM описаны в текущем Phase 14 contract ниже,
+их live delivery gate открыт. CI/release остаются целевыми.
 
 ### Общий обзор
 
@@ -257,7 +258,7 @@ Runtime configs остаются рядом с кодом и сохраняют 
 |:---|:---|
 | `apps/mobile` | Android/iOS-редактор, offline draft и sync; функции по roadmap |
 | `apps/web` | D048 Next.js landing/download/Auth/owner/public document surfaces; browser/live acceptance открыта |
-| `firebase` | Firestore/Storage Rules, emulator tests и D048 trusted publication functions; FCM остаётся будущей capability |
+| `firebase` | Firestore/Storage Rules, emulator tests и D048 trusted publication functions и Phase 14 Contact/Inbox/FCM; live gate открыт |
 | `.github/workflows` — ещё не создан | Проверки и APK artifact; Phase 18 |
 
 </div>
@@ -289,8 +290,8 @@ Dart и TypeScript реализуют их независимо в своих с
 | `/`, `/download` | Публичная информация о проекте и мобильных релизах. |
 | Auth routes | Sign-in/register/reset; SDK session и owner access guard. |
 | `/account-deletion` | Restricted recovery прежней deletion operation из локального journal после утраты Auth; private data не читает. |
-| Private кабинет и editor по document ID | Общая база/Library, независимые Resume/Portfolio, scoped Save/base review, preview и отдельный Publish/Unpublish; только своего UID. Inbox не реализован этим пакетом. |
-| `/d/[publicId]` | Published-only Resume/Portfolio, metadata/SEO; missing/unpublished/deleted не раскрывают private existence. Contact me/Inbox остаются Phase 14. |
+| Private кабинет и editor по document ID | Общая база/Library, независимые Resume/Portfolio, scoped Save/base review, preview и отдельный Publish/Unpublish; только своего UID. Phase 14 Inbox доступен из Settings, отдельно от draft. |
+| `/d/[publicId]` | Published-only Resume/Portfolio, metadata/SEO; missing/unpublished/deleted не раскрывают private existence. Phase 14 Contact form использует только открытые projected typed contacts. |
 
 </div>
 
@@ -1049,7 +1050,64 @@ Demo profile/projects остаются локальными и не копиру
 5. Явное publish обновляет published representation; публичная страница читает её.
 
 Detection изменений GitHub и синхронизация draft не выполняют шаг публикации.
-Контактное обращение и notifications подключаются отдельным сценарием Phase 14.
+Контактное обращение и notifications принадлежат отдельному Phase 14 сценарию ниже.
+
+---
+
+## Contact, Inbox и уведомления — Phase 14
+
+[ADR 0004](../decisions/0004-contact-inbox-notifications.md) фиксирует новый
+contract, отдельный от cloud6/Hive7 draft и public schema1.
+
+Web ContactForm принимает name/email/message только на выбранной public page
+с открытым typed email/phone/Telegram и visible links block. `contactInbox`
+проверяет allowlist/размер/нормализацию/honeypot и повторно читает текущую private
+publication/public snapshot/active account в transaction. Ownership определяется
+collection-group query `publications.publicId`; public payload/response не содержит UID.
+Production требует consumed limited-use App Check token intended web appId и
+Secret Manager HMAC key; demo bypass возможен только в actual Functions emulator
+с demo project. Это ограничение злоупотреблений, не обещание полной защиты от DoS.
+
+Transactional fixed windows: 5 обращений/10 минут и 30/сутки на документ,
+3/час на пару document+normalized sender email. `contactRateLimits` хранит только
+HMAC key/count/windowStart/expiresAt, с TTL. PII не дублируется в rate docs/indexes.
+Captured requestId/payload подтверждают уже принятое обращение без quota increment
+или повторного push даже после withdrawal; новая отправка проверяет current privacy.
+Другой payload с прежним ID возвращает conflict. Web ACK не стирает поздний buffer.
+
+`accounts/{uid}/contactRequests/{requestId}` содержит ровно десять полей ADR:
+server-created имя/email/message, document identity/title, schema/request IDs,
+createdAt и readAt. Owner get/list требует active lifecycle; newest-first cursor
+createdAt+requestId, page ≤50. Client write разрешён только для readAt=request.time;
+content/create/delete закрыты. Private inbox не копируется в draft/public snapshot.
+Web использует server reads и generation/UID guards; mobile feature `inbox`
+предоставляет pure domain и UID-bound Firestore repository через feature-root DI.
+Inbox открывается из Settings (`/inbox`, `/inbox/:requestId` в mobile,
+`/workspace#inbox[/requestId]` в web), без пятого root-раздела и независимо от draft.
+
+Mobile `features/notifications` отделяет messaging/device contracts от Firebase SDK.
+LocalRuntime композиция и один controller сериализуют token cleanup/register,
+обрабатывают permission denial, token refresh, foreground и tap из background/
+terminated app. Captured UID/generation проверяются до navigation и после await;
+переход к другому владельцу очищает pending tap и private Inbox. Native auto-init
+выключен; permission не спрашивается при запуске. Configuration/default/demo
+unavailable имеет честный UI и не создаёт fake token/request.
+
+Authenticated register/revoke управляют hashed `pushDevices` и global
+`pushTokenOwners`, максимум 10 устройств на UID; token привязан к одному владельцу.
+Valid Auth account может зарегистрировать устройство до создания root account;
+locked/deleted lifecycle запрещает регистрацию, sender требует существующий active
+root. Trusted `contactInboxNotification` запускается после durable Inbox и отправляет
+только generic notification и data `{type,requestId,ownerUid}`. Перед отправкой
+повторно проверяются lifecycle/binding; stale invalid-token cleanup не удаляет
+rebound token. Durable attempt receipt подавляет дубли trigger; FCM не exactly-once,
+transport failure сохраняет Inbox. Account deletion очищает все private subcollections
+и принадлежащие UID global bindings. Browser push и чат не входят в scope.
+
+Local/emulator/mock проверки не доказывают production App Check/IAM/secrets,
+live Firestore indexes/Functions, FCM/APNs delivery или устройство. Setup и команды —
+в [CONTRIBUTING](../../CONTRIBUTING.md#contactinboxfcm--phase-14), фактический прогресс
+и открытые gates — в [Phase 14](../product/product-spec.md#phase-14--contact--inbox--fcm).
 
 ---
 

@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { DocumentView } from '@/components/document-view';
 import { ShareActions } from '@/components/share-actions';
+import { ContactForm } from '@/components/contact-form';
+import { canContact } from '@/lib/contact-contract';
 import { Header, LinkButton } from '@/components/ui';
 import {
   publicDocumentMetadata,
@@ -106,6 +108,7 @@ export default async function PublicDocumentPage({ params }: Props) {
   }
   const hasProjects = document.content.projects.length > 0;
   const hasContacts = document.content.links.length > 0;
+  const acceptsContact = canContact(document.content);
   const nav = [
     ...(hasProjects ? [{ label: 'Проекты', href: '#projects' }] : []),
     ...(hasContacts ? [{ label: 'Контакты', href: '#contacts' }] : []),
@@ -126,6 +129,7 @@ export default async function PublicDocumentPage({ params }: Props) {
             attachedResumeUrl={attachedResumeUrl}
           />
           <ShareActions title={document.title} />
+          {acceptsContact && <ContactForm key={publicId} publicId={publicId} />}
         </div>
       </main>
     </div>

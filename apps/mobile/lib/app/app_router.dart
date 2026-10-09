@@ -8,6 +8,8 @@ import '../features/home/home_screen.dart';
 import '../features/portfolio_draft/portfolio_draft.dart';
 import '../features/projects/projects.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/inbox/inbox.dart';
+import '../features/notifications/notifications.dart';
 import '../shared/widgets/stackcard_states.dart';
 import 'app_shell.dart';
 
@@ -63,6 +65,9 @@ String safeAuthDestination(String? value) {
       path == '/projects' ||
       path == '/settings' ||
       path == '/settings/appearance' ||
+      path == '/settings/notifications' ||
+      path == '/inbox' ||
+      RegExp(r'^/inbox/[0-9a-f]{32}$').hasMatch(path) ||
       path == '/settings/account' ||
       path == '/settings/profile' ||
       path == '/settings/contacts' ||
@@ -97,6 +102,17 @@ GoRouter createAppRouter({
       '/register',
       '/reset-password',
     }.contains(path);
+    final accountOnly =
+        path == '/inbox' ||
+        path.startsWith('/inbox/') ||
+        path == '/settings/notifications';
+    if (accountOnly &&
+        (access?.authenticated != true || access?.restoring == true)) {
+      return Uri(
+        path: '/sign-in',
+        queryParameters: {'from': state.uri.toString()},
+      ).toString();
+    }
     if (access?.configured != true) return null;
     if (path == '/settings/account' &&
         access!.pendingAccountDeletion &&
@@ -118,6 +134,19 @@ GoRouter createAppRouter({
     return null;
   },
   routes: [
+    GoRoute(
+      name: 'inbox',
+      path: '/inbox',
+      builder: (_, _) => const InboxScreen(),
+      routes: [
+        GoRoute(
+          name: 'inboxRequest',
+          path: ':requestId',
+          builder: (_, state) =>
+              InboxRequestScreen(requestId: state.pathParameters['requestId']!),
+        ),
+      ],
+    ),
     GoRoute(
       name: 'signIn',
       path: '/sign-in',
@@ -143,6 +172,11 @@ GoRouter createAppRouter({
       path: '/settings',
       builder: (_, _) => const SettingsScreen(),
       routes: [
+        GoRoute(
+          name: 'settingsNotifications',
+          path: 'notifications',
+          builder: (_, _) => const NotificationsScreen(),
+        ),
         GoRoute(
           name: 'developerProfile',
           path: 'profile',
