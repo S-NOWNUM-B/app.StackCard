@@ -23,7 +23,7 @@ deploy/billing/Git сохраняют отдельные ограничения.
 
 | Задача | Читать | Canonical source |
 | --- | --- | --- |
-| Commit, pull, rebase, push и исправление истории | [Git workflow](GIT_WORKFLOW.md) | Реальные status/diff, сохранённые commit objects, полный body с каждым фактическим файлом, upstream и актуальные remote refs |
+| Commit, pull, rebase, push и исправление истории | [Git workflow](GIT_WORKFLOW.md) | [.githooks/commit-msg](../../.githooks/commit-msg), [validator](../../tools/git/validate_commit_message.py), реальные status/diff, сохранённые commit objects/body, upstream и актуальные remote refs |
 | Contact form, private Inbox и native FCM | [ADR 0004](../decisions/0004-contact-inbox-notifications.md), [Contact contract](../architecture/architecture.md#contact-inbox-и-уведомления--phase-14), web/mobile/firebase scopes | `firebase/functions/src/server.mjs` (Spark Node runtime), shared `contact-*.mjs`, Rules/indexes; web contact contract/repository/form/Inbox; mobile `features/inbox`, `features/notifications`, LocalRuntime/router |
 | Разработка продукта: scope, capabilities, история фаз и сценарии | [План разработки](../product/product-spec.md#план-разработки), [Product spec](../product/product-spec.md), [правила фаз](AGENTS.md#разработка-по-плану) | Действующий scope и открытые критерии в product spec, последнее поручение пользователя и фактическая реализация |
 | Структура/зависимости mobile | [Mobile rules](scopes/mobile.md), [architecture](../architecture/architecture.md), [решения](../decisions/README.md) | `apps/mobile/pubspec.yaml`, `apps/mobile/pubspec.lock`, `apps/mobile/lib`, platform configs |

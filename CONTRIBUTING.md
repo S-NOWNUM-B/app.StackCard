@@ -899,6 +899,17 @@ lowercase; описание на русском, lowercase, без точки, �
 времени и объяснением изменения. Body обязателен: отдельный пункт для каждого
 созданного, изменённого, удалённого или переименованного файла.
 
+После clone включи нативный [commit-msg hook](.githooks/commit-msg), чтобы Git
+проверял body и пути даже при коммите из Desktop/IDE. Требуется Python 3 в PATH.
+macOS zsh/bash или Windows Git Bash, cwd корень monorepo:
+
+```sh
+git config --local core.hooksPath .githooks
+```
+
+Для `amend` используй `STACKCARD_COMMIT_MODE=amend` только перед этой командой;
+полный пример, правила и тесты — в [Git workflow](docs/AI/GIT_WORKFLOW.md#нативный-commit-msg-hook).
+
 При подключённом remote синхронизируй через rebase/autostash. После конфликтов
 проверь сохранность локальных изменений и повтори релевантные проверки.
 Не обходи hooks ради завершения операции.

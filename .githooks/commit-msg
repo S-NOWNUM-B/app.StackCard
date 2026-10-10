@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+
+# Git передаёт prospective index, включая отдельный index для --only/-a.
+root=$(git rev-parse --show-toplevel)
+export PYTHONDONTWRITEBYTECODE=1
+if command -v python3 >/dev/null 2>&1; then
+    exec python3 "$root/tools/git/validate_commit_message.py" "$1"
+elif command -v python >/dev/null 2>&1; then
+    exec python "$root/tools/git/validate_commit_message.py" "$1"
+elif command -v py >/dev/null 2>&1; then
+    exec py -3 "$root/tools/git/validate_commit_message.py" "$1"
+fi
+echo 'StackCard commit-msg: требуется Python 3 в PATH.' >&2
+exit 1
