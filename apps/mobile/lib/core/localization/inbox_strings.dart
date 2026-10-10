@@ -44,7 +44,8 @@ const russianInboxStrings = <String, String>{
       'Нет связи с сервисом регистрации. Повторите позже.',
   'notifications.error.registration':
       'Не удалось подтвердить регистрацию устройства. Повторите включение.',
-  'notifications.error.cleanup': 'Не удалось полностью отключить прежнюю регистрацию. Повторите очистку перед включением.',
+  'notifications.cleanupPending': 'Очистка прежней регистрации не завершена',
+  'notifications.error.cleanup': 'Не удалось полностью отключить прежнюю регистрацию. Повторите очистку; для удаления серверной регистрации может понадобиться вход в прежний аккаунт.',
 };
 const englishInboxStrings = <String, String>{
   'inbox.title': 'Inbox',
@@ -92,5 +93,6 @@ const englishInboxStrings = <String, String>{
       'Device registration service is offline. Try later.',
   'notifications.error.registration':
       'Device registration could not be confirmed. Retry enabling.',
-  'notifications.error.cleanup': 'The previous registration could not be fully disabled. Retry cleanup before enabling.',
+  'notifications.cleanupPending': 'Previous registration cleanup is incomplete',
+  'notifications.error.cleanup': 'The previous registration could not be fully disabled. Retry cleanup; removing the server registration may require signing in to the previous account.',
 };

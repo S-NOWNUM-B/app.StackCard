@@ -293,6 +293,18 @@ Rules Emulator Suite и native sync/restart pair — в
 Rules/indexes/config и отдельный npm suite находятся в [firebase](../../firebase/),
 не смешиваются с Flutter manifest или generated Firebase configuration.
 
+Contact/Inbox/FCM сохранены для будущего подключения: постоянный бесплатный
+hosting пока отложен. Android live acceptance — **5/5 PASS**; результаты и iOS
+ограничения — в [Phase 14](../../docs/product/product-spec.md#phase-14--contact--inbox--fcm).
+Backend и web настраиваются по [server env](../../firebase/functions/.env.example)
+и [web env](../web/.env.example); подробности — в
+[CONTRIBUTING](../../CONTRIBUTING.md#contactinboxfcm--phase-14).
+Mobile не читает `.env`: после запуска своего HTTPS API пересоберите Flutter с
+`--dart-define="CONTACT_INBOX_API_URL=<api-origin>/contactInbox"` и
+`--dart-define="STACKCARD_PUBLICATION_API_URL=<api-origin>/documentPublication"`
+(macOS zsh/bash, cwd `apps/mobile`). Это настоящие адреса того же Firebase проекта;
+без defines регистрация push и публикация недоступны, Inbox не зависит от push.
+
 Для Android нужны SDK, JDK и устройство/эмулятор; для iOS — macOS и Xcode.
 Фактические проблемы toolchain показывает `flutter doctor -v`; наличие scaffold
 не подтверждает готовность нативной сборки на конкретном компьютере.

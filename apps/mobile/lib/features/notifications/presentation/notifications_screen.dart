@@ -66,7 +66,11 @@ class NotificationsScreen extends ConsumerWidget {
               padding: const EdgeInsets.only(top: StackCardSpacing.lg),
               child: StackCardStateView(
                 kind: StackCardViewState.error,
-                title: strings.tr('notifications.error'),
+                title: strings.tr(
+                  state.failure == PushFailureKind.cleanup
+                      ? 'notifications.cleanupPending'
+                      : 'notifications.error',
+                ),
                 message: strings.tr(
                   'notifications.error.${state.failure!.name}',
                 ),

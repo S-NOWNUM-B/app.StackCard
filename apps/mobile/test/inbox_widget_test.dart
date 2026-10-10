@@ -224,6 +224,52 @@ void main() {
     },
   );
   testWidgets(
+    'new owner can enable after local cleanup while previous backend cleanup stays visible',
+    (tester) async {
+      final messaging = TestMessaging();
+      final auth = TestAuth(const AuthUser(uid: 'a'));
+      final devices = {'a': TestRegistration('a'), 'b': TestRegistration('b')};
+      final controller = NotificationsController(
+        messaging: messaging,
+        registrationForOwner: (uid) =>
+            uid == auth.current?.uid ? devices[uid] : null,
+      );
+      addTearDown(() async {
+        await _drain(tester, controller.dispose());
+        await _drain(tester, messaging.close());
+      });
+      await _open(
+        tester,
+        auth,
+        location: '/settings/notifications',
+        notifications: controller,
+        inboxes: {'b': TestInbox('b')},
+      );
+      await _tap(tester, find.byKey(const Key('notifications.enable')));
+      auth.emit(const AuthUser(uid: 'b'));
+      await tester.pumpAndSettle();
+      _router(tester).go('/settings/notifications');
+      await tester.pumpAndSettle();
+      messaging.token = 'token-b';
+      await _tap(tester, find.byKey(const Key('notifications.enable')));
+      expect(controller.state.enabled, isTrue);
+      expect(controller.state.cleanupFailed, isTrue);
+      expect(
+        find.text('Устройство зарегистрировано для этого аккаунта'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Очистка прежней регистрации не завершена'),
+        findsOneWidget,
+      );
+      expect(find.text('Уведомления не подтверждены'), findsNothing);
+      _router(tester).push('/inbox');
+      await tester.pumpAndSettle();
+      expect(find.byType(InboxScreen), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
     'UID transition clears Inbox and late old-owner page cannot appear in new account',
     (tester) async {
       final auth = TestAuth(const AuthUser(uid: 'a'));

@@ -46,6 +46,79 @@ test('submit writes exactly ten private Inbox fields after trusted owner resolut
   assert.ok(inbox.createdAt instanceof Timestamp); assert.equal(inbox.readAt, null);
   assert.equal((await database.collection('contactRateLimits').get()).size, 3);
 });
+test('post-commit notification captures only authoritative private owner and never leaks it in accepted response', async () => {
+  await published();
+  const notified = [];
+  const api = service({ notifyAccepted: async (captured) => {
+    assert.equal((await database.doc(`accounts/${captured.ownerUid}/contactRequests/${captured.requestId}`).get()).exists, true);
+    notified.push(captured);
+  } });
+  assert.deepEqual(await api.execute('foreign-caller', submit()), { status: 'accepted', requestId });
+  assert.deepEqual(notified, [{ ownerUid: 'owner', requestId }]);
+  await assert.rejects(api.execute('foreign-caller', submit({ ownerUid: 'spoofed' })), rejected('invalid-data'));
+  assert.equal(notified.length, 1);
+});
+test('concurrent accepted submissions and lost ACK retries use one receipt-gated notification transport attempt', async () => {
+  await published();
+  await service().execute('owner', device('owner-token'));
+  const sent = [], messaging = { async sendEachForMulticast(payload) {
+    sent.push(payload); return { responses: payload.tokens.map(() => ({ success: true })) };
+  } };
+  const api = service({ notifyAccepted: (captured) => sendContactNotification({ database, messaging, ...captured }) });
+  const results = await Promise.all(Array.from({ length: 4 }, () => api.execute(null, submit())));
+  assert.ok(results.every((result) => Object.keys(result).length === 2 && result.status === 'accepted' && result.requestId === requestId));
+  await api.execute(null, submit());
+  assert.equal(sent.length, 1);
+  assert.deepEqual(sent[0].data, { type: 'contactRequest', ownerUid: 'owner', requestId });
+  assert.equal((await database.collection('accounts/owner/contactRequests').get()).size, 1);
+});
+test('accepted retry recovers a notification callback failure before its first durable attempt', async () => {
+  await published();
+  await service().execute('owner', device('owner-token'));
+  let callbacks = 0, transports = 0;
+  const messaging = { async sendEachForMulticast(payload) { transports++; return { responses: payload.tokens.map(() => ({ success: true })) }; } };
+  const api = service({ notifyAccepted: (captured) => {
+    if (++callbacks === 1) throw new Error('host interrupted before sender');
+    return sendContactNotification({ database, messaging, ...captured });
+  } });
+  assert.deepEqual(await api.execute(null, submit()), { status: 'accepted', requestId });
+  assert.equal(transports, 0);
+  assert.equal((await database.doc(`accounts/owner/contactRequests/${requestId}`).get()).exists, true);
+  assert.equal((await database.doc(`accounts/owner/contactNotificationReceipts/${requestId}`).get()).exists, false);
+  assert.deepEqual(await api.execute(null, submit()), { status: 'accepted', requestId });
+  await api.execute(null, submit());
+  assert.equal(transports, 1);
+  assert.equal(callbacks, 3);
+  assert.ok((await database.collection('contactRateLimits').get()).docs.every((rate) => rate.data().count === 1));
+});
+test('portable HTTP messaging preserves exact accepted response and durable Inbox when FCM fails', async () => {
+  await published();
+  await service().execute('owner', device('owner-token'));
+  let transports = 0;
+  const messaging = { async sendEachForMulticast(payload) {
+    assert.deepEqual(payload.data, { type: 'contactRequest', ownerUid: 'owner', requestId });
+    assert.equal((await database.doc(`accounts/owner/contactRequests/${requestId}`).get()).exists, true);
+    transports++; throw new Error('FCM unavailable');
+  } };
+  const handler = createContactHttpHandler({ database, messaging, origin: 'https://stackcard.example', emulator: true, projectId });
+  async function http(body) {
+    const response = { statusCode: 200, value: null,
+      set() { return this; }, status(code) { this.statusCode = code; return this; }, json(value) { this.value = value; return this; }, end() { return this; } };
+    await handler({ method: 'POST', body, rawBody: Buffer.from(JSON.stringify(body)), get: (key) => key === 'origin' ? 'https://stackcard.example' : undefined,
+      is: (type) => type === 'application/json' }, response);
+    return response;
+  }
+  const denied = await http(submit({ ownerUid: 'foreign' }));
+  assert.equal(denied.statusCode, 400); assert.equal(transports, 0);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const accepted = await http(submit());
+    assert.equal(accepted.statusCode, 200);
+    assert.deepEqual(accepted.value, { status: 'accepted', requestId });
+    assert.ok(!JSON.stringify(accepted.value).includes('owner'));
+  }
+  assert.equal(transports, 1);
+  assert.equal((await database.doc(`accounts/owner/contactRequests/${requestId}`).get()).exists, true);
+});
 test('same immutable request is accepted idempotently; changed payload cannot overwrite Inbox or consume quota', async () => {
   await published(); const api = service();
   const results = await Promise.all(Array.from({ length: 4 }, () => api.execute(null, submit())));

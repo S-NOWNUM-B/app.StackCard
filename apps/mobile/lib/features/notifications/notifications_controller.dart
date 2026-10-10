@@ -37,14 +37,17 @@ final class NotificationsController {
   final List<StreamSubscription<dynamic>> _subscriptions = [];
   late final Future<void> _ready;
   Future<void> _work = Future.value();
-  String? _owner, _consentedOwner, _token, _tokenOwner, _pendingTap;
+  String? _owner, _consentedOwner, _token, _pendingTap;
+  // Captured token/UID сохраняются до backend ACK, даже после SDK deleteToken.
+  final _registrations = <({String uid, String token})>{};
   Map<String, dynamic>? _coldTap;
   int _generation = 0, _foregroundCount = 0;
   bool _ownerSet = false,
       _disposed = false,
       _enabled = false,
       _busy = false,
-      _cleanupFailed = false;
+      _cleanupFailed = false,
+      _cleanupBlocked = false;
   PushPermission _permission = PushPermission.unavailable;
   PushFailureKind? _failure;
   PushNotificationState get state => PushNotificationState(
@@ -117,7 +120,7 @@ final class NotificationsController {
     final generation = ++_generation;
     _enabled = false;
     _busy = true;
-    _failure = null;
+    _failure = _cleanupFailed ? PushFailureKind.cleanup : null;
     _pendingTap = null;
     _foregroundCount = 0;
     _publish();
@@ -125,14 +128,16 @@ final class NotificationsController {
       await _ready;
       final rememberedOwner = _consentedOwner;
       if (oldOwner != null ||
-          (rememberedOwner != null && rememberedOwner != uid)) {
+          (rememberedOwner != null && rememberedOwner != uid) ||
+          _registrations.isNotEmpty ||
+          _cleanupBlocked) {
         await _cleanup();
       }
       if (!_active(generation, uid)) return;
       final cold = _coldTap;
       _coldTap = null;
       if (cold != null) _tap(cold);
-      if (uid != null && rememberedOwner == uid && !_cleanupFailed) {
+      if (uid != null && rememberedOwner == uid && !_cleanupBlocked) {
         await _enable(generation, uid, request: false);
       } else {
         _busy = false;
@@ -145,7 +150,7 @@ final class NotificationsController {
     final uid = _owner, generation = _generation;
     if (uid == null || _disposed || _busy) return Future.value();
     _busy = true;
-    _failure = null;
+    _failure = _cleanupFailed ? PushFailureKind.cleanup : null;
     _publish();
     return _queue(() async {
       await _ready;
@@ -163,7 +168,7 @@ final class NotificationsController {
       final registration = registrationForOwner(uid);
       if (registration == null ||
           registration.ownerUid != uid ||
-          _cleanupFailed) {
+          _cleanupBlocked) {
         throw const PushFailure(PushFailureKind.unavailable);
       }
       final permission = await messaging.permission(request: request);
@@ -180,7 +185,7 @@ final class NotificationsController {
         throw const PushFailure(PushFailureKind.registration);
       }
       _token = token;
-      _tokenOwner = uid;
+      _registrations.add((uid: uid, token: token));
       if (!_active(generation, uid)) return;
       await registration.register(token);
       if (!_active(generation, uid)) return;
@@ -237,7 +242,11 @@ final class NotificationsController {
         if (permission != PushPermission.authorized &&
             permission != PushPermission.provisional) {
           final registered =
-              _enabled || _token != null || _consentedOwner != null;
+              _enabled ||
+              _token != null ||
+              _consentedOwner != null ||
+              _registrations.isNotEmpty ||
+              _cleanupBlocked;
           _enabled = false;
           if (registered) {
             await _cleanup();
@@ -257,20 +266,16 @@ final class NotificationsController {
   }
 
   Future<void> _cleanup() async {
-    var failed = false;
+    var failed = false, blocked = false;
     try {
       await messaging.setAutoInitEnabled(false);
     } catch (_) {
       failed = true;
+      blocked = true;
     }
-    final token = _token, owner = _tokenOwner;
-    if (token != null && owner != null) {
+    for (final registration in _registrations.toList()) {
       try {
-        final registration = registrationForOwner(owner);
-        if (registration == null) {
-          throw const PushFailure(PushFailureKind.unavailable);
-        }
-        await registration.unregister(token);
+        await _unregister(registration);
       } catch (_) {
         failed = true;
       }
@@ -278,18 +283,35 @@ final class NotificationsController {
     try {
       await messaging.deleteToken();
       _token = null;
-      _tokenOwner = null;
     } catch (_) {
       failed = true;
+      blocked = true;
     }
     try {
       await consent.writeOwner(null);
       _consentedOwner = null;
     } catch (_) {
       failed = true;
+      blocked = true;
     }
     _cleanupFailed = failed;
-    if (failed) _failure = PushFailureKind.cleanup;
+    // После подтверждённых SDK deletion/consent cleanup новый UID может явно
+    // включить push; прежний backend revoke остаётся видимым и доступным для retry.
+    _cleanupBlocked = blocked;
+    if (failed) {
+      _failure = PushFailureKind.cleanup;
+    } else if (_failure == PushFailureKind.cleanup) {
+      _failure = null;
+    }
+  }
+
+  Future<void> _unregister(({String uid, String token}) captured) async {
+    final registration = registrationForOwner(captured.uid);
+    if (registration == null || registration.ownerUid != captured.uid) {
+      throw const PushFailure(PushFailureKind.unavailable);
+    }
+    await registration.unregister(captured.token);
+    _registrations.remove(captured);
   }
 
   bool _messageForOwner(Map<String, dynamic> message) =>
@@ -336,16 +358,21 @@ final class NotificationsController {
           return;
         }
         final registration = registrationForOwner(uid);
-        if (registration == null) {
+        if (registration == null || registration.ownerUid != uid) {
           throw const PushFailure(PushFailureKind.unavailable);
         }
         final oldToken = _token;
+        _registrations.add((uid: uid, token: token));
         await registration.register(token);
         if (!_active(generation, uid)) return;
         _token = token;
-        _tokenOwner = uid;
         if (oldToken != null && oldToken != token) {
-          await registration.unregister(oldToken);
+          try {
+            await _unregister((uid: uid, token: oldToken));
+          } catch (_) {
+            _cleanupFailed = true;
+            _fail(PushFailureKind.cleanup);
+          }
         }
       } catch (error) {
         if (_active(generation, uid)) {

@@ -30,6 +30,9 @@ export function createPublicationService({ database, bucket, auth, origin, emula
   const publicationRef = (uid, documentId) => accountRef(uid).collection('publications').doc(documentId);
   const operationRef = (uid, operationId) => accountRef(uid).collection('publicationOperations').doc(operationId);
   const publicRef = (publicId) => database.doc(`publicDocuments/${publicId}`);
+  const requireStorage = () => {
+    if (!bucket) throw new PublicationError('storage-unavailable', 'Media storage and cleanup are unavailable', 503);
+  };
 
   function validDraft(draft, uid) {
     const fields = ['schemaVersion', 'ownerUid', 'mutationId', 'localRevision', 'notes', 'content', 'updatedAt'];
@@ -83,6 +86,8 @@ export function createPublicationService({ database, bucket, auth, origin, emula
       const digest = fingerprint(request);
       if (operation) {
         if (operation.fingerprint !== digest) conflict();
+        if (operation.cleanupPaths?.length || (operation.status === 'pending'
+            && (operation.media?.length || publication?.mediaPaths?.length))) requireStorage();
         return { operation, existing: true };
       }
       if (stateOf(account) !== 'active') throw new PublicationError('account-deleting', 'Account is unavailable', 409);
@@ -112,6 +117,8 @@ export function createPublicationService({ database, bucket, auth, origin, emula
           throw new PublicationError('resource-exhausted', 'Document deletion limit reached', 409);
         }
       }
+      // Без bucket не создаём journal, который потребует copy или cleanup.
+      if (projection?.media.length || publication?.mediaPaths?.length) requireStorage();
       const pending = {
         action: request.action, documentId: request.documentId, operationId: request.operationId,
         fingerprint: digest, status: 'pending', expectedGeneration: request.expectedGeneration,
@@ -127,6 +134,7 @@ export function createPublicationService({ database, bucket, auth, origin, emula
   }
 
   async function copyMedia(operation) {
+    if (operation.media.length) requireStorage();
     for (const item of operation.media) {
       const source = bucket.file(item.source);
       const [metadata] = await source.getMetadata();
@@ -178,6 +186,7 @@ export function createPublicationService({ database, bucket, auth, origin, emula
   }
 
   async function cleanupPaths(paths) {
+    if (paths.length) requireStorage();
     const failures = [];
     for (const path of paths) {
       try { await bucket.file(path).delete({ ignoreNotFound: true }); } catch { failures.push(path); }
@@ -291,6 +300,8 @@ export function createPublicationService({ database, bucket, auth, origin, emula
     if (!Number.isInteger(token.auth_time) || now() / 1000 - token.auth_time > 300 || token.auth_time > now() / 1000 + 60) {
       throw new PublicationError('reauthentication-required', 'Sign in again before deleting account', 412);
     }
+    // Private/orphan objects нельзя подтвердить без Storage: не ставим lock и не удаляем identity.
+    requireStorage();
     const prepared = await database.runTransaction(async (transaction) => {
       const [accountSnapshot, operationSnapshot, publications] = await Promise.all([
         transaction.get(accountRef(uid)), transaction.get(operationRef(uid, request.operationId)),
@@ -332,6 +343,7 @@ export function createPublicationService({ database, bucket, auth, origin, emula
   }
 
   async function cleanupAccount(uid, operationId, prepared) {
+    requireStorage();
     try {
       // Account lock уже запрещает SDK writes; withdrawal подтверждён прежде cleanup.
       const [publications, operations] = await Promise.all([

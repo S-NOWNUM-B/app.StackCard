@@ -2,7 +2,7 @@
 import {
   getLimitedUseToken,
   initializeAppCheck,
-  ReCaptchaV3Provider,
+  ReCaptchaEnterpriseProvider,
   type AppCheck,
 } from 'firebase/app-check';
 import type { User } from 'firebase/auth';
@@ -73,7 +73,7 @@ export async function submitContact(submission: ContactSubmission): Promise<void
     if (!siteKey)
       throw new ContactError('Форма связи временно недоступна.', 'configuration-required');
     appCheck ??= initializeAppCheck(firebaseServices().app, {
-      provider: new ReCaptchaV3Provider(siteKey),
+      provider: new ReCaptchaEnterpriseProvider(siteKey),
       isTokenAutoRefreshEnabled: false,
     });
     headers['X-Firebase-AppCheck'] = (await getLimitedUseToken(appCheck)).token;

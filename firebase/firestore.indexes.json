@@ -13,7 +13,6 @@
     {
       "collectionGroup": "contactRateLimits",
       "fieldPath": "expiresAt",
-      "ttl": true,
       "indexes": []
     },
     { "collectionGroup": "contactRequests", "fieldPath": "name", "indexes": [] },

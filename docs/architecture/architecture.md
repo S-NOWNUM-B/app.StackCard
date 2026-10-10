@@ -1064,13 +1064,14 @@ Web ContactForm принимает name/email/message только на выбр
 проверяет allowlist/размер/нормализацию/honeypot и повторно читает текущую private
 publication/public snapshot/active account в transaction. Ownership определяется
 collection-group query `publications.publicId`; public payload/response не содержит UID.
-Production требует consumed limited-use App Check token intended web appId и
-Secret Manager HMAC key; demo bypass возможен только в actual Functions emulator
+Live требует consumed limited-use App Check Enterprise Essentials token intended
+web appId и private HMAC env; demo bypass возможен только в actual Functions emulator
 с demo project. Это ограничение злоупотреблений, не обещание полной защиты от DoS.
 
 Transactional fixed windows: 5 обращений/10 минут и 30/сутки на документ,
 3/час на пару document+normalized sender email. `contactRateLimits` хранит только
-HMAC key/count/windowStart/expiresAt, с TTL. PII не дублируется в rate docs/indexes.
+HMAC key/count/windowStart/expiresAt, без платной Firestore TTL policy. Истёкшие
+rate docs требуют отдельной maintenance; quota windows определяет server clock. PII не дублируется в rate docs/indexes.
 Captured requestId/payload подтверждают уже принятое обращение без quota increment
 или повторного push даже после withdrawal; новая отправка проверяет current privacy.
 Другой payload с прежним ID возвращает conflict. Web ACK не стирает поздний buffer.
@@ -1093,19 +1094,33 @@ terminated app. Captured UID/generation проверяются до navigation �
 выключен; permission не спрашивается при запуске. Configuration/default/demo
 unavailable имеет честный UI и не создаёт fake token/request.
 
+Captured UID/token начатых register, включая поздний token-refresh ACK, остаются
+в памяти controller до подтверждённого backend unregister. SDK deleteToken не
+теряет pending revoke; disable/возврат прежнего owner повторяет cleanup. После
+успешной local SDK/consent очистки новый UID может явно зарегистрироваться,
+при этом предупреждение о прежнем backend revoke остаётся до ACK; ошибка local
+очистки блокирует enable. Retry прежней серверной регистрации требует Auth её
+владельца. Очередь не переживает закрытие controller и не сохраняет token на диск.
+
 Authenticated register/revoke управляют hashed `pushDevices` и global
 `pushTokenOwners`, максимум 10 устройств на UID; token привязан к одному владельцу.
 Valid Auth account может зарегистрировать устройство до создания root account;
 locked/deleted lifecycle запрещает регистрацию, sender требует существующий active
-root. Trusted `contactInboxNotification` запускается после durable Inbox и отправляет
+root. Trusted HTTP submit вызывает sender после durable Inbox commit и отправляет
 только generic notification и data `{type,requestId,ownerUid}`. Перед отправкой
 повторно проверяются lifecycle/binding; stale invalid-token cleanup не удаляет
 rebound token. Durable attempt receipt подавляет дубли trigger; FCM не exactly-once,
-transport failure сохраняет Inbox. Account deletion очищает все private subcollections
+transport failure сохраняет Inbox. Matching retry может запустить ещё не начатый
+send, но завершённый receipt повторно transport не вызывает. Account deletion очищает все private subcollections
 и принадлежащие UID global bindings. Browser push и чат не входят в scope.
 
 Local/emulator/mock проверки не доказывают production App Check/IAM/secrets,
-live Firestore indexes/Functions, FCM/APNs delivery или устройство. Setup и команды —
+live Firestore indexes/backend, FCM/APNs delivery или устройство.
+По решению пользователя 2026-10-10 live Firebase остаётся Spark. Обычный Node
+`firebase/functions/src/server.mjs` использует стандартные private ADC, Auth/
+Firestore/FCM и те же shared handlers; Cloud Functions и App Hosting не нужны.
+Без Storage доступен text-only Publish; операции с media и account delete
+отклоняются до необратимой записи. Temporary HTTPS tunnel не является постоянным hosting. Setup и команды —
 в [CONTRIBUTING](../../CONTRIBUTING.md#contactinboxfcm--phase-14), фактический прогресс
 и открытые gates — в [Phase 14](../product/product-spec.md#phase-14--contact--inbox--fcm).
 

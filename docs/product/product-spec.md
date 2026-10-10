@@ -37,6 +37,18 @@
 Переход не закрывает открытые Phase13/live/iOS/Figma проверки. Следующие фазы,
 commit/push/deploy/billing этим поручением автоматически не разрешаются.
 
+**2026-10-10: продолжена незавершённая Phase14.** Исправлены потеря retry
+серверной очистки FCM registration и поздний token-refresh register при смене UID.
+Android SDK permission mapping проверен на локальном эмуляторе. Последующее
+поручение разрешило live Firebase/deploy/FCM проверки; затем пользователь потребовал
+сохранять бесплатный Spark и использовать бесплатные открытые аналоги. Backend
+перенесён в обычный Node без Cloud Functions/App Hosting; платный TTL отключён.
+Android live Contact/FCM acceptance — **5/5 PASS**, включая настоящий tray tap
+и cold start. Пользователь затем отложил постоянный запуск: hosting отсутствует,
+функцию сохранить для будущего подключения с требованиями в env examples.
+Временные endpoints очищены; iOS/APNs и production readiness не подтверждены.
+[Результаты](#phase-14--contact--inbox--fcm) не запускают Phase15.
+
 **2026-10-08, D048:** поручение «закончи перенос» и явный ответ «Также реализовать
 web и публикацию» разрешают завершение mobile-сценариев, actual Next.js web и
 публикацию независимых Resume/Portfolio. Запрошенная реализация D048 выполнена
@@ -115,7 +127,7 @@ Private Resume attachment даёт public link только после отде�
 
 **Открытая приёмка:** полная Figma/visual/native/browser parity и прежние
 Google/reset/iOS/media/location сценарии; live cloud6 sync и deployment Rules/
-Functions/web ещё не подтверждены. Inbox/FCM, QR/Developer Card, store release
+Functions/web ещё не подтверждены. Live FCM, QR/Developer Card, store release
 и billing остаются отдельными будущими capabilities. Новые результаты tests
 не закрывают эти gates. Production публикации пользователя этим запуском не создаются.
 
@@ -718,14 +730,14 @@ R7 user acceptance и full native/browser/Figma parity остаются откр
 | Ближайший mobile блок; PR-CONTACT-01, PR-PREF-01, PR-AUTH-01, PR-ACCOUNT-01/02 | D048 source: typed Contacts/selection/privacy, reduced motion и Account actions/deletion lifecycle. Native media/location/Google/iOS и visual acceptance остаются отдельными проверками. | Login/providers отделены от public contacts; изменение базы не переписывает документы; unsupported действие не показывает success. Account deletion требует public withdrawal/cleanup contract и выполняется после него. |
 | Публикация; PR-PUB-01/02/03, PR-URL-01 | D048 trusted Functions, permanent /d/<publicId>, inventory/version/unknown recovery, public media/current-version access и delete tombstones/account lock. Deployment/live reader ещё не подтверждены. | Выбранный документ доступен по настоящему URL, draft/Library/base edits не меняют public snapshot; rename/republish сохраняют URL, duplicate его не наследует, delete не воскресает после позднего retry. |
 | Web; PR-WEB-13A/B/C | D048 actual Next.js landing/download/Auth, owner база/Library/document editors и anonymous /d/[publicId]. Headless checks и browser/live acceptance фиксируются отдельно. | Full owner editor не является предпосылкой первого public документа: source сначала mobile. После расширения оба клиента используют совместимую базу/Library/документы и owner guards. |
-| Связь и распространение; Phase 14/15 | D048 confirmed URL Copy/Open/native Share actions; device acceptance открыта. Затем отдельно ContactRequest/Inbox/FCM и Developer Card/QR. | Контактная форма следует выбранному published документу и privacy; notifications не подменяются локальным toggle. QR/Share никогда не передают фиктивную ссылку. |
+| Связь и распространение; Phase 14/15 | Phase14 ContactRequest/Inbox/FCM source реализован; Android live acceptance 5/5 PASS, постоянный запуск отложен пользователем, iOS/APNs открыты. D048 confirmed URL Copy/Open/native Share actions сохранены; Developer Card/QR — следующая отдельная capability. | Контактная форма следует выбранному published документу и privacy; notifications не подменяются локальным toggle. QR/Share никогда не передают фиктивную ссылку. |
 | Качество и выпуск; Phase 16–20 | Tests/security/CI идут вместе с capabilities; профилирование, полная native/live приёмка и release — отдельные результаты. | Есть воспроизводимые измерения/checks, приёмка критических journeys Android/iOS/web и разрешённый пользователем выпуск. |
 
 Детальные PR-* контракты и Figma/task mappings остаются в
 [prerequisites](../redesign/prerequisites.md#product-tasks-gap-и-владельцы-источников)
 и [R8/R9 plan](../redesign/plan.md#r8--перенос-согласованного-ui). Эта таблица задаёт
 актуальные приоритеты; Phase 0–12 ниже сохраняют историю/учебную прослеживаемость,
-Phase13 описывает D048 source и открытую приёмку, Phase14–20 - будущие результаты.
+Phase13/14 описывают source и открытую приёмку, Phase15–20 — будущие результаты.
 
 ### История фаз до функционального mobile scope 2026-10-07
 
@@ -909,7 +921,7 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 13a — Public shell | D048 source реализован: Next.js shell/landing/download; browser runtime и production build PASS; full Figma/release acceptance отдельно |
 | Phase 13b — Auth и редактор | D048 source реализован: Auth/UID owner база/Library/document editors; mobile fixture/web CAS browser flow PASS, full cross-client/live acceptance отдельно |
 | Phase 13c — Public Resume/Portfolio | D048 source реализован: trusted publication/permanent URL/public media/reader; backend51/projection14 и browser Publish/Unpublish/republish/Copy PASS, live acceptance отдельно |
-| Phase 14 — Contact / Inbox / FCM | В разработке; локальный Contact/Inbox и Android SDK сценарий PASS 2026-10-10, live FCM/APNs и production setup открыты |
+| Phase 14 — Contact / Inbox / FCM | Реализована; Android live 5/5 PASS 2026-10-10, постоянный запуск отложен пользователем; iOS/APNs и production readiness открыты |
 | Phase 15 — Developer Card и native sharing | Запланирована |
 | Phase 16 — Performance | Запланирована |
 | Phase 17 — Testing | Запланирована |
@@ -1913,10 +1925,11 @@ trusted validation → public reader → доступные Publish/Copy/Open д
 - [x] Создать ContactRequest и Inbox в mobile/web; обращения читает только владелец.
   Проверить переход к обращению без добавления пятой root-вкладки и передачу
   только разрешённых полей; private owner identity не раскрывать отправителю.
-- [ ] Настроить mobile FCM: device tokens, permissions и переход из уведомления
-  к обращению. Отправку выполнять с доверенной стороны, с Functions при необходимости.
-- [ ] Проверить доставку на устройстве, отказ в уведомлениях и смену аккаунта;
-  Inbox остаётся источником обращения при недоставленном push.
+- [x] Настроить Android FCM: device tokens, permissions и переход из уведомления
+  к обращению. Trusted Node sender работает без платного Cloud Functions.
+  iOS/APNs configuration и device acceptance остаются отдельной открытой проверкой.
+- [x] Проверить actual live доставку на Android, запрет уведомлений и смену аккаунта;
+  Inbox остаётся источником обращения при выключенном push.
 
 **Проверки и приёмка**
 
@@ -1925,8 +1938,11 @@ trusted validation → public reader → доступные Publish/Copy/Open д
   retry проверены. Production App Check и публичное открытие остаются отдельным gate.
 - [x] Обращение читает только владелец; отказ постороннему подтверждён
   actual emulator SDK Rules/service tests и native Android SDK acceptance.
-- [ ] FCM доставлен на устройство, переход открывает обращение;
-  отказ в notifications и смена аккаунта проверены, без push обращение остаётся в Inbox.
+- [x] Actual Android FCM доставлен, настоящий tray tap открывает обращение
+  из background и terminated; denied notifications и смена аккаунта проверены,
+  без push обращение остаётся в Inbox. Это Android acceptance, не iOS/APNs.
+- [ ] iOS/APNs device delivery и постоянный публичный запуск. Hosting отложен
+  по решению пользователя; конфигурация будущего подключения описана в env examples.
 
 **Готово, когда:** обращение с public page появляется в обоих кабинетах,
 владелец получает mobile notification, посторонний не читает Inbox. Это не чат;
@@ -1977,6 +1993,113 @@ permission denial/revocation и tap на устройстве; iOS compilation/s
 и доставка. Уже открытые live/iOS/Figma и пользовательская приёмка Phase 13
 не закрываются этими результатами. Phase 14 целиком не завершена; Phase 15
 автоматически не начата. Config/deploy/billing требуют отдельного поручения.
+
+**Продолжение Phase14 — 2026-10-10**
+
+- Две regression failures до исправления подтвердили потерю повторного backend
+  unregister после успешного SDK deleteToken и отсутствие cleanup нового token
+  при позднем register ACK после смены UID. Controller хранит captured UID/token
+  в памяти до подтверждённого revoke. После SDK/consent cleanup новый UID может
+  явно включить push; прежний backend warning остаётся видимым, retry может
+  требовать Auth прежнего владельца. Queue не сохраняет tokens на диск.
+- UI различает подтверждённую регистрацию нового аккаунта и незавершённую
+  очистку прежней. Новый widget regression подтверждает warning и доступ к Inbox.
+
+| Проверка | Фактический результат |
+| --- | --- |
+| Focused controller/UI/locale | **34/34 PASS**, включая 4 новых controller regressions и 1 widget scenario. |
+| Полный mobile gate | **1357/1357 PASS**; `flutter analyze --no-pub` — 0 issues; format всех 6 затронутых Dart-файлов PASS. |
+| Native Android permission | Actual Firebase Messaging SDK на `main_phone`: **3 отдельных прогона по 1 PASS** — notDetermined, authorized, revoked/denied. System flags заданы ADB; prompt/token/register/Auth/draft не вызываются. Это permission mapping, не live FCM или ручной отказ в prompt. |
+| Восстановление | Исходный `POST_NOTIFICATIONS granted=false` без user flags восстановлен; обычный debug APK собран и установлен через `install -r` без uninstall. Task emulator остановлен. |
+
+Raw logs: `/private/tmp/stackcard-phase14-notifications-focused.log`,
+`stackcard-phase14-continuation-tests.log`, `stackcard-phase14-continuation-analyze.log`,
+`stackcard-phase14-permission-initial.log`, `stackcard-phase14-permission-granted.log`,
+`stackcard-phase14-permission-revoked.log`, `stackcard-phase14-restored-apk-build.log`.
+Команда opt-in SDK test и восстановление — в CONTRIBUTING. Web/backend не
+изменены и их suites не повторялись. Production App Check/IAM/secrets/deployment,
+live FCM delivery/tap, ручной permission prompt и iOS/APNs остаются открытыми;
+Phase14 целиком не завершена. Commit/push/deploy не выполнялись.
+
+**Бесплатное live-окружение и отложенное подключение — 2026-10-10**
+
+- Firebase `stackcard-dev-snownumb` остаётся Spark: `billingEnabled=false`,
+  платёжный аккаунт не связан. Cloud Functions/App Hosting/Storage не развёрнуты.
+  `contactRateLimits.expiresAt` больше не включает платную TTL policy; фиксированные
+  quota windows работают по server clock, старые docs требуют отдельной maintenance.
+- Plain Node `firebase/functions/src/server.mjs` переиспользует shared Auth,
+  publication, Contact и FCM services. Submit вызывает sender после durable commit;
+  matching retry восстанавливает лишь ещё не начатую попытку. Transport failure
+  сохраняет Inbox. Без bucket доступен text-only Publish; media/account delete
+  отклоняются до необратимой записи, прежние Phase13 release gates остаются открытыми.
+- Actual Firestore Rules/indexes развёрнуты. Registered Firebase web app и бесплатный
+  App Check Enterprise Essentials provider настроены. В live-тесте Node/Next.js
+  работали через временные HTTPS Quick Tunnels с этого Mac; это dev acceptance,
+  постоянный hosting этим не обеспечен. Секреты/ADC не помещены в Git.
+- Backend **31/31 pure/real HTTP tests PASS**, syntax PASS; actual emulator
+  Rules/service suite **74/74 PASS**. Web **96/96 PASS**, typecheck, format и production
+  build PASS с actual public Firebase env. Mobile unit/widget suite **1357/1357 PASS**,
+  полный analyze — 0 issues; затронутые Dart files format PASS. Android opt-in
+  live entrypoint compiled/analyzed; обычный runtime не включает его автоматически.
+- Первый actual run остановился на отсутствующем App Check consumption permission
+  и завершился **failed**, не PASS. Пользователь затем явно разрешил ADB tray tap
+  и временное `roles/firebaseappcheck.tokenVerifier` для существующего project owner.
+  Новый run использовал настоящую web форму и Enterprise limited-use token:
+  intended app verified, `alreadyConsumed=false`, без debug/bypass token.
+  Owner/project/default Auth/Hive state не подменялись: отдельные named test sessions,
+  saved text fixtures и actual authenticated HTTP Publish.
+
+| Actual Android live сценарий | Проверенное поведение | Результат |
+| --- | --- | --- |
+| Foreground | SDK `onMessage`, нет автоматического перехода; exact обращение читается из server Inbox | **PASS** |
+| Background + tray tap | Реальное системное FCM notification → `onMessageOpenedApp` → правильный `InboxRequestScreen` и текст Firestore | **PASS** |
+| Terminated + tray tap | `am kill`, отсутствие процесса до send; настоящий tap → PID 8680 → 10227, `getInitialMessage`, правильное обращение | **PASS** |
+| Смена A → B + notification A | Actual `onMessageOpenedApp` A под B; переход отсутствует, actual Firestore SDK читает A с `permission-denied` | **PASS** |
+| Уведомления запрещены | Actual SDK denied, device registration отсутствует; browser submit accepted, exact server Inbox detail доступен без push | **PASS** |
+
+Четыре transport сценария подтвердили server FCM `successCount=1/failureCount=0`;
+в denied сценарии device count — 0, обращение сохранено. Каждый native run завершён
+`status=passed`, SDK token удалён, pending backend cleanup отсутствует, named
+sessions закрыты, default Auth/consent сохранены. Actual requestId получен от
+браузерного submit и передан host handshake; synthetic notification intent не
+использовался. Revocation SDK mapping ранее проверен отдельно; реальный ручной
+отказ в системном prompt и iOS/APNs device delivery этим не подтверждены.
+
+- После теста временное IAM-право **удалено**, остальные bindings сохранены,
+  Spark без billing повторно подтверждён. Все пять тестовых public документов
+  штатно сняты через reversible Unpublish; own push bindings — 0. Обычный debug APK
+  восстановлен через `install -r`; `POST_NOTIFICATIONS granted=false`, без
+  `user-set/user-fixed`. Node/Next.js/tunnels и запущенный для теста emulator
+  остановлены, временный ADC credential file удалён, исходная CLI сессия сохранена.
+- Автоматическая review отклонила irreversible удаление disposable Auth accounts/
+  Firestore fixtures без явного разрешения. Тестовые аккаунты/private fixtures
+  сохранены; прежний failed run также снял свою публикацию и удалил own bindings.
+  Рабочие аккаунты не удалялись.
+- Пользователь сообщил, что постоянного бесплатного hosting нет, и поручил
+  сохранить функцию для будущего подключения. В own web `.env.local` очищены
+  временные API URLs, App Check site key и web origin; normal mobile build не
+  содержит тестовых endpoint defines. UI использует существующий unavailable
+  state. Будущий setup описан в [web env](../../apps/web/.env.example),
+  [backend env](../../firebase/functions/.env.example),
+  [web guide](../../apps/web/README.md#бесплатное-окружение-spark),
+  [mobile guide](../../apps/mobile/README.md#локальная-разработка) и CONTRIBUTING.
+  Нужны собственные HTTPS Node/Next.js hosts, реальные env/defines, Rules/indexes,
+  App Check SCORE provider/intended app и права runtime ADC, включая token verifier.
+  Временный grant owner не заменяет постоянную настройку backend principal.
+  Final web production build с очищенными временными endpoints — **PASS**;
+  локальные Markdown targets после обновления guides: **545 проверены, 0 broken**.
+
+Raw metadata: `/private/tmp/stackcard-phase14-spark-live-results.json`,
+`stackcard-phase14-live-{foreground,background,terminated,foreign,denied}.json`;
+safe server diagnostics — `stackcard-phase14-spark-api.log`.
+Screenshot принятой формы — `stackcard-phase14-spark-live-contact-accepted.jpg`;
+реального background tray tap/detail — `stackcard-phase14-background-shade.png`
+и `stackcard-phase14-background-opened.png`.
+
+Android live gate Phase14 выполнен, функциональность сохранена для будущего
+подключения. Постоянный публичный запуск отложен по решению пользователя;
+iOS/APNs, полная production/Figma/user acceptance и release не объявляются
+завершёнными. Phase15 не начата.
 
 ### Phase 15 — Developer Card и native sharing
 

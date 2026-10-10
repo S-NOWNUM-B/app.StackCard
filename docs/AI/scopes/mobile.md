@@ -6,8 +6,15 @@ Phase 14 Contact/Inbox/FCM — [ADR 0004](../../decisions/0004-contact-inbox-not
 LocalRuntime создаёт dependencies; Inbox standalone из Settings, без пятого root.
 Permissions запрашиваются явно, disabled/unavailable не означают FCM enabled.
 Token cleanup/registration сериализованы, captured UID/generation защищают late
-responses и tap. Смена UID очищает private Inbox и pending notification navigation.
+responses и tap. Captured register UID/token остаётся в памяти до backend revoke
+ACK, включая поздний token-refresh ACK; успешный SDK deleteToken не теряет retry.
+Новая регистрация блокируется до SDK/consent cleanup; pending backend revoke
+остаётся warning и требует прежнего owner Auth, не наследует consent новым UID.
+Смена UID очищает private Inbox и pending notification navigation.
 Default/demo runtime не создаёт fake requests/tokens; device/live gate отдельный.
+Opt-in `integration_test/notification_permission_runtime_test.dart` читает actual
+Android permission без prompt/token/Auth/draft mutations; его локальный результат
+не подтверждает FCM delivery. Запуск и восстановление permission/APK — в CONTRIBUTING.
 
 Область этих правил — `apps/mobile/`.
 
@@ -417,3 +424,11 @@ native font/SVG/AppIcon, device smoke или live backend acceptance. Резул
 и фактические runtime ограничения фиксируются в canonical plan/product spec.
 D048 visual/browser/native проверки разрешены последующим явным ответом пользователя;
 исторические skipped checks не становятся выполненными автоматически.
+
+- Live FCM acceptance — `integration_test/notifications_live_runtime_test.dart`:
+  default Messaging только при отсутствии прежнего consent, named disposable
+  Auth/Firestore, memory test repositories и отдельный cache. Обычные default
+  Auth/Hive/settings сохраняются. Browser-generated requestId задаёт private
+  host handshake, actual event/owner/message должны совпасть. Cold PASS требует
+  новый processId и actual getInitialMessage после настоящего tray tap; подробности
+  [CONTRIBUTING](../../../CONTRIBUTING.md#contactinboxfcm--phase-14).
