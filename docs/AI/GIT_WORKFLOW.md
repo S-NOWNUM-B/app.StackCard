@@ -2,6 +2,45 @@
 
 Git-команды выполняются из корня monorepo в macOS zsh/bash. Эти правила действуют для каждого фактического commit независимо от инструмента его создания. Перед Git-операциями прочитай этот файл.
 
+## Нативный commit-msg hook
+
+Версионируемый [.githooks/commit-msg](../../.githooks/commit-msg) вызывает
+[project validator](../../tools/git/validate_commit_message.py) через Python 3.
+Он не зависит от Codex и проверяет коммиты из Desktop Commit, IDE и терминала:
+русский Conventional Commit, body и точное совпадение каждого пути с prospective
+Git index. Rename считается удалением старого и добавлением нового пути;
+для каждого нужен отдельный пункт с непустым описанием. Missing/extra/duplicate
+пути и ошибки чтения блокируют commit. Никаких ограничений 72/4000 символов нет.
+Git editor comments с префиксом `#` удаляются, проверенный текст сохраняется
+в message file; нестандартный `core.commentChar/core.commentString` отклоняется.
+
+Установка после clone, macOS zsh/bash или Windows Git Bash, cwd корень monorepo:
+
+```sh
+git config --local core.hooksPath .githooks
+```
+
+Это локальная настройка checkout: другой clone должен включить hook отдельно.
+Проверки без изменения основного репозитория, тот же терминал/cwd:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/git -p 'test_*.py' -v
+```
+
+Git не передаёт `--amend` в commit-msg. Поэтому исправление существующего commit
+требует явного режима; **не экспортировать** его для следующих обычных commits:
+
+```sh
+STACKCARD_COMMIT_MODE=amend git commit --amend -F <message-file>
+```
+
+Этот режим сравнивает index с родителем исправляемого HEAD, для первого commit —
+с пустым деревом. Обычный режим сравнивает index с HEAD. Пустые commits и amend
+merge commit отклоняются. Режим должен соответствовать операции; после создания
+всегда проверять фактический объект через `git show` и `git diff-tree --root --no-renames`.
+Hook не генерирует описания: если Desktop потерял diff/body, подготовь полное
+сообщение по реальным файлам и передай его через `git commit -F`.
+
 ИНСТРУКЦИЯ ПО GIT COMMIT, REBASE, PULL И PUSH
 Когда я прошу написать commit, создать commit, закоммитить изменения, отправить изменения, выполнить push, скачать изменения, выполнить pull, синхронизировать ветку или использую слово commit, всегда строго следуй этим правилам.
 ГЛАВНЫЙ ПРИНЦИП GIT WORKFLOW
