@@ -232,4 +232,112 @@ void main() {
     expect(consent.ownerUid, isNull);
     expect(messaging.calls.last, 'delete-token');
   });
+  test(
+    'failed backend unregister is retried after successful SDK token deletion',
+    () async {
+      await controller.setOwner('a');
+      await controller.enable();
+      devices['a']!.unregisterFailure = const PushFailure(
+        PushFailureKind.network,
+      );
+      await controller.disable();
+      expect(controller.state.cleanupFailed, isTrue);
+      expect(messaging.calls.last, 'delete-token');
+
+      devices['a']!.unregisterFailure = null;
+      await controller.disable();
+      expect(devices['a']!.trace, [
+        'register:a:token-a',
+        'unregister:a:token-a',
+        'unregister:a:token-a',
+      ]);
+      expect(controller.state.cleanupFailed, isFalse);
+    },
+  );
+  test(
+    'UID transition cleans a rotated token whose registration completed late',
+    () async {
+      await controller.setOwner('a');
+      await controller.enable();
+      final started = Completer<void>(), response = Completer<void>();
+      devices['a']!.registerAction = (token) async {
+        if (token == 'rotated-a') {
+          started.complete();
+          await response.future;
+        }
+      };
+      messaging.token = 'rotated-a';
+      messaging.refreshes.add('rotated-a');
+      await started.future;
+
+      final switching = controller.setOwner('b');
+      response.complete();
+      await switching;
+      expect(devices['a']!.trace, [
+        'register:a:token-a',
+        'register:a:rotated-a',
+        'unregister:a:token-a',
+        'unregister:a:rotated-a',
+      ]);
+      expect(devices['b']!.trace, isEmpty);
+      expect(controller.state.ownerUid, 'b');
+      expect(controller.state.enabled, isFalse);
+      expect(controller.state.cleanupFailed, isFalse);
+    },
+  );
+  test('backend cleanup warning survives explicit enable for B and retries when A returns', () async {
+    await controller.setOwner('a');
+    await controller.enable();
+    devices['a']!.unregisterFailure = const PushFailure(
+      PushFailureKind.unauthenticated,
+    );
+
+    await controller.setOwner('b');
+    messaging.token = 'token-b';
+    await controller.enable();
+    expect(controller.state.enabled, isTrue);
+    expect(controller.state.cleanupFailed, isTrue);
+    expect(controller.state.failure, PushFailureKind.cleanup);
+    expect(consent.ownerUid, 'b');
+    expect(devices['b']!.trace, ['register:b:token-b']);
+
+    devices['a']!.unregisterFailure = null;
+    await controller.setOwner('a');
+    expect(devices['a']!.trace, [
+      'register:a:token-a',
+      'unregister:a:token-a',
+      'unregister:a:token-a',
+    ]);
+    expect(devices['b']!.trace, ['register:b:token-b', 'unregister:b:token-b']);
+    expect(controller.state.cleanupFailed, isFalse);
+    expect(controller.state.failure, isNull);
+    expect(controller.state.enabled, isFalse);
+    expect(consent.ownerUid, isNull);
+  });
+  test('failed previous token cleanup during rotation is retained for disable retry', () async {
+    await controller.setOwner('a');
+    await controller.enable();
+    devices['a']!.unregisterFailure = const PushFailure(
+      PushFailureKind.network,
+    );
+    messaging.token = 'rotated-a';
+    final cleanupFailed = controller.states.firstWhere(
+      (state) => state.cleanupFailed,
+    );
+    messaging.refreshes.add('rotated-a');
+    await cleanupFailed;
+    expect(controller.state.enabled, isTrue);
+    expect(controller.state.failure, PushFailureKind.cleanup);
+
+    devices['a']!.unregisterFailure = null;
+    await controller.disable();
+    expect(devices['a']!.trace, [
+      'register:a:token-a',
+      'register:a:rotated-a',
+      'unregister:a:token-a',
+      'unregister:a:token-a',
+      'unregister:a:rotated-a',
+    ]);
+    expect(controller.state.cleanupFailed, isFalse);
+  });
 }

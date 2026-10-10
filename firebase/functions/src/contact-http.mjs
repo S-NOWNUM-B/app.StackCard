@@ -1,8 +1,8 @@
 import { publicOrigin } from './projection.mjs';
 import { ContactError, normalizeContactRequest, isDemoFunctionsEmulator, verifyContactAppCheck } from './contact-contract.mjs';
-import { createContactService } from './contact-service.mjs';
+import { createContactService, sendContactNotification } from './contact-service.mjs';
 
-export function createContactHttpHandler({ database, auth, appCheck, origin, emulator = false, projectId, appId, secret }) {
+export function createContactHttpHandler({ database, auth, appCheck, messaging, origin, emulator = false, projectId, appId, secret }) {
   return async (request, response) => {
     response.set('Cache-Control', 'no-store'); response.set('X-Content-Type-Options', 'nosniff');
     const demo = isDemoFunctionsEmulator(emulator, projectId), requestOrigin = request.get('origin');
@@ -28,7 +28,10 @@ export function createContactHttpHandler({ database, auth, appCheck, origin, emu
         try { uid = (await auth.verifyIdToken(match[1], true)).uid; }
         catch { throw new ContactError('unauthenticated', 401); }
       }
-      const service = createContactService({ database, secret: secret || (demo ? 'demo-contact-rate-hmac-key-not-for-production' : undefined) });
+      const service = createContactService({
+        database, secret: secret || (demo ? 'demo-contact-rate-hmac-key-not-for-production' : undefined),
+        notifyAccepted: messaging ? (captured) => sendContactNotification({ database, messaging, ...captured }) : undefined,
+      });
       response.status(200).json(await service.execute(uid, body));
     } catch (error) {
       if (error instanceof ContactError) response.status(error.httpStatus).json({ error: { code: error.code } });

@@ -8,10 +8,10 @@ const active = (account) => (account?.lifecycleState ?? 'active') === 'active';
 const timestamp = () => FieldValue.serverTimestamp();
 const unavailable = () => { throw new ContactError('document-unavailable', 404); };
 
-export function createContactService({ database, secret, now = () => Date.now() }) {
+export function createContactService({ database, secret, now = () => Date.now(), notifyAccepted }) {
   async function submit(request) {
     const quotas = contactQuotaWindows({ publicId: request.publicId, email: request.email, secret, now: now() });
-    return database.runTransaction(async (transaction) => {
+    const accepted = await database.runTransaction(async (transaction) => {
       // Единственный источник ownership — private publication; public snapshot не содержит UID.
       const matches = await transaction.get(database.collectionGroup('publications').where('publicId', '==', request.publicId).limit(2));
       if (matches.size !== 1) unavailable();
@@ -26,7 +26,7 @@ export function createContactService({ database, secret, now = () => Date.now() 
         if (existing.data().schemaVersion !== 1 || existing.data().documentId !== mapping.documentId
             || !sameContactPayload(existing.data(), request)) throw new ContactError('conflict', 409);
         // Lost ACK подтверждает прежний durable write даже после withdrawal; новый submit закрыт.
-        return { status: 'accepted', requestId: request.requestId };
+        return { ownerUid: accountRef.id, result: { status: 'accepted', requestId: request.requestId } };
       }
       if (mapping.state !== 'published' || !snapshot || snapshot.schemaVersion !== 1
           || snapshot.publicId !== request.publicId || snapshot.version !== mapping.version
@@ -42,8 +42,12 @@ export function createContactService({ database, secret, now = () => Date.now() 
         count: (rates[index].data()?.count ?? 0) + 1,
         windowStart: Timestamp.fromMillis(quotas[index].windowStart), expiresAt: Timestamp.fromMillis(quotas[index].expiresAt),
       });
-      return { status: 'accepted', requestId: request.requestId };
+      return { ownerUid: accountRef.id, result: { status: 'accepted', requestId: request.requestId } };
     });
+    // Callback выполняется после durable commit и на lost-ACK retry; receipt ограничивает transport attempt.
+    try { await notifyAccepted?.({ ownerUid: accepted.ownerUid, requestId: request.requestId }); }
+    catch { /* Best effort: недоступность push не отменяет уже сохранённый Inbox. */ }
+    return accepted.result;
   }
   async function register(uid, request) {
     const hash = tokenHash(request.token), accountRef = database.doc(`accounts/${uid}`);

@@ -21,7 +21,7 @@
   buffer. Apply проверяет их неизменность, фото URL/path переносит одной парой;
   dialog показывает captured строки и блокирует фоновые Save/Cancel/exit.
   Поздний media ACK сохраняет ввод, но делает прежний review устаревшим.
-- `src/lib/publication.ts` вызывает trusted Firebase HTTP API с ID token;
+- `src/lib/publication.ts` вызывает trusted Node HTTP API с ID token;
   operation ID, inventory version/generation и saved mutation защищают retry/races.
   UID-scoped metadata receipts сохраняются в `localStorage` с readback и защитой
   от другой вкладки; неизвестный результат повторяется с тем же ID. Квитанция
@@ -42,6 +42,10 @@
   публикацию повторно. `contact-repository.ts` получает limited-use App Check token;
   emulator bypass ограничен demo project. Captured submit/requestId сохраняются при
   unknown retry, поздний ввод не стирается ACK. Ответ не содержит owner UID.
+  Live Spark использует бесплатный reCAPTCHA Enterprise Essentials provider;
+  site key и intended appId берутся из actual registered web app.
+  SSR Next.js и Node API размещаются самостоятельно без Cloud Functions/App Hosting;
+  временный HTTPS tunnel подтверждает только dev acceptance, не постоянный hosting.
   Private Inbox читает server-only `accounts/UID/contactRequests`, ≤50 newest-first,
   strict parser принимает exact10 fields; update только readAt serverTimestamp.
   Inbox доступен из Settings/hash, не зависит от draft и не добавляет root-вкладку.

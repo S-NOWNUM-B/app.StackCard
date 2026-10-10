@@ -20,11 +20,16 @@ Scope и фактическая приёмка остаются в [product spec
 - Pure Dart contracts, UID-bound Firestore adapters и Hive outbox принадлежат
   `apps/mobile/lib/features/portfolio_draft`. Runtime composition — LocalRuntime.
   Не переносить SDK в domain или widgets и не дублировать cloud schema.
-- [Functions](../../../firebase/functions/) владеют authenticated HTTP
+- [Backend](../../../firebase/functions/) владеет authenticated HTTP
   `documentPublication`: ID token/UID, CORS origin, authoritative saved mutation,
   deep workspace validation/privacy projection, permanent ID, operation CAS/recovery,
   immutable public media и delete lifecycle. [Manifest](../../../firebase/functions/package.json)
   и [.env.example](../../../firebase/functions/.env.example) — runtime/commands/origin.
+  Live Spark использует `src/server.mjs` и `npm start` с private ADC/HMAC env;
+  `src/index.mjs` — прежний Functions adapter только для demo emulators.
+  Cloud Functions/App Hosting/Storage/TTL live не развёртывать: требуют billing.
+  Без Storage разрешён text-only Publish; media операции и account delete
+  завершаются configuration error до необратимой записи.
   Admin SDK обходит Rules; server validation tests обязательны отдельно.
 - [storage.rules](../../../firebase/storage.rules) и `features/media` владеют
   Phase 11 private image доступом. Path `accounts/{uid}/media/{32hex}.jpg`:
@@ -40,12 +45,15 @@ Scope и фактическая приёмка остаются в [product spec
 - Phase 14 `contactInbox` и trusted FCM sender следуют
   [ADR 0004](../../decisions/0004-contact-inbox-notifications.md). Anonymous submit
   требует consumed App Check intended appId и HMAC secret; bypass только actual
-  Functions emulator + demo project. Transaction перепроверяет active account,
+  emulator + demo project с actual loopback Auth/Firestore hosts. Transaction перепроверяет active account,
   current publication/contact privacy, idempotency и quotas. Owner collection
   contactRequests отдельна от draft, exact10 fields; list ≤50, update только readAt.
   Private hashed device bindings допускают один UID на token; register/revoke
   authenticated, sender использует только актуальную active binding. Generic push
-  без имени/email/message; delivery failure не удаляет обращение. Account cleanup
+  без имени/email/message; delivery failure не удаляет обращение.
+  HTTP submit вызывает sender после commit; receipt обеспечивает максимум один
+  transport attempt, matching retry восстанавливает только ещё не начатый send.
+  `expiresAt` — metadata rate window, без платной Firestore TTL policy. Account cleanup
   удаляет и глобальные bindings. Emulator/mocks не доказывают live FCM delivery.
 
 - Private notes/account data не смешивать с public snapshot; hidden content
@@ -99,7 +107,7 @@ Scope и фактическая приёмка остаются в [product spec
   `test:rules` сохраняет Firestore-only contract. Native media SDK acceptance
   использует Auth/Storage emulators и отдельные named apps; системный picker,
   отказ permissions и live bucket требуют отдельной приёмки. Billing/deploy
-  автоматически не выполняются. Для handler из `firebase/functions` — `npm run check`
+  автоматически не выполняются; Spark-only правило обязательно. Для handler из `firebase/functions` — `npm run check`
   и `npm test`; команды полного emulated integration берутся из actual manifest.
 - Native acceptance имеет explicit opt-in, отдельный test storage/disposable
   accounts и `--no-uninstall`; обычный app draft/session не очищаются.

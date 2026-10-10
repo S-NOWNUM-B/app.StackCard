@@ -66,6 +66,36 @@ function request(action = 'publish', overrides = {}) {
 }
 const rejected = (code) => (error) => error.code === code;
 
+test('without Storage text-only publication and withdrawal work, photos fail before journal writes', async () => {
+  await saveFixture();
+  const api = service({ bucket: null });
+  const published = await api.execute('owner', request());
+  assert.equal(published.status, 'completed');
+  const withdrawn = await api.execute('owner', request('unpublish', { expectedVersion: 1, expectedGeneration: 1 }));
+  assert.equal(withdrawn.status, 'completed');
+  assert.equal((await database.doc(`publicDocuments/${published.publication.publicId}`).get()).exists, false);
+  await saveFixture({ media: true });
+  await assert.rejects(api.execute('owner', request('publish', { operationId: 'photo-without-storage', expectedVersion: 2, expectedGeneration: 2 })), rejected('storage-unavailable'));
+  assert.equal((await database.doc('accounts/owner/publicationOperations/photo-without-storage').get()).exists, false);
+  assert.equal((await database.doc('accounts/owner').get()).data().lifecycleGeneration, 2);
+});
+
+test('without Storage media withdrawal and account deletion reject before any lifecycle/data mutation', async () => {
+  await saveFixture({ media: true });
+  const published = await service().execute('owner', request());
+  let identityDeleted = false;
+  const api = service({ bucket: null, auth: fakeAuth(async () => { identityDeleted = true; }) });
+  await assert.rejects(api.execute('owner', request('unpublish', { expectedVersion: 1, expectedGeneration: 1 })), rejected('storage-unavailable'));
+  assert.equal((await database.doc('accounts/owner/publicationOperations/unpublish-operation').get()).exists, false);
+  await assert.rejects(api.execute('owner', { action: 'deleteAccount', operationId: 'blocked-delete', expectedGeneration: 1, recoveryKey }, { auth_time: Math.floor(instant() / 1000) }), rejected('storage-unavailable'));
+  const account = (await database.doc('accounts/owner').get()).data();
+  assert.equal(account.lifecycleState, 'active'); assert.equal(account.lifecycleGeneration, 1);
+  assert.equal(account.deletionOperationId, undefined); assert.equal(identityDeleted, false);
+  assert.equal((await database.doc('accounts/owner/publicationOperations/blocked-delete').get()).exists, false);
+  assert.equal((await database.doc('accounts/owner/drafts/current').get()).exists, true);
+  assert.equal((await database.doc(`publicDocuments/${published.publication.publicId}`).get()).exists, true);
+});
+
 test('server uses exact saved mutation, projects only selected data and resolves lost response idempotently', async () => {
   await saveFixture();
   const api = service();

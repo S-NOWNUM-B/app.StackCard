@@ -309,25 +309,47 @@ subcollections и UID-owned global token bindings.
 
 Web [.env.example](apps/web/.env.example): `NEXT_PUBLIC_CONTACT_INBOX_API_URL`
 для `contactInbox` и `NEXT_PUBLIC_APP_CHECK_SITE_KEY` для зарегистрированного
-reCAPTCHA v3 App Check web provider. Functions [.env.example](firebase/functions/.env.example):
+reCAPTCHA Enterprise Essentials App Check web provider (бесплатный Spark).
+Backend [.env.example](firebase/functions/.env.example):
 exact `PUBLIC_WEB_ORIGIN` и intended `CONTACT_APP_CHECK_APP_ID` того же web app.
-`CONTACT_RATE_HMAC_KEY` (≥32 символа) — Secret Manager `defineSecret`, не public
-env/репозиторий. Production дополнительно требует App Check token-consumption
-Token Verifier IAM permissions и отдельно развёрнутых Rules/indexes/Functions/web.
+`CONTACT_RATE_HMAC_KEY` (≥32 символа) — private server env, не public env/репозиторий.
+Live дополнительно требует App Check token-consumption Token Verifier IAM
+permissions и отдельно развёрнутых Rules/indexes, Node API и Next.js web.
+`roles/firebaseappcheck.tokenVerifier` требуется именно runtime principal ADC;
+обычная `roles/owner` не заменяет это право. Временный grant личному owner для
+live-теста снимается после проверки. Постоянный backend требует своего
+согласованного runtime principal с этим правом; без него submit закрывается.
+Cloud Functions/App Hosting/Storage/Firestore TTL live запрещены Spark-only правилом.
+`src/index.mjs` остаётся demo Functions adapter; живой сервер — `src/server.mjs`.
+С private standard ADC (`GOOGLE_APPLICATION_CREDENTIALS`, не Git), explicit
+`GCLOUD_PROJECT`, `BACKEND_PORT`, origin/appId/HMAC из `.env.example`,
+macOS zsh/bash, cwd `firebase/functions`: `npm start`. Сервер слушает loopback;
+HTTPS обеспечивает собственный reverse proxy или временный tunnel. `/health`
+проверяет запуск; API paths — `/contactInbox` и `/documentPublication`.
+Не создавайте service account keys для теста, когда есть стандартные user ADC.
+Без bucket доступен text-only Publish; media операции и account delete
+отклоняются до irreversible writes. Quick Tunnel — только dev acceptance,
+его случайный URL нужно зарегистрировать в App Check и web/native env,
+после остановки он не обеспечивает live availability.
 [Firebase replay protection](https://firebase.google.com/docs/app-check/custom-resource-backend#replay_protection_beta)
 описывает consumed limited-use проверку; обычный reusable token не заменяет её.
 Отсутствующая конфигурация закрывает submit. Demo bypass ограничен actual Functions
 emulator + demo project, не произвольным client flag или production project.
 
 Canonical indexes включают collection-group `publications.publicId` для private
-lookup, TTL `contactRateLimits.expiresAt` и отключённое индексирование visitor PII/
-FCM tokens. TTL очищает истёкшие rate docs асинхронно; фиксированные windows
-определяет server clock, а не момент TTL deletion.
+lookup и отключённое индексирование visitor PII/FCM tokens.
+`contactRateLimits.expiresAt` не включает платную TTL policy; фиксированные windows
+определяет server clock. Истёкшие rate docs остаются до отдельной доверенной
+maintenance очистки; контролируйте бесплатную Firestore storage quota.
 
 Mobile получает `CONTACT_INBOX_API_URL` через Dart define; adapter принимает HTTPS,
 demo HTTP только при demo Firebase app+Auth emulator configuration. Firebase Messaging
 native auto-init выключен до явного разрешения владельца. Settings показывает
 реальные permission/registration/cleanup states; permission denied не скрывает Inbox.
+Pending backend revoke сохраняется в памяти controller до ACK; успешный SDK
+deleteToken не стирает его. После смены аккаунта retry может требовать вход в
+прежний account. Только failure local SDK/consent cleanup блокирует новый enable;
+неподтверждённый backend revoke остаётся видимым и после явного enable нового UID.
 FCM live setup требует действующего Firebase Android app и устройства с Google Play
 services; для iOS — Xcode signing, Push Notifications capability/aps entitlement,
 APNs key в Firebase и физического устройства. Наличие manifest/entitlement не
@@ -349,10 +371,13 @@ URLs, emulator flag и local origin. Secret/real App Check/FCM transport для 
 не требуются; notification trigger в demo не отправляет live FCM. Web проверки —
 `typecheck`, `test`, `format:check`, `build` из `apps/web` (macOS zsh/bash).
 Mobile проверки — format/analyze/tests из `apps/mobile` по существующему gate.
+Live submit вызывает sender после durable commit без облачного trigger; matching
+retry не дублирует transport с receipt, ошибка push сохраняет Inbox.
 Live acceptance проверяет валидное обращение в обоих Inbox, чужой UID, отказ/
 revocation permissions, token refresh, delivery/tap из background и terminated,
 смену UID во время enable/cleanup и сохранение Inbox при transport failure.
-Emulator и fake messaging tests не заменяют этот gate; deploy/billing отдельно.
+Emulator и fake messaging tests не заменяют этот gate; deploy в разрешённом scope,
+billing upgrade запрещён.
 
 Opt-in native Inbox acceptance использует только именованные SDK apps с `demo-`
 project и localhost/Android host, не default/live session. Подготовьте temporary
@@ -371,6 +396,61 @@ flutter test integration_test/inbox_runtime_test.dart -d "<android-id>" --no-pub
 Тест проверяет actual Dart SDK server reads/cursor/readAt, foreign/anonymous
 denial и UID guards. `--no-uninstall` сохраняет данные приложения; после тестового
 APK восстановите обычный debug APK через build и `adb install -r`, не uninstall.
+
+Отдельный opt-in [native permission test](apps/mobile/integration_test/notification_permission_runtime_test.dart)
+проверяет mapping настоящего Android `POST_NOTIFICATIONS` через Firebase SDK.
+Он не запрашивает permission, не получает/удаляет FCM token, не читает Auth/draft
+и требует выключенный auto-init. Используйте только dev Android 13+; перед
+изменением разрешения сохраните его granted/flags из `adb shell dumpsys package`
+и после проверки восстановите исходное состояние. Для локального эмулятора с
+исходным `granted=false`, без `user-set/user-fixed` и прежних SDK permission requests,
+macOS zsh/bash, cwd `apps/mobile`:
+
+```zsh
+flutter test integration_test/notification_permission_runtime_test.dart -d "<android-id>" --no-pub --no-uninstall --dart-define=RUN_NOTIFICATION_PERMISSION_ACCEPTANCE=true --dart-define=NOTIFICATION_EXPECTED_PERMISSION=notDetermined
+adb -s "<android-id>" shell pm grant com.example.app_stackcard android.permission.POST_NOTIFICATIONS
+flutter test integration_test/notification_permission_runtime_test.dart -d "<android-id>" --no-pub --no-uninstall --dart-define=RUN_NOTIFICATION_PERMISSION_ACCEPTANCE=true --dart-define=NOTIFICATION_EXPECTED_PERMISSION=authorized
+adb -s "<android-id>" shell pm revoke com.example.app_stackcard android.permission.POST_NOTIFICATIONS
+adb -s "<android-id>" shell pm set-permission-flags com.example.app_stackcard android.permission.POST_NOTIFICATIONS user-set
+flutter test integration_test/notification_permission_runtime_test.dart -d "<android-id>" --no-pub --no-uninstall --dart-define=RUN_NOTIFICATION_PERMISSION_ACCEPTANCE=true --dart-define=NOTIFICATION_EXPECTED_PERMISSION=denied
+adb -s "<android-id>" shell pm clear-permission-flags com.example.app_stackcard android.permission.POST_NOTIFICATIONS user-set user-fixed
+flutter build apk --debug --no-pub
+adb -s "<android-id>" install -r build/app/outputs/flutter-apk/app-debug.apk
+```
+
+Если любой шаг неуспешен, всё равно восстановите permission и обычный APK.
+Эта проверка не заменяет ручной отказ в системном prompt, live delivery/tap или
+controller resume/UID scenarios; последние отдельно проверяются regression tests.
+
+Opt-in [live FCM test](apps/mobile/integration_test/notifications_live_runtime_test.dart)
+использует default Messaging SDK, отдельные named Auth/Firestore apps и disposable
+accounts. Если есть прежний default push consent, тест останавливается до изменений.
+`RUN_NOTIFICATION_LIVE_ACCEPTANCE=true`, `NOTIFICATION_LIVE_RUN_ID` (32 hex),
+`NOTIFICATION_LIVE_STAGE` (`foreground`, `background`, `terminated`, `foreign`,
+`denied`; `revoked` отдельно), `NOTIFICATION_LIVE_MESSAGE`, `CONTACT_INBOX_API_URL`
+и `STACKCARD_PUBLICATION_API_URL` передаются временным define JSON вне Git.
+macOS zsh/bash, cwd `apps/mobile`: `flutter build apk --debug --no-pub --target
+integration_test/notifications_live_runtime_test.dart --dart-define-from-file="<temporary-live-defines.json>"`.
+Установка только `adb install -r -t`, без uninstall/clear и автоматического `-g`.
+
+Private cache `stackcard-phase14-live-<runId>/<stage>.json` содержит только metadata.
+Host после `owner-created` создаёт исключительно проверенному новому test UID
+active root generation0 и canonical schema6 saved text-only document по указанным
+`documentId`/`sourceMutationId`, затем пишет `<stage>.command=fixture-ready`.
+Test сам выполняет authenticated Publish с RAM-only ID token. После `ready/armed`
+выполнить настоящую отправку public формы; её actual requestId по owner/exact message
+записать в `<stage>.request-id` (32 hex), не подменять browser-generated ID.
+Для `denied` дополнительно command `inbox-submitted`; для `foreign` — `switch-owner`,
+проверенный disposable B fixture и `foreign-fixture-ready`.
+
+Принять только `status=passed` с confirmed actual SDK event, exact server message,
+`sdkTokenDeleted`, отсутствием `backendCleanupPending`, `isolatedSessionsClosed`,
+`defaultSessionPreserved` и `defaultConsentPreserved`. Background tap нажимает
+настоящее tray notification; cold проверка требует Home → `am kill` (не force-stop)
+→ FCM → настоящее нажатие, новый processId и `getInitialMessage`. Compiled standalone
+APK выбран для process recreation; killed Flutter runner не выдаётся за PASS.
+После теста удалить только собственные disposable cloud fixtures/bindings, вернуть
+обычный APK/исходные permission flags; временные URLs не доказывают stable hosting.
 
 ## Web и document publication
 

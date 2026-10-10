@@ -17,6 +17,7 @@
 - [Что хранится здесь](#что-хранится-здесь)
 - [Типовые сценарии](#типовые-сценарии)
 - [Запуск и проверка](#запуск-и-проверка)
+- [Бесплатное окружение Spark](#бесплатное-окружение-spark)
 - [Правила](#правила)
 
 ---
@@ -115,7 +116,7 @@ Public media ограничены данным ID/версией; private paths 
 Contact form появляется только при открытом projected email/phone/Telegram
 и visible links block. `NEXT_PUBLIC_CONTACT_INBOX_API_URL` указывает на
 trusted `contactInbox`; production требует `NEXT_PUBLIC_APP_CHECK_SITE_KEY`
-зарегистрированного reCAPTCHA v3 provider и consumed limited-use token. Отсутствие
+зарегистрированного score-based reCAPTCHA Enterprise provider и consumed limited-use token. Отсутствие
 конфигурации показывает unavailable. Server повторно проверяет публикацию/privacy,
 применяет honeypot/validation и transactional HMAC quotas по
 [ADR 0004](../../docs/decisions/0004-contact-inbox-notifications.md). Unknown retry
@@ -164,6 +165,65 @@ socket CLI. Production build не нужно выполнять параллел
 не входят в Git. Применяемый scoped gRPC override исправляет advisory
 [GHSA-m9gg-hp2v-232j](https://github.com/advisories/GHSA-m9gg-hp2v-232j)
 в транзитивном Node-пакете Firebase; private SDK остаётся browser-only.
+
+---
+
+## Бесплатное окружение Spark
+
+Постоянный запуск Contact/Inbox/FCM отложен по решению пользователя 2026-10-10:
+своего hosting пока нет. Реализация сохранена, Android live acceptance — **5/5 PASS**;
+результаты и отдельные iOS/release gates — в [Phase 14](../../docs/product/product-spec.md#phase-14--contact--inbox--fcm).
+До подключения оставьте API URLs и App Check site key пустыми: существующий UI
+сообщает о недоступной форме, опубликованные контакты остаются доступны.
+
+Firebase остаётся на Spark: Auth, Firestore и FCM работают в пределах бесплатных
+квот. Доверенный API можно запустить обычным Node-процессом из
+[`firebase/functions/src/server.mjs`](../../firebase/functions/src/server.mjs),
+переиспользуя те же Contact и Publication services. Firebase Functions и App
+Hosting для этого запуска не нужны. Параметры API и его порт принадлежат
+[`firebase/functions/.env.example`](../../firebase/functions/.env.example).
+
+Настройте private окружение backend: actual project, точный HTTPS web origin,
+intended App Check web app ID, HMAC secret не короче 32 символов и стандартные
+Firebase Admin ADC. Credentials и HMAC не входят в web env, Git или logs.
+Runtime principal ADC требует `roles/firebaseappcheck.tokenVerifier` для consumed
+token, а также прав используемых Auth/Firestore/FCM APIs. Временное право личному
+owner после live-теста снято; оно не считается настройкой постоянного backend.
+Сервер слушает только loopback; `GET /health` возвращает минимальный статус,
+`/contactInbox` и `/documentPublication` сохраняют существующие HTTP-контракты.
+Запуск backend из `firebase/functions`, macOS — zsh/bash, Windows — WSL/Ubuntu:
+
+```bash
+npm ci
+node --env-file=.env.local src/server.mjs
+```
+
+В `apps/web/.env.local` укажите фактические HTTPS адреса API с соответствующими
+paths и origin самого Next.js сайта. Зарегистрируйте Web app в Firebase App Check
+с [reCAPTCHA Enterprise score key](https://firebase.google.com/docs/app-check/web/recaptcha-enterprise-provider),
+разрешив точный hostname сайта; ключ помещается в `NEXT_PUBLIC_APP_CHECK_SITE_KEY`.
+После заполнения `NEXT_PUBLIC_*` пересоберите сайт (`npm run build`), затем
+запустите `npm run start -- --hostname 127.0.0.1` за своим HTTPS reverse proxy.
+Клиент получает новый limited-use token на каждую отправку или retry, backend
+потребляет его и проверяет intended app ID. Auto-refresh выключен. Auth domain
+сайта должен быть разрешён в Firebase Authentication.
+
+Для live DEV-проверки Next.js и API можно временно открыть через
+[Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
+Они не требуют аккаунта или домена, но URL меняется после перезапуска и работает
+лишь пока запущены локальные процессы. Такой адрес не считается постоянным
+production deployment. После смены hostname обновите App Check/Auth domains,
+точный backend origin и web env, затем пересоберите Next.js: `NEXT_PUBLIC_*`
+фиксируются при build. Не подставляйте прежний временный адрес в новые публикации.
+
+Без live Storage bucket доступна публикация без загружаемых private изображений;
+media copy/cleanup и удаление аккаунта возвращают `storage-unavailable` до новых
+изменений, а status/inventory остаются доступными. Firebase Storage
+[требует Blaze даже для существующих buckets](https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024).
+Поэтому `PUBLIC_STORAGE_BUCKET` в live Spark backend остаётся пустым. Bucket и
+App Check bypass разрешены только для `demo-*` с actual loopback Auth/Firestore
+emulators; для bucket нужен также loopback Storage emulator. Demo-проверки и
+мокированный транспорт не подтверждают live FCM или переход по уведомлению.
 
 ---
 
