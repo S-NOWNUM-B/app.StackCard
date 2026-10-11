@@ -1,11 +1,16 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../apps/web/public/branding/stackcard-v2-mark-paper.svg">
+  <img src="../../apps/web/public/branding/stackcard-v2-mark-ink.svg" width="64" height="64" alt="Логотип StackCard — Brand A">
+</picture>
+
 # StackCard Product
 
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
-![Stage local transfer verified](https://raster.shields.io/badge/Stage-local_transfer_verified-111111?style=for-the-badge)
-![Mobile + Web source](https://raster.shields.io/badge/Mobile_%2B_Web-source-C7FF1A?style=for-the-badge)
+![Stage local transfer verified](https://img.shields.io/badge/Stage-local_transfer_verified-111111?style=for-the-badge)
+![Mobile + Web source](https://img.shields.io/badge/Mobile_%2B_Web-source-C7FF1A?style=for-the-badge)
 
 </div>
 
@@ -137,15 +142,35 @@ username API не определяет этот public contract.
 Private Resume attachment даёт public link только после отдельной подтверждённой
 публикации Resume. Фиктивные URL или success для отсутствующего сервиса запрещены.
 
-**Открытая приёмка:** полная Figma/visual/native/browser parity и прежние
-Google/reset/iOS/media/location сценарии; live cloud6 sync и deployment Rules/
-Functions/web ещё не подтверждены. Live FCM, QR/Developer Card, store release
-и billing остаются отдельными будущими capabilities. Новые результаты tests
+**Открытая приёмка:** полная Figma/visual/native/browser parity, полный password
+reset, iOS/APNs и оставшиеся media/location сценарии. Android Google-вход и
+восстановление сессии приняты 2026-10-11; Android live Contact/FCM — 5/5 PASS
+по Phase 14. Постоянные HTTPS Node API и web hosting отложены; временный запуск
+не доказывает production availability. Cloud Functions/App Hosting/billing не
+включены. QR/Developer Card и store release остаются в плане. Новые результаты tests
 не закрывают эти gates. Production публикации пользователя этим запуском не создаются.
 
 Наличие кода не подтверждает проверку нового сценария. Итоговые проверки этой
 работы фиксируются здесь по фактам; прежние 950/1068 PASS относятся к своим
 историческим версиям и не доказывают новую document модель.
+
+### Сверка актуальной версии и документации — 2026-10-11
+
+`main` и `dev` локально и на GitHub синхронизированы на `daf6482`; перенос
+сохранил точное содержимое последнего `dev` и линейную историю. Последний gate:
+Flutter **1242/1242 PASS**, analyze **0 issues**; web typecheck, format и production
+build **PASS**, **97/97 tests**; Node handler syntax check и **31/31 tests**;
+Git message validator **15/15 tests**, source asset checker **PASS**. Эти проверки
+не повторяют emulator Rules, native iOS или live backend acceptance.
+
+Документация использует текущий Brand A и SVG Shields `for-the-badge` с logos
+и версиями из canonical источников. Версия Next.js сверена с web manifest
+и lockfile, Flutter — с установленным SDK. Бейджи показывают основные технологии:
+Flutter, Next.js и Firebase; вложенные Dart, React/TypeScript и tooling не
+дублируются в шапке. Developer Card/QR остаются
+планом, независимые Resume/Portfolio, общая Library, Inbox и условие подключённого
+backend описаны по фактическому runtime. Исторические результаты ниже
+сохраняют свою дату и scope.
 
 ### Проверки светлого web — 2026-10-11
 
@@ -2405,10 +2430,10 @@ Web-редактор добавляет работу сверх обязател
 
 ### Проверка требований недель 7–8 — 2026-10-10
 
-По предоставленному учебному заданию полное соответствие неделе 8 пока
-не подтверждено. Навигация, email/password и Firestore работают; Android
-Google configuration завершена, live вход ещё проверяется; постоянный сервис
-FCM отложен владельцем проекта.
+Аудит 2026-10-10 сохраняет результаты на дату проверки. Последующее обновление
+2026-10-11: Android Google-вход и восстановление сессии приняты по Phase 7.
+Полное соответствие неделе 8 требует повторяемой FCM-демонстрации и учебных
+материалов; постоянный backend отложен владельцем проекта.
 
 | Требование | Фактический результат текущей проверки |
 | --- | --- |
@@ -2430,8 +2455,9 @@ Resume/Portfolio snapshots и связь Portfolio→Resume. Коллекции 
 Публикация и фиктивные push tokens не создавались; passwords/tokens не входят
 в Firestore или Git. Account delete/cleanup не выполнялись.
 
-Для завершения учебной приёмки остаются Google live sign-in,
-подключение FCM backend для повторяемой демонстрации и материалы РК1.
+Для завершения учебной приёмки остаются подключение FCM backend для повторяемой
+демонстрации и материалы РК1. Android Google live sign-in и восстановление
+сессии приняты последующей проверкой 2026-10-11 (Phase 7).
 Недельный аудит не запускает следующую продуктовую фазу и не закрывает
 полную iOS/release/Figma приёмку.
 

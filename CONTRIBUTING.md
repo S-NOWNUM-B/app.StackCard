@@ -1,11 +1,16 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="apps/web/public/branding/stackcard-v2-mark-paper.svg">
+  <img src="apps/web/public/branding/stackcard-v2-mark-ink.svg" width="64" height="64" alt="Логотип StackCard — Brand A">
+</picture>
+
 # Разработка StackCard
 
 **Процесс работы, проверки и правила внесения согласованных изменений**
 
-![Contributing guide](https://raster.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
-![Scope mobile web publication](https://raster.shields.io/badge/Scope-mobile_web_publication-C7FF1A?style=for-the-badge)
+![Contributing guide](https://img.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
+![Scope mobile web publication](https://img.shields.io/badge/Scope-mobile_web_publication-C7FF1A?style=for-the-badge)
 
 </div>
 

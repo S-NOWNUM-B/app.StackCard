@@ -1,11 +1,16 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../apps/web/public/branding/stackcard-v2-mark-paper.svg">
+  <img src="../../apps/web/public/branding/stackcard-v2-mark-ink.svg" width="64" height="64" alt="Логотип StackCard — Brand A">
+</picture>
+
 # StackCard State Management
 
 **Эволюция темы и границы Provider/Riverpod в мобильном приложении**
 
-![Learning state management](https://raster.shields.io/badge/Learning-state_management-09090B?style=for-the-badge)
-![Scope Phases 2–6](https://raster.shields.io/badge/Scope-Phases_2--6-FF0012?style=for-the-badge)
+![Learning state management](https://img.shields.io/badge/Learning-state_management-09090B?style=for-the-badge)
+![Scope Phases 2–6](https://img.shields.io/badge/Scope-Phases_2--6-FF0012?style=for-the-badge)
 
 </div>
 

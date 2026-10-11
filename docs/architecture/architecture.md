@@ -1,11 +1,16 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../apps/web/public/branding/stackcard-v2-mark-paper.svg">
+  <img src="../../apps/web/public/branding/stackcard-v2-mark-ink.svg" width="64" height="64" alt="Логотип StackCard — Brand A">
+</picture>
+
 # StackCard Architecture
 
-**Текущая Flutter-основа и целевые границы mobile, web и общего backend**
+**Flutter и Next.js, общая модель документов и trusted backend**
 
-![Architecture guide](https://raster.shields.io/badge/Architecture-guide-09090B?style=for-the-badge)
-![Stage mobile capabilities](https://raster.shields.io/badge/Stage-mobile_capabilities-C7FF1A?style=for-the-badge)
+![Architecture guide](https://img.shields.io/badge/Architecture-guide-09090B?style=for-the-badge)
+![Stage mobile capabilities](https://img.shields.io/badge/Stage-mobile_capabilities-C7FF1A?style=for-the-badge)
 
 </div>
 
@@ -55,7 +60,7 @@ Phase 5 сохраняет настройки, GitHub cache и локальны�
 Phase 6 расширила тот же draft до локального Builder с ручными формами,
 порядком и видимостью блоков, вычисляемой полнотой и preview.
 Phase 7 добавила Firebase authentication, защищённую навигацию и локальную
-изоляцию guest/UID draft. Android email lifecycle проверен; Google flow,
+изоляцию guest/UID draft. Android email lifecycle, Google-вход и восстановление Google-сессии проверены;
 полный password reset и iOS приёмка остаются открытыми. Отдельно разрешённая
 Phase 8 завершена: local-first Firestore sync проверен на Android;
 механизм явной публикации подготовлен и проверен в adapter/Rules tests.

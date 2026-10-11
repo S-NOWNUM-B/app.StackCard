@@ -1,11 +1,16 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../apps/web/public/branding/stackcard-v2-mark-paper.svg">
+  <img src="../../apps/web/public/branding/stackcard-v2-mark-ink.svg" width="64" height="64" alt="Логотип StackCard — Brand A">
+</picture>
+
 # StackCard Design
 
 **Действующий shared UI contract R8 и история визуального target от 2026-10-04**
 
-![Design partial runtime](https://raster.shields.io/badge/Design-partial_runtime-111111?style=for-the-badge)
-![Light UI](https://raster.shields.io/badge/UI-light_only-ffffff?style=for-the-badge)
+![Design partial runtime](https://img.shields.io/badge/Design-partial_runtime-111111?style=for-the-badge)
+![Light UI](https://img.shields.io/badge/UI-light_only-ffffff?style=for-the-badge)
 
 </div>
 

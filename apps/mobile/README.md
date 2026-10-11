@@ -1,11 +1,15 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../web/public/branding/stackcard-v2-mark-paper.svg">
+  <img src="../web/public/branding/stackcard-v2-mark-ink.svg" width="64" height="64" alt="Логотип StackCard — Brand A">
+</picture>
+
 # StackCard Mobile
 
-**Flutter-клиент для Android и iOS с мобильным редактором общего портфолио**
+**Flutter-клиент для Android и iOS с общей базой, резюме и портфолио**
 
-![Mobile Android + iOS](https://raster.shields.io/badge/Mobile-Android_%2B_iOS-09090B?style=for-the-badge)
-![Stage Phase 12 in progress](https://raster.shields.io/badge/Stage-Phase_12_in_progress-FF0012?style=for-the-badge)
+![Flutter 3.47.4](https://img.shields.io/badge/Flutter-3.47.4-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 
 </div>
 
@@ -23,9 +27,8 @@
 
 ## Назначение
 
-С 2026-10-07 последовательная очередь фаз поставлена на паузу по поручению
-пользователя. Mobile развивается по Figma/концепции: общая профессиональная база,
-одна Projects Library и несколько независимых Resume/Portfolio.
+Мобильное приложение использует общую профессиональную базу,
+одну Projects Library и несколько независимых Resume/Portfolio.
 Четыре stateful вкладки сохраняют состояние; Home показывает mixed library
 с фильтрами Все/Резюме/Проекты, Settings открывается через gear.
 Новые документные библиотеки используют actual workspace; пустая база остаётся
@@ -33,21 +36,22 @@
 Текущий scope/оставшаяся работа — в
 [product status](../../docs/product/product-spec.md#статус-и-границы-текущей-работы).
 
-Phase 12 добавляет ручной город/страну и опциональное определение города по
+Location поддерживает ручной город/страну и опциональное определение города по
 нажатию, с подтверждением перед Apply/Save. Карта и Google Maps исключены;
 координаты/адрес не сохраняются. Отказ permissions не блокирует ручной ввод.
 Контракт — в [architecture](../../docs/architecture/architecture.md#выбор-города-и-страны--phase-12),
 приёмка — в [Phase 12](../../docs/product/product-spec.md#phase-12--location).
 
-Phase 11 добавляет приватные avatar/project images: camera/gallery, validation,
+Media поддерживает приватные avatar/project images: camera/gallery, validation,
 resize/compression, upload progress/retry и отображение по Storage path.
-Guest остаётся local-only; Apply и Save отдельны. Контракт —
+Guest остаётся local-only; Apply и Save отдельны. Облачные media требуют доступного
+Storage, который в текущем Spark-окружении не развёрнут. Контракт —
 [ADR 0003](../../docs/decisions/0003-private-portfolio-media.md), setup и проверка —
 [CONTRIBUTING](../../CONTRIBUTING.md#media-storage-и-native-acceptance);
 фактическая приёмка — в product spec.
 
 Мобильное приложение StackCard — самостоятельный редактор портфолио, который
-будет использовать тот же аккаунт, draft и правила публикации, что и web.
+использует тот же аккаунт, draft и правила публикации, что и web.
 Offline draft/cache и нативные функции относятся к мобильному клиенту.
 
 GitHub Import загружает публичный профиль и repositories через Dio.
@@ -60,21 +64,23 @@ SharedPreferences — совместимые настройки приложен
 Общий stateful app shell и Material 3 сохранены. После одобрения web
 2026-10-11 применяется светлый Openship-derived дизайн StackCard: белые
 поверхности, чёрные кнопки, Manrope, Brand A и русский интерфейс.
-Phase 7 добавила Firebase Auth, защищённые именованные routes и изоляцию draft
+Firebase Auth обеспечивает защищённые именованные routes и изоляцию draft
 по guest/UID. Native entry настраивает настоящий account adapter; локальный guest
-доступ выбирается явно. Google flow, полный password reset и iOS приёмка остаются
-открытыми. Отдельно разрешённая Phase 8 завершена: Firestore sync поверх local
+доступ выбирается явно. Android Google flow и восстановление той же сессии после
+перезапуска приняты 2026-10-11; полный password reset и iOS приёмка остаются
+открытыми. Firestore sync работает поверх local
 Hive draft с durable outbox и pending/synced/error/retry. Publication repository
-Phase 8 сохранён как legacy API. D048 реализует отдельную trusted document
+сохранён как legacy API. Документы используют отдельную trusted document
 publication, permanent URL и Next.js reader; live deployment/приёмка открыты.
-Phase 9 завершена: явные Add/Review/Ignore для GitHub repositories проверены;
+Явные Add/Review/Ignore для GitHub repositories проверены;
 source metadata и ручные overrides сохраняются раздельно в том же draft.
-Phase 10 завершена: read-only подсказки объясняют новый repository, обновления,
+Read-only подсказки объясняют новый repository, обновления,
 недостающие description/demo и кандидатов для featured. Владелец открывает
 Preview или редактор и применяет изменения отдельно.
-Дальнейший scope развивается по последнему поручению и product status;
-статус и результаты проверок — в
-[product spec](../../docs/product/product-spec.md#phase-10--portfolio-suggestions).
+Inbox доступен из Settings, хранит обращения отдельно от draft и работает без
+push. Уведомления требуют consent и настроенного HTTPS backend; постоянный
+hosting отложен. Условия подключения — в [локальной разработке](#локальная-разработка),
+результаты и границы приёмки — в [product spec](../../docs/product/product-spec.md#phase-14--contact--inbox--fcm).
 ThemeMode/Locale/preferences управляются Provider; product state, repository
 loading и DI — Riverpod. Их границы и
 учебная эволюция описаны в
@@ -101,13 +107,15 @@ loading и DI — Riverpod. Их границы и
 | [lib/features/github_import/github_import.dart](lib/features/github_import/github_import.dart) | Публичный API GitHub Import; DI связывает repository, clock и response cache, native bootstrap подставляет Hive adapter |
 | [lib/features/auth/auth.dart](lib/features/auth/auth.dart) | Account repository/user/typed failures, Firebase adapter, session/actions/explicit guest access; legacy demo API для preview/tests |
 | [lib/features/portfolio_draft/portfolio_draft.dart](lib/features/portfolio_draft/portfolio_draft.dart) | Portfolio domain, validation/completion, repository, единый session controller, Builder/preview и private notes |
+| [lib/features/portfolio_draft/data/http_document_publication_repository.dart](lib/features/portfolio_draft/data/http_document_publication_repository.dart) | Trusted document Publish/Update/Unpublish, operation recovery и постоянные URL |
+| [lib/features/inbox](lib/features/inbox/), [lib/features/notifications](lib/features/notifications/) | Owner-only обращения, прочтение, consent, device registration и FCM navigation |
 | [lib/features/portfolio_draft/data/local_draft_accounts.dart](lib/features/portfolio_draft/data/local_draft_accounts.dart) | Guest/UID namespaces, явный transfer, journal/generation и recovery |
 | [lib/features/portfolio_draft/domain/portfolio_sync.dart](lib/features/portfolio_draft/domain/portfolio_sync.dart), [data/synced_portfolio_draft_repository.dart](lib/features/portfolio_draft/data/synced_portfolio_draft_repository.dart) | Pure sync contract и local-first wrapper: durable outbox, ACK, retry и remote hydration |
 | [lib/features/portfolio_draft/data/firestore_portfolio_draft_repository.dart](lib/features/portfolio_draft/data/firestore_portfolio_draft_repository.dart), [data/hive_portfolio_sync_metadata_store.dart](lib/features/portfolio_draft/data/hive_portfolio_sync_metadata_store.dart) | UID-bound SDK adapter и persistent sync metadata рядом с draft envelope |
-| [lib/features/portfolio_draft/data/firestore_portfolio_publication_repository.dart](lib/features/portfolio_draft/data/firestore_portfolio_publication_repository.dart), [data/portfolio_public_content_codec.dart](lib/features/portfolio_draft/data/portfolio_public_content_codec.dart) | Prepared online publish/unpublish и public projection без hidden data/private notes |
+| [lib/features/portfolio_draft/data/firestore_portfolio_publication_repository.dart](lib/features/portfolio_draft/data/firestore_portfolio_publication_repository.dart), [data/portfolio_public_content_codec.dart](lib/features/portfolio_draft/data/portfolio_public_content_codec.dart) | Legacy publication API и public projection; текущая публикация документов идёт через trusted HTTP repository |
 | [lib/features/settings/data/shared_preferences_settings_repository.dart](lib/features/settings/data/shared_preferences_settings_repository.dart) | Один versioned snapshot настроек через SharedPreferencesAsync |
 | [lib/features/portfolio_draft/domain/portfolio_suggestions.dart](lib/features/portfolio_draft/domain/portfolio_suggestions.dart), [presentation/portfolio_suggestion_list.dart](lib/features/portfolio_draft/presentation/portfolio_suggestion_list.dart) | Pure deterministic rules, единые пороги и локализованные объяснения без автоматической записи |
-| [assets/fonts](assets/fonts/) | Локальные DM Sans, Noto Sans fallback и SIL OFL лицензии |
+| [assets/fonts](assets/fonts/) | Локальный Manrope, совместимые DM Sans/Noto Sans и SIL OFL лицензии |
 | [test/widget_test.dart](test/widget_test.dart), [test/responsive_test.dart](test/responsive_test.dart) | UI-сценарии, навигация, темы и адаптивность |
 | [test/auth_di_test.dart](test/auth_di_test.dart), [test/profile_di_test.dart](test/profile_di_test.dart), [test/projects_di_test.dart](test/projects_di_test.dart) | Подмена repositories в реальных экранах и async states |
 | [test/auth_repository_test.dart](test/auth_repository_test.dart), [test/profile_repository_test.dart](test/profile_repository_test.dart), [test/projects_repository_test.dart](test/projects_repository_test.dart) | Domain rules, demo/mock content и immutable collections |
@@ -153,9 +161,9 @@ Native Sign In использует Firebase email/password, registration/passwo
 без account. Ошибка configuration/restoring/session не открывает чужой draft.
 Legacy demo-email/`openDemo` остаётся только preview/test harness `StackCardApp`
 без native account configuration; обычный запуск этот путь не использует.
-Через app shell доступны Portfolio, Projects и Settings; переходы поддерживают
-возврат назад. Projects позволяет искать и фильтровать ручные проекты Builder
-либо demo-данные до его начала, открывать карточку с подробностями.
+Через app shell доступны Home, Resumes, Projects и Portfolios; Settings
+открывается отдельно. Переходы поддерживают возврат назад. Projects позволяет
+искать и фильтровать проекты Library и открывать карточку с подробностями.
 Loading/error/retry работают с текущими repository
 states; подмена источника не требует правки widgets. Settings получает профиль
 из того же profile provider и показывает loading/empty/error с retry.
@@ -262,20 +270,29 @@ Save документа/проекта/базы сохраняет выбран�
 Legacy Builder (`/portfolio/builder`) и plain `resumeText` остаются доступны.
 Явный импорт старого draft из document library создаёт legacy-portfolio и, при
 непустом Resume text, legacy-resume; текст/notes/source metadata сохраняются.
-Hive writer6 читает1–6, cloud writer5 —1–5 без eager rewrite. Save/ACK пишет текущую
+Hive writer7 читает1–7, cloud writer6 —1–6 без eager rewrite. Save/ACK пишет текущую
 версию после raw owner backup; corrupt/unknown блокирует перезапись.
 Подробный [контракт](../../docs/architecture/architecture.md#общая-база-и-независимые-документы).
 
-Public schema1 и username-addressed prepared publication repository остаются
-прежними. Новые multiple-document Publish/Unpublish/URL, trusted projection,
-публичный renderer/web и native sharing пока не реализованы.
+Publish/Update/Unpublish относятся к выбранному сохранённому документу.
+Trusted API читает authoritative workspace и создаёт public schema1 snapshot
+по постоянному `/d/<publicId>`; rename и republish сохраняют адрес.
+Copy/Open/native Share доступны только для подтверждённого URL. Unknown
+результат операции проверяется с прежним operation ID, без фиктивной ссылки.
+Прикреплённое Resume открывается только пока оно отдельно опубликовано.
+Полная Developer Card и QR остаются планом в product spec.
 
 ### Использовать общий backend и функции устройства
 
-Firebase Auth определяет account session; Firestore sync относится к Phase 8,
-web-редактор появится на Phase 13. Нативные camera,
-location и sharing вводятся под конкретный сценарий и платформу; Kotlin и
-MethodChannel относятся к Android. Клиент не публикует draft автоматически.
+Firebase Auth определяет account session; Firestore синхронизирует saved draft
+с web-редактором. Camera/gallery, location и native sharing работают через
+платформенные adapters; Android sharing использует Kotlin/MethodChannel.
+Клиент не публикует draft автоматически.
+
+Inbox (`/inbox`, detail `/inbox/<requestId>`) читает только обращения своего UID
+с сервера, поддерживает пагинацию и явную отметку прочтения. Уведомления открываются
+в `/settings/notifications`; отказ permissions не скрывает Inbox и не удаляет
+обращение. Без `CONTACT_INBOX_API_URL` push registration показывает недоступность.
 
 ---
 

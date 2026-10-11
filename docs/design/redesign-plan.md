@@ -1,11 +1,16 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../apps/web/public/branding/stackcard-v2-mark-paper.svg">
+  <img src="../../apps/web/public/branding/stackcard-v2-mark-ink.svg" width="64" height="64" alt="Логотип StackCard — Brand A">
+</picture>
+
 # StackCard Redesign Plan
 
 **Figma-first переработка модели продукта, навигации и ключевых экранов**
 
-![Scope Figma first](https://raster.shields.io/badge/Scope-Figma_first-C7FF1A?style=for-the-badge)
-![Implementation Pending](https://raster.shields.io/badge/Implementation-pending-111111?style=for-the-badge)
+![Scope Figma first](https://img.shields.io/badge/Scope-Figma_first-C7FF1A?style=for-the-badge)
+![Implementation Pending](https://img.shields.io/badge/Implementation-pending-111111?style=for-the-badge)
 
 </div>
 

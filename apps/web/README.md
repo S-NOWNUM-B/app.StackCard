@@ -1,11 +1,16 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/branding/stackcard-v2-mark-paper.svg">
+  <img src="public/branding/stackcard-v2-mark-ink.svg" width="64" height="64" alt="Логотип StackCard — Brand A">
+</picture>
+
 # StackCard Web
 
 **Сайт, редактор общей базы и публичные резюме и портфолио**
 
-![Next.js](https://raster.shields.io/badge/Web-Next.js-09090B?style=for-the-badge)
-![Firebase](https://raster.shields.io/badge/Data-Firebase-C7FF1A?style=for-the-badge)
+![Next.js 16.4.0](https://img.shields.io/badge/Next.js-16.4.0-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![Firebase JS 13.0.0](https://img.shields.io/badge/Firebase_JS-13.0.0-FFCA28?style=for-the-badge&logo=firebase&logoColor=000000)
 
 </div>
 
@@ -98,7 +103,7 @@ Web online-first: загрузка идёт с сервера; Save выполн
 более поздние правки сохраняются отдельным следующим Save. После неизвестного
 ответа повтор сначала подтверждает прежний mutation ID, сохраняя новый buffer.
 
-Публикация — отдельное действие доверенного Firebase сервиса. Publish фиксирует
+Публикация — отдельное действие доверенного Node API с Firebase Admin. Publish фиксирует
 сохранённый snapshot; Unpublish отзывает доступ, сохраняя постоянный ID.
 Удаление документа снимает публичную страницу и удаляет его из aggregate.
 Неизвестный ответ сохраняет тот же operation ID для проверки и повторения;
@@ -110,7 +115,7 @@ Web online-first: загрузка идёт с сервера; Save выполн
 статус уже подтверждённого удаления по локальной квитанции после потери сессии.
 Квитанции не содержат password или Firebase token. Из настроек доступен Inbox
 (`/workspace#inbox`, обращение — `#inbox/32hex`): server-only чтение своего UID,
-50 newest-first с пагинацией и явная отметка прочтения. Inbox независим от draft;
+50 newest-first с пагинацией и явная отметка прочтения. Inbox независим от draft и push;
 неподдерживаемые данные блокируют отображение обращения. Смена UID/страницы
 не применяет поздние ответы к новой сессии.
 
@@ -184,7 +189,9 @@ socket CLI. Production build не нужно выполнять параллел
 своего hosting пока нет. Реализация сохранена, Android live acceptance — **5/5 PASS**;
 результаты и отдельные iOS/release gates — в [Phase 14](../../docs/product/product-spec.md#phase-14--contact--inbox--fcm).
 До подключения оставьте API URLs и App Check site key пустыми: существующий UI
-сообщает о недоступной форме, опубликованные контакты остаются доступны.
+сообщает о недоступной форме и публикации, опубликованные контакты остаются доступны.
+Inbox продолжает читать ранее сохранённые обращения через Firestore при настроенном
+Firebase-входе; получение новых обращений и push требует работающего backend.
 
 Firebase остаётся на Spark: Auth, Firestore и FCM работают в пределах бесплатных
 квот. Доверенный API можно запустить обычным Node-процессом из

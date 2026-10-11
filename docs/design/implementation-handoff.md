@@ -1,10 +1,17 @@
 # Перенос нового дизайна StackCard
 
-Handoff описывает **следующую реализацию**, а не выполненный перенос.
-Сейчас scope — [Figma-first plan](redesign-plan.md): audit, IA,
-[design system](design-system.md) и пять key screens. Полный Flutter/web refactor
-начинается после целостного Figma flow и согласованного scope implementation.
-Прежняя runtime-приёмка — в [product spec](../product/product-spec.md#редизайн-мобильного-интерфейса).
+Этот документ сохраняет исторический handoff прежней Figma-first итерации.
+Его будущие формулировки не описывают текущую реализацию и не задают новый scope.
+
+На 2026-10-11 mobile и Next.js web используют общую базу, Projects Library и
+независимые Resume/Portfolio; trusted publication читает saved workspace и
+создаёт отдельный `/d/<publicId>`. Phase 14 добавила Contact/Inbox/mobile FCM;
+постоянный hosting отложен. Действующие правила переноса светлого русского
+интерфейса — в [design system](design-system.md),
+[web brief](../redesign/web-openship.md) и
+[product status](../product/product-spec.md#статус-и-границы-текущей-работы).
+Ниже сохранён прежний план, включая singleton, dark/en и web-заготовку;
+его нельзя применять как актуальный source contract.
 
 ## До реализации
 

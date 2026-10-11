@@ -1,10 +1,15 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../apps/web/public/branding/stackcard-v2-mark-paper.svg">
+  <img src="../../apps/web/public/branding/stackcard-v2-mark-ink.svg" width="64" height="64" alt="Логотип StackCard — Brand A">
+</picture>
+
 # StackCard Design v2 — экраны
 
 **Карта текущих маршрутов, целевых переходов и обязательных состояний**
 
-![Scope screen map](https://raster.shields.io/badge/Scope-screen_map-C7FF1A?style=for-the-badge)
+![Scope screen map](https://img.shields.io/badge/Scope-screen_map-C7FF1A?style=for-the-badge)
 
 </div>
 

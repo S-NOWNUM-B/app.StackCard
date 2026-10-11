@@ -1,11 +1,16 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../apps/web/public/branding/stackcard-v2-mark-paper.svg">
+  <img src="../../apps/web/public/branding/stackcard-v2-mark-ink.svg" width="64" height="64" alt="Логотип StackCard — Brand A">
+</picture>
+
 # StackCard Design v2 — предпосылки переноса
 
 **Конкретный scope модели, миграции, публикации, media и web для решения пользователя**
 
-![Status partial implementation](https://raster.shields.io/badge/Status-partial_implementation-111111?style=for-the-badge)
-![Scope mobile web publication](https://raster.shields.io/badge/Scope-mobile_web_publication-14161B?style=for-the-badge)
+![Status partial implementation](https://img.shields.io/badge/Status-partial_implementation-111111?style=for-the-badge)
+![Scope mobile web publication](https://img.shields.io/badge/Scope-mobile_web_publication-14161B?style=for-the-badge)
 
 </div>
 
@@ -34,11 +39,18 @@ Figma/концепции и поставил последовательную о
 модель/навигация/документы развиваются через existing aggregate; принятый ниже
 subset отличается от полного proposal. Это не полная приёмка PR-* пакета:
 D048 (2026-10-08) явно разрешает mobile + web + publication перенос. Trusted
-handler/permanent URL/privacy/attachments и actual Next.js runtime реализуются
+handler/permanent URL/privacy/attachments и actual Next.js runtime реализованы
 в этом scope; итоговые проверки фиксируются в product status. Advanced migration
 из полного proposal не вводится автоматически. Deploy/billing/commit/push не разрешены.
 [Product status](../product/product-spec.md#статус-и-границы-текущей-работы)
 владеет actual scope и проверками; [R0–R9](plan.md) сохраняет историю acceptance.
+
+Актуализация 2026-10-11: Phase 14 добавила Contact/Inbox и mobile FCM;
+Android live acceptance 5/5 PASS, постоянный HTTPS backend отложен. Android
+Google-вход и восстановление сессии приняты; iOS/APNs, QR/Developer Card и
+release остаются открытыми. Ниже D045/D048 snapshots описывают состояние на свои
+даты, а не отменяют последующие результаты в product spec. Mobile/web runtime
+использует светлый русский дизайн и существующий Brand A.
 
 Рекомендую полную целевую модель с одним UID workspace aggregate: DeveloperProfile, Projects Library и несколько независимых Resume/Portfolio. Сохранить имеющиеся Riverpod composition, Hive очередь и UID namespaces, outbox, server-commit whole-document LWW. Public snapshots хранить отдельно по постоянному opaque public document ID. Никаких CRDT, event bus, нового sync framework, per-screen write stores или второго mobile runtime.
 

@@ -1,11 +1,16 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../apps/web/public/branding/stackcard-v2-mark-paper.svg">
+  <img src="../../apps/web/public/branding/stackcard-v2-mark-ink.svg" width="64" height="64" alt="Логотип StackCard — Brand A">
+</picture>
+
 # StackCard Design v2 — требования
 
 **Зафиксированные продуктовые решения, запреты и проверяемые условия редизайна**
 
-![Requirements fixed in R0](https://raster.shields.io/badge/Requirements-R0_recorded-111111?style=for-the-badge)
-![UI acceptance pending](https://raster.shields.io/badge/UI_acceptance-pending-0EA5E9?style=for-the-badge)
+![Requirements fixed in R0](https://img.shields.io/badge/Requirements-R0_recorded-111111?style=for-the-badge)
+![UI acceptance pending](https://img.shields.io/badge/UI_acceptance-pending-0EA5E9?style=for-the-badge)
 
 </div>
 
