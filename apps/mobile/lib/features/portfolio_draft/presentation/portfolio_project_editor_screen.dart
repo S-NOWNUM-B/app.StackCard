@@ -315,6 +315,7 @@ class _PortfolioProjectEditorScreenState
 
   Widget _technologiesSection() => BuilderTagsEditor(
     key: const ValueKey('project.technologies.editor'),
+    sliver: true,
     title: context.strings.tr('builderForm.technologies'),
     items: _technologies,
     keyPrefix: 'project.technology',
@@ -328,6 +329,11 @@ class _PortfolioProjectEditorScreenState
       _technologies = [..._technologies]..removeAt(index);
       _saveFailed = false;
     }),
+  );
+
+  Widget _scrollableGateState(Widget child) => SingleChildScrollView(
+    padding: const EdgeInsets.all(StackCardSpacing.lg),
+    child: child,
   );
 
   void _reorderTechnology(int oldIndex, int newIndex) {
@@ -509,142 +515,218 @@ class _PortfolioProjectEditorScreenState
               constraints: const BoxConstraints(
                 maxWidth: StackCardSize.contentMaxWidth,
               ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(StackCardSpacing.lg),
-                child: BuilderContentGate(
-                  data: (content) {
-                    if (ownerChanged) {
-                      return Text(context.strings.tr('media.ownerChanged'));
-                    }
-                    final project = _findProject(content);
-                    if (widget.projectId != null && project == null) {
-                      return StackCardStateView(
-                        kind: StackCardViewState.empty,
-                        title: context.strings.tr('builderForm.projectMissing'),
-                        message: context.strings.tr(
-                          'builderForm.projectMissingHint',
-                        ),
-                      );
-                    }
-                    _initialize(project);
-                    return Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (_stale || _saveFailed) ...[
-                            Semantics(
-                              liveRegion: true,
-                              child: Text(
-                                context.strings.tr(
-                                  _stale
-                                      ? 'githubSync.editorStale'
-                                      : 'mobileParity.projectSaveError',
-                                ),
-                                key: ValueKey(
-                                  _stale
-                                      ? 'builder_project_stale'
-                                      : 'project.save.error',
-                                ),
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: context.colors.error),
+              child: Builder(
+                builder: (context) {
+                  final gate = BuilderContentGate(
+                    data: (content) {
+                      if (ownerChanged) {
+                        return Text(context.strings.tr('media.ownerChanged'));
+                      }
+                      final project = _findProject(content);
+                      if (widget.projectId != null && project == null) {
+                        return StackCardStateView(
+                          kind: StackCardViewState.empty,
+                          title: context.strings.tr(
+                            'builderForm.projectMissing',
+                          ),
+                          message: context.strings.tr(
+                            'builderForm.projectMissingHint',
+                          ),
+                        );
+                      }
+                      _initialize(project);
+                      return Form(
+                        key: _formKey,
+                        child: CustomScrollView(
+                          key: const Key('project.editor.scroll'),
+                          slivers: [
+                            SliverPadding(
+                              padding: const EdgeInsets.all(
+                                StackCardSpacing.lg,
                               ),
-                            ),
-                            const SizedBox(height: StackCardSpacing.lg),
-                          ],
-                          Center(
-                            child: Semantics(
-                              button: true,
-                              label: 'Иконка проекта',
-                              child: SizedBox.square(
-                                key: const ValueKey('project.icon.editor'),
-                                dimension: 128,
-                                child: Stack(
-                                  children: [
-                                    Positioned.fill(
-                                      child: Material(
-                                        color: context.colors.surfaceElevated,
-                                        shape: CircleBorder(
-                                          side: BorderSide(
-                                            color: context.colors.borderStrong,
+                              sliver: SliverMainAxisGroup(
+                                slivers: [
+                                  SliverToBoxAdapter(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        if (_stale || _saveFailed) ...[
+                                          Semantics(
+                                            liveRegion: true,
+                                            child: Text(
+                                              context.strings.tr(
+                                                _stale
+                                                    ? 'githubSync.editorStale'
+                                                    : 'mobileParity.projectSaveError',
+                                              ),
+                                              key: ValueKey(
+                                                _stale
+                                                    ? 'builder_project_stale'
+                                                    : 'project.save.error',
+                                              ),
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    color: context.colors.error,
+                                                  ),
+                                            ),
                                           ),
-                                        ),
-                                        clipBehavior: Clip.antiAlias,
-                                        child: InkWell(
-                                          key: const ValueKey(
-                                            'project.icon.edit',
+                                          const SizedBox(
+                                            height: StackCardSpacing.lg,
                                           ),
-                                          onTap: state.saving
-                                              ? null
-                                              : _selectIcon,
-                                          child: Center(
-                                            child: ProjectStockIcon(
-                                              iconId: _iconId,
-                                              size: 48,
+                                        ],
+                                        Center(
+                                          child: Semantics(
+                                            button: true,
+                                            label: 'Иконка проекта',
+                                            child: SizedBox.square(
+                                              key: const ValueKey(
+                                                'project.icon.editor',
+                                              ),
+                                              dimension: 128,
+                                              child: Stack(
+                                                children: [
+                                                  Positioned.fill(
+                                                    child: Material(
+                                                      color: context
+                                                          .colors
+                                                          .surfaceElevated,
+                                                      shape: CircleBorder(
+                                                        side: BorderSide(
+                                                          color: context
+                                                              .colors
+                                                              .borderStrong,
+                                                        ),
+                                                      ),
+                                                      clipBehavior:
+                                                          Clip.antiAlias,
+                                                      child: InkWell(
+                                                        key: const ValueKey(
+                                                          'project.icon.edit',
+                                                        ),
+                                                        onTap: state.saving
+                                                            ? null
+                                                            : _selectIcon,
+                                                        child: Center(
+                                                          child:
+                                                              ProjectStockIcon(
+                                                                iconId: _iconId,
+                                                                size: 48,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Positioned(
+                                                    right: 0,
+                                                    bottom: 0,
+                                                    child: Material(
+                                                      color: context
+                                                          .colors
+                                                          .primary,
+                                                      shape: CircleBorder(
+                                                        side: BorderSide(
+                                                          color: context
+                                                              .colors
+                                                              .surface,
+                                                          width: 2,
+                                                        ),
+                                                      ),
+                                                      child: IconButton(
+                                                        key: const ValueKey(
+                                                          'project.icon.select',
+                                                        ),
+                                                        tooltip:
+                                                            'Иконка проекта',
+                                                        onPressed: state.saving
+                                                            ? null
+                                                            : _selectIcon,
+                                                        icon: StackCardIcon(
+                                                          name: 'pencil',
+                                                          size: 22,
+                                                          color: context
+                                                              .colors
+                                                              .onPrimary,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                    Positioned(
-                                      right: 0,
-                                      bottom: 0,
-                                      child: Material(
-                                        color: context.colors.primary,
-                                        shape: CircleBorder(
-                                          side: BorderSide(
-                                            color: context.colors.surface,
-                                            width: 2,
-                                          ),
+                                        const SizedBox(
+                                          height: StackCardSpacing.lg,
                                         ),
-                                        child: IconButton(
-                                          key: const ValueKey(
-                                            'project.icon.select',
-                                          ),
-                                          tooltip: 'Иконка проекта',
-                                          onPressed: state.saving
-                                              ? null
-                                              : _selectIcon,
-                                          icon: StackCardIcon(
-                                            name: 'pencil',
-                                            size: 22,
-                                            color: context.colors.onPrimary,
-                                          ),
+                                        _field('title'),
+                                        const SizedBox(
+                                          height: StackCardSpacing.lg,
                                         ),
-                                      ),
+                                        _field('description'),
+                                        const SizedBox(
+                                          height: StackCardSpacing.lg,
+                                        ),
+                                        _field('contribution'),
+                                        const SizedBox(
+                                          height: StackCardSpacing.lg,
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  _technologiesSection(),
+                                  SliverToBoxAdapter(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        const SizedBox(
+                                          height: StackCardSpacing.lg,
+                                        ),
+                                        _field('repositoryUrl'),
+                                        const SizedBox(
+                                          height: StackCardSpacing.lg,
+                                        ),
+                                        _field('liveUrl'),
+                                        if (project != null) ...[
+                                          const SizedBox(
+                                            height: StackCardSpacing.lg,
+                                          ),
+                                          StackCardButton(
+                                            label: context.strings.tr(
+                                              'workspace.delete',
+                                            ),
+                                            role: StackCardButtonRole.danger,
+                                            onPressed: !state.saving
+                                                ? () => _deleteProject(
+                                                    project,
+                                                    repository,
+                                                  )
+                                                : null,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          const SizedBox(height: StackCardSpacing.lg),
-                          _field('title'),
-                          const SizedBox(height: StackCardSpacing.lg),
-                          _field('description'),
-                          const SizedBox(height: StackCardSpacing.lg),
-                          _field('contribution'),
-                          const SizedBox(height: StackCardSpacing.lg),
-                          _technologiesSection(),
-                          const SizedBox(height: StackCardSpacing.lg),
-                          _field('repositoryUrl'),
-                          const SizedBox(height: StackCardSpacing.lg),
-                          _field('liveUrl'),
-                          if (project != null) ...[
-                            const SizedBox(height: StackCardSpacing.lg),
-                            StackCardButton(
-                              label: context.strings.tr('workspace.delete'),
-                              role: StackCardButtonRole.danger,
-                              onPressed: !state.saving
-                                  ? () => _deleteProject(project, repository)
-                                  : null,
-                            ),
                           ],
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                        ),
+                      );
+                    },
+                  );
+                  if (state.loading ||
+                      !state.canEdit ||
+                      content == null ||
+                      ownerChanged ||
+                      !found) {
+                    return _scrollableGateState(gate);
+                  }
+                  return gate;
+                },
               ),
             ),
           ),

@@ -94,6 +94,12 @@ void main() {
             .dy,
         lessThanOrEqualTo(400),
       );
+      await Scrollable.ensureVisible(
+        tester.element(
+          find.byKey(const ValueKey('builder_form_title'), skipOffstage: false),
+        ),
+      );
+      await tester.pumpAndSettle();
       expect(
         _text(tester, find.byKey(const ValueKey('builder_form_title'))),
         'Название проекта с длинным текстом',
@@ -510,6 +516,26 @@ String _text(WidgetTester tester, Finder finder) => tester
     .controller!
     .text;
 Future<void> _tap(WidgetTester tester, Finder finder) async {
+  if (finder.evaluate().isEmpty) {
+    final technologies = find.byKey(
+      const ValueKey('project.technologies.editor'),
+      skipOffstage: false,
+    );
+    if (technologies.evaluate().isNotEmpty) {
+      await Scrollable.ensureVisible(
+        tester.element(technologies),
+        alignment: 0,
+      );
+      await tester.pumpAndSettle();
+    }
+  }
+  if (finder.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(
+      finder,
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+  }
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
   await tester.tap(finder);

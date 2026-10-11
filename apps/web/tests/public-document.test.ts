@@ -489,6 +489,26 @@ test('unprojected visibility and private links are rejected', () => {
   content(hidden).blocks = [];
   assert.equal(parsePublicDocument(hidden), null);
 });
+test('both public schemas require biography and location to be cleared when their blocks are absent', () => {
+  for (const makeFixture of [fixture, modernFixture]) {
+    for (const [kind, field] of [
+      ['about', 'bio'],
+      ['location', 'locationText'],
+    ] as const) {
+      const data = makeFixture();
+      const c = content(data);
+      c.blocks = (c.blocks as { kind: string; visible: true }[]).filter(
+        (block) => block.kind !== kind,
+      );
+      assert.equal(parsePublicDocument(data, publicId), null);
+      (c.profile as Record<string, unknown>)[field] = '';
+      const projected = parsePublicDocument(data, publicId);
+      assert.ok(projected);
+      assert.equal(projected.content.profile[field], '');
+      assert.deepEqual(projected.content.blocks, c.blocks);
+    }
+  }
+});
 test('invalid kind/theme types and duplicate element IDs cannot pass string coercion', () => {
   assert.equal(parsePublicDocument({ ...fixture(), kind: ['resume'] }), null);
   const data = fixture();

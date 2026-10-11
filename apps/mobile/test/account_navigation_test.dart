@@ -574,7 +574,16 @@ void main() {
         location: '/portfolio/builder/skills',
       );
       final add = find.byKey(const ValueKey('main.editor.addSkill'));
-      await tester.ensureVisible(add);
+      await tester.scrollUntilVisible(
+        add,
+        300,
+        scrollable: find
+            .descendant(
+              of: find.byKey(const Key('main.editor.scroll')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
       await tester.tap(add);
       await tester.pumpAndSettle();
       expect(find.byType(Dialog), findsOneWidget);

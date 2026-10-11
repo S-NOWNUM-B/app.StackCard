@@ -497,6 +497,36 @@ void main() {
       );
     }
   }
+  for (final size in [const Size(320, 640), const Size(844, 390)]) {
+    for (final unavailable in [true, false]) {
+      testWidgets(
+        'Project ${unavailable ? 'error' : 'missing'} state scrolls at $size text2',
+        (tester) async {
+          await _pumpEditor(
+            tester,
+            const PortfolioProjectEditorScreen(projectId: 'missing'),
+            content: _filledContent(),
+            failure: unavailable ? PortfolioDraftFailureKind.corrupted : null,
+            size: size,
+            scale: 2,
+          );
+          final title = find.text(
+            builderFormRussianStrings[unavailable
+                ? 'builderForm.unavailable'
+                : 'builderForm.projectMissing']!,
+          );
+          await tester.ensureVisible(title);
+          await tester.pumpAndSettle();
+          expect(title, findsOneWidget);
+          expect(tester.takeException(), isNull);
+          expect(
+            _button(tester, const ValueKey('builder_form_apply')).onPressed,
+            isNull,
+          );
+        },
+      );
+    }
+  }
   for (final collection in _collections) {
     testWidgets(
       'Large text English $collection dialog stays scrollable with validation',

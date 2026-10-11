@@ -72,10 +72,7 @@ void main() {
                   ),
                 );
               }
-              await tester.drag(
-                find.byType(SingleChildScrollView).last,
-                const Offset(0, -10000),
-              );
+              await tester.drag(_pageScrollView(), const Offset(0, -10000));
               await tester.pumpAndSettle();
               expect(
                 tester.takeException(),
@@ -337,16 +334,20 @@ Future<void> _open(
   await tester.pumpAndSettle();
 }
 
+Finder _pageScrollView() {
+  final project = find.byKey(const Key('project.editor.scroll'));
+  return project.evaluate().isNotEmpty
+      ? project
+      : find.byType(SingleChildScrollView).last;
+}
+
 Future<void> _checkAccessibility(WidgetTester tester) async {
   // SDK guidelines измеряют обрезанные scroll-границей semantics как полные
   // элементы. Проверяем все controls без clipping при исходной ширине экрана.
   final size = tester.view.physicalSize;
   final scroll = tester.state<ScrollableState>(
     find
-        .descendant(
-          of: find.byType(SingleChildScrollView).last,
-          matching: find.byType(Scrollable),
-        )
+        .descendant(of: _pageScrollView(), matching: find.byType(Scrollable))
         .first,
   );
   final extraHeight = scroll.position.maxScrollExtent.ceilToDouble();
