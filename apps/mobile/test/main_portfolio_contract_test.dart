@@ -81,6 +81,21 @@ void main() {
       expect(normalizePortfolioGitHubUsername(input), isNull, reason: input);
     }
   });
+  test(
+    'Pasted GitHub profile URL accepts uppercase username with optional slash',
+    () {
+      for (final input in [
+        'https://github.com/LINESKL',
+        'https://github.com/LINESKL/',
+      ]) {
+        expect(
+          normalizePortfolioGitHubUsername(input),
+          'lineskl',
+          reason: input,
+        );
+      }
+    },
+  );
   test('Legacy hidden location and contacts remain excluded; archive remains exact', () {
     final workspace = _workspace().copyWith(
       links: const [

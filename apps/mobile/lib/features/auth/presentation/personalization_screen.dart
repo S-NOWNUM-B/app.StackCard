@@ -155,23 +155,17 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
   String? _length(String? value, int limit) =>
       (value?.length ?? 0) > limit ? 'Не больше $limit символов' : null;
 
-  PortfolioProfile _enteredProfile({required bool skip}) {
-    String field(String input, String saved) =>
-        skip && input.trim().isEmpty ? saved : input.trim();
+  PortfolioProfile _enteredProfile() {
     return switch (_step) {
       1 => _profile.copyWith(
-        name: field(_name.text, _profile.name),
-        headline: field(_headline.text, _profile.headline),
-      ),
-      2 => _profile.copyWith(
-        bio: field(_bio.text, _profile.bio),
-        locationText: field(_location.text, _profile.locationText),
-        publishLocation:
-            _location.text.trim() == _profile.locationText ||
-                (skip && _location.text.trim().isEmpty)
+        name: _name.text.trim(),
+        headline: _headline.text.trim(),
+        locationText: _location.text.trim(),
+        publishLocation: _location.text.trim() == _profile.locationText
             ? _profile.publishLocation
             : _location.text.trim().isNotEmpty,
       ),
+      2 => _profile.copyWith(bio: _bio.text.trim()),
       3 => _profile.copyWith(
         avatarPath: _avatarPath,
         avatarUrl: _avatarChanged ? '' : _profile.avatarUrl,
@@ -180,7 +174,7 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
     };
   }
 
-  Future<void> _save({bool skip = false, bool back = false}) async {
+  Future<void> _save({bool back = false}) async {
     if (!_current ||
         _saving ||
         _mediaBusy ||
@@ -190,7 +184,7 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
     FocusScope.of(context).unfocus();
     final target = back ? _step - 1 : (_step + 1).clamp(0, 3);
     final completed = !back && _step == 3;
-    final entered = _enteredProfile(skip: skip);
+    final entered = _enteredProfile();
     final github = _step == 0
         ? normalizePortfolioGitHubUsername(_github.text)
         : null;
@@ -212,11 +206,7 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
                 ? PortfolioPersonalizationStatus.completed
                 : PortfolioPersonalizationStatus.inProgress,
             profile: _step == 0 ? null : entered,
-            githubUsername: _step != 0
-                ? null
-                : skip && (github?.isEmpty ?? true)
-                ? _savedGithub
-                : github,
+            githubUsername: github,
             expectedRepository: _repository,
           );
       if (!mounted || !_current) return;
@@ -236,9 +226,7 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
       _bio.text = _profile.bio;
       _location.text = _profile.locationText;
       if (_step == 0) {
-        _savedGithub = skip && (github?.isEmpty ?? true)
-            ? _savedGithub
-            : github!;
+        _savedGithub = github!;
         _github.text = _savedGithub;
       }
       if (completed) {
@@ -297,14 +285,15 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
   Widget _fields(bool busy) => switch (_step) {
     0 => StackCardInput(
       key: const Key('personalization.github'),
-      label: 'GitHub',
+      label: 'GitHub-профиль',
       hint: 'https://github.com/username',
       controller: _github,
       enabled: !busy,
       keyboardType: TextInputType.url,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: (value) =>
           normalizePortfolioGitHubUsername(value ?? '') == null
-          ? 'Введите username или ссылку на профиль GitHub'
+          ? 'Введите имя пользователя или ссылку вида https://github.com/username'
           : null,
       onChanged: (_) => setState(() {}),
     ),
@@ -325,22 +314,8 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
           label: 'Должность',
           controller: _headline,
           enabled: !busy,
+          textInputAction: TextInputAction.next,
           validator: (value) => _length(value, 160),
-          onChanged: (_) => setState(() {}),
-        ),
-      ],
-    ),
-    2 => Column(
-      children: [
-        StackCardInput(
-          key: const Key('personalization.bio'),
-          label: 'Краткое описание',
-          controller: _bio,
-          enabled: !busy,
-          minLines: 3,
-          maxLines: 5,
-          keyboardType: TextInputType.multiline,
-          validator: (value) => _length(value, 4000),
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: StackCardSpacing.lg),
@@ -353,6 +328,17 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
           onChanged: (_) => setState(() {}),
         ),
       ],
+    ),
+    2 => StackCardInput(
+      key: const Key('personalization.bio'),
+      label: 'Краткое описание',
+      controller: _bio,
+      enabled: !busy,
+      minLines: 3,
+      maxLines: 5,
+      keyboardType: TextInputType.multiline,
+      validator: (value) => _length(value, 4000),
+      onChanged: (_) => setState(() {}),
     ),
     _ => PortfolioMediaEditor(
       key: _media,
@@ -468,34 +454,38 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
                                       ),
                                     ],
                                     const SizedBox(height: StackCardSpacing.xl),
-                                    StackCardButton(
-                                      key: const Key('personalization.next'),
-                                      label: _step == 3 ? 'Готово' : 'Далее',
-                                      loading: _saving,
-                                      onPressed: busy ? null : _save,
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: StackCardButton(
+                                            key: const Key(
+                                              'personalization.back',
+                                            ),
+                                            label: 'Назад',
+                                            onPressed: busy || _step == 0
+                                                ? null
+                                                : () => _save(back: true),
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          width: StackCardSpacing.sm,
+                                        ),
+                                        Expanded(
+                                          child: StackCardButton(
+                                            key: const Key(
+                                              'personalization.next',
+                                            ),
+                                            label: _step == 3
+                                                ? 'Готово'
+                                                : 'Далее',
+                                            loading: _saving,
+                                            onPressed: busy ? null : _save,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: StackCardSpacing.sm),
-                                    StackCardButton(
-                                      key: const Key('personalization.skip'),
-                                      label: 'Пропустить',
-                                      role: StackCardButtonRole.quiet,
-                                      onPressed: busy
-                                          ? null
-                                          : () => _save(skip: true),
-                                    ),
-                                    if (_step > 0) ...[
-                                      const SizedBox(
-                                        height: StackCardSpacing.sm,
-                                      ),
-                                      StackCardButton(
-                                        key: const Key('personalization.back'),
-                                        label: 'Назад',
-                                        role: StackCardButtonRole.quiet,
-                                        onPressed: busy
-                                            ? null
-                                            : () => _save(back: true),
-                                      ),
-                                    ],
                                   ],
                                 ),
                               ),
