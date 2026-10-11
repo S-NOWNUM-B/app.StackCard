@@ -6,7 +6,8 @@ Home/Projects/Editor — единственные roots; saved Home не исп�
 `mainPortfolioSectionOrder` задаёт совместимый default и сохраняет выбранный порядок.
 Editor переставляет секции за точки в заголовках, Home/PDF читают saved snapshot.
 Технологии проекта переставляются через `BuilderTagsEditor.onReorder` с final index;
-сохранение остаётся отдельным scoped Save проекта.
+sliver mode находится в едином `CustomScrollView` редактора для автопрокрутки
+удерживаемого элемента у края. Сохранение остаётся отдельным scoped Save проекта.
 Legacy libraries/Builder/routes ниже — совместимость, старые deep links ведут
 в Editor. Только avatar Firestore/JPEG512/256KiB и catalog project icons;
 `locationText` вручную, GPS feature/dependencies/permissions удалены.
@@ -441,6 +442,9 @@ headless проверки не закрывают native visual, public/web ил
   Builder checks дополнительно проверяют validation/completion, CRUD, порядок/
   видимость/тему legacy preview, v1–v7 → v8 compatibility, stale revision и сохранение новых
   правок во время Save; имена актуальных tests — в `apps/mobile/test`.
+  Для lazy/sliver списков widget tests сначала прокручивают принадлежащий списку
+  `Scrollable` через `scrollUntilVisible`, затем взаимодействуют с элементом или
+  измеряют его. `ensureVisible` применим только к уже построенному элементу.
 - Локальные шрифты и лицензии: [assets/fonts](../../../apps/mobile/assets/fonts/);
   регистрация остаётся в pubspec. Manrope400/600/700/800 и OFL/pinned hashes
   проверяются manifest; original DM Sans/Noto сохранены. Новые original Brand A

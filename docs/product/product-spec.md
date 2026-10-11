@@ -293,6 +293,26 @@ Home/Editor widget suites — **53/53 PASS**, `flutter analyze --no-pub` —
 Лог: `/private/tmp/stackcard-project-order-tests.log`; это локальные проверки,
 без новой native/live приёмки.
 
+Управляемый порядок разделов 2026-10-12: удержание точек в заголовках mobile
+Editor переставляет контакты, навыки, проекты, опыт и образование. Порядок
+сохраняется в существующем `document.content.blocks`; Home, web outputs и PDF
+его учитывают. Профиль остаётся первым, GitHub следует рядом с контактами.
+Технологии внутри редактора проекта переставляются отдельно за точки слева;
+единый sliver scroll позволяет переносить элемент до конца длинного списка.
+Общий Save портфолио и scoped Save проекта сохраняют соответствующие изменения;
+ошибка записи сохраняет buffer для retry, смена owner исключает late results.
+Полный mobile suite — **1344/1344 PASS**, полный analyze — **0 issues**;
+последняя правка порядка blocks дополнительно проверена Home/Editor suite
+**55/55 PASS** и targeted analyze. Web — **163/163 PASS**, typecheck и
+production build — PASS. Actual held drag вверх/вниз, автопрокрутка раздела,
+перенос первой технологии на последнее место из20, Save/reopen/Hive и privacy
+проверены локально. Просмотрены narrow/text2 headless снимки
+`/private/tmp/stackcard-main-skill-tags.png` и
+`/private/tmp/stackcard-project-technologies-narrow.png`.
+Логи: `/private/tmp/stackcard-section-reorder-full-tests.log`,
+`/private/tmp/stackcard-sections-editor-final.log`,
+`/private/tmp/stackcard-section-web-tests.log`; новой native/live приёмки нет.
+
 GitHub в редакторе 2026-10-12: дублирующий раздел профиля удалён в mobile и web;
 он остаётся в Settings и персонализации. Main Save не записывает GitHub identity,
 поэтому сохранённое изменение настроек не откатывается соседним вводом редактора.
@@ -341,6 +361,26 @@ runtime Copy/Share не подтверждён; временный harness ос�
 Логи mobile: `/private/tmp/stackcard_mobile_duplicates_final_tests.log`,
 `/private/tmp/stackcard-screen-dedup-final-tests.log`,
 `/private/tmp/stackcard-screen-dedup-final-analyze.log`.
+
+Повторная проверка редактора и public reader 2026-10-12 закрыла указанные выше
+падения. В project editor состояния загрузки, ошибки, смены owner и удалённого
+проекта прокручиваются отдельно от рабочего sliver списка; четыре новых
+проверки охватывают width320/landscape844×390 с text2. Widget tests прокручивают
+lazy списки перед взаимодействием и сохраняют проверки drag/autoscroll,
+Save/reopen, UID isolation, accessibility и targets48. Public order fixture
+сохраняет `about/location`, когда содержит biography/location; отдельный test
+проверяет обе public schemas: скрытые данные отклоняются до очистки полей.
+Финальный полный Flutter — **1344/1344 PASS**, analyze — **0 issues**;
+web — **163/163 PASS**, typecheck, build и формат — PASS; Firebase demo
+Auth/Firestore/Storage — **81/81 PASS**, Functions — **42/42 PASS**, syntax check — PASS.
+Формат девяти затронутых Dart-файлов — PASS; общая проверка295 файлов отмечает
+четыре неизменённых файла прежнего форматирования вне этой задачи.
+Логи: `/private/tmp/stackcard-editor-repair-mobile-final-tests.log`,
+`/private/tmp/stackcard-editor-repair-mobile-final-analyze.log`,
+`/private/tmp/stackcard-editor-repair-firebase-tests.log`,
+`/private/tmp/stackcard-editor-repair-functions-tests.log`; web results receipt —
+`/private/tmp/stackcard-web-gate-evidence-20261012/gate-receipt.txt`.
+Это локальный automated gate, без новой native/live приёмки.
 
 Основные логи: `/private/tmp/stackcard-single-portfolio-final-verified-tests.log`,
 `stackcard-single-portfolio-final-flutter-analyze.log`, `stackcard-web-tests-final.log`,

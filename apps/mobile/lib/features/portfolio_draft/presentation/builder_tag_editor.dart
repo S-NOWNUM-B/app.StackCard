@@ -28,6 +28,7 @@ class BuilderTagsEditor extends StatelessWidget {
     this.iconName,
     this.headerLeading,
     this.onReorder,
+    this.sliver = false,
   });
 
   final String title;
@@ -41,6 +42,7 @@ class BuilderTagsEditor extends StatelessWidget {
   final Key? addKey;
   final ValueChanged<int>? onEdit;
   final String Function(int)? iconName;
+  final bool sliver;
   final Widget? headerLeading;
   final void Function(int oldIndex, int newIndex)? onReorder;
 
@@ -81,120 +83,206 @@ class BuilderTagsEditor extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) => StackCardCard(
-    outlined: true,
-    padding: const EdgeInsets.all(StackCardSpacing.lg),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            ?headerLeading,
-            Expanded(
-              child: Text(title, style: Theme.of(context).textTheme.titleLarge),
-            ),
-            IconButton(
-              key: addKey ?? ValueKey('$keyPrefix.add'),
-              tooltip: addLabel,
-              onPressed: enabled ? onAdd : null,
-              icon: const StackCardIcon(name: 'plus'),
-            ),
-          ],
-        ),
-        if (items.isNotEmpty) ...[
-          const SizedBox(height: StackCardSpacing.md),
-          if (onReorder != null)
-            ReorderableListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              buildDefaultDragHandles: false,
-              padding: EdgeInsets.zero,
-              itemCount: items.length,
-              itemBuilder: (context, index) => Padding(
-                key: ValueKey(
-                  '$keyPrefix.item.${items[index]}.${items.take(index).where((item) => item == items[index]).length}',
-                ),
-                padding: const EdgeInsets.only(bottom: StackCardSpacing.sm),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: context.colors.surfaceElevated,
-                    borderRadius: BorderRadius.circular(StackCardRadius.small),
-                  ),
-                  child: Row(
-                    children: [
-                      Semantics(
-                        label: 'Изменить порядок ${items[index]}',
-                        hint: 'Удерживайте точки и перетащите',
-                        child: ReorderableDelayedDragStartListener(
-                          key: ValueKey('$keyPrefix.drag.$index'),
-                          index: index,
-                          enabled: enabled,
-                          child: const SizedBox(
-                            width: StackCardSize.touchTarget,
-                            height: StackCardSize.touchTarget,
-                            child: ColoredBox(
-                              color: Colors.transparent,
-                              child: Center(
-                                child: StackCardIcon(
-                                  name: 'grip-vertical',
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(child: _label(context, index)),
-                      IconButton(
-                        key: ValueKey('$keyPrefix.remove.$index'),
-                        tooltip: removeLabel(items[index]),
-                        onPressed: enabled ? () => onRemove(index) : null,
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                      ),
-                    ],
+  Widget _header(BuildContext context) => BuilderSectionHeader(
+    title: title,
+    leading: headerLeading,
+    action: IconButton(
+      key: addKey ?? ValueKey('$keyPrefix.add'),
+      tooltip: addLabel,
+      onPressed: enabled ? onAdd : null,
+      icon: const StackCardIcon(name: 'plus'),
+    ),
+  );
+
+  Widget _reorderableItem(BuildContext context, int index) => Padding(
+    key: ValueKey(
+      '$keyPrefix.item.${items[index]}.${items.take(index).where((item) => item == items[index]).length}',
+    ),
+    padding: const EdgeInsets.only(bottom: StackCardSpacing.sm),
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.colors.surfaceElevated,
+        borderRadius: BorderRadius.circular(StackCardRadius.small),
+      ),
+      child: Row(
+        children: [
+          Semantics(
+            label: 'Изменить порядок ${items[index]}',
+            hint: 'Удерживайте точки и перетащите',
+            child: ReorderableDelayedDragStartListener(
+              key: ValueKey('$keyPrefix.drag.$index'),
+              index: index,
+              enabled: enabled,
+              child: const SizedBox(
+                width: StackCardSize.touchTarget,
+                height: StackCardSize.touchTarget,
+                child: ColoredBox(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: StackCardIcon(name: 'grip-vertical', size: 20),
                   ),
                 ),
               ),
-              onReorderItem: (oldIndex, newIndex) {
-                if (enabled) onReorder!(oldIndex, newIndex);
-              },
-            )
-          else
-            Wrap(
-              spacing: StackCardSpacing.sm,
-              runSpacing: StackCardSpacing.sm,
-              children: [
-                for (var index = 0; index < items.length; index++)
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: context.colors.surfaceElevated,
-                      borderRadius: BorderRadius.circular(
-                        StackCardRadius.small,
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: StackCardSpacing.xs),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(child: _label(context, index)),
-                          const SizedBox(width: StackCardSpacing.xs),
-                          IconButton(
-                            key: ValueKey('$keyPrefix.remove.$index'),
-                            tooltip: removeLabel(items[index]),
-                            onPressed: enabled ? () => onRemove(index) : null,
-                            icon: const Icon(Icons.close_rounded, size: 20),
+            ),
+          ),
+          Expanded(child: _label(context, index)),
+          IconButton(
+            key: ValueKey('$keyPrefix.remove.$index'),
+            tooltip: removeLabel(items[index]),
+            onPressed: enabled ? () => onRemove(index) : null,
+            icon: const Icon(Icons.close_rounded, size: 20),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  void _reorder(int oldIndex, int newIndex) {
+    if (enabled) onReorder!(oldIndex, newIndex);
+  }
+
+  Widget _sliver(BuildContext context) => DecoratedSliver(
+    decoration: BoxDecoration(
+      color: context.colors.surface,
+      border: Border.all(color: context.colors.border),
+      borderRadius: BorderRadius.circular(StackCardRadius.large),
+    ),
+    sliver: SliverPadding(
+      padding: const EdgeInsets.all(StackCardSpacing.lg),
+      sliver: SliverMainAxisGroup(
+        slivers: [
+          SliverToBoxAdapter(child: _header(context)),
+          if (items.isNotEmpty) ...[
+            const SliverToBoxAdapter(
+              child: SizedBox(height: StackCardSpacing.md),
+            ),
+            SliverReorderableList(
+              itemCount: items.length,
+              itemBuilder: _reorderableItem,
+              onReorderItem: _reorder,
+              proxyDecorator: (child, index, animation) =>
+                  Material(type: MaterialType.transparency, child: child),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) => sliver
+      ? _sliver(context)
+      : StackCardCard(
+          outlined: true,
+          padding: const EdgeInsets.all(StackCardSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _header(context),
+              if (items.isNotEmpty) ...[
+                const SizedBox(height: StackCardSpacing.md),
+                if (onReorder != null)
+                  ReorderableListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    buildDefaultDragHandles: false,
+                    padding: EdgeInsets.zero,
+                    itemCount: items.length,
+                    itemBuilder: _reorderableItem,
+                    onReorderItem: _reorder,
+                  )
+                else
+                  Wrap(
+                    spacing: StackCardSpacing.sm,
+                    runSpacing: StackCardSpacing.sm,
+                    children: [
+                      for (var index = 0; index < items.length; index++)
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: context.colors.surfaceElevated,
+                            borderRadius: BorderRadius.circular(
+                              StackCardRadius.small,
+                            ),
                           ),
-                        ],
-                      ),
-                    ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              left: StackCardSpacing.xs,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(child: _label(context, index)),
+                                const SizedBox(width: StackCardSpacing.xs),
+                                IconButton(
+                                  key: ValueKey('$keyPrefix.remove.$index'),
+                                  tooltip: removeLabel(items[index]),
+                                  onPressed: enabled
+                                      ? () => onRemove(index)
+                                      : null,
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    size: 20,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
               ],
-            ),
+            ],
+          ),
+        );
+}
+
+/// Заголовок сохраняет место для крупного текста и controls48.
+class BuilderSectionHeader extends StatelessWidget {
+  const BuilderSectionHeader({
+    super.key,
+    required this.title,
+    required this.action,
+    this.leading,
+  });
+  final String title;
+  final Widget action;
+  final Widget? leading;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final style = Theme.of(context).textTheme.titleLarge;
+      final painter = TextPainter(
+        text: TextSpan(
+          text: title.split(' ').reduce((a, b) => a.length >= b.length ? a : b),
+          style: style,
+        ),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout();
+      final compact =
+          painter.width +
+              StackCardSize.touchTarget * (leading == null ? 1 : 2) >
+          constraints.maxWidth;
+      painter.dispose();
+      final heading = Text(title, style: style);
+      if (compact) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            heading,
+            Row(children: [?leading, const Spacer(), action]),
+          ],
+        );
+      }
+      return Row(
+        children: [
+          ?leading,
+          Expanded(child: heading),
+          action,
         ],
-      ],
-    ),
+      );
+    },
   );
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -975,12 +976,13 @@ class _MainPortfolioEditorScreenState
     final kinds = [...mainPortfolioSectionOrder(_buffer!)];
     final kind = kinds.removeAt(oldIndex);
     kinds.insert(newIndex, kind);
+    final ordered = _buffer!.copyWith(
+      blocks: [for (final item in kinds) PortfolioBlock(kind: item)],
+    );
     final blocks = [
-      for (final block in _buffer!.blocks)
-        if (!mainPortfolioSectionKinds.contains(block.kind)) block,
-      for (final item in kinds)
-        _buffer!.blocks.where((block) => block.kind == item).firstOrNull ??
-            PortfolioBlock(kind: item),
+      for (final block in mainPortfolioBlocks(ordered))
+        _buffer!.blocks.where((item) => item.kind == block.kind).firstOrNull ??
+            block,
     ];
     setState(() => _buffer = _buffer!.copyWith(blocks: blocks));
     _changed();
@@ -1134,19 +1136,15 @@ class _MainPortfolioEditorScreenState
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            handle,
-            Expanded(
-              child: Text(title, style: Theme.of(context).textTheme.titleLarge),
-            ),
-            IconButton(
-              key: ValueKey(addKey),
-              tooltip: 'Добавить запись',
-              onPressed: _busy ? null : onAdd,
-              icon: const StackCardIcon(name: 'plus'),
-            ),
-          ],
+        BuilderSectionHeader(
+          title: title,
+          leading: handle,
+          action: IconButton(
+            key: ValueKey(addKey),
+            tooltip: 'Добавить запись',
+            onPressed: _busy ? null : onAdd,
+            icon: const StackCardIcon(name: 'plus'),
+          ),
         ),
         if (children.isNotEmpty) const SizedBox(height: StackCardSpacing.md),
         ...children,
@@ -1162,22 +1160,15 @@ class _MainPortfolioEditorScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                ?leading,
-                Expanded(
-                  child: Text(
-                    'Реализованные проекты',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                IconButton(
-                  key: const Key('main.editor.addProject'),
-                  tooltip: 'Добавить проект',
-                  onPressed: _busy ? null : _addProjects,
-                  icon: const StackCardIcon(name: 'plus'),
-                ),
-              ],
+            BuilderSectionHeader(
+              title: 'Реализованные проекты',
+              leading: leading,
+              action: IconButton(
+                key: const Key('main.editor.addProject'),
+                tooltip: 'Добавить проект',
+                onPressed: _busy ? null : _addProjects,
+                icon: const StackCardIcon(name: 'plus'),
+              ),
             ),
             if (_projects.isNotEmpty) ...[
               const SizedBox(height: StackCardSpacing.md),

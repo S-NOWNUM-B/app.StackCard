@@ -8,6 +8,7 @@ import 'package:app_stackcard/features/portfolio_draft/data/hive_portfolio_draft
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/portfolio_draft/presentation/builder_tag_editor.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -98,7 +99,12 @@ Future<({ProviderContainer container, GoRouter router})> _open(
 Future<void> _dragFirstToLast(WidgetTester tester) async {
   final first = find.byKey(const ValueKey('project.technology.drag.0'));
   await Scrollable.ensureVisible(
-    tester.element(find.byKey(const ValueKey('project.technologies.editor'))),
+    tester.element(
+      find.byKey(
+        const ValueKey('project.technologies.editor'),
+        skipOffstage: false,
+      ),
+    ),
     alignment: 0,
   );
   await tester.pumpAndSettle();
@@ -115,7 +121,10 @@ Future<void> _dragFirstToLast(WidgetTester tester) async {
 
 List<String> _technologyOrder(WidgetTester tester) => tester
     .widget<BuilderTagsEditor>(
-      find.byKey(const ValueKey('project.technologies.editor')),
+      find.byKey(
+        const ValueKey('project.technologies.editor'),
+        skipOffstage: false,
+      ),
     )
     .items;
 
@@ -125,6 +134,23 @@ Future<void> _save(WidgetTester tester) async {
 }
 
 void main() {
+  setUpAll(() async {
+    if (!const bool.fromEnvironment('UPDATE_SINGLE_PORTFOLIO_PREVIEWS')) return;
+    final loader = FontLoader('Manrope');
+    for (final font in [
+      'Manrope-Regular.ttf',
+      'Manrope-SemiBold.ttf',
+      'Manrope-Bold.ttf',
+      'Manrope-ExtraBold.ttf',
+    ]) {
+      loader.addFont(rootBundle.load('assets/fonts/$font'));
+    }
+    await loader.load();
+    final icons = FontLoader('MaterialIcons')
+      ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+    await icons.load();
+  });
+
   test(
     'Scoped technology Save survives actual Hive close and reopen',
     () async {
@@ -319,7 +345,12 @@ void main() {
     );
     await _open(tester, repository);
     await Scrollable.ensureVisible(
-      tester.element(find.byKey(const ValueKey('project.technologies.editor'))),
+      tester.element(
+        find.byKey(
+          const ValueKey('project.technologies.editor'),
+          skipOffstage: false,
+        ),
+      ),
       alignment: 0,
     );
     await tester.pumpAndSettle();
@@ -327,16 +358,25 @@ void main() {
       find.byType(Scrollable).first,
     );
     final before = scrollable.position.pixels;
-    final viewport = tester.getRect(find.byType(SingleChildScrollView).first);
+    final viewport = tester.getRect(
+      find.byKey(const Key('project.editor.scroll')),
+    );
     final first = find.byKey(const ValueKey('project.technology.drag.0'));
     final gesture = await tester.startGesture(tester.getCenter(first));
     await tester.pump(const Duration(milliseconds: 650));
     final edge = Offset(tester.getCenter(first).dx, viewport.bottom - 8);
     await gesture.moveTo(edge);
-    for (var i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 300));
-      await gesture.moveTo(edge.translate(0, i.isEven ? -1 : 0));
+    final last = find.byKey(const ValueKey('project.technology.drag.19'));
+    for (var i = 0; i < 600; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      if (last.evaluate().isNotEmpty &&
+          tester.getRect(last).bottom < viewport.bottom - 60) {
+        break;
+      }
     }
+    expect(last, findsOneWidget);
+    await gesture.moveTo(tester.getCenter(last) + const Offset(0, 50));
+    await tester.pump(const Duration(milliseconds: 300));
     final after = scrollable.position.pixels;
     await gesture.up();
     await tester.pumpAndSettle();
@@ -365,8 +405,17 @@ void main() {
       notes: '',
     );
     await _open(tester, repository, width: 320, scale: 2);
+
     final first = find.byKey(const ValueKey('project.technology.drag.0'));
-    await tester.ensureVisible(first);
+    await Scrollable.ensureVisible(
+      tester.element(
+        find.byKey(
+          const ValueKey('project.technologies.editor'),
+          skipOffstage: false,
+        ),
+      ),
+      alignment: 0,
+    );
     await tester.pumpAndSettle();
     expect(tester.getSize(first), const Size(48, 48));
     for (var i = 0; i < 3; i++) {
@@ -374,6 +423,14 @@ void main() {
       final rect = tester.getRect(remove);
       expect(rect.left, greaterThanOrEqualTo(0));
       expect(rect.right, lessThanOrEqualTo(320));
+    }
+    if (const bool.fromEnvironment('UPDATE_SINGLE_PORTFOLIO_PREVIEWS')) {
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile(
+          '/private/tmp/stackcard-project-technologies-narrow.png',
+        ),
+      );
     }
     expect(tester.takeException(), isNull);
   });

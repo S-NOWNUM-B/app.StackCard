@@ -97,6 +97,10 @@ void main() {
       await _tap(tester, 'main.editor.save');
       final saved = mainPortfolioDocument((await memory.read())!.content!)!;
       expect(mainPortfolioSectionOrder(saved.content), chosen);
+      expect(
+        saved.content.blocks.map((block) => block.kind),
+        mainPortfolioBlocks(saved.content).map((block) => block.kind),
+      );
       expect(saved.content.profile.headline, 'Разработчик');
       expect(saved.content.skills.single.name, 'Dart');
       await tester.pumpWidget(const SizedBox.shrink());
@@ -132,6 +136,42 @@ void main() {
           mainPortfolioDocument((await memory.read())!.content!)!.content,
         ),
         chosen,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'held section drag scrolls through the list to the last position',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 640);
+      final repository = await _repository();
+      final container = await _open(tester, repository, shell: true);
+      final handle = find.byKey(const Key('main.editor.section.drag.links'));
+      await _ensureVisible(tester, handle);
+      final viewport = tester.getRect(_editorScrollable());
+      final gesture = await tester.startGesture(tester.getCenter(handle));
+      await tester.pump(const Duration(milliseconds: 650));
+      final edge = Offset(viewport.center.dx, viewport.bottom - 8);
+      for (var index = 0; index < 20; index++) {
+        await gesture.moveTo(edge + Offset(index.isEven ? 1 : -1, 0));
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(
+        mainPortfolioSectionOrder(
+          mainPortfolioDocument(
+            container.read(portfolioDraftControllerProvider).content!,
+          )!.content,
+        ),
+        const [
+          PortfolioBlockKind.skills,
+          PortfolioBlockKind.featuredProjects,
+          PortfolioBlockKind.experience,
+          PortfolioBlockKind.education,
+          PortfolioBlockKind.links,
+        ],
       );
       expect(tester.takeException(), isNull);
     },
