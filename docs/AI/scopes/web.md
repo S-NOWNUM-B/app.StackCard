@@ -27,6 +27,8 @@ scoped Library imports/deletes не записывают unsaved Editor. Legacy 
   пользователем; последующее поручение переносит white-only/ru дизайн в Flutter.
 - `src/lib/model.ts` реализует тот же JSON aggregate mobile PortfolioContent:
   root Projects Library, mainPortfolioId, GitHub identity/onboarding и legacy backup.
+  GitHub identity — Settings/onboarding, без поля в ContentEditor; обычный
+  Save портфолио не применяет ввод `githubInput` из настроек.
   Версии и команды берутся из `apps/web/package.json`, env — из `.env.example`.
 - `src/lib/firebase.ts` и `draft-repository.ts` — UID-bound client SDK. Web
   online-first: server read, CAS transaction по captured basis, ошибки сохраняют

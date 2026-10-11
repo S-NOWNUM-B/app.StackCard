@@ -47,13 +47,11 @@ export function ContentEditor({
   onChange,
   photo,
   projects,
-  github,
 }: {
   content: DocumentContent;
   onChange: (content: DocumentContent) => void;
   photo?: ReactNode;
   projects?: ReactNode;
-  github?: ReactNode;
 }) {
   const patch = (p: Partial<DocumentContent>) => onChange({ ...content, ...p });
   const profile = (p: Partial<Profile>) => patch({ profile: { ...content.profile, ...p } });
@@ -225,12 +223,6 @@ export function ContentEditor({
           onChange={(education) => patch({ education })}
         />
       </section>
-      {github && (
-        <section className="editor-group stack">
-          <h2>GitHub</h2>
-          {github}
-        </section>
-      )}
     </div>
   );
 }

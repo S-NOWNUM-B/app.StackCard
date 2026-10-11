@@ -280,6 +280,44 @@ dialog сохраняют порядок при переносе; Escape отм�
 Логи: `/private/tmp/stackcard-dialog-actions-verified-tests.log` и
 `/private/tmp/stackcard-dialog-actions-final-analyze.log`.
 
+Порядок mobile Home/Editor 2026-10-12: после профиля идут контакты, навыки,
+реализованные проекты, опыт работы и образование. Секция проектов в Editor
+использует общую outlined карточку с «+»; удержание точек слева перед иконкой
+переставляет проекты, крестик справа снимает связь, сохраняя Library.
+Общий Save сохраняет порядок и удаление; Home читает durable snapshot.
+При узком viewport/крупном тексте название проекта переносится под controls.
+Home/Editor widget suites — **53/53 PASS**, `flutter analyze --no-pub` —
+**0 issues**, format и `git diff --check` — PASS. Проверен actual gesture,
+сохранение порядка, privacy и320px/text2/keyboard; headless снимок
+`/private/tmp/stackcard-main-project-order-narrow.png` просмотрен.
+Лог: `/private/tmp/stackcard-project-order-tests.log`; это локальные проверки,
+без новой native/live приёмки.
+
+GitHub в редакторе 2026-10-12: дублирующий раздел профиля удалён в mobile и web;
+он остаётся в Settings и персонализации. Main Save не записывает GitHub identity,
+поэтому сохранённое изменение настроек не откатывается соседним вводом редактора.
+Mobile editor/contract/settings suites — **43/43 PASS**, анализ двух Dart-файлов
+— **0 issues**; web — **154/154 PASS**, typecheck и production build — PASS.
+Проверены отсутствие поля, сохранность root identity при scoped Settings Save,
+dirty buffer и смене owner. Логи mobile:
+`/private/tmp/stackcard-editor-github-removal-tests.log`,
+`/private/tmp/stackcard-editor-github-removal-analyze.log`.
+Проверки локальные, без нового native/live acceptance.
+
+Ссылки проектов 2026-10-12: saved mobile портфолио и web preview/public reader
+показывают два независимых действия под полным описанием — «Репозиторий»
+с `github` и «Продукт» с `globe`. Пустая ссылка скрывает только своё действие;
+без обеих ссылок нет строки действий. Название и описание больше не открывают
+одну выбранную ссылку, ограничение mobile описания в три строки удалено.
+Existing Home suite — **30/30 PASS**, анализ двух затронутых Dart-файлов —
+**0 issues**; web — **154/154 PASS**, typecheck, format и production build — PASS.
+Проверены правильные назначения ссылок, отсутствие пустых controls, keyboard,
+targets48 и width320/text2. Mobile headless и web browser снимки просмотрены;
+original SVG/Feather license перенесены из mobile в web с pinned hashes.
+Это локальные UI проверки, без нового native/live acceptance.
+Логи: `/private/tmp/stackcard-project-links-preview-tests.log` и
+`/private/tmp/stackcard-project-links-analyze.log`.
+
 Основные логи: `/private/tmp/stackcard-single-portfolio-final-verified-tests.log`,
 `stackcard-single-portfolio-final-flutter-analyze.log`, `stackcard-web-tests-final.log`,
 `stackcard-web-build-final.log`, `stackcard-single-all-rules.log`,
@@ -1679,7 +1717,8 @@ mobile/web/publication scope
   Keyboard/overflow прокручивает форму, fields сохраняют ввод.
 - Password и confirmation имеют независимые show/hide controls≥48, autofill и
   отключённые autocorrect/suggestions/smart quotes/dashes также при показе текста.
-- Регистрация проверяет 15–128 Unicode code points, очевидные простые варианты,
+- Регистрация проверяет 8–128 Unicode code points (минимум снижен по запросу
+  2026-10-12), очевидные простые варианты,
   короткие повторы/последовательности и точное совпадение с email/local-part.
   Requirements и конкретная ошибка обновляются при вводе; confirmation повторно
   проверяется после изменения password. Пробелы разрешены и передаются без trim.
@@ -1690,6 +1729,16 @@ mobile/web/publication scope
   PASS. Headless previews входа/регистрации/reset и validation states просмотрены;
   320px/text2/ru-en, keyboard и доступность покрыты. Это проверка UI/source,
   без новой native Auth acceptance или установки на устройство.
+
+**Минимальная длина пароля — 12 октября 2026**
+
+По прямому запросу минимум регистрации снижен с15 до8 Unicode code points
+в mobile и web; требования и сообщения об ошибке обновлены. Максимум128,
+проверки простых паролей, повторы, совпадение с почтой и raw SDK input сохранены.
+Mobile policy/auth UI/localization — **63/63 PASS**, web password tests —
+**5/5 PASS**; targeted Flutter analyze, web typecheck, Dart/Prettier format и
+`git diff --check` — PASS. Границы7/8 и128/129 покрыты. Live Firebase Auth policy
+не проверялась и не менялась; серверный минимум в репозитории не задан.
 
 **Google Auth и публичные API keys — 11 октября 2026**
 

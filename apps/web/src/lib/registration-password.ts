@@ -1,5 +1,5 @@
 export type RegistrationPasswordIssue = 'tooShort' | 'tooLong' | 'tooCommon' | 'matchesEmail';
-export const registrationPasswordMinimumLength = 15;
+export const registrationPasswordMinimumLength = 8;
 export const registrationPasswordMaximumLength = 128;
 const commonPasswords = new Set([
   'password',

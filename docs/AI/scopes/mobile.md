@@ -158,7 +158,7 @@ headless проверки не закрывают native visual, public/web ил
   разделяют nullable account repository, session и явный `guestAccessProvider`.
   Password/token/credential не сохраняются приложением; SDK владеет persistence.
   При регистрации форма применяет pure Dart `RegistrationPasswordPolicy`:
-  15–128 Unicode code points, локальные очевидные повторы/последовательности и
+  8–128 Unicode code points, локальные очевидные повторы/последовательности и
   точное совпадение с email/local-part отклоняются. Пробелы разрешены, пароль
   передаётся без trim. Это client validation, не remote Firebase policy и не
   проверка утечек. При входе сохраняется совместимость существующих паролей.
@@ -172,6 +172,8 @@ headless проверки не закрывают native visual, public/web ил
   вкладки. Home читает durable main portfolio; Editor guard предлагает
   Save/Discard/Cancel до смены вкладки. Gear≥48 открывает
   standalone `/settings`; `/settings/appearance` и `/settings/account` вне Shell.
+  GitHub identity меняется в Settings/персонализации; Main Editor не содержит
+  дублирующего поля и не записывает `githubUsername` при Save.
   Back возвращает origin; UID/access boundary сбрасывает private branch state.
 - Routes именованы в `app_router.dart`; `/register` и `/reset-password` — auth
   forms, Builder forms вложены в `/portfolio/builder`, project edit получает `id`.

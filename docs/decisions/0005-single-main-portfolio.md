@@ -37,9 +37,9 @@ Mobile shell содержит Home, Projects, Editor. Home разрешает д
 `state.draft.content`, Editor изменяет working buffer с явным Save и защитой выхода.
 Library импорт сохраняется отдельной scoped operation и не сохраняет соседний
 несохранённый ввод, не добавляет attachments и не публикует.
-Editor захватывает исходный GitHub username вместе с документом для CAS.
-Нетронутое поле обновляется после scoped/cloud изменения identity; собственный
-изменённый ввод при конфликте сохраняется и не перезаписывает новую запись.
+GitHub username вводится в персонализации и меняется в Settings отдельной scoped
+operation. По поручению 2026-10-12 дублирующее поле удалено из Editor; его Save
+не меняет GitHub identity и сохраняет её актуальное значение из repository.
 
 `PortfolioProject.iconId` принадлежит Library. Разрешённый каталог использует
 существующие pinned Lucide IDs: `folder`, `file-text`, `panels-top-left`, `home`,

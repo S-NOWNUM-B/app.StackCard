@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Icon } from '@/components/ui';
 import { publicProjectIcon, safePublicHref, safePublicMedia } from '@/lib/public-document';
 import type {
   PublicDocumentContent,
@@ -136,10 +137,10 @@ export function DocumentView({
                     {content.projects
                       .filter((p) => p.visible)
                       .map((project) => {
-                        const href =
-                          safePublicHref(project.liveUrl) || safePublicHref(project.repositoryUrl);
-                        const details = (
-                          <>
+                        const repositoryHref = safePublicHref(project.repositoryUrl.trim());
+                        const productHref = safePublicHref(project.liveUrl.trim());
+                        return (
+                          <div className="document-project-row" key={project.id}>
                             <img
                               className="document-project-icon"
                               src={`/icons/lucide/${publicProjectIcon(project.iconId)}.svg`}
@@ -151,22 +152,35 @@ export function DocumentView({
                             <div className="document-project-text">
                               <h3>{project.title}</h3>
                               {project.description.trim() && <p>{project.description}</p>}
+                              {(repositoryHref || productHref) && (
+                                <div className="document-project-links">
+                                  {repositoryHref && (
+                                    <a
+                                      className="button secondary"
+                                      href={repositoryHref}
+                                      target="_blank"
+                                      rel="noopener noreferrer nofollow"
+                                      aria-label={`Репозиторий проекта ${project.title}`}
+                                    >
+                                      <Icon name="github" size={20} />
+                                      Репозиторий
+                                    </a>
+                                  )}
+                                  {productHref && (
+                                    <a
+                                      className="button secondary"
+                                      href={productHref}
+                                      target="_blank"
+                                      rel="noopener noreferrer nofollow"
+                                      aria-label={`Продукт проекта ${project.title}`}
+                                    >
+                                      <Icon name="globe" size={20} />
+                                      Продукт
+                                    </a>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                          </>
-                        );
-                        return href ? (
-                          <a
-                            className="document-project-row"
-                            key={project.id}
-                            href={href}
-                            target="_blank"
-                            rel="noopener noreferrer nofollow"
-                          >
-                            {details}
-                          </a>
-                        ) : (
-                          <div className="document-project-row" key={project.id}>
-                            {details}
                           </div>
                         );
                       })}

@@ -2702,7 +2702,7 @@ h2.section-heading,
 .document-project-row {
   display: flex;
   gap: var(--md);
-  align-items: center;
+  align-items: flex-start;
   min-height: 64px;
   padding: var(--md) 0;
   border-bottom: 1px solid var(--border);
@@ -2723,6 +2723,18 @@ h2.section-heading,
 }
 .document-project-text p {
   font-size: 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.document-project-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--xs);
+  margin-top: var(--xs);
+  white-space: normal;
+}
+.document-project-links .button {
+  max-width: 100%;
   overflow-wrap: anywhere;
 }
 .avatar-editor {

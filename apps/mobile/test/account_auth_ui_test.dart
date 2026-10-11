@@ -425,9 +425,17 @@ void main() {
           locale: locale,
         );
         final strings = AppStrings(locale);
+        expect(
+          find.text(
+            locale.languageCode == 'ru'
+                ? 'От 8 до 128 символов'
+                : '8 to 128 characters',
+          ),
+          findsOneWidget,
+        );
         await _enter(tester, 'account.email', 'long.username@example.com');
         for (final candidate in [
-          ('short', 'tooShort'),
+          ('cloudca', 'tooShort'),
           ('aaaaaaaaaaaaaaa', 'tooCommon'),
           ('long.username@example.com', 'matchesEmail'),
           (List.filled(129, 'x').join(), 'tooLong'),
@@ -462,14 +470,12 @@ void main() {
         );
         await _tap(tester, 'account.submit');
         expect(repository.requests, isEmpty);
-        await _enter(
-          tester,
-          'account.confirmPassword',
-          'another lengthy phrase',
-        );
+        await _enter(tester, 'account.password', 'cloudcat');
+        await _enter(tester, 'account.confirmPassword', 'cloudcat');
         await _tap(tester, 'account.submit');
         await tester.pumpAndSettle();
         expect(repository.requests, ['register']);
+        expect(repository.password, 'cloudcat');
       },
     );
   }

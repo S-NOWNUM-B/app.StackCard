@@ -6,6 +6,8 @@ import { PasswordField } from '../src/components/auth-form';
 import { registrationPasswordIssues } from '../src/lib/registration-password';
 
 test('registration permits a long passphrase without invented character-category requirements', () => {
+  assert.ok(registrationPasswordIssues('Северок').has('tooShort'));
+  assert.equal(registrationPasswordIssues('Северная').size, 0);
   assert.equal(registrationPasswordIssues('Северный ветер над морем').size, 0);
   assert.equal(registrationPasswordIssues('a gentle amber evening').size, 0);
 });
@@ -22,8 +24,9 @@ test('obvious passwords and partial repeating patterns are rejected even when lo
     assert.ok(registrationPasswordIssues(value).has('tooCommon'));
 });
 test('length uses Unicode code points and spaces are preserved as password characters', () => {
-  assert.ok(registrationPasswordIssues('😀'.repeat(14)).has('tooShort'));
-  assert.ok(!registrationPasswordIssues('😀'.repeat(15)).has('tooShort'));
+  assert.ok(registrationPasswordIssues('😀'.repeat(7)).has('tooShort'));
+  assert.ok(!registrationPasswordIssues('😀'.repeat(8)).has('tooShort'));
+  assert.ok(!registrationPasswordIssues('😀'.repeat(128)).has('tooLong'));
   assert.ok(registrationPasswordIssues('😀'.repeat(129)).has('tooLong'));
   assert.ok(!registrationPasswordIssues('  северный ветер ').has('tooShort'));
 });

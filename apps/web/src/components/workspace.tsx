@@ -159,8 +159,8 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     content: WorkspaceContent;
     notes: string;
   } | null>(null);
-  const input = useRef({ content, notes, githubInput });
-  input.current = { content, notes, githubInput };
+  const input = useRef({ content, notes });
+  input.current = { content, notes };
   const activeUid = useRef(user.uid),
     shareAfter = useRef(false);
   const dirty =
@@ -459,12 +459,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         attempt = {
           mutationId: `web-${uid()}`,
           basis,
-          content: clone(
-            validateWorkspace(
-              { ...content, githubUsername: normalizeGitHubUsername(githubInput) },
-              user.uid,
-            ),
-          ),
+          content: clone(validateWorkspace(content, user.uid)),
           notes,
         };
         saveAttempt.current = attempt;
@@ -478,20 +473,10 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       );
       if (!owned()) return;
       const hasNewerInput =
-        !equal(
-          { ...input.current.content, githubUsername: canonicalGitHub(input.current.githubInput) },
-          attempt.content,
-        ) ||
-        input.current.notes !== attempt.notes ||
-        canonicalGitHub(input.current.githubInput) !== attempt.content.githubUsername;
+        !equal(input.current.content, attempt.content) || input.current.notes !== attempt.notes;
       setBasis(saved);
       setContent((current) =>
-        equal(
-          { ...current, githubUsername: canonicalGitHub(input.current.githubInput) },
-          attempt.content,
-        )
-          ? (saved.content ?? emptyContent())
-          : current,
+        equal(current, attempt.content) ? (saved.content ?? emptyContent()) : current,
       );
       setNotes((current) => (current === attempt.notes ? saved.notes : current));
       saveAttempt.current = null;
@@ -857,14 +842,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       placeholder="https://github.com/username"
       value={githubInput}
       maxLength={120}
-      onChange={(e) => {
-        setGitHubInput(e.target.value);
-        try {
-          update({ ...content, githubUsername: normalizeGitHubUsername(e.target.value) });
-        } catch {
-          /* Не завершённый URL не заменяет сохранённый источник. */
-        }
-      }}
+      onChange={(e) => setGitHubInput(e.target.value)}
     />
   );
   const previewCandidate =
@@ -1171,7 +1149,6 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                             onProjects={() => navigate('projects')}
                           />
                         }
-                        github={githubField}
                       />
                     </>
                   )}

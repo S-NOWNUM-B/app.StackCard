@@ -10,6 +10,7 @@ import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:app_stackcard/shared/widgets/stackcard_icon.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -202,6 +203,132 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  for (final (repository, product) in [
+    ('', ''),
+    ('https://github.com/snownumb/stackcard', ''),
+    ('', 'https://stackcard.example'),
+    ('https://github.com/snownumb/stackcard', 'https://stackcard.example'),
+    ('   ', '\n'),
+  ]) {
+    testWidgets('project links open independently: $repository / $product', (
+      tester,
+    ) async {
+      final links = _Links();
+      await _openProjectView(
+        tester,
+        links: links,
+        repositoryUrl: repository,
+        liveUrl: product,
+      );
+      final hasRepository = repository.trim().isNotEmpty;
+      final hasProduct = product.trim().isNotEmpty;
+      expect(
+        find.byKey(const Key('main.project.links.project')),
+        hasRepository || hasProduct ? findsOneWidget : findsNothing,
+      );
+      expect(
+        find.text('Репозиторий'),
+        hasRepository ? findsOneWidget : findsNothing,
+      );
+      expect(find.text('Продукт'), hasProduct ? findsOneWidget : findsNothing);
+      await tester.tap(find.text('app.StackCard'));
+      expect(links.opened, isEmpty);
+      if (hasRepository) {
+        await _tap(tester, 'main.project.repository.project');
+      }
+      if (hasProduct) {
+        await _tap(tester, 'main.project.product.project');
+      }
+      expect(links.opened, [
+        if (hasRepository) Uri.parse(repository),
+        if (hasProduct) Uri.parse(product),
+      ]);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final (width, scale) in [(390.0, 1.0), (320.0, 2.0)]) {
+    testWidgets('project description and actions fit width$width text$scale', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 680);
+      const description =
+          'Конструктор developer-портфолио с автоматической синхронизацией с GitHub '
+          'и публикацией публичной web-визитки.\n'
+          'Полное описание сохраняет все подробности проекта, включая эту последнюю строку.';
+      await _openProjectView(
+        tester,
+        links: _Links(),
+        repositoryUrl: 'https://github.com/snownumb/stackcard',
+        liveUrl: 'https://stackcard.example',
+        description: description,
+        textScale: scale,
+      );
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.text(description),
+      );
+      expect(paragraph.didExceedMaxLines, isFalse);
+      final descriptionRect = tester.getRect(find.text(description));
+      final rowRect = tester.getRect(
+        find.byKey(const Key('main.project.project')),
+      );
+      expect(descriptionRect.right, closeTo(rowRect.right, 0.01));
+      for (final key in ['repository', 'product']) {
+        final action = find.byKey(ValueKey('main.project.$key.project'));
+        final rect = tester.getRect(action);
+        expect(rect.top, greaterThan(descriptionRect.bottom));
+        expect(rect.left, greaterThanOrEqualTo(0));
+        expect(rect.right, lessThanOrEqualTo(width));
+        expect(rect.height, greaterThanOrEqualTo(48));
+        expect(rect.width, greaterThanOrEqualTo(48));
+      }
+      for (final key in ['repository', 'product']) {
+        await tester.ensureVisible(
+          find.byKey(ValueKey('main.project.$key.project')),
+        );
+        expect(tester.takeException(), isNull);
+      }
+      if (const bool.fromEnvironment('UPDATE_PROJECT_PREVIEWS')) {
+        tester.view.physicalSize = Size(width, scale == 1 ? 500 : 1200);
+        await tester.pumpAndSettle();
+        await tester.drag(
+          find.byType(SingleChildScrollView),
+          const Offset(0, 2000),
+        );
+        await tester.pumpAndSettle();
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile(
+            '/private/tmp/stackcard-projects-${width.toInt()}.png',
+          ),
+        );
+      }
+    });
+  }
+
+  testWidgets('project links support keyboard in repository/product order', (
+    tester,
+  ) async {
+    final links = _Links();
+    await _openProjectView(
+      tester,
+      links: links,
+      repositoryUrl: 'https://github.com/snownumb/stackcard',
+      liveUrl: 'https://stackcard.example',
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(links.opened, [
+      Uri.parse('https://github.com/snownumb/stackcard'),
+      Uri.parse('https://stackcard.example'),
+    ]);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('legacy additional content remains after education', (
     tester,
@@ -890,6 +1017,50 @@ final _pdfBytes = Uint8List.fromList(
 );
 const _legacyAvatarUrl = 'https://images.example.com/saved-avatar.jpg';
 final _legacyAvatarBytes = Uint8List.fromList([1, 2, 3]);
+
+Future<void> _openProjectView(
+  WidgetTester tester, {
+  required _Links links,
+  required String repositoryUrl,
+  required String liveUrl,
+  String description = 'Описание проекта',
+  double textScale = 1,
+}) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [documentLinkActionsProvider.overrideWithValue(links)],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: StackCardTheme.light,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: MainPortfolioContentView(
+              content: PortfolioContent(
+                projects: [
+                  PortfolioProject(
+                    id: 'project',
+                    title: 'app.StackCard',
+                    description: description,
+                    technologies: const [],
+                    repositoryUrl: repositoryUrl,
+                    liveUrl: liveUrl,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
 
 PortfolioContent _workspace(
   String name, {
