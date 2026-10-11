@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
+import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../auth_providers.dart';
 import '../domain/auth_failure.dart';
+import '../domain/registration_password_policy.dart';
 import '../../portfolio_draft/portfolio_draft.dart';
 import 'auth_controller.dart';
 
@@ -39,6 +41,9 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
   final _confirmation = TextEditingController();
   bool _resetSent = false;
   bool _confirming = false;
+  bool _passwordVisible = false;
+  bool _confirmationVisible = false;
+  bool _passwordEdited = false;
 
   Future<bool> _confirmAccountSwitch() async {
     if (!ref.read(portfolioDraftControllerProvider).hasUnsavedChanges) {
@@ -90,6 +95,9 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
       _password.clear();
       _confirmation.clear();
       _resetSent = false;
+      _passwordVisible = false;
+      _confirmationVisible = false;
+      _passwordEdited = false;
       _formKey.currentState?.reset();
     }
   }
@@ -102,6 +110,18 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
   }
 
   String? _validatePassword(String? value) {
+    if (widget.mode == AuthFormMode.register) {
+      final issues = RegistrationPasswordPolicy.evaluate(
+        value ?? '',
+        email: _email.text,
+      );
+      for (final issue in RegistrationPasswordIssue.values) {
+        if (issues.contains(issue)) {
+          return context.strings.tr('account.passwordIssue.${issue.name}');
+        }
+      }
+      return null;
+    }
     return (value?.length ?? 0) >= 6
         ? null
         : context.strings.tr('account.error.weakPassword');
@@ -133,6 +153,9 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
   }
 
   Future<void> _submit() async {
+    if (widget.mode == AuthFormMode.register) {
+      setState(() => _passwordEdited = true);
+    }
     final session = ref.read(accountSessionProvider);
     if (_confirming ||
         session.isLoading ||
@@ -187,6 +210,110 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
     if (mounted && success) context.go(destination);
   }
 
+  Widget _visibilityButton({required bool confirmation, required bool busy}) {
+    final visible = confirmation ? _confirmationVisible : _passwordVisible;
+    return IconButton(
+      key: Key(
+        confirmation
+            ? 'account.confirmPasswordVisibility'
+            : 'account.passwordVisibility',
+      ),
+      tooltip: context.strings.tr(
+        visible ? 'account.hidePassword' : 'account.showPassword',
+      ),
+      constraints: const BoxConstraints(
+        minWidth: StackCardSize.touchTarget,
+        minHeight: StackCardSize.touchTarget,
+      ),
+      onPressed: busy
+          ? null
+          : () => setState(() {
+              if (confirmation) {
+                _confirmationVisible = !_confirmationVisible;
+              } else {
+                _passwordVisible = !_passwordVisible;
+              }
+            }),
+      icon: Icon(
+        visible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+        size: 20,
+      ),
+    );
+  }
+
+  Widget _passwordRequirements() {
+    final issues = RegistrationPasswordPolicy.evaluate(
+      _password.text,
+      email: _email.text,
+    );
+    final rules = [
+      (
+        key: 'length',
+        passed:
+            !issues.contains(RegistrationPasswordIssue.tooShort) &&
+            !issues.contains(RegistrationPasswordIssue.tooLong),
+      ),
+      (
+        key: 'uncommon',
+        passed: !issues.contains(RegistrationPasswordIssue.tooCommon),
+      ),
+      (
+        key: 'differentEmail',
+        passed: !issues.contains(RegistrationPasswordIssue.matchesEmail),
+      ),
+    ];
+    return Column(
+      key: const Key('account.passwordRequirements'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final rule in rules)
+          Padding(
+            padding: const EdgeInsets.only(top: StackCardSpacing.xs),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ExcludeSemantics(
+                  child: Icon(
+                    !_passwordEdited
+                        ? Icons.circle_outlined
+                        : rule.passed
+                        ? Icons.check_rounded
+                        : Icons.close_rounded,
+                    size: 18,
+                    color: !_passwordEdited
+                        ? context.colors.textMeta
+                        : rule.passed
+                        ? context.colors.success
+                        : context.colors.error,
+                  ),
+                ),
+                const SizedBox(width: StackCardSpacing.sm),
+                Expanded(
+                  child: Semantics(
+                    label: _passwordEdited
+                        ? context.strings.tr(
+                            rule.passed
+                                ? 'account.ruleMet'
+                                : 'account.ruleUnmet',
+                          )
+                        : null,
+                    child: Text(
+                      context.strings.tr('account.passwordRule.${rule.key}'),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: _passwordEdited && !rule.passed
+                            ? context.colors.error
+                            : context.colors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(accountAuthControllerProvider);
@@ -211,7 +338,7 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
               Text(
                 strings.tr(titleKey),
                 key: const Key('account.title'),
-                textAlign: TextAlign.left,
+                textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               if (session.isLoading) ...[
@@ -253,11 +380,14 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                 enabled: !busy,
                 prefixIcon: Icons.alternate_email_rounded,
                 keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
                 textInputAction: widget.mode == AuthFormMode.resetPassword
                     ? TextInputAction.done
                     : TextInputAction.next,
                 onChanged: (_) {
-                  if (_resetSent) setState(() => _resetSent = false);
+                  if (_resetSent || widget.mode == AuthFormMode.register) {
+                    setState(() => _resetSent = false);
+                  }
                 },
                 onFieldSubmitted: widget.mode == AuthFormMode.resetPassword
                     ? (_) => _submit()
@@ -269,11 +399,31 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                 StackCardInput(
                   key: const Key('account.password'),
                   label: strings.tr('account.password'),
-                  hint: strings.tr('account.passwordHint'),
+                  hint: strings.tr(
+                    widget.mode == AuthFormMode.register
+                        ? 'account.registrationPasswordHint'
+                        : 'account.signInPasswordHint',
+                  ),
                   controller: _password,
                   enabled: !busy,
                   prefixIcon: Icons.lock_outline_rounded,
-                  obscureText: true,
+                  obscureText: !_passwordVisible,
+                  keyboardType: TextInputType.visiblePassword,
+                  autofillHints: [
+                    widget.mode == AuthFormMode.register
+                        ? AutofillHints.newPassword
+                        : AutofillHints.password,
+                  ],
+                  autovalidateMode: widget.mode == AuthFormMode.register
+                      ? AutovalidateMode.onUserInteraction
+                      : null,
+                  onChanged: widget.mode == AuthFormMode.register
+                      ? (_) => setState(() => _passwordEdited = true)
+                      : null,
+                  suffixIcon: _visibilityButton(
+                    confirmation: false,
+                    busy: busy,
+                  ),
                   textInputAction: widget.mode == AuthFormMode.register
                       ? TextInputAction.next
                       : TextInputAction.done,
@@ -284,6 +434,8 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                 ),
               ],
               if (widget.mode == AuthFormMode.register) ...[
+                const SizedBox(height: StackCardSpacing.xs),
+                _passwordRequirements(),
                 const SizedBox(height: 16),
                 StackCardInput(
                   key: const Key('account.confirmPassword'),
@@ -291,7 +443,11 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                   controller: _confirmation,
                   enabled: !busy,
                   prefixIcon: Icons.lock_outline_rounded,
-                  obscureText: true,
+                  obscureText: !_confirmationVisible,
+                  keyboardType: TextInputType.visiblePassword,
+                  autofillHints: const [AutofillHints.newPassword],
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  suffixIcon: _visibilityButton(confirmation: true, busy: busy),
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _submit(),
                   validator: (value) => value == _password.text
@@ -305,7 +461,7 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                   onPressed: busy ? null : () => _openMode('/reset-password'),
                   child: Text(
                     strings.tr('account.forgotPassword'),
-                    textAlign: TextAlign.left,
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],
@@ -347,7 +503,7 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                   child: Text(strings.tr('account.resetSuccess')),
                 ),
               ],
-              const SizedBox(height: 24),
+              const SizedBox(height: StackCardSpacing.lg),
               TextButton(
                 onPressed: busy
                     ? null
@@ -362,12 +518,12 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                         ? 'account.register'
                         : 'account.backToSignIn',
                   ),
-                  textAlign: TextAlign.left,
+                  textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: StackCardSpacing.sm),
               const Divider(height: 1),
-              const SizedBox(height: 16),
+              const SizedBox(height: StackCardSpacing.sm),
               TextButton(
                 key: const Key('account.guest'),
                 onPressed: busy
@@ -378,7 +534,7 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                       },
                 child: Text(
                   strings.tr('account.guest'),
-                  textAlign: TextAlign.left,
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],

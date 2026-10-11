@@ -15,6 +15,23 @@ const russianAuthStrings = <String, String>{
   'account.emailHint': 'you@example.com',
   'account.password': 'Пароль',
   'account.passwordHint': 'Не менее 6 символов',
+  'account.signInPasswordHint': 'Ваш пароль',
+  'account.registrationPasswordHint': 'Придумайте длинную фразу',
+  'account.showPassword': 'Показать пароль',
+  'account.hidePassword': 'Скрыть пароль',
+  'account.ruleMet': 'Выполнено',
+  'account.ruleUnmet': 'Не выполнено',
+  'account.passwordRule.length': 'От 15 до 128 символов',
+  'account.passwordRule.uncommon': 'Без простых повторов и последовательностей',
+  'account.passwordRule.differentEmail':
+      'Отличается от вашей почты и имени в ней',
+  'account.passwordIssue.tooShort':
+      'Используйте не менее 15 символов. Можно фразу с пробелами.',
+  'account.passwordIssue.tooLong': 'Используйте не более 128 символов',
+  'account.passwordIssue.tooCommon':
+      'Этот пароль слишком простой. Придумайте другую фразу.',
+  'account.passwordIssue.matchesEmail':
+      'Пароль не должен совпадать с почтой или именем в ней',
   'account.confirmPassword': 'Повторите пароль',
   'account.passwordMismatch': 'Пароли не совпадают',
   'account.google': 'Войти через Google',
@@ -68,6 +85,23 @@ const englishAuthStrings = <String, String>{
   'account.emailHint': 'you@example.com',
   'account.password': 'Password',
   'account.passwordHint': 'At least 6 characters',
+  'account.signInPasswordHint': 'Your password',
+  'account.registrationPasswordHint': 'Choose a long passphrase',
+  'account.showPassword': 'Show password',
+  'account.hidePassword': 'Hide password',
+  'account.ruleMet': 'Requirement met',
+  'account.ruleUnmet': 'Requirement not met',
+  'account.passwordRule.length': '15 to 128 characters',
+  'account.passwordRule.uncommon': 'No simple repetitions or sequences',
+  'account.passwordRule.differentEmail':
+      'Different from your email and its username',
+  'account.passwordIssue.tooShort':
+      'Use at least 15 characters. A phrase with spaces works.',
+  'account.passwordIssue.tooLong': 'Use no more than 128 characters',
+  'account.passwordIssue.tooCommon':
+      'This password is too simple. Choose another phrase.',
+  'account.passwordIssue.matchesEmail':
+      'Password must differ from your email and its username',
   'account.confirmPassword': 'Confirm password',
   'account.passwordMismatch': 'Passwords do not match',
   'account.google': 'Sign in with Google',

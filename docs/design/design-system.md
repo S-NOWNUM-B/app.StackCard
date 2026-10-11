@@ -66,6 +66,8 @@ Manrope400/600/700/800 — живой UI font с Noto Sans fallback; регис�
 [StackCardBrand](../../apps/mobile/lib/shared/widgets/stackcard_brand.dart)
 выбирает один Wordmark (уже содержит Mark) либо compact Mark, contain/no tint/
 no дублирующий Text. Текущий light runtime выбирает original ink variant;
+Auth использует `trimWordmarkPadding`: viewport убирает пустое правое поле,
+оптически центрируя original paths без изменения SVG bytes и пропорций.
 исторический paper variant сохранён в исходных assets.9BrandA SVG импортированы.
 D048 экспортировал Accent AppIcon; поручение 2026-10-11 заменяет его на
 original MonoDark: светлый знак на чёрном фоне. Pinned source из действующего
@@ -307,7 +309,7 @@ contextual Back и platform gesture. Tab switch отличается от nested
 | Settings | Account, connections, social, base profile, appearance, privacy, notifications, session |
 | Editor | Compact back/title, focused sections, Saved/Saving либо доступный Save |
 | Portfolio Builder | Name/status, mini-preview, section rows/reorder, appearance/publishing |
-| Auth | Центрированная форма, text слева, matte controls, без тяжёлой декорации |
+| Auth | Logo, heading и текстовые действия по центру; вся форма центрируется по вертикали, при keyboard/overflow прокручивается; текст полей слева, matte controls |
 
 Copy Link постоянно доступен у published Resume/Portfolio. Draft показывает
 Draft и Edit/Preview, не выдаёт несуществующую ссылку за публичную. Detail содержит

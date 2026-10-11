@@ -1528,6 +1528,25 @@ mobile/web/publication scope
 - [x] Гостевой draft переносится явно только в пустой target; sign out, UID switch,
   late save, сбой transfer/reopen и private form state проверены без чужих данных.
 
+**Формы аккаунта — 11 октября 2026**
+
+- Вход, регистрация и reset центрируют общий блок, heading и текстовые действия.
+  Auth viewport убирает пустое поле original Wordmark справа; SVG bytes сохранены.
+  Keyboard/overflow прокручивает форму, fields сохраняют ввод.
+- Password и confirmation имеют независимые show/hide controls≥48, autofill и
+  отключённые autocorrect/suggestions/smart quotes/dashes также при показе текста.
+- Регистрация проверяет 15–128 Unicode code points, очевидные простые варианты,
+  короткие повторы/последовательности и точное совпадение с email/local-part.
+  Requirements и конкретная ошибка обновляются при вводе; confirmation повторно
+  проверяется после изменения password. Пробелы разрешены и передаются без trim.
+  Sign-in сохраняет правила существующих аккаунтов. Это client validation;
+  remote Firebase policy, проверка утечек и рабочие аккаунты не менялись.
+- Focused gate: **136/136 PASS** — policy, auth UI, account navigation,
+  shared controls и localization. `flutter analyze`, Dart format и diff check —
+  PASS. Headless previews входа/регистрации/reset и validation states просмотрены;
+  320px/text2/ru-en, keyboard и доступность покрыты. Это проверка UI/source,
+  без новой native Auth acceptance или установки на устройство.
+
 **Google Auth и публичные API keys — 11 октября 2026**
 
 - В Google Cloud Android/iOS keys ограничены 11 Firebase API, без AI Logic,

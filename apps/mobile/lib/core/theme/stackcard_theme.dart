@@ -67,7 +67,7 @@ abstract final class StackCardTheme {
         style: TextButton.styleFrom(
           foregroundColor: colors.textPrimary,
           disabledForegroundColor: colors.textMeta,
-          alignment: Alignment.centerLeft,
+          alignment: Alignment.center,
           minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(vertical: 12),
           textStyle: base.textTheme.bodyMedium?.copyWith(

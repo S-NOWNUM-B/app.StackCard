@@ -138,6 +138,13 @@ headless проверки не закрывают native visual, public/web ил
   [auth providers](../../../apps/mobile/lib/features/auth/auth_providers.dart)
   разделяют nullable account repository, session и явный `guestAccessProvider`.
   Password/token/credential не сохраняются приложением; SDK владеет persistence.
+  При регистрации форма применяет pure Dart `RegistrationPasswordPolicy`:
+  15–128 Unicode code points, локальные очевидные повторы/последовательности и
+  точное совпадение с email/local-part отклоняются. Пробелы разрешены, пароль
+  передаётся без trim. Это client validation, не remote Firebase policy и не
+  проверка утечек. При входе сохраняется совместимость существующих паролей.
+  Password/confirmation имеют независимые show/hide controls≥48 и autofill;
+  autocorrect/suggestions и smart quotes/dashes отключены также при показе пароля.
   Legacy `AuthRepository`/`DemoSession` остаются preview API без native configuration.
   Restoring/error/signedOut без guest access блокируют private routes и draft;
   нельзя читать guest или предыдущий UID как fallback. Error/retry остаётся явным.
