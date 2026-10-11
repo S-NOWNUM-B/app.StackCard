@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { Button, Field, Icon } from './ui';
+import { useId, useRef, useState } from 'react';
+import { Button, Field, Icon, Notice, TechnologyBadges } from './ui';
 import {
   uid,
   withProjectEdits,
@@ -37,10 +37,18 @@ export function IconPicker({
   const [open, setOpen] = useState(false);
   return (
     <div className="stack">
-      <Button variant="secondary" onClick={() => setOpen(!open)} aria-expanded={open}>
-        <Icon name={value} />
-        Выбрать иконку
-      </Button>
+      <button
+        type="button"
+        className="avatar-trigger project-icon-trigger"
+        aria-label="Иконка проекта"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+      >
+        <Icon name={value} size={48} />
+        <span className="avatar-pencil" aria-hidden="true">
+          <Icon name="pencil" size={22} />
+        </span>
+      </button>
       {open && (
         <div className="icon-picker" role="group" aria-label="Встроенные иконки">
           {projectIconIds.map((id) => (
@@ -60,6 +68,157 @@ export function IconPicker({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+export function appendProjectTechnology(items: string[], input: string): string[] {
+  const technology = input.trim();
+  if (!technology) throw new Error('Введите название.');
+  if (technology.includes(',')) throw new Error('Добавляйте по одной технологии.');
+  if (technology.length > 60) throw new Error('Максимум 60 символов.');
+  if (items.some((item) => item.trim().toLowerCase() === technology.toLowerCase()))
+    throw new Error('Технология уже добавлена.');
+  if (items.length >= 20) throw new Error('Максимум 20 технологий.');
+  return [...items, technology];
+}
+function ProjectTechnologies({
+  items,
+  onChange,
+}: {
+  items: string[];
+  onChange: (items: string[]) => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null),
+    input = useRef<HTMLInputElement>(null),
+    titleId = useId(),
+    errorId = useId();
+  const [name, setName] = useState(''),
+    [error, setError] = useState('');
+  function add() {
+    try {
+      onChange(appendProjectTechnology(items, name));
+      setName('');
+      setError('');
+      dialog.current?.close();
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'Не удалось добавить технологию.');
+      input.current?.focus();
+    }
+  }
+  return (
+    <div className="stack project-technologies">
+      <div className="project-technology-heading">
+        <strong>Технологии</strong>
+        <Button
+          variant="quiet"
+          className="project-technology-action"
+          aria-label="Добавить технологию"
+          title="Добавить технологию"
+          onClick={() => {
+            setError('');
+            dialog.current?.showModal();
+            input.current?.focus();
+          }}
+        >
+          <Icon name="plus" />
+        </Button>
+      </div>
+      {items.length > 0 && (
+        <ul className="project-technology-list" aria-label="Технологии проекта">
+          {items.map((item, index) => (
+            <li className="project-technology-item" key={item + index}>
+              <TechnologyBadges items={[item]} />
+              <Button
+                variant="quiet"
+                className="project-technology-action text-danger"
+                aria-label={`Удалить технологию ${item}`}
+                title={`Удалить технологию ${item}`}
+                onClick={() => onChange(items.filter((_, position) => position !== index))}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7" />
+                </svg>
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <dialog
+        ref={dialog}
+        className="dialog project-technology-dialog"
+        aria-labelledby={titleId}
+        onKeyDown={(event) => {
+          if (event.key !== 'Tab') return;
+          const active = event.currentTarget.ownerDocument.activeElement,
+            submit = event.currentTarget.querySelector<HTMLButtonElement>('button[type="submit"]');
+          if (event.shiftKey && active === input.current) {
+            event.preventDefault();
+            submit?.focus();
+          } else if (!event.shiftKey && active === submit) {
+            event.preventDefault();
+            input.current?.focus();
+          }
+        }}
+      >
+        <form
+          className="stack"
+          onSubmit={(event) => {
+            event.preventDefault();
+            add();
+          }}
+        >
+          <h2 id={titleId}>Технология</h2>
+          <label className="field">
+            <span>Название</span>
+            <input
+              ref={input}
+              value={name}
+              autoComplete="off"
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? errorId : undefined}
+              onChange={(event) => {
+                setName(event.target.value);
+                setError('');
+              }}
+            />
+          </label>
+          {error && (
+            <div id={errorId}>
+              <Notice error>{error}</Notice>
+            </div>
+          )}
+          <div className="project-technology-dialog-actions">
+            <Button
+              variant="quiet"
+              className="project-technology-action"
+              aria-label="Закрыть"
+              title="Закрыть"
+              onClick={() => dialog.current?.close()}
+            >
+              <span aria-hidden="true">×</span>
+            </Button>
+            <Button
+              type="submit"
+              className="project-technology-action"
+              aria-label="Добавить технологию"
+              title="Добавить технологию"
+            >
+              <Icon name="plus" />
+            </Button>
+          </div>
+        </form>
+      </dialog>
     </div>
   );
 }
@@ -96,17 +255,10 @@ export function ProjectForm({
         maxLength={4000}
         onChange={(e) => patch({ contribution: e.target.value })}
       />
-      <Field
-        label="Технологии через запятую"
-        value={project.technologies.join(', ')}
-        onChange={(e) =>
-          patch({
-            technologies: e.target.value
-              .split(',')
-              .map((s) => s.trim())
-              .filter(Boolean),
-          })
-        }
+      <ProjectTechnologies
+        key={project.id}
+        items={project.technologies}
+        onChange={(technologies) => patch({ technologies })}
       />
       <Field
         label="Репозиторий"

@@ -2541,6 +2541,68 @@ h2.section-heading,
   background: var(--surface-elevated);
   border-color: var(--outline);
 }
+.project-technologies {
+  gap: var(--sm);
+}
+.project-technology-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sm);
+  font-size: 14px;
+}
+.project-technology-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sm);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.project-technology-item {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-elevated);
+}
+.project-technology-item .badges {
+  flex: 1;
+  min-width: 0;
+}
+.project-technology-item .badge {
+  min-width: 0;
+  max-width: 100%;
+  border: 0;
+  background: transparent;
+  overflow-wrap: anywhere;
+}
+.project-technology-item .technology-icon {
+  flex-shrink: 0;
+}
+.project-technology-action {
+  flex-shrink: 0;
+  min-width: 48px;
+  padding: var(--sm);
+}
+.project-technology-dialog {
+  margin: auto;
+  color: var(--text);
+}
+.project-technology-dialog::backdrop {
+  background: #000a;
+}
+.project-technology-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sm);
+}
+.project-technology-dialog-actions .button > span:not(.icon) {
+  font-size: 24px;
+  line-height: 1;
+}
 .repository-choice input,
 .project-row input[type='radio'] {
   width: 24px;
@@ -2618,6 +2680,11 @@ h2.section-heading,
   border: 1px solid var(--outline);
   border-radius: 50%;
   background: var(--surface-elevated);
+}
+.project-icon-trigger {
+  display: grid;
+  place-items: center;
+  align-self: center;
 }
 .avatar-photo {
   width: 100%;

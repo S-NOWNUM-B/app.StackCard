@@ -43,7 +43,8 @@ class _PortfolioProjectEditorScreenState
   String _iconId = 'folder';
   String _baselineIconId = 'folder';
   Map<String, String>? _baselineValues;
-  bool _editingTechnologies = false;
+  List<String> _technologies = [];
+  List<String> _baselineTechnologies = [];
   bool _allowPop = false;
   bool _confirmingExit = false;
   bool _saveFailed = false;
@@ -51,7 +52,8 @@ class _PortfolioProjectEditorScreenState
   bool get _dirty =>
       _controllers != null &&
       (!mapEquals(_baselineValues, builderFieldValues(_controllers!)) ||
-          _baselineIconId != _iconId);
+          _baselineIconId != _iconId ||
+          !listEquals(_baselineTechnologies, _technologies));
 
   void _inputChanged() {
     if (mounted) setState(() => _saveFailed = false);
@@ -70,7 +72,8 @@ class _PortfolioProjectEditorScreenState
       _iconId = 'folder';
       _baselineIconId = 'folder';
       _baselineValues = null;
-      _editingTechnologies = false;
+      _technologies = [];
+      _baselineTechnologies = [];
       _allowPop = false;
       _saveFailed = false;
     }
@@ -96,6 +99,8 @@ class _PortfolioProjectEditorScreenState
     _initialRepository = ref.read(portfolioDraftRepositoryProvider);
     _iconId = project?.iconId ?? 'folder';
     _baselineIconId = _iconId;
+    _technologies = List.of(project?.technologies ?? const <String>[]);
+    _baselineTechnologies = List.of(_technologies);
     _featured = project?.featured ?? false;
     _visible = project?.visible ?? true;
     _fields = [
@@ -122,14 +127,6 @@ class _PortfolioProjectEditorScreenState
         kind: BuilderFieldKind.multiline,
       ),
       BuilderFieldSpec(
-        name: 'technologies',
-        labelKey: 'builderForm.technologies',
-        hintKey: 'builderForm.technologiesHint',
-        value: project?.technologies.join(', ') ?? '',
-        maxLength: 1238,
-        validate: _validateTechnologies,
-      ),
-      BuilderFieldSpec(
         name: 'repositoryUrl',
         labelKey: 'builderForm.repositoryUrl',
         value: project?.repositoryUrl ?? '',
@@ -149,24 +146,6 @@ class _PortfolioProjectEditorScreenState
     for (final controller in _controllers!.values) {
       controller.addListener(_inputChanged);
     }
-  }
-
-  List<String> _technologies(String value) => [
-    for (final part in value.split(','))
-      if (part.trim().isNotEmpty) part.trim(),
-  ];
-
-  String? _validateTechnologies(BuildContext context, String value) {
-    final technologies = _technologies(value);
-    if (technologies.length > 20) {
-      return context.strings.tr('builderForm.tooManyTechnologies', {
-        'limit': 20,
-      });
-    }
-    if (technologies.any((technology) => technology.length > 60)) {
-      return context.strings.tr('builderForm.technologyTooLong', {'limit': 60});
-    }
-    return null;
   }
 
   Future<void> _apply() async {
@@ -189,13 +168,14 @@ class _PortfolioProjectEditorScreenState
     }
     if (widget.projectId != null && existingProject == null) return;
     final values = builderFieldValues(_controllers!);
+    final technologies = List<String>.of(_technologies);
     final controller = ref.read(portfolioDraftControllerProvider.notifier);
     final edited = PortfolioProject(
       id: widget.projectId ?? _initialProject?.id ?? controller.createId(),
       title: values['title']!,
       description: values['description']!,
       contribution: values['contribution']!,
-      technologies: _technologies(values['technologies']!),
+      technologies: technologies,
       repositoryUrl: values['repositoryUrl']!,
       liveUrl: values['liveUrl']!,
       featured: _featured,
@@ -227,9 +207,11 @@ class _PortfolioProjectEditorScreenState
     _initialProject = project;
     _baselineValues = values;
     _baselineIconId = project.iconId;
+    _baselineTechnologies = technologies;
     // Ввод после нажатия Save остаётся в форме, даже если старый snapshot сохранён.
     if (!mapEquals(values, builderFieldValues(_controllers!)) ||
-        project.iconId != _iconId) {
+        project.iconId != _iconId ||
+        !listEquals(technologies, _technologies)) {
       return;
     }
     _leave();
@@ -348,47 +330,110 @@ class _PortfolioProjectEditorScreenState
   }
 
   Widget _technologiesSection() {
-    final technologies = _technologies(_controllers!['technologies']!.text);
+    final enabled = !ref.watch(portfolioDraftControllerProvider).saving;
     return StackCardCard(
+      key: const ValueKey('project.technologies.editor'),
       outlined: true,
       padding: const EdgeInsets.all(StackCardSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            context.strings.tr('builderForm.technologies'),
-            style: Theme.of(context).textTheme.titleLarge,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.strings.tr('builderForm.technologies'),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              IconButton(
+                key: const ValueKey('project.technology.add'),
+                tooltip: context.strings.tr('mobileParity.addTechnology'),
+                onPressed: enabled ? _addTechnology : null,
+                icon: const StackCardIcon(name: 'plus'),
+              ),
+            ],
           ),
-          const SizedBox(height: StackCardSpacing.md),
-          if (technologies.isEmpty)
-            Text(
-              context.strings.tr('mobileParity.technologiesEmpty'),
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: context.colors.textSecondary),
-            )
-          else
+          if (_technologies.isNotEmpty) ...[
+            const SizedBox(height: StackCardSpacing.md),
             Wrap(
               spacing: StackCardSpacing.sm,
               runSpacing: StackCardSpacing.sm,
               children: [
-                for (final technology in technologies)
-                  StackCardTechnologyBadge(label: technology),
+                for (var index = 0; index < _technologies.length; index++)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: StackCardTechnologyBadge(
+                          label: _technologies[index],
+                        ),
+                      ),
+                      IconButton(
+                        key: ValueKey('project.technology.remove.$index'),
+                        tooltip: context.strings.tr(
+                          'mobileParity.removeTechnology',
+                          {'name': _technologies[index]},
+                        ),
+                        onPressed: enabled
+                            ? () => setState(() {
+                                _technologies = [..._technologies]
+                                  ..removeAt(index);
+                                _saveFailed = false;
+                              })
+                            : null,
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          color: context.colors.error,
+                          size: 22,
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
-          const SizedBox(height: StackCardSpacing.md),
-          if (_editingTechnologies) ...[
-            _field('technologies'),
-            const SizedBox(height: StackCardSpacing.sm),
           ],
-          StackCardButton(
-            key: const ValueKey('project.technologies.edit'),
-            label: context.strings.tr('builderIntegration.edit'),
-            role: StackCardButtonRole.quiet,
-            onPressed: () => setState(() => _editingTechnologies = true),
-          ),
         ],
       ),
     );
+  }
+
+  Future<void> _addTechnology() async {
+    final repository = _initialRepository;
+    final controllers = _controllers;
+    FocusManager.instance.primaryFocus?.unfocus();
+    final technology = await showDialog<String>(
+      context: context,
+      builder: (_) => _TechnologyDialog(existing: List.of(_technologies)),
+    );
+    if (!mounted ||
+        technology == null ||
+        !identical(controllers, _controllers) ||
+        !identical(repository, ref.read(portfolioDraftRepositoryProvider)) ||
+        ref.read(portfolioDraftControllerProvider).saving) {
+      return;
+    }
+    setState(() {
+      _technologies = [..._technologies, technology];
+      _saveFailed = false;
+    });
+  }
+
+  Future<void> _selectIcon() async {
+    final repository = _initialRepository;
+    final controllers = _controllers;
+    final selected = await showProjectIconPicker(
+      context,
+      selectedIconId: _iconId,
+    );
+    if (!mounted ||
+        selected == null ||
+        !identical(controllers, _controllers) ||
+        !identical(repository, ref.read(portfolioDraftRepositoryProvider)) ||
+        ref.read(portfolioDraftControllerProvider).saving) {
+      return;
+    }
+    setState(() => _iconId = selected);
   }
 
   Future<void> _deleteProject(
@@ -527,6 +572,73 @@ class _PortfolioProjectEditorScreenState
                             ),
                             const SizedBox(height: StackCardSpacing.lg),
                           ],
+                          Center(
+                            child: Semantics(
+                              button: true,
+                              label: 'Иконка проекта',
+                              child: SizedBox.square(
+                                key: const ValueKey('project.icon.editor'),
+                                dimension: 128,
+                                child: Stack(
+                                  children: [
+                                    Positioned.fill(
+                                      child: Material(
+                                        color: context.colors.surfaceElevated,
+                                        shape: CircleBorder(
+                                          side: BorderSide(
+                                            color: context.colors.borderStrong,
+                                          ),
+                                        ),
+                                        clipBehavior: Clip.antiAlias,
+                                        child: InkWell(
+                                          key: const ValueKey(
+                                            'project.icon.edit',
+                                          ),
+                                          onTap: state.saving
+                                              ? null
+                                              : _selectIcon,
+                                          child: Center(
+                                            child: ProjectStockIcon(
+                                              iconId: _iconId,
+                                              size: 48,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Material(
+                                        color: context.colors.primary,
+                                        shape: CircleBorder(
+                                          side: BorderSide(
+                                            color: context.colors.surface,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: IconButton(
+                                          key: const ValueKey(
+                                            'project.icon.select',
+                                          ),
+                                          tooltip: 'Иконка проекта',
+                                          onPressed: state.saving
+                                              ? null
+                                              : _selectIcon,
+                                          icon: StackCardIcon(
+                                            name: 'pencil',
+                                            size: 22,
+                                            color: context.colors.onPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: StackCardSpacing.lg),
                           _field('title'),
                           const SizedBox(height: StackCardSpacing.lg),
                           _field('description'),
@@ -535,59 +647,9 @@ class _PortfolioProjectEditorScreenState
                           const SizedBox(height: StackCardSpacing.lg),
                           _technologiesSection(),
                           const SizedBox(height: StackCardSpacing.lg),
-                          Row(
-                            children: [
-                              ProjectStockIcon(iconId: _iconId),
-                              const SizedBox(width: StackCardSpacing.md),
-                              Flexible(
-                                child: StackCardButton(
-                                  key: const ValueKey('project.icon.select'),
-                                  label: 'Иконка проекта',
-                                  onPressed: state.saving
-                                      ? null
-                                      : () async {
-                                          final selected =
-                                              await showProjectIconPicker(
-                                                context,
-                                                selectedIconId: _iconId,
-                                              );
-                                          if (!mounted ||
-                                              selected == null ||
-                                              !identical(
-                                                _initialRepository,
-                                                ref.read(
-                                                  portfolioDraftRepositoryProvider,
-                                                ),
-                                              )) {
-                                            return;
-                                          }
-                                          setState(() => _iconId = selected);
-                                        },
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: StackCardSpacing.lg),
                           _field('repositoryUrl'),
                           const SizedBox(height: StackCardSpacing.lg),
                           _field('liveUrl'),
-                          const SizedBox(height: StackCardSpacing.xl),
-                          Text(
-                            context.strings.tr('mobileParity.preview'),
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: StackCardSpacing.md),
-                          ProjectLibraryCard(
-                            key: const ValueKey('project.editor.preview'),
-                            title: _controllers!['title']!.text.isEmpty
-                                ? context.strings.tr(
-                                    'mobileParity.projectNameEmpty',
-                                  )
-                                : _controllers!['title']!.text,
-                            description: _controllers!['description']!.text,
-                            iconId: _iconId,
-                            showActions: false,
-                          ),
                           if (project != null) ...[
                             const SizedBox(height: StackCardSpacing.lg),
                             StackCardButton(
@@ -675,4 +737,85 @@ class _PortfolioProjectEditorScreenState
       ),
     );
   }
+}
+
+class _TechnologyDialog extends StatefulWidget {
+  const _TechnologyDialog({required this.existing});
+
+  final List<String> existing;
+
+  @override
+  State<_TechnologyDialog> createState() => _TechnologyDialogState();
+}
+
+class _TechnologyDialogState extends State<_TechnologyDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  String? _validate(String? raw) {
+    final name = (raw ?? '').trim();
+    final issue = validatePortfolioText(name, required: true, maxLength: 60);
+    if (issue != null) {
+      return builderValidationMessage(context, issue, maxLength: 60);
+    }
+    if (name.contains(',')) {
+      return context.strings.tr('mobileParity.singleTechnology');
+    }
+    if (widget.existing.any(
+      (item) => item.trim().toLowerCase() == name.toLowerCase(),
+    )) {
+      return context.strings.tr('mobileParity.technologyDuplicate');
+    }
+    if (widget.existing.length >= 20) {
+      return context.strings.tr('builderForm.tooManyTechnologies', {
+        'limit': 20,
+      });
+    }
+    return null;
+  }
+
+  void _submit() {
+    if (_formKey.currentState?.validate() == true) {
+      Navigator.pop(context, _controller.text.trim());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    scrollable: true,
+    title: Text(context.strings.tr('mobileParity.technology')),
+    content: Form(
+      key: _formKey,
+      child: StackCardInput(
+        key: const ValueKey('project.technology.name'),
+        label: context.strings.tr('builderForm.name'),
+        controller: _controller,
+        autofocus: true,
+        validator: _validate,
+        textInputAction: TextInputAction.done,
+        onFieldSubmitted: (_) => _submit(),
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+      ),
+    ),
+    actions: [
+      IconButton(
+        key: const ValueKey('project.technology.cancel'),
+        tooltip: context.strings.tr('builderForm.cancel'),
+        onPressed: () => Navigator.pop(context),
+        icon: const Icon(Icons.close_rounded),
+      ),
+      IconButton(
+        key: const ValueKey('project.technology.confirm'),
+        tooltip: context.strings.tr('builderForm.add'),
+        onPressed: _submit,
+        icon: const StackCardIcon(name: 'plus'),
+      ),
+    ],
+  );
 }
