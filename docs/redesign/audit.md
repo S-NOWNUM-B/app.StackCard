@@ -9,7 +9,7 @@
 
 **Текущие экраны, данные, интеграции и расхождения с требованиями редизайна**
 
-![Phase R0 audit](https://img.shields.io/badge/Phase-R0_audit-C7FF1A?style=for-the-badge)
+![Phase R0 audit](https://img.shields.io/badge/Phase-R0_audit-111111?style=for-the-badge)
 ![Scope read only](https://img.shields.io/badge/Scope-source_and_Figma-14161B?style=for-the-badge)
 
 </div>

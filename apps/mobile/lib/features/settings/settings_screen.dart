@@ -78,8 +78,13 @@ class SettingsScreen extends riverpod.ConsumerWidget {
           icon: Icons.notifications_none_rounded,
           title: strings.tr('settings.notifications'),
           onPressed: () => context.push('/settings/notifications'),
+          showDivider: false,
         ),
-        const SizedBox(height: StackCardSpacing.lg),
+        Divider(
+          height: StackCardSpacing.lg,
+          thickness: 1,
+          color: context.colors.borderStrong,
+        ),
         const AccountSettingsSection(),
       ],
     );
@@ -175,18 +180,22 @@ class _SettingsRow extends StatelessWidget {
     required this.icon,
     required this.title,
     this.onPressed,
+    this.showDivider = true,
   });
 
   final IconData icon;
   final String title;
   final VoidCallback? onPressed;
+  final bool showDivider;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final content = DecoratedBox(
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.border)),
+        border: showDivider
+            ? Border(bottom: BorderSide(color: colors.border))
+            : null,
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 64),

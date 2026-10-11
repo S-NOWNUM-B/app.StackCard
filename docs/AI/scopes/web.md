@@ -10,6 +10,8 @@
   [Web brief](../../redesign/web-openship.md) задаёт страницы и границы переноса.
   Сохранять Brand A, локальный Manrope, исходные SVG/font bytes и лицензии в `public`.
   Screenshot не runtime asset. Web всегда light; переключателей dark нет.
+  Действующий [Brand A kit](../../../assets/branding/stackcard-v2-brand-kit.json) —
+  монохромный: Ink wordmark/mark, MonoDark favicon; Accent/Link assets — история.
   Shared `dark | light` schema сохраняется для mobile и старых данных: чтение
   не меняет сохранённую тему, новые документы получают light. Web одобрен
   пользователем; последующее поручение переносит white-only/ru дизайн в Flutter.

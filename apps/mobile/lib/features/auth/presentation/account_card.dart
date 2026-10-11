@@ -58,7 +58,7 @@ class _AccountCardState extends ConsumerState<AccountCard> {
             : session.hasError
             ? strings.tr('account.sessionError')
             : user == null
-            ? strings.tr('account.guestTitle')
+            ? strings.tr('account.title')
             : [user.displayName, user.email]
                       .whereType<String>()
                       .map((value) => value.trim())
@@ -97,9 +97,7 @@ class _AccountCardState extends ConsumerState<AccountCard> {
                   children: [
                     ExcludeSemantics(
                       child: Icon(
-                        ready && user == null
-                            ? Icons.person_off_outlined
-                            : Icons.person_outline_rounded,
+                        Icons.person_outline_rounded,
                         color: context.colors.textSecondary,
                         size: 24,
                       ),
@@ -154,12 +152,20 @@ class _AccountCardState extends ConsumerState<AccountCard> {
                           minHeight: StackCardSize.touchTarget,
                         ),
                         onPressed: action,
+                        style: IconButton.styleFrom(
+                          foregroundColor: ready && user != null
+                              ? context.colors.error
+                              : context.colors.textPrimary,
+                        ),
                         icon: busy
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
+                                  color: ready && user != null
+                                      ? context.colors.error
+                                      : context.colors.textPrimary,
                                 ),
                               )
                             : Icon(actionIcon, size: 24),
@@ -168,7 +174,9 @@ class _AccountCardState extends ConsumerState<AccountCard> {
                       StackCardButton(
                         key: const Key('account.sessionAction'),
                         label: actionLabel,
-                        role: StackCardButtonRole.quiet,
+                        role: ready && user != null
+                            ? StackCardButtonRole.dangerQuiet
+                            : StackCardButtonRole.quiet,
                         loading: busy,
                         onPressed: action,
                       ),

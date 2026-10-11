@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:app_stackcard/core/localization/app_strings.dart';
+import 'package:app_stackcard/core/theme/stackcard_colors.dart';
 import 'package:app_stackcard/core/theme/stackcard_theme.dart';
+import 'package:app_stackcard/core/theme/stackcard_tokens.dart';
 import 'package:app_stackcard/features/auth/auth.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
@@ -215,53 +217,55 @@ void main() {
     }
   });
 
-  testWidgets('Guest session has a sign-in action and no deletion menu', (
-    tester,
-  ) async {
-    _setViewport(tester, 390, 1);
-    final auth = _SessionAuth();
-    await _openSettings(tester, auth);
-    await tester.ensureVisible(find.byKey(_sessionAction));
-    expect(find.text(_strings.tr('account.guestTitle')), findsOneWidget);
-    expect(find.text(_strings.tr('account.signIn')), findsOneWidget);
-    expect(_sessionIcon(Icons.person_off_outlined), findsOneWidget);
-    expect(find.byKey(_sessionMenu), findsNothing);
-    expect(find.byKey(_googleProvider), findsNothing);
-    expect(find.byKey(const Key('settings.deleteAccount')), findsNothing);
-    expect(find.text(_strings.tr('settings.deleteAccount')), findsNothing);
-    expect(find.text(_strings.tr('settings.session')), findsNothing);
+  testWidgets(
+    'Signed-out session has a neutral account title and sign-in action',
+    (tester) async {
+      _setViewport(tester, 390, 1);
+      final auth = _SessionAuth();
+      await _openSettings(tester, auth);
+      await tester.ensureVisible(find.byKey(_sessionAction));
+      expect(find.text(_strings.tr('account.title')), findsOneWidget);
+      expect(find.text(_strings.tr('account.guestTitle')), findsNothing);
+      expect(find.text(_strings.tr('account.signIn')), findsOneWidget);
+      expect(_sessionIcon(Icons.person_outline_rounded), findsOneWidget);
+      expect(find.byKey(_sessionMenu), findsNothing);
+      expect(find.byKey(_googleProvider), findsNothing);
+      expect(find.byKey(const Key('settings.deleteAccount')), findsNothing);
+      expect(find.text(_strings.tr('settings.deleteAccount')), findsNothing);
+      expect(find.text(_strings.tr('settings.session')), findsNothing);
 
-    await _tap(tester, find.byKey(_sessionAction));
-    expect(find.byType(SignInScreen), findsOneWidget);
-    expect(
-      _router(tester)
-          .routeInformationProvider
-          .value
-          .uri
-          .queryParameters['from'],
-      '/settings',
-    );
-    for (final field in [
-      ('account.email', 'owner@example.com'),
-      ('account.password', 'secret'),
-    ]) {
-      await tester.enterText(
-        find.descendant(
-          of: find.byKey(Key(field.$1)),
-          matching: find.byType(TextFormField),
-        ),
-        field.$2,
+      await _tap(tester, find.byKey(_sessionAction));
+      expect(find.byType(SignInScreen), findsOneWidget);
+      expect(
+        _router(tester)
+            .routeInformationProvider
+            .value
+            .uri
+            .queryParameters['from'],
+        '/settings',
       );
-    }
-    await _tap(tester, find.byKey(const Key('account.submit')));
-    expect(find.byType(SettingsScreen), findsOneWidget);
-    expect(
-      _router(tester).routeInformationProvider.value.uri.path,
-      '/settings',
-    );
-    expect(find.text('owner@example.com'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+      for (final field in [
+        ('account.email', 'owner@example.com'),
+        ('account.password', 'secret'),
+      ]) {
+        await tester.enterText(
+          find.descendant(
+            of: find.byKey(Key(field.$1)),
+            matching: find.byType(TextFormField),
+          ),
+          field.$2,
+        );
+      }
+      await _tap(tester, find.byKey(const Key('account.submit')));
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(
+        _router(tester).routeInformationProvider.value.uri.path,
+        '/settings',
+      );
+      expect(find.text('owner@example.com'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   for (final fixture in [
     (
@@ -296,6 +300,16 @@ void main() {
     testWidgets('Account identity: ${fixture.name}', (tester) async {
       _setViewport(tester, 390, 1);
       await _openSettings(tester, _SessionAuth(fixture.user));
+      final account = tester.getRect(find.byType(AccountCard));
+      final lastSetting = tester.getRect(
+        find.byKey(const Key('settings.group.notifications')),
+      );
+      expect(account.top, greaterThanOrEqualTo(0));
+      expect(lastSetting.bottom, lessThan(account.top));
+      expect(
+        account.top - lastSetting.bottom,
+        closeTo(StackCardSpacing.lg, 0.1),
+      );
       expect(find.text(fixture.identity), findsOneWidget);
       expect(_sessionIcon(Icons.person_outline_rounded), findsOneWidget);
       expect(find.text(_strings.tr('account.signOut')), findsOneWidget);
@@ -412,7 +426,7 @@ void main() {
   for (final width in [320.0, 390.0]) {
     for (final scale in [1.0, 2.0]) {
       for (final fixture in [
-        (user: null, identity: _strings.tr('account.guestTitle')),
+        (user: null, identity: _strings.tr('account.title')),
         (
           user: const AuthUser(
             uid: 'long-name',
@@ -435,16 +449,29 @@ void main() {
           (tester) async {
             _setViewport(tester, width, scale);
             await _openSettings(tester, _SessionAuth(fixture.user));
+            final account = tester.getRect(find.byType(AccountCard));
+            final lastSetting = tester.getRect(
+              find.byKey(const Key('settings.group.notifications')),
+            );
+            expect(account.top, greaterThanOrEqualTo(0));
+            expect(lastSetting.bottom, lessThan(account.top));
             await tester.ensureVisible(find.byKey(_sessionAction));
             await tester.pumpAndSettle();
             final identity = tester.getRect(find.text(fixture.identity));
             final action = tester.getRect(find.byKey(_sessionAction));
             final icon = tester.getRect(
-              _sessionIcon(
-                fixture.user == null
-                    ? Icons.person_off_outlined
-                    : Icons.person_outline_rounded,
+              _sessionIcon(Icons.person_outline_rounded),
+            );
+            final colors = tester.element(find.byKey(_sessionAction)).colors;
+            final renderedAction = tester.widget<RichText>(
+              find.descendant(
+                of: find.byKey(_sessionAction),
+                matching: find.byType(RichText),
               ),
+            );
+            expect(
+              renderedAction.text.style?.color,
+              fixture.user == null ? colors.textPrimary : colors.error,
             );
             expect(icon.size, const Size(24, 24));
             expect(icon.right, lessThanOrEqualTo(identity.left));

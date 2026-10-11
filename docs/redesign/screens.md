@@ -9,7 +9,7 @@
 
 **Карта текущих маршрутов, целевых переходов и обязательных состояний**
 
-![Scope screen map](https://img.shields.io/badge/Scope-screen_map-C7FF1A?style=for-the-badge)
+![Scope screen map](https://img.shields.io/badge/Scope-screen_map-111111?style=for-the-badge)
 
 </div>
 

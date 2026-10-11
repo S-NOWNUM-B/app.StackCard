@@ -10,7 +10,7 @@
 **Flutter и Next.js, общая модель документов и trusted backend**
 
 ![Architecture guide](https://img.shields.io/badge/Architecture-guide-09090B?style=for-the-badge)
-![Stage mobile capabilities](https://img.shields.io/badge/Stage-mobile_capabilities-C7FF1A?style=for-the-badge)
+![Stage mobile capabilities](https://img.shields.io/badge/Stage-mobile_capabilities-111111?style=for-the-badge)
 
 </div>
 
@@ -240,8 +240,11 @@ Deployment имеет явный project target и
 
 ### assets/branding
 
-Оригинальные SVG и brand kit. Mobile mark уже отрисовывается в shared widget;
-D048 экспортирует pinned AppIcon source в 20 Android/iOS PNG через
+Оригинальные SVG и brand kits. Действующий
+[Brand A kit](../../assets/branding/stackcard-v2-brand-kit.json) выбирает
+Ink/Paper mark/wordmark и MonoDark system icon; прежний Link kit архивный.
+Mobile mark отрисовывается в shared widget; pinned MonoDark AppIcon source
+экспортируется в 20 Android/iOS PNG через
 [exporter](../../tools/redesign/export_native_icons.mjs), provenance — в
 [native ledger](../redesign/source/native-app-icons.json). Сохранённый оригинал
 не заменяется экспортом; build/device appearance и release Phase 19 проверяются отдельно.
@@ -458,8 +461,10 @@ metadata сохраняются в прежнем envelope; app settings и publ
 исключает гонки между repository instances и transfer. In-flight save всегда
 пишет в namespace своего repository, даже при смене активного UID.
 
-Перенос guest выполняется только явным действием из Settings. В configured
-runtime начало требует сети и пустого target как в local namespace, так и в
+По поручению 2026-10-11 гостевые подписи и действие переноса удалены из Settings.
+Legacy guest namespaces и transfer API сохраняются для совместимости данных;
+перенос не запускается при открытии настроек. В configured runtime явный вызов
+API требует сети и пустого target как в local namespace, так и в
 Firestore; пустой offline cache не доказывает, что cloud draft отсутствует.
 [`LocalRuntime.transferGuestToUser`](../../apps/mobile/lib/app/local_runtime.dart)
 проверяет server-only read перед новым переносом; при своём pending journal

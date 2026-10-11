@@ -58,7 +58,9 @@
 - GitHub — источник; curated portfolio и опубликованное представление контролирует
   пользователь. Sync не перезаписывает публичное портфолио автоматически.
 - Сохранять стиль из [design guide](../design/design-system.md) и оригиналы
-  `assets/branding`. Mobile использует `lib/core/theme` и `lib/shared/widgets`;
+  `assets/branding`. Действующий Brand A kit — `assets/branding/stackcard-v2-brand-kit.json`:
+  Ink/Paper mark и wordmark, MonoDark system icon; Link/Accent остаются историей.
+  Mobile использует `lib/core/theme` и `lib/shared/widgets`;
   расширять эти механизмы, не вводить параллельные tokens и компоненты.
   Актуальная инициатива — [StackCard Design v2](../redesign/README.md): сначала
   читать её README и [план](../redesign/plan.md), сопоставлять capability с реальными

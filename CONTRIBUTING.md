@@ -10,7 +10,7 @@
 **Процесс работы, проверки и правила внесения согласованных изменений**
 
 ![Contributing guide](https://img.shields.io/badge/Contributing-guide-09090B?style=for-the-badge)
-![Scope mobile web publication](https://img.shields.io/badge/Scope-mobile_web_publication-C7FF1A?style=for-the-badge)
+![Scope mobile web publication](https://img.shields.io/badge/Scope-mobile_web_publication-111111?style=for-the-badge)
 
 </div>
 
@@ -560,8 +560,12 @@ SHARP_MODULE_ROOT="$PWD/firebase/functions/node_modules" node tools/redesign/exp
 
 `--check` ничего не переписывает: сверяет source hash, existing Android/iOS PNG,
 размеры/alpha и [ledger](docs/redesign/source/native-app-icons.json). Без `--check`
-script заменяет только существующие AppIcon exports и ledger; original SVG и
-splash не меняются. iOS output opaque RGB, фон исходный #070708.
+script читает выбор MonoDark из [действующего Brand A kit](assets/branding/stackcard-v2-brand-kit.json),
+заменяет только существующие AppIcon exports и ledger; original SVG и
+splash assets не меняются. iOS output opaque RGB, фон исходный #070708.
+Native label и launcher/Google picker icon обновляются только после build/install
+поверх приложения с сохранением данных; hot reload недостаточно. Android
+launch/window themes следуют светлому runtime независимо от системной темы.
 
 ---
 

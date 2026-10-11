@@ -4,7 +4,7 @@ import '../../core/localization/app_strings.dart';
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
 
-enum StackCardButtonRole { primary, secondary, quiet, danger }
+enum StackCardButtonRole { primary, secondary, quiet, danger, dangerQuiet }
 
 class StackCardButton extends StatefulWidget {
   const StackCardButton({
@@ -63,17 +63,21 @@ class _StackCardButtonState extends State<StackCardButton> {
         ? colors.textSecondary
         : switch (role) {
             StackCardButtonRole.primary => colors.onPrimary,
-            StackCardButtonRole.danger => colors.error,
+            StackCardButtonRole.danger ||
+            StackCardButtonRole.dangerQuiet => colors.error,
             StackCardButtonRole.secondary ||
             StackCardButtonRole.quiet => colors.textPrimary,
           };
-    final faceOutline = unavailable
+    final faceOutline = role == StackCardButtonRole.dangerQuiet
+        ? Colors.transparent
+        : unavailable
         ? colors.controlOutline
         : switch (role) {
             StackCardButtonRole.primary => colors.primaryOutline,
             StackCardButtonRole.secondary => colors.controlOutline,
             StackCardButtonRole.quiet => Colors.transparent,
             StackCardButtonRole.danger => colors.error,
+            StackCardButtonRole.dangerQuiet => Colors.transparent,
           };
     final focused = enabled && _focused;
     final button = Focus(
@@ -122,7 +126,9 @@ class _StackCardButtonState extends State<StackCardButton> {
                     foregroundColor: WidgetStatePropertyAll(foreground),
                     backgroundColor: WidgetStateProperty.resolveWith((states) {
                       if (unavailable) {
-                        return colors.surfaceElevated;
+                        return role == StackCardButtonRole.dangerQuiet
+                            ? Colors.transparent
+                            : colors.surfaceElevated;
                       }
                       final active =
                           states.contains(WidgetState.pressed) ||
@@ -130,7 +136,8 @@ class _StackCardButtonState extends State<StackCardButton> {
                       return switch (role) {
                         StackCardButtonRole.primary =>
                           active ? colors.accentHover : colors.primary,
-                        StackCardButtonRole.quiet =>
+                        StackCardButtonRole.quiet ||
+                        StackCardButtonRole.dangerQuiet =>
                           active ? colors.surfaceHover : Colors.transparent,
                         StackCardButtonRole.secondary ||
                         StackCardButtonRole.danger =>
