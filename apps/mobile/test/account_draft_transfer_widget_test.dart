@@ -5,7 +5,6 @@ import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_dra
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/settings/account_settings_section.dart';
 import 'package:app_stackcard/main.dart';
-import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,25 +45,12 @@ class _DraftTransfer {
   final guest = MemoryPortfolioDraftRepository();
   final account = MemoryPortfolioDraftRepository();
   final calls = <String>[];
+  int availabilityReads = 0;
   bool available = true;
   bool availabilityFailure = false;
-  PortfolioDraftFailure? failure;
-  Completer<void>? pending;
 
   Future<void> transfer(String uid) async {
     calls.add(uid);
-    if (pending != null) await pending!.future;
-    if (failure != null) throw failure!;
-    if (await account.read() != null) {
-      throw const PortfolioDraftFailure(PortfolioDraftFailureKind.conflict);
-    }
-    final source = (await guest.read())!;
-    if (source.content case final content?) {
-      await account.save(content, expectedRevision: 0, notes: source.notes);
-    } else {
-      await account.saveNotes(source.notes);
-    }
-    available = false;
   }
 }
 
@@ -86,6 +72,7 @@ Future<void> _pumpSettings(
           (uid) => uid == null ? transfer.guest : transfer.account,
         ),
         guestDraftAvailableProvider.overrideWith((ref) async {
+          transfer.availabilityReads++;
           if (transfer.availabilityFailure) {
             throw const PortfolioDraftFailure(
               PortfolioDraftFailureKind.unavailable,
@@ -104,21 +91,6 @@ ProviderContainer _scope(WidgetTester tester) => ProviderScope.containerOf(
   tester.element(find.byType(AccountSettingsSection)),
 );
 
-Future<void> _requestTransfer(WidgetTester tester) async {
-  final button = find.widgetWithText(
-    StackCardButton,
-    'Перенести в этот аккаунт',
-  );
-  await tester.ensureVisible(button);
-  await tester.tap(button);
-  await tester.pump(const Duration(milliseconds: 300));
-}
-
-Future<void> _confirmTransfer(WidgetTester tester) async {
-  await tester.tap(find.widgetWithText(TextButton, 'Перенести в этот аккаунт'));
-  await tester.pump();
-}
-
 void main() {
   setUp(() {
     final view =
@@ -133,206 +105,31 @@ void main() {
     view.resetDevicePixelRatio();
   });
 
-  testWidgets(
-    'Guest transfer requires explicit confirmation and refreshes current account draft',
-    (tester) async {
-      final auth = _Auth();
-      final transfer = _DraftTransfer();
-      final content = PortfolioContent(
-        profile: const PortfolioProfile(name: 'Guest owner'),
-      );
-      await transfer.guest.save(
-        content,
-        expectedRevision: 0,
-        notes: 'Guest private notes',
-      );
-      await _pumpSettings(tester, auth, transfer);
-      await _requestTransfer(tester);
-      expect(find.byType(AlertDialog), findsOneWidget);
-      expect(transfer.calls, isEmpty);
-      await tester.tap(find.widgetWithText(TextButton, 'Отмена'));
-      await tester.pumpAndSettle();
-      expect(transfer.calls, isEmpty);
-      expect(await transfer.account.read(), isNull);
-      expect((await transfer.guest.read())!.notes, 'Guest private notes');
-      await _requestTransfer(tester);
-      await _confirmTransfer(tester);
-      await tester.pumpAndSettle();
-      expect(transfer.calls, ['a']);
-      expect((await transfer.account.read())!.content, content);
-      expect(
-        _scope(tester).read(portfolioDraftControllerProvider).notes,
-        'Guest private notes',
-      );
-      expect(find.text('Черновик перенесён'), findsOneWidget);
-      expect(
-        find.widgetWithText(StackCardButton, 'Перенести в этот аккаунт'),
-        findsNothing,
-      );
-    },
-  );
-
-  testWidgets(
-    'Existing account draft blocks transfer without overwriting either source',
-    (tester) async {
-      final auth = _Auth();
-      final transfer = _DraftTransfer();
-      await transfer.guest.saveNotes('Guest notes');
-      await transfer.account.saveNotes('Account notes');
-      await _pumpSettings(tester, auth, transfer);
-      await _requestTransfer(tester);
-      await _confirmTransfer(tester);
-      await tester.pumpAndSettle();
-      expect(transfer.calls, ['a']);
-      expect((await transfer.account.read())!.notes, 'Account notes');
-      expect((await transfer.guest.read())!.notes, 'Guest notes');
-      expect(find.textContaining('Перенос заблокирован:'), findsOneWidget);
-      expect(
-        _scope(tester).read(portfolioDraftControllerProvider).notes,
-        'Account notes',
-      );
-    },
-  );
-
-  testWidgets(
-    'Unsaved account edits block guest transfer and preserve working input',
-    (tester) async {
-      final auth = _Auth();
-      final transfer = _DraftTransfer();
-      await transfer.guest.saveNotes('Guest notes');
-      await _pumpSettings(tester, auth, transfer);
-      final scope = _scope(tester);
-      scope
-          .read(portfolioDraftControllerProvider.notifier)
-          .editNotes('Unsaved account notes');
-      expect(
-        scope.read(portfolioDraftControllerProvider).hasUnsavedChanges,
-        isTrue,
-      );
-      await _requestTransfer(tester);
-      expect(find.byType(AlertDialog), findsNothing);
-      expect(
-        find.text('Сначала сохрани или отмени текущие правки аккаунта.'),
-        findsOneWidget,
-      );
-      expect(transfer.calls, isEmpty);
-      expect(
-        scope.read(portfolioDraftControllerProvider).notes,
-        'Unsaved account notes',
-      );
-      expect(await transfer.account.read(), isNull);
-    },
-  );
-
-  testWidgets(
-    'Failed guest-draft availability can be explicitly retried before transfer',
-    (tester) async {
-      final auth = _Auth();
-      final transfer = _DraftTransfer()..availabilityFailure = true;
-      await transfer.guest.saveNotes('Guest notes');
-      await _pumpSettings(tester, auth, transfer);
-      final retry = find.descendant(
-        of: find.byType(AccountSettingsSection),
-        matching: find.widgetWithText(StackCardButton, 'Повторить'),
-      );
-      expect(retry, findsOneWidget);
-      expect(
-        find.widgetWithText(StackCardButton, 'Перенести в этот аккаунт'),
-        findsNothing,
-      );
-      transfer.availabilityFailure = false;
-      await tester.ensureVisible(retry);
-      await tester.tap(retry);
-      await tester.pumpAndSettle();
-      expect(
-        find.widgetWithText(StackCardButton, 'Перенести в этот аккаунт'),
-        findsOneWidget,
-      );
-      expect(transfer.calls, isEmpty);
-      expect((await transfer.guest.read())!.notes, 'Guest notes');
-    },
-  );
-
-  testWidgets(
-    'Transfer failure preserves guest draft and allows a successful explicit retry',
-    (tester) async {
-      final auth = _Auth();
-      final transfer = _DraftTransfer()
-        ..failure = const PortfolioDraftFailure(
-          PortfolioDraftFailureKind.unavailable,
+  for (final availabilityFailure in [false, true]) {
+    testWidgets(
+      'Settings hide guest transfer without reading ${availabilityFailure ? "failed" : "available"} availability',
+      (tester) async {
+        final auth = _Auth();
+        final transfer = _DraftTransfer()
+          ..availabilityFailure = availabilityFailure;
+        await transfer.guest.saveNotes('Durable guest notes');
+        await transfer.account.saveNotes('Durable account notes');
+        await _pumpSettings(tester, auth, transfer);
+        expect(find.text('Гостевой режим'), findsNothing);
+        expect(find.text('Гостевой черновик'), findsNothing);
+        expect(find.text('Перенести в этот аккаунт'), findsNothing);
+        expect(transfer.availabilityReads, 0);
+        expect(transfer.calls, isEmpty);
+        expect((await transfer.guest.read())!.notes, 'Durable guest notes');
+        expect((await transfer.account.read())!.notes, 'Durable account notes');
+        expect(
+          _scope(tester).read(portfolioDraftControllerProvider).notes,
+          'Durable account notes',
         );
-      await transfer.guest.saveNotes('Recoverable guest notes');
-      await _pumpSettings(tester, auth, transfer);
-      await _requestTransfer(tester);
-      await _confirmTransfer(tester);
-      await tester.pumpAndSettle();
-      expect(transfer.calls, ['a']);
-      expect(await transfer.account.read(), isNull);
-      expect((await transfer.guest.read())!.notes, 'Recoverable guest notes');
-      transfer.failure = null;
-      await _requestTransfer(tester);
-      await _confirmTransfer(tester);
-      await tester.pumpAndSettle();
-      expect(transfer.calls, ['a', 'a']);
-      expect(
-        _scope(tester).read(portfolioDraftControllerProvider).notes,
-        'Recoverable guest notes',
-      );
-    },
-  );
-
-  testWidgets(
-    'Transfer pending disables duplicate transfer and sign-out cannot leave mid-transfer',
-    (tester) async {
-      final auth = _Auth();
-      final transfer = _DraftTransfer()..pending = Completer<void>();
-      await transfer.guest.saveNotes('Guest notes');
-      await _pumpSettings(tester, auth, transfer);
-      await _requestTransfer(tester);
-      await _confirmTransfer(tester);
-      final button = tester.widget<StackCardButton>(
-        find.widgetWithText(StackCardButton, 'Перенести в этот аккаунт'),
-      );
-      expect(button.loading, isTrue);
-      expect(button.onPressed, isNull);
-      await tester.ensureVisible(
-        find.byKey(const Key('account.sessionAction')),
-      );
-      await tester.tap(find.byKey(const Key('account.sessionAction')));
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(auth.signOutCalls, 0);
-      transfer.pending!.complete();
-      await tester.pumpAndSettle();
-      expect(transfer.calls, ['a']);
-    },
-  );
-
-  testWidgets(
-    'New working edits during transfer remain visible after transfer completes',
-    (tester) async {
-      final auth = _Auth();
-      final transfer = _DraftTransfer()..pending = Completer<void>();
-      await transfer.guest.saveNotes('Saved guest notes');
-      await _pumpSettings(tester, auth, transfer);
-      await _requestTransfer(tester);
-      await _confirmTransfer(tester);
-      final scope = _scope(tester);
-      scope
-          .read(portfolioDraftControllerProvider.notifier)
-          .editNotes('NEW WORKING NOTES');
-      transfer.pending!.complete();
-      await tester.pumpAndSettle();
-      expect(
-        scope.read(portfolioDraftControllerProvider).notes,
-        'NEW WORKING NOTES',
-      );
-      expect(
-        scope.read(portfolioDraftControllerProvider).hasUnsavedChanges,
-        isTrue,
-      );
-      expect((await transfer.account.read())!.notes, 'Saved guest notes');
-    },
-  );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   testWidgets(
     'Sign-out confirmation cancels safely then discards only unsaved working changes',

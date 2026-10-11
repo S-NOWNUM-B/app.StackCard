@@ -10,7 +10,7 @@
 **Мобильный и web-конструктор developer-портфолио с контролируемой публикацией**
 
 ![Stage local transfer verified](https://img.shields.io/badge/Stage-local_transfer_verified-111111?style=for-the-badge)
-![Mobile + Web source](https://img.shields.io/badge/Mobile_%2B_Web-source-C7FF1A?style=for-the-badge)
+![Mobile + Web source](https://img.shields.io/badge/Mobile_%2B_Web-source-111111?style=for-the-badge)
 
 </div>
 
@@ -2486,3 +2486,31 @@ placeholder и Firebase. Пустые списки оставляют один �
 `stackcard-ui-copy-final-analyze.log`, `stackcard-ui-copy-final-native.log`;
 снимки `stackcard-ui-copy-screen.png`, `stackcard-ui-copy-home.png`,
 `stackcard-ui-copy-project-editor.png`, `stackcard-ui-copy-project-cover.png`.
+
+### Упрощение мобильных настроек — 2026-10-11
+
+Итоговое поручение: сначала список настроек, затем линия 1dp в отступе 16dp
+и строка аккаунта. «Выйти» — красный текст без фона, обводки и карточки;
+компактная иконка также красная. Гостевые подписи и перенос черновика удалены из Settings
+и общей account section; legacy storage/transfer API сохранены без изменения
+данных. Подтверждение выхода с несохранёнными правками сохранено.
+
+- Focused gate: **129/129 PASS** — session/removed transfer UI (27), responsive
+  Settings (14), auth/navigation/account management/settings/local accounts (88).
+- `flutter analyze --no-pub`: **0 issues**; format пяти затронутых Dart files
+  и `git diff --check`: **PASS**.
+- Светлое Flutter-превью с тестовым аккаунтом отрендерено и просмотрено:
+  `/private/tmp/stackcard-settings-account.png`. Native install не выполнялся:
+  существующий `emulator-5554` был offline, после ADB reconnect устройств нет.
+  Full suite, новая live Auth/iOS приёмка и Git delivery не выполнялись.
+
+Промежуточное уточнение пользователя: обводка «Выйти» убрана; между аккаунтом и настройками
+добавлена линия 1dp по ширине содержимого, в прежнем отступе 16dp.
+Button/session/removed transfer UI suites: **83/83 PASS**, analyze **0 issues**,
+format и diff check — **PASS**; обновлённое Flutter-превью просмотрено.
+
+Последнее уточнение заменяет прежний порядок: аккаунт внизу, после разделителя.
+`StackCardButtonRole.dangerQuiet` расширяет существующую кнопку для красного
+текстового действия без фона и контура; прежние destructive controls сохраняют
+свою роль. Button/session/removed transfer UI suites: **91/91 PASS**,
+analyze **0 issues**, format и diff check — **PASS**; итоговое Flutter-превью просмотрено.

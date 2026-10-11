@@ -10,7 +10,7 @@
 **Эволюция темы и границы Provider/Riverpod в мобильном приложении**
 
 ![Learning state management](https://img.shields.io/badge/Learning-state_management-09090B?style=for-the-badge)
-![Scope Phases 2–6](https://img.shields.io/badge/Scope-Phases_2--6-FF0012?style=for-the-badge)
+![Scope Phases 2–6](https://img.shields.io/badge/Scope-Phases_2--6-111111?style=for-the-badge)
 
 </div>
 

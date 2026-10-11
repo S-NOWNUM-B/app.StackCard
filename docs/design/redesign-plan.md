@@ -9,7 +9,7 @@
 
 **Figma-first переработка модели продукта, навигации и ключевых экранов**
 
-![Scope Figma first](https://img.shields.io/badge/Scope-Figma_first-C7FF1A?style=for-the-badge)
+![Scope Figma first](https://img.shields.io/badge/Scope-Figma_first-111111?style=for-the-badge)
 ![Implementation Pending](https://img.shields.io/badge/Implementation-pending-111111?style=for-the-badge)
 
 </div>

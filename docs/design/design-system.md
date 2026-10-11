@@ -33,6 +33,7 @@ categories/artwork требования не переопределяют Design
 ## Содержание
 
 - [Действующий runtime contract R8](#действующий-runtime-contract-r8)
+- [Монохромный бренд](#монохромный-бренд)
 - [1. Visual Theme & Atmosphere](#1-visual-theme--atmosphere)
 - [2. Color](#2-color)
 - [3. Typography](#3-typography)
@@ -66,7 +67,9 @@ Manrope400/600/700/800 — живой UI font с Noto Sans fallback; регис�
 выбирает один Wordmark (уже содержит Mark) либо compact Mark, contain/no tint/
 no дублирующий Text. Текущий light runtime выбирает original ink variant;
 исторический paper variant сохранён в исходных assets.9BrandA SVG импортированы.
-D048 экспортирует pinned AppIcon source в existing Android mipmaps и iOS
+D048 экспортировал Accent AppIcon; поручение 2026-10-11 заменяет его на
+original MonoDark: светлый знак на чёрном фоне. Pinned source из действующего
+[brand kit](../../assets/branding/stackcard-v2-brand-kit.json) экспортируется в Android mipmaps и iOS
 AppIcon set: 5 Android + 15 iOS PNG. Source geometry/fills/bytes не меняются;
 iOS transparent corners flattened на исходный #070708 и RGB без alpha.
 [Generator](../../tools/redesign/export_native_icons.mjs) и
@@ -121,9 +124,12 @@ message в `StackCardStateView` выводится только при необ�
 и остаются совместимыми для компонентных проверок.
 
 Mobile Settings использует общий `SettingsEditorScaffold`: строки меню от 64dp,
-иконки 24dp, единые отступы и разделители. Аккаунт — горизонтальная строка
+иконки 24dp, единые отступы и разделители. После списка настроек — горизонтальная
+линия толщиной 1dp по ширине содержимого в отступе 16dp, затем строка аккаунта
 с именем (или email), действием справа и меткой Google только для подключённого
-Google provider. Гость видит иконку гостя, «Гостевой режим» и вход. Удаление
+Google provider. «Выйти» — красный текст без фона, обводки и карточки;
+компактная иконка также красная. Без сессии строка показывает
+нейтральный «Аккаунт» и вход; гостевых подписей и переноса черновика нет. Удаление
 доступно через меню аккаунта и существующий экран подтверждения; у гостя его нет.
 При узком экране или увеличенном шрифте действия становятся иконками с tooltip,
 а длинное имя ограничивается двумя строками без вытеснения кнопок.
@@ -157,6 +163,23 @@ native launch/goldens пропущены по запросу, поэтому nat
 актуальные requirements и текущий shared contract выше.
 
 ---
+
+## Монохромный бренд
+
+Действующий [Brand A kit](../../assets/branding/stackcard-v2-brand-kit.json)
+задаёт выбор оригинальных SVG: Ink mark/wordmark на светлой поверхности,
+Paper на тёмной, MonoDark для системной иконки Android/iOS и favicon сайта.
+Ink `#070708` и Paper `#F4F5F7` — исходные цвета знака; UI использует свои
+существующие нейтральные tokens. Написание StackCard остаётся original outlined
+Wordmark A, интерфейс — Manrope. Не перекрашивать и не перерисовывать геометрию.
+
+Лаймовые Accent SVG и прежний Link kit сохраняются как исторические источники;
+новые runtime placements их не используют. Цвета технологий и semantic
+success/error/warning не относятся к брендовой палитре. Android `application`
+label и iOS display name — `StackCard`: системные окна входа и launcher
+получают имя и иконку из установленной сборки. Обновление этих assets требует
+новой установки поверх приложения; hot reload не меняет package resources.
+Android LaunchTheme/NormalTheme остаются светлыми при любой системной теме.
 
 ## 1. Visual Theme & Atmosphere
 

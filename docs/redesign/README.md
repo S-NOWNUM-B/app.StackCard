@@ -9,7 +9,7 @@
 
 **Отдельная инициатива полного редизайна mobile, web и публичных документов**
 
-![Phase R7](https://img.shields.io/badge/Phase-R7-C7FF1A?style=for-the-badge)
+![Phase R7](https://img.shields.io/badge/Phase-R7-111111?style=for-the-badge)
 ![Status awaiting review](https://img.shields.io/badge/Status-awaiting_review-14161B?style=for-the-badge)
 
 </div>

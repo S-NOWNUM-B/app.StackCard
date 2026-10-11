@@ -10,7 +10,7 @@
 **Проверенные источники, приёмы и границы их применения в редизайне**
 
 ![Reference audit R0](https://img.shields.io/badge/References-R0_audit-111111?style=for-the-badge)
-![Direction A selected](https://img.shields.io/badge/Direction-A_selected-C7FF1A?style=for-the-badge)
+![Direction A selected](https://img.shields.io/badge/Direction-A_selected-111111?style=for-the-badge)
 
 </div>
 

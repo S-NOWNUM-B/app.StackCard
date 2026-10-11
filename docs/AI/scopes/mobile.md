@@ -72,7 +72,9 @@ headless проверки не закрывают native visual, public/web ил
   сохраняет живой label/wrap; +N — настоящий control с полным списком.
   [StackCardBrand](../../../apps/mobile/lib/shared/widgets/stackcard_brand.dart)
   использует один original outlined Wordmark A либо compact Mark, paper/ink,
-  contain/no tint. D048 native AppIcon PNG экспортированы в existing Android
+  contain/no tint. Действующий [brand kit](../../../assets/branding/stackcard-v2-brand-kit.json)
+  выбирает MonoDark AppIcon, без лаймового Accent. Native имя — StackCard;
+  Android launch/window themes светлые при любом OS mode. Native AppIcon PNG экспортированы в existing Android
   mipmaps/iOS set; [ledger](../../redesign/source/native-app-icons.json) фиксирует
   pinned source, hashes/dimensions/alpha. Packaging source не означает native
   build/launch/parity.
@@ -190,8 +192,10 @@ headless проверки не закрывают native visual, public/web ил
   сохраняет прежние guest keys и отдельные UID namespaces через base64url UTF-8.
   `portfolioDraftRepositoryFactoryProvider` выбирает owner repository; каждый
   экземпляр фиксирует key и выполняет in-flight save только в свой namespace.
-  Общая очередь Box сериализует adapters и transfer. Transfer запускается явно
-  в Settings; configured runtime требует online claim и пустой local/cloud target,
+  Общая очередь Box сериализует adapters и transfer. По поручению 2026-10-11
+  Settings показывает сначала настройки, затем тонкую линию и аккаунт с красным
+  текстом выхода без фона и обводки; гостевые подписи и перенос удалены из UI. Legacy transfer API
+  сохранён для совместимости; configured runtime требует online claim и пустой local/cloud target,
   offline cache miss не означает cloud emptiness. LocalRuntime server-only preflight
   пропускается только для своего pending journal; transaction закрывает race.
   Source envelope/revision/notes/content и raw backups v1–v6 сохраняются;

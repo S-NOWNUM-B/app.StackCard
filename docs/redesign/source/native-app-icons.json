@@ -1,12 +1,14 @@
 {
   "schemaVersion": 1,
   "source": {
-    "path": "apps/mobile/assets/branding/design_v2/stackcard-v2-app-icon-accent.svg",
-    "sha256": "f50ee34fb9070f7debfa69ef6f2f8320d9d9a670198a8543b3654ec2a452a229",
-    "figmaMainId": "111:285",
-    "sourceUrl": "https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=111-285",
+    "path": "apps/mobile/assets/branding/design_v2/stackcard-v2-app-icon-mono-dark.svg",
+    "sha256": "1fb1b65463cdc8bde9fecc8b27edbf946dae7ea39ec64b95c4ff0e706115123c",
+    "figmaMainId": "111:289",
+    "sourceUrl": "https://www.figma.com/design/3YhNUPDIJJWB39NSBxbRr6/StackCard?node-id=111-289",
     "originalSourceManifest": "apps/mobile/assets/design_v2/source-manifest.json",
-    "originalBytesPreserved": true
+    "originalBytesPreserved": true,
+    "brandKit": "assets/branding/stackcard-v2-brand-kit.json",
+    "appearance": "monochrome"
   },
   "generator": {
     "path": "tools/redesign/export_native_icons.mjs",
@@ -37,8 +39,8 @@
       "path": "apps/mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
       "width": 72,
       "height": 72,
-      "bytes": 827,
-      "sha256": "9ca7a6f88d3099b5a82cc46d9cd1a0ea08c898c70caac6e789b55482392f41e8",
+      "bytes": 833,
+      "sha256": "bbc30dcca839cc50f9649c8f11682d5a486f028d699cacbcdbc9e42d839044c7",
       "hasAlpha": true
     },
     {
@@ -46,8 +48,8 @@
       "path": "apps/mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
       "width": 48,
       "height": 48,
-      "bytes": 620,
-      "sha256": "c261ff64bebb2c96db7e46d61cdfaa1881baa7e57d7e521bf67dac331fc5347d",
+      "bytes": 624,
+      "sha256": "ba121f9ed5ff0afcfaecec38d08546d196910812e848c22937712350e40db2d6",
       "hasAlpha": true
     },
     {
@@ -55,8 +57,8 @@
       "path": "apps/mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
       "width": 96,
       "height": 96,
-      "bytes": 1088,
-      "sha256": "4adac753ed82f769acccf28bb991bd0f7d9c31a98b640ddc87e150756bed1a06",
+      "bytes": 1098,
+      "sha256": "8e61728a757581c4db7e1e0eaca14320c3adf121120d1579d998037427667cbd",
       "hasAlpha": true
     },
     {
@@ -64,8 +66,8 @@
       "path": "apps/mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
       "width": 144,
       "height": 144,
-      "bytes": 1461,
-      "sha256": "32f1cb8dac94609bd2681dc9fbd52f23c2576cb5c40844b216f1865d5e4e720c",
+      "bytes": 1462,
+      "sha256": "82b106a0a1f6bd230eaff3ff6b762424e08236992d5136864ba07cfd41b1ad0a",
       "hasAlpha": true
     },
     {
@@ -73,8 +75,8 @@
       "path": "apps/mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
       "width": 192,
       "height": 192,
-      "bytes": 2109,
-      "sha256": "c15134cf0f9372efad7e88d1025a59f9ef38c4c3aceabc3a134c03d474d709be",
+      "bytes": 2101,
+      "sha256": "cbf39f84559701fed28c9b9de2a77df770d1e91df3d4092abf3aafc89f9e2917",
       "hasAlpha": true
     },
     {
@@ -82,8 +84,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
       "width": 1024,
       "height": 1024,
-      "bytes": 8342,
-      "sha256": "bb8a17f2bef69a48f10512ab956df7a15c32f68ea590c894e54101557c639867",
+      "bytes": 8343,
+      "sha256": "2beb9e622cdd054e3b9d34d03fd04c52e11d26a56bfc541e1ed551959beaad44",
       "hasAlpha": false
     },
     {
@@ -91,8 +93,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png",
       "width": 20,
       "height": 20,
-      "bytes": 268,
-      "sha256": "10b2a4d85e9c6f5814bc114cfae2d8472641a8049353eba7889ab45e44161f7a",
+      "bytes": 265,
+      "sha256": "43d913bf487d1b4104794be02fd920629cd2757327a4d1a654a25e68346f5beb",
       "hasAlpha": false
     },
     {
@@ -101,7 +103,7 @@
       "width": 40,
       "height": 40,
       "bytes": 406,
-      "sha256": "309a1b72be8fb846cdd6605e6bef4d8ab214c9fb3d7a8f5eb76177b16cb664ff",
+      "sha256": "68216f22b8679ebe38402e1d61a32ee3611a1dd3b9d37f6fe1e32b5d1b98cf78",
       "hasAlpha": false
     },
     {
@@ -109,8 +111,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png",
       "width": 60,
       "height": 60,
-      "bytes": 495,
-      "sha256": "81f81cd449ec22220f36c80516dfbb69a9a2968ad70734bd0375ea00b684c4b8",
+      "bytes": 496,
+      "sha256": "654e7343ae7ce912e062ebd1d60928a2ed6e758d73dc4849735258648509460b",
       "hasAlpha": false
     },
     {
@@ -118,8 +120,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png",
       "width": 29,
       "height": 29,
-      "bytes": 314,
-      "sha256": "8439e4201cf7e093b9cc9da44dd582bd77a78c18bbf88995d1bedcdefc473732",
+      "bytes": 315,
+      "sha256": "3eb6a0a241dd184623838afec458a9c63106dbde3fd2eca7ad7faeda5bf32d28",
       "hasAlpha": false
     },
     {
@@ -127,8 +129,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png",
       "width": 58,
       "height": 58,
-      "bytes": 523,
-      "sha256": "5867dc0e8cb7d9724e5e9cbc6a35a755f6498d7cae9eab10c2b8d7c593843b64",
+      "bytes": 526,
+      "sha256": "6b9666df2be9fb52699e4e16c58335728b282a74196322c9a06c6531bb0ece48",
       "hasAlpha": false
     },
     {
@@ -136,8 +138,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png",
       "width": 87,
       "height": 87,
-      "bytes": 693,
-      "sha256": "3f39db19eb287a20e71f1dc5525f4fe5629cae4c79b0b9fa9604cacac20bd280",
+      "bytes": 700,
+      "sha256": "537a0ff0829aebf483317243cd1b8b40ee8d39d767ba50c9abce9e193b5d0c52",
       "hasAlpha": false
     },
     {
@@ -146,7 +148,7 @@
       "width": 40,
       "height": 40,
       "bytes": 406,
-      "sha256": "309a1b72be8fb846cdd6605e6bef4d8ab214c9fb3d7a8f5eb76177b16cb664ff",
+      "sha256": "68216f22b8679ebe38402e1d61a32ee3611a1dd3b9d37f6fe1e32b5d1b98cf78",
       "hasAlpha": false
     },
     {
@@ -154,8 +156,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png",
       "width": 80,
       "height": 80,
-      "bytes": 657,
-      "sha256": "f84c07fd6365f801229408ae4114a832c7f6a4959fc2a1b32a68d7ced96ec911",
+      "bytes": 658,
+      "sha256": "403dc06fe9509b5e76c7bef08214d5bf80d7e9776253b2280837107ffc9ba323",
       "hasAlpha": false
     },
     {
@@ -163,8 +165,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png",
       "width": 120,
       "height": 120,
-      "bytes": 915,
-      "sha256": "e09a7c54d08cd6b2fec5031b1f0df6d18b5806f0d88bc9feb9aea8248510c9a4",
+      "bytes": 922,
+      "sha256": "2bb0b819ea28d2a44c603856fff66fa85bb61df3eb6641548befed85f68678e1",
       "hasAlpha": false
     },
     {
@@ -172,8 +174,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png",
       "width": 120,
       "height": 120,
-      "bytes": 915,
-      "sha256": "e09a7c54d08cd6b2fec5031b1f0df6d18b5806f0d88bc9feb9aea8248510c9a4",
+      "bytes": 922,
+      "sha256": "2bb0b819ea28d2a44c603856fff66fa85bb61df3eb6641548befed85f68678e1",
       "hasAlpha": false
     },
     {
@@ -181,8 +183,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png",
       "width": 180,
       "height": 180,
-      "bytes": 1157,
-      "sha256": "35a0bc199660972c8a862edd15db15ae47e9c14f8b9cb02b3c9c092081e90426",
+      "bytes": 1156,
+      "sha256": "4101ade908b9ef924c30656fbe39cd472534f8497fb4df53a29ef786ff1210ec",
       "hasAlpha": false
     },
     {
@@ -190,8 +192,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png",
       "width": 76,
       "height": 76,
-      "bytes": 573,
-      "sha256": "687baf4c75bf66e3bb606628d76a2d40f4c057f420b4ff6505d3f4c4bcf1af20",
+      "bytes": 578,
+      "sha256": "8dfd3ef1008ccd36b3a26548f9ad221d1d5f4ef56172efc829c867c0b0929dab",
       "hasAlpha": false
     },
     {
@@ -199,8 +201,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png",
       "width": 152,
       "height": 152,
-      "bytes": 1056,
-      "sha256": "8c6efc2cb9cb850a8662f2264e6a88fc69997191877093cec48de103c3409c1b",
+      "bytes": 1061,
+      "sha256": "cf081def3d386d7f0ae443bdbfd63d6fd1caa7aa0d57952416770dda1de6d679",
       "hasAlpha": false
     },
     {
@@ -208,8 +210,8 @@
       "path": "apps/mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png",
       "width": 167,
       "height": 167,
-      "bytes": 1143,
-      "sha256": "7a91193a910b195ef842dd96d5c5526940748d70a9b6f8c627848b853775ebf7",
+      "bytes": 1154,
+      "sha256": "6d06226875dd3f1eb6e4e927043121017ef6ef68ec6fda46e9d166936ab5e26b",
       "hasAlpha": false
     }
   ]

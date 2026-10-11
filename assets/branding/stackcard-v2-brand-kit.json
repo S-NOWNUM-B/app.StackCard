@@ -1,0 +1,28 @@
+{
+  "brand": "StackCard",
+  "direction": "Brand A",
+  "appearance": "monochrome",
+  "colors": {
+    "ink": "#070708",
+    "paper": "#F4F5F7"
+  },
+  "typography": {
+    "ui": "Manrope",
+    "wordmark": "Original outlined Noto Sans ExtraBold"
+  },
+  "assets": {
+    "mark": "apps/mobile/assets/branding/design_v2/stackcard-v2-mark-ink.svg",
+    "wordmark": "apps/mobile/assets/branding/design_v2/stackcard-v2-wordmark-ink.svg",
+    "inverseMark": "apps/mobile/assets/branding/design_v2/stackcard-v2-mark-paper.svg",
+    "inverseWordmark": "apps/mobile/assets/branding/design_v2/stackcard-v2-wordmark-paper.svg",
+    "appIcon": "apps/mobile/assets/branding/design_v2/stackcard-v2-app-icon-mono-dark.svg"
+  },
+  "sourceManifest": "apps/mobile/assets/design_v2/source-manifest.json",
+  "usage": {
+    "lightSurface": "ink mark or wordmark",
+    "darkSurface": "paper mark or wordmark",
+    "systemIcon": "paper mark on ink background",
+    "originalGeometryPreserved": true,
+    "accentVariants": "historical source assets only"
+  }
+}

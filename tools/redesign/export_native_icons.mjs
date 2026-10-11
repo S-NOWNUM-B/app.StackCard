@@ -17,11 +17,16 @@ assert(process.argv.slice(2).every((arg) => arg === '--check'), 'Unknown argumen
 
 const sourceManifestPath = 'apps/mobile/assets/design_v2/source-manifest.json';
 const manifestPath = 'docs/redesign/source/native-app-icons.json';
-const sourcePath = 'apps/mobile/assets/branding/design_v2/stackcard-v2-app-icon-accent.svg';
+const brandKitPath = 'assets/branding/stackcard-v2-brand-kit.json';
+const brandKit = JSON.parse(await readFile(join(root, brandKitPath), 'utf8'));
+assert.equal(brandKit.appearance, 'monochrome', 'Native branding must be monochrome');
+const sourcePath = brandKit.assets.appIcon;
+assert.equal(sourcePath, 'apps/mobile/assets/branding/design_v2/stackcard-v2-app-icon-mono-dark.svg');
 const sourceManifest = JSON.parse(await readFile(join(root, sourceManifestPath), 'utf8'));
 const sourceEntry = sourceManifest.entries.find((entry) =>
-  entry.assetPath === 'assets/branding/design_v2/stackcard-v2-app-icon-accent.svg');
-assert(sourceEntry?.kind === 'brand-svg' && sourceEntry.family === 'app-icon');
+  `apps/mobile/${entry.assetPath}` === sourcePath);
+assert(sourceEntry?.kind === 'brand-svg' && sourceEntry.family === 'app-icon'
+  && sourceEntry.variant === 'MonoDark');
 const source = await readFile(join(root, sourcePath));
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 assert.equal(sha256(source), sourceEntry.sha256, 'Pinned source digest changed');
@@ -101,6 +106,8 @@ const manifest = {
     sourceUrl: sourceEntry.sourceUrl,
     originalSourceManifest: sourceManifestPath,
     originalBytesPreserved: true,
+    brandKit: brandKitPath,
+    appearance: brandKit.appearance,
   },
   generator: {
     path: 'tools/redesign/export_native_icons.mjs',
