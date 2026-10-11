@@ -38,7 +38,7 @@
   --link: #454951;
   --focus: #5863ab;
   --source: #0b6570;
-  --accent: #c7ff1a;
+  --accent: var(--primary);
   --xs: 4px;
   --sm: 8px;
   --md: 12px;

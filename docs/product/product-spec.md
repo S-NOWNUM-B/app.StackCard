@@ -214,6 +214,32 @@ light. Горизонтальная строка аккаунта и provider me
 iOS runtime, live Auth/Save/Publish/FCM и мобильная пользовательская оценка
 остаются отдельными проверками; этот пакет их не закрывает.
 
+### Монохромный бренд и системные иконки — 2026-10-11
+
+По прямому поручению устранён прежний зелёный знак в Android Google account
+picker: native AppIcon переведён с Accent на original Brand A MonoDark,
+Android label и iOS display/bundle name — StackCard. Exporter читает текущий
+[brand kit](../../assets/branding/stackcard-v2-brand-kit.json); 20 PNG Android/iOS
+пересозданы без изменения исходных SVG. Android LaunchTheme/NormalTheme
+остаются светлыми при любом OS mode. Website favicon использует тот же
+MonoDark source; прежний lime CSS token стал alias текущего primary.
+Шапки документации и brand guidance приведены к монохромному contract.
+Технологические/semantic цвета и исторические SVG/Figma sources сохранены.
+
+- Native export exact check: **20/20 PASS**; strict imported source check,
+  iOS plist validation и `git diff --check` — **PASS**.
+- Android debug build и `adb install -r` на `emulator-5554` — **PASS**.
+  Readback установленного APK подтвердил StackCard label и точное совпадение
+  всех пяти mipmap PNG с новым source. Home/Settings просмотрены; существующая
+  account session сохранена. Google picker повторно не открывался через выход
+  из аккаунта; iOS runtime отдельно не проверялся.
+- Web: **97/97 tests PASS**, typecheck и scoped Prettier — **PASS**;
+  isolated и actual production builds — **PASS**, MonoDark favicon есть в 14 app HTML.
+  Текущее local preview на `127.0.0.1:3000` пересобрано и перезапущено.
+  В браузере главной и Auth подтверждены Ink wordmark, MonoDark favicon,
+  white background и neutral primary/accent. Снимок —
+  `/private/tmp/stackcard-brand-web.png`.
+
 ### Упрощение web-входа — 2026-10-11
 
 По прямому поручению пользователя Auth формы приведены к компактной стандартной

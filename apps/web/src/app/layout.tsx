@@ -7,6 +7,12 @@ export const metadata: Metadata = {
     template: '%s · StackCard',
   },
   description: 'Профессиональная база, проекты и независимые резюме и портфолио.',
+  icons: {
+    icon: {
+      url: '/branding/stackcard-v2-app-icon-mono-dark.svg',
+      type: 'image/svg+xml',
+    },
+  },
   robots: { index: true, follow: true },
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
