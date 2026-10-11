@@ -34,3 +34,6 @@ app.*.map.json
 
 # Generated-файлы дополнительно исключаются в apps/mobile/*/.gitignore.
 # pubspec.lock отслеживается для воспроизводимых зависимостей приложения.
+
+# Локальные установленные Git hooks; шаблон хранится в tools/git.
+/.githooks/

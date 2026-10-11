@@ -970,7 +970,8 @@ lowercase; описание на русском, lowercase, без точки, �
 времени и объяснением изменения. Body обязателен: отдельный пункт для каждого
 созданного, изменённого, удалённого или переименованного файла.
 
-После clone включи нативный [commit-msg hook](.githooks/commit-msg), чтобы обычный
+После clone установи нативный [commit-msg hook](tools/git/commit-msg)
+в локальную игнорируемую папку `.githooks/`, чтобы обычный
 Git проверял body и пути в терминале/IDE. Требуется Python 3 в PATH.
 Встроенная кнопка Commit в проверенной версии Codex отключает hooks и при больших
 diff получает только статистику. Для полного body создавай коммиты через чат
@@ -979,6 +980,9 @@ diff получает только статистику. Для полного b
 macOS zsh/bash или Windows Git Bash, cwd корень monorepo:
 
 ```sh
+mkdir -p .githooks
+cp tools/git/commit-msg .githooks/commit-msg
+chmod +x .githooks/commit-msg
 git config --local core.hooksPath .githooks
 ```
 

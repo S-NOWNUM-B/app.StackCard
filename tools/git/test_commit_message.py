@@ -32,8 +32,11 @@ class NativeHookTests(unittest.TestCase):
         self.run_git("config", "user.email", "hook@example.invalid")
         self.run_git("config", "commit.gpgsign", "false")
         self.run_git("config", "core.hooksPath", ".githooks")
-        for source in (".githooks/commit-msg", "tools/git/validate_commit_message.py"):
-            target = self.repo / source
+        for source, destination in (
+            ("tools/git/commit-msg", ".githooks/commit-msg"),
+            ("tools/git/validate_commit_message.py", "tools/git/validate_commit_message.py"),
+        ):
+            target = self.repo / destination
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / source, target)
         (self.repo / ".githooks/commit-msg").chmod(0o755)

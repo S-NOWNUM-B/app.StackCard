@@ -4,7 +4,8 @@ Git-команды выполняются из корня monorepo в macOS zsh/
 
 ## Нативный commit-msg hook
 
-Версионируемый [.githooks/commit-msg](../../.githooks/commit-msg) вызывает
+Версионируемый [шаблон commit-msg](../../tools/git/commit-msg) устанавливается
+в локальную игнорируемую папку `.githooks/` и вызывает
 [project validator](../../tools/git/validate_commit_message.py) через Python 3.
 Он не зависит от Codex и проверяет обычный `git commit` из терминала и IDE,
 которые не отключают Git hooks:
@@ -18,6 +19,9 @@ Git editor comments с префиксом `#` удаляются, провере
 Установка после clone, macOS zsh/bash или Windows Git Bash, cwd корень monorepo:
 
 ```sh
+mkdir -p .githooks
+cp tools/git/commit-msg .githooks/commit-msg
+chmod +x .githooks/commit-msg
 git config --local core.hooksPath .githooks
 ```
 
