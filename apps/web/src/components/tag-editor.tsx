@@ -131,7 +131,7 @@ export function TagEditor({
               <Notice error>{error}</Notice>
             </div>
           )}
-          <div className="tag-editor-dialog-actions">
+          <div className="dialog-actions">
             <Button variant="secondary" onClick={() => dialog.current?.close()}>
               Отмена
             </Button>

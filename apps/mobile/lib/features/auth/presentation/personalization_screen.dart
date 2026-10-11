@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_avatar.dart';
 import '../../../shared/widgets/stackcard_button.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../../media/media.dart';
 import '../../portfolio_draft/portfolio_draft.dart';
@@ -265,13 +267,9 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
           'Вы вернётесь к последнему сохранённому состоянию этого шага',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Оставить'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Отменить изменения'),
+          StackCardDialogActions(
+            onCancel: () => Navigator.pop(context, false),
+            onConfirm: () => Navigator.pop(context, true),
           ),
         ],
       ),
@@ -478,7 +476,9 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
                                               'personalization.next',
                                             ),
                                             label: _step == 3
-                                                ? 'Готово'
+                                                ? context.strings.tr(
+                                                    'common.finish',
+                                                  )
                                                 : 'Далее',
                                             loading: _saving,
                                             onPressed: busy ? null : _save,

@@ -404,13 +404,13 @@ void main() {
         .maybePop();
     await tester.pumpAndSettle();
     expect(find.text('Отменить изменения?'), findsOneWidget);
-    await tester.tap(find.text('Оставить'));
+    await tester.tap(find.text('Отмена'));
     await tester.pumpAndSettle();
     expect(find.text('Несохранённое имя'), findsOneWidget);
     await Navigator.of(tester.element(find.byType(PersonalizationScreen)))
         .maybePop();
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Отменить изменения'));
+    await tester.tap(find.text('Подтвердить'));
     await tester.pumpAndSettle();
     expect(find.text('Шаг 2 из 4'), findsOneWidget);
     expect(find.text('Несохранённое имя'), findsNothing);

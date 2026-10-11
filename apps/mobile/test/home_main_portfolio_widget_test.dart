@@ -165,6 +165,49 @@ void main() {
     },
   );
 
+  testWidgets(
+    'PDF preparation and saving keep sharing enabled and ink colored',
+    (tester) async {
+      final generator = _PendingPdfGenerator();
+      final files = _PendingPdfFiles();
+      final links = _Links();
+      await _open(
+        tester,
+        saved: _workspace('Имя'),
+        generator: generator,
+        files: files,
+        links: links,
+        publication: _PublicationController(published: true),
+      );
+      final shareFace = find.descendant(
+        of: find.byKey(const Key('home.share')),
+        matching: find.byType(FilledButton),
+      );
+      Color? shareColor() => tester
+          .widget<FilledButton>(shareFace)
+          .style!
+          .backgroundColor!
+          .resolve({});
+      final initialColor = shareColor();
+      await _tap(tester, 'home.download', settle: false);
+      expect(_button(tester, 'home.download').onPressed, isNull);
+      expect(shareColor(), initialColor);
+      expect(_button(tester, 'home.share').onPressed, isNotNull);
+      generator.pending.complete(_pdfBytes);
+      await tester.pumpAndSettle();
+      expect(files.bytes, [_pdfBytes]);
+      expect(shareColor(), initialColor);
+      expect(_button(tester, 'home.download').onPressed, isNull);
+      await _tap(tester, 'home.share');
+      expect(links.shared, [_publicUrl]);
+      files.pending.complete(false);
+      await tester.pumpAndSettle();
+      expect(shareColor(), initialColor);
+      expect(_button(tester, 'home.download').onPressed, isNotNull);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('owner change resets a pending PDF and ignores its late result', (
     tester,
   ) async {
@@ -428,7 +471,7 @@ void main() {
       expect(find.text('Опубликовать портфолио?'), findsOneWidget);
       expect(links.shared, isEmpty);
       expect(publication.actions, isEmpty);
-      await tester.tap(find.text('Опубликовать и поделиться'));
+      await tester.tap(find.text('Подтвердить'));
       await tester.pumpAndSettle();
       expect(publication.actions, [
         (DocumentPublicationAction.publish, 'main', true),
@@ -947,6 +990,18 @@ class _PdfFiles implements PortfolioPdfFileActions {
   }) async {
     bytes.add(value);
     return result;
+  }
+}
+
+class _PendingPdfFiles extends _PdfFiles {
+  final pending = Completer<bool>();
+  @override
+  Future<bool> savePdf(
+    Uint8List value, {
+    String filename = 'stackcard-portfolio.pdf',
+  }) {
+    bytes.add(value);
+    return pending.future;
   }
 }
 

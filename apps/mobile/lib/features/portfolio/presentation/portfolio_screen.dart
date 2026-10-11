@@ -288,10 +288,13 @@ void _showPreview(BuildContext context, PortfolioOverview overview) {
             ),
             const SizedBox(height: StackCardSpacing.xl),
             _DemoPortfolio(overview: overview),
-            StackCardButton(
-              label: context.strings.tr('portfolio.closePreview'),
-              icon: Icons.close_rounded,
-              onPressed: () => Navigator.of(context).pop(),
+            Align(
+              alignment: Alignment.centerRight,
+              child: StackCardButton(
+                label: context.strings.tr('common.close'),
+                primary: true,
+                onPressed: () => Navigator.of(context).pop(),
+              ),
             ),
           ],
         ),

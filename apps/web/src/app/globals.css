@@ -579,6 +579,20 @@ select {
   border-radius: 16px;
   padding: 24px;
 }
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--sm);
+}
+.confirmation-dialog {
+  margin: auto;
+  color: var(--text);
+}
+.confirmation-dialog::backdrop {
+  background: #000a;
+}
 .publication-state {
   color: var(--success);
 }
@@ -2596,12 +2610,6 @@ h2.section-heading,
 .tag-editor-dialog::backdrop {
   background: #000a;
 }
-.tag-editor-dialog-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--sm);
-}
 .record-editor-heading {
   display: flex;
   align-items: center;
@@ -2648,15 +2656,6 @@ h2.section-heading,
 }
 .record-editor-dialog::backdrop {
   background: #000a;
-}
-.record-editor-dialog-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--sm);
-}
-.record-editor-dialog-actions .button[type='submit'] {
-  margin-left: auto;
 }
 .repository-choice input,
 .project-row input[type='radio'] {
@@ -2888,10 +2887,10 @@ h2.section-heading,
 .single-portfolio-workspace .workspace-footer {
   flex-direction: row;
 }
-.single-portfolio-workspace .workspace-footer > .row {
+.single-portfolio-workspace .workspace-footer > .dialog-actions {
   width: auto;
   max-width: none;
-  margin: 0;
+  margin-left: auto;
 }
 .document-paper .document-profile h1 {
   font-size: 24px;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
@@ -116,9 +117,13 @@ class _MainPortfolioMigrationScreenState
                     const SizedBox(height: StackCardSpacing.lg),
                     MainPortfolioContentView(content: content),
                     const SizedBox(height: StackCardSpacing.lg),
-                    StackCardButton(
-                      label: 'Закрыть',
-                      onPressed: () => Navigator.pop(context),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: StackCardButton(
+                        label: context.strings.tr('common.close'),
+                        primary: true,
+                        onPressed: () => Navigator.pop(context),
+                      ),
                     ),
                   ],
                 ),

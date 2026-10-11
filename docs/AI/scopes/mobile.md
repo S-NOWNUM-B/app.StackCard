@@ -68,14 +68,23 @@ headless проверки не закрывают native visual, public/web ил
   `successText`, `controlOutline`, `primaryOutline` задают читаемые пары по состоянию.
   Manrope и Noto fallback зарегистрированы в pubspec; не возвращать red/white CTA.
   `StackCardButton` сохраняет loading/disabled/focus/semantics и внешний target48,
-  `StackCardInput` — label/focus/validation/input retention. Auth остаётся scoped
-  `StackCardTheme.authentication`, без poster. Имеющиеся Card/Poster/StateView
+  `StackCardInput` — label/focus/validation/input retention.
+  Пары действий форм/диалогов собираются через
+  [StackCardDialogActions](../../../apps/mobile/lib/shared/widgets/stackcard_dialog_actions.dart):
+  справа, «Отмена» первой, основное действие последним. Подписи брать из `common.*`;
+  Save/Confirm/Close/Finish по [design contract](../../design/design-system.md#действующий-runtime-contract-r8).
+  Auth остаётся scoped `StackCardTheme.authentication`, без poster. Имеющиеся Card/Poster/StateView
   расширять, не создавать параллельную UI library; декоративная графика исключена
   из semantics. Legacy композиции не считать target Design v2 parity.
   [StackCardIcon](../../../apps/mobile/lib/shared/widgets/stackcard_icon.dart)
   загружает pinned SVG; Lucide допускает semantic tint, технологии — original
-  source fills/зафиксированный React-TypeScript brand mapping. Flutter CSS
-  compatibility — отдельный `flutter.render.svg`, canonical raw не менять.
+  source fills/зафиксированный React-TypeScript brand mapping.
+  Contact categories используют shared mapping
+  `portfolio_contact_visual.dart` и монохромные Lucide/Feather SVG с точными
+  source hashes/licensing в existing manifest; произвольный URL/SVG не принимается.
+  Контакты редактируются тегами вместе с навыками; на Home открывается `url`
+  по пользовательскому `label`, категория задаёт иконку и заголовок.
+  Flutter CSS compatibility — отдельный `flutter.render.svg`, canonical raw не менять.
   [TechnologyBadge](../../../apps/mobile/lib/shared/widgets/stackcard_technology_badge.dart)
   сохраняет живой label/wrap; +N — настоящий control с полным списком.
   [StackCardBrand](../../../apps/mobile/lib/shared/widgets/stackcard_brand.dart)

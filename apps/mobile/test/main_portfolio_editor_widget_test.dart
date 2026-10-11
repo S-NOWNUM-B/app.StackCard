@@ -513,7 +513,13 @@ void main() {
     final cancel = find.byKey(const Key('main.contact.cancel'));
     final apply = find.byKey(const Key('main.contact.apply'));
     expect(tester.getCenter(cancel).dx, lessThan(tester.getCenter(apply).dx));
-    expect(tester.widget<StackCardButton>(apply).label, 'Добавить');
+    expect(tester.widget<StackCardButton>(apply).label, 'Сохранить');
+    if (const bool.fromEnvironment('UPDATE_SINGLE_PORTFOLIO_PREVIEWS')) {
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('/private/tmp/stackcard-contact-dialog-actions.png'),
+      );
+    }
     await _enterForm(tester, 'label', 'Сайт');
     await _enterForm(tester, 'url', 'javascript:alert(1)');
     await _tap(tester, 'main.contact.apply');

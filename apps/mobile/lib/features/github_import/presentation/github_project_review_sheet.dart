@@ -4,6 +4,7 @@ import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../shared/widgets/stackcard_button.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../portfolio_draft/portfolio_draft.dart';
 
@@ -101,22 +102,23 @@ class GitHubProjectReviewSheet extends StatelessWidget {
               incoming: change.$3,
             ),
         const SizedBox(height: StackCardSpacing.xl),
-        if (reviewChanges && canAccept) ...[
-          StackCardButton(
-            key: const ValueKey('github_review_accept'),
-            label: strings.tr('githubSync.accept'),
-            primary: true,
-            onPressed: () => Navigator.of(context).pop(true),
+        if (reviewChanges && canAccept)
+          StackCardDialogActions(
+            cancelKey: const ValueKey('github_review_close'),
+            confirmKey: const ValueKey('github_review_accept'),
+            onCancel: () => Navigator.of(context).pop(false),
+            onConfirm: () => Navigator.of(context).pop(true),
+          )
+        else
+          Align(
+            alignment: Alignment.centerRight,
+            child: StackCardButton(
+              key: const ValueKey('github_review_close'),
+              label: strings.tr('common.close'),
+              primary: true,
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
           ),
-          const SizedBox(height: StackCardSpacing.sm),
-        ],
-        StackCardButton(
-          key: const ValueKey('github_review_close'),
-          label: strings.tr(
-            reviewChanges ? 'githubSync.cancel' : 'githubSync.close',
-          ),
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
       ],
     );
   }

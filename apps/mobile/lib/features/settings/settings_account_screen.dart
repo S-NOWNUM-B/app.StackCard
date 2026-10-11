@@ -732,6 +732,10 @@ class _AccountCredentialsDialogState extends State<_AccountCredentialsDialog> {
               _AccountInput(
                 email: _email.text.trim(),
                 password: _password.text,
+              ),
+            );
+          }
+        },
       ),
     ],
   );

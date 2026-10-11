@@ -51,7 +51,7 @@ void main() {
           ...StackCardIcon.lucideNames,
           ...StackCardIcon.technologyNames,
         };
-        expect(names, hasLength(23));
+        expect(names, hasLength(30));
         expect(brandPaths, hasLength(9));
         final originalPrint = debugPrint;
         final warnings = <String>[];
@@ -87,7 +87,7 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
-          expect(find.byType(SvgPicture), findsNWidgets(32));
+          expect(find.byType(SvgPicture), findsNWidgets(39));
           final pictures = tester
               .widgetList<SvgPicture>(find.byType(SvgPicture))
               .toList();

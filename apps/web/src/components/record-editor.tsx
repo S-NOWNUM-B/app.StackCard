@@ -190,7 +190,7 @@ export function RecordEditor<T extends { id: string }>({
               <Notice error>{error}</Notice>
             </div>
           )}
-          <div className="record-editor-dialog-actions">
+          <div className="dialog-actions">
             <Button variant="secondary" onClick={() => dialog.current?.close()}>
               Отмена
             </Button>

@@ -11,6 +11,7 @@ import { DocumentView } from './document-view';
 import { AccountSettings, ApplicationPreferences } from './account-settings';
 import { Inbox } from './inbox';
 import { AvatarEditor, PrivateImage } from './media-upload';
+import { useConfirmation } from './confirmation-dialog';
 import { readAvatarBytes, readLegacyAvatarBytes } from '@/lib/portfolio-media-repository';
 import { firebaseServices } from '@/lib/firebase';
 import { loadDraft, saveDraft } from '@/lib/draft-repository';
@@ -115,6 +116,7 @@ export function Workspace({ initialView = 'home' }: { initialView?: string }) {
   return <OwnerWorkspace key={session.user.uid} user={session.user} initialView={initialView} />;
 }
 function OwnerWorkspace({ user, initialView }: { user: User; initialView: string }) {
+  const { confirm, confirmation } = useConfirmation();
   const [basis, setBasis] = useState<DraftEnvelope | null>(null),
     [content, setContent] = useState<WorkspaceContent>(emptyContent),
     [notes, setNotes] = useState(''),
@@ -183,6 +185,33 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   const migrationNeeded = !loading && !blocked && !workingMain;
   const owned = () =>
     activeUid.current === user.uid && firebaseServices().auth.currentUser?.uid === user.uid;
+  const confirmationContext = useRef({
+    basis,
+    content,
+    notes,
+    githubInput,
+    publications,
+    pending,
+    busy,
+    avatarBusy,
+    view,
+  });
+  confirmationContext.current = {
+    basis,
+    content,
+    notes,
+    githubInput,
+    publications,
+    pending,
+    busy,
+    avatarBusy,
+    view,
+  };
+  async function confirmAction(message: string, title?: string) {
+    const captured = confirmationContext.current;
+    const accepted = await confirm(message, title);
+    return accepted && owned() && equal(captured, confirmationContext.current);
+  }
   async function refreshInventory() {
     if (!owned()) return;
     try {
@@ -279,16 +308,19 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     return () => window.removeEventListener('beforeunload', leaving);
   }, []);
   useEffect(() => {
-    function history() {
+    let navigationVersion = 0;
+    async function history() {
+      const version = ++navigationVersion;
       const next = ownerView(decodeURIComponent(window.location.hash.slice(1)));
       if (busy || avatarBusy) {
         window.history.replaceState(null, '', `/workspace#${view}`);
         return;
       }
-      if (
-        dirtyRef.current &&
-        !window.confirm('Есть несохранённые изменения. Отбросить их и перейти?')
-      ) {
+      const accepted =
+        !dirtyRef.current ||
+        (await confirmAction('Есть несохранённые изменения. Отбросить их и перейти?'));
+      if (version !== navigationVersion || !owned()) return;
+      if (!accepted) {
         window.history.replaceState(null, '', `/workspace#${view}`);
         return;
       }
@@ -301,7 +333,10 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       setView(next);
     }
     window.addEventListener('popstate', history);
-    return () => window.removeEventListener('popstate', history);
+    return () => {
+      navigationVersion++;
+      window.removeEventListener('popstate', history);
+    };
   }, [view, busy, avatarBusy, basis]);
   useEffect(() => {
     if (!shareChoice) return;
@@ -333,14 +368,15 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       previous?.focus();
     };
   }, [shareChoice]);
-  function navigate(next: View, preserve = false) {
+  async function navigate(next: View, preserve = false) {
     if (busy || avatarBusy) return;
     if (
       !preserve &&
       dirty &&
-      !window.confirm('Есть несохранённые изменения. Отбросить их и перейти?')
+      !(await confirmAction('Есть несохранённые изменения. Отбросить их и перейти?'))
     )
       return;
+    if (!owned()) return;
     if (!preserve && dirty) {
       setContent(clone(basis?.content ?? emptyContent()));
       setGitHubInput(basis?.content?.githubUsername ?? '');
@@ -555,7 +591,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       if (owned()) setBusy(false);
     }
   }
-  function beginPublication(action: PendingOperation['action'], confirmed = false) {
+  async function beginPublication(action: PendingOperation['action'], confirmed = false) {
     if (!activeDocument || !basis || !publications || pending || receiptError || busy) {
       shareAfter.current = false;
       return;
@@ -564,27 +600,31 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     if (
       action === 'publish' &&
       !confirmed &&
-      !window.confirm(
+      !(await confirmAction(
         'Опубликовать текущую сохранённую версию? Введённые контакты и фотография станут доступны по постоянной ссылке.',
-      )
+        'Опубликовать портфолио?',
+      ))
     ) {
       shareAfter.current = false;
       return;
     }
     if (
       action === 'unpublish' &&
-      !window.confirm(
+      !(await confirmAction(
         'Снять документ с публикации? Постоянный адрес сохранится, содержимое станет недоступно.',
-      )
+        'Снять с публикации?',
+      ))
     )
       return;
     if (
       action === 'deleteDocument' &&
-      !window.confirm(
+      !(await confirmAction(
         'Удалить документ и отозвать его публичную страницу? Это действие нельзя отменить.',
-      )
+        'Удалить документ?',
+      ))
     )
       return;
+    if (!owned()) return;
     void perform({
       action,
       documentId: activeDocument.id,
@@ -596,7 +636,8 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   }
   async function exit() {
     if (busy || avatarBusy || !owned()) return;
-    if (dirty && !window.confirm('Отбросить несохранённые изменения и выйти?')) return;
+    if (dirty && !(await confirmAction('Отбросить несохранённые изменения и выйти?'))) return;
+    if (!owned()) return;
     try {
       await signOut(firebaseServices().auth);
     } catch (e) {
@@ -768,9 +809,10 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   }
   async function removeProject(id: string) {
     if (
-      !window.confirm(
+      !(await confirmAction(
         'Удалить проект из StackCard и убрать из портфолио? Репозиторий GitHub сохранится. Если проект опубликован, обновите публичную версию отдельно.',
-      )
+        'Удалить проект?',
+      ))
     )
       return;
     if (!savedWorkspace.projects.some((p) => p.id === id)) {
@@ -1046,25 +1088,18 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                   ) : (
                     photo
                   )}
-                  <Button disabled={busy || avatarBusy} onClick={() => void personalize('next')}>
-                    {content.personalization.step === 3 ? 'Готово' : 'Далее'}
-                  </Button>
-                  <Button
-                    variant="quiet"
-                    disabled={busy || avatarBusy}
-                    onClick={() => void personalize('skip')}
-                  >
-                    Пропустить
-                  </Button>
-                  {content.personalization.step > 0 && (
+                  <div className="dialog-actions">
                     <Button
-                      variant="quiet"
-                      disabled={busy || avatarBusy}
+                      variant="secondary"
+                      disabled={busy || avatarBusy || content.personalization.step === 0}
                       onClick={() => void personalize('back')}
                     >
                       Назад
                     </Button>
-                  )}
+                    <Button disabled={busy || avatarBusy} onClick={() => void personalize('next')}>
+                      {content.personalization.step === 3 ? 'Завершить' : 'Далее'}
+                    </Button>
+                  </div>
                 </section>
               ) : (
                 <fieldset className="workspace-fieldset" disabled={busy && !saving}>
@@ -1243,7 +1278,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                             void saveGitHub(githubInput).catch((e) => setError(errorMessage(e)))
                           }
                         >
-                          Сохранить GitHub-профиль
+                          Сохранить
                         </Button>
                       </section>
                       <ApplicationPreferences>
@@ -1314,12 +1349,13 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       {showSave && (
         <footer className="workspace-footer" inert={shareChoice}>
           <small className="muted">{dirty ? 'Есть несохранённые изменения' : 'Сохранено'}</small>
-          <div className="row">
+          <div className="dialog-actions">
             <Button
               variant="secondary"
               disabled={busy || avatarBusy}
-              onClick={() => {
-                if (dirty && !window.confirm('Отбросить несохранённые изменения?')) return;
+              onClick={async () => {
+                if (dirty && !(await confirmAction('Отбросить несохранённые изменения?'))) return;
+                if (!owned()) return;
                 void reload();
               }}
             >
@@ -1344,30 +1380,33 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
             <p>
               Сохранённая версия изменилась. Можно обновить её или отправить существующую ссылку.
             </p>
-            <Button
-              onClick={() => {
-                setShareChoice(false);
-                shareAfter.current = true;
-                beginPublication('publish', true);
-              }}
-            >
-              Обновить и поделиться
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setShareChoice(false);
-                if (activePublication) void sharePublication(activePublication);
-              }}
-            >
-              Отправить существующую
-            </Button>
-            <Button variant="quiet" onClick={() => setShareChoice(false)}>
-              Отмена
-            </Button>
+            <div className="dialog-actions">
+              <Button variant="secondary" onClick={() => setShareChoice(false)}>
+                Отмена
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShareChoice(false);
+                  if (activePublication) void sharePublication(activePublication);
+                }}
+              >
+                Отправить существующую
+              </Button>
+              <Button
+                onClick={() => {
+                  setShareChoice(false);
+                  shareAfter.current = true;
+                  void beginPublication('publish', true);
+                }}
+              >
+                Обновить и поделиться
+              </Button>
+            </div>
           </section>
         </div>
       )}
+      {confirmation}
     </div>
   );
 }

@@ -778,6 +778,15 @@ class _ContactDialogState extends State<_ContactDialog> {
               context,
               SocialLink(
                 id: widget.id,
+                label: _label.text.trim(),
+                url: _url(),
+                kind: _kind,
+                publishAllowed: _allowed,
+                visible: widget.link?.visible ?? true,
+              ),
+            );
+          }
+        },
       ),
     ],
   );
@@ -910,7 +919,6 @@ class _QualificationEditor extends StatelessWidget {
         ),
         actions: [
           StackCardDialogActions(
-            confirmKey: field.value.text.trim(),
             confirmLabel: context.strings.tr('common.save'),
             onCancel: () => Navigator.pop(context),
             onConfirm: () {

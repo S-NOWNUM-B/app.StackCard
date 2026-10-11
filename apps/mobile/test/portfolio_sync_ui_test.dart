@@ -109,7 +109,7 @@ void main() {
     expect(_notes(tester), 'Keep until confirmed');
     await tester.tap(reload);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Открыть сохранённое'));
+    await tester.tap(find.text('Подтвердить'));
     await tester.pumpAndSettle();
     expect(_notes(tester), 'Remote');
     expect(find.byKey(const ValueKey('portfolio_remote_update')), findsNothing);
