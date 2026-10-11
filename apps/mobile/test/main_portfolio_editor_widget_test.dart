@@ -273,7 +273,7 @@ void main() {
       await _tap(tester, 'main.projectSelection.apply');
       expect(find.byKey(const Key('main.editor.up.two')), findsNothing);
       final drag = find.byKey(const Key('main.editor.drag.two'));
-      await tester.ensureVisible(drag);
+      await Scrollable.ensureVisible(tester.element(drag), alignment: 0.5);
       await tester.pumpAndSettle();
       final start = tester.getCenter(drag);
       final target = tester.getCenter(
@@ -293,6 +293,8 @@ void main() {
       );
       final gesture = await tester.startGesture(start);
       await tester.pump(const Duration(milliseconds: 600));
+      await gesture.moveBy(const Offset(0, -5));
+      await tester.pump();
       await gesture.moveTo(target - const Offset(0, 20));
       await tester.pump(const Duration(milliseconds: 300));
       await gesture.up();

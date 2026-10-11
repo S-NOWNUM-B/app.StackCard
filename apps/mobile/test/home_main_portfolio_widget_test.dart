@@ -100,6 +100,152 @@ void main() {
   );
 
   testWidgets(
+    'Home follows editor section order and durable project attachment order',
+    (tester) async {
+      final base = _workspace('Стас', bio: 'Описание профиля');
+      final document = base.documents.single.copyWith(
+        content: base.documents.single.content.copyWith(
+          skills: const [Skill(id: 'flutter', name: 'Flutter')],
+          links: const [
+            SocialLink(
+              id: 'public',
+              label: 'Мой сайт',
+              url: 'https://example.com',
+              publishAllowed: true,
+            ),
+            SocialLink(
+              id: 'hidden',
+              label: 'Скрытый контакт',
+              url: 'https://example.com/hidden',
+              visible: false,
+              publishAllowed: true,
+            ),
+            SocialLink(
+              id: 'private',
+              label: 'Приватный контакт',
+              url: 'https://example.com/private',
+            ),
+          ],
+          experience: const [
+            Experience(
+              id: 'job',
+              role: 'Разработчик',
+              organization: 'Компания',
+              period: '2025–2026',
+              description: 'Разработка приложения',
+            ),
+          ],
+          education: const [
+            Education(
+              id: 'university',
+              institution: 'AlmaU',
+              qualification: 'Software Engineering',
+              period: '2023–2027',
+              description: 'Обучение',
+            ),
+          ],
+        ),
+        projects: const [
+          PortfolioProjectAttachment(projectId: 'second'),
+          PortfolioProjectAttachment(projectId: 'hidden', visible: false),
+          PortfolioProjectAttachment(projectId: 'first'),
+        ],
+      );
+      final saved = base.copyWith(
+        projects: [
+          for (final id in ['first', 'second', 'hidden', 'unattached'])
+            PortfolioProject(
+              id: id,
+              title: 'Проект $id',
+              description: '',
+              technologies: const [],
+            ),
+        ],
+        documents: [document],
+      );
+      final working = saved.copyWith(
+        documents: [
+          document.copyWith(projects: document.projects.reversed.toList()),
+        ],
+      );
+      await _open(tester, saved: saved, working: working);
+
+      final sections = [
+        find.byKey(const Key('main.portfolio.bio')),
+        for (final key in [
+          'links',
+          'skills',
+          'projects',
+          'experience',
+          'education',
+        ])
+          find.byKey(ValueKey('main.section.$key')),
+      ];
+      for (var index = 1; index < sections.length; index++) {
+        expect(
+          tester.getTopLeft(sections[index - 1]).dy,
+          lessThan(tester.getTopLeft(sections[index]).dy),
+        );
+      }
+      expect(find.text('Реализованные проекты'), findsOneWidget);
+      expect(find.text('Опыт работы'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(const Key('main.project.second'))).dy,
+        lessThan(
+          tester.getTopLeft(find.byKey(const Key('main.project.first'))).dy,
+        ),
+      );
+      expect(find.byKey(const Key('main.project.hidden')), findsNothing);
+      expect(find.byKey(const Key('main.project.unattached')), findsNothing);
+      expect(find.text('Скрытый контакт'), findsNothing);
+      expect(find.text('Приватный контакт'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('legacy additional content remains after education', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: StackCardTheme.light,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: MainPortfolioContentView(
+                content: PortfolioContent(
+                  education: const [
+                    Education(
+                      id: 'university',
+                      institution: 'AlmaU',
+                      qualification: 'Software Engineering',
+                      period: '2023–2027',
+                      description: '',
+                    ),
+                  ],
+                  resumeText: 'Прежний дополнительный текст',
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.byKey(const Key('main.section.education'))).dy,
+      lessThan(
+        tester.getTopLeft(find.byKey(const Key('main.section.legacyText'))).dy,
+      ),
+    );
+    expect(find.text('Прежний дополнительный текст'), findsOneWidget);
+    for (final key in ['links', 'skills', 'projects', 'experience']) {
+      expect(find.byKey(ValueKey('main.section.$key')), findsNothing);
+    }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
     'empty saved portfolio keeps short state and disables output actions',
     (tester) async {
       final saved = _workspace('');

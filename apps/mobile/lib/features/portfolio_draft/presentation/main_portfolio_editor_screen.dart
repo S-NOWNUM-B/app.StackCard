@@ -1176,8 +1176,11 @@ class _MainPortfolioEditorScreenState
                   child: const SizedBox(
                     width: StackCardSize.touchTarget,
                     height: StackCardSize.touchTarget,
-                    child: Center(
-                      child: StackCardIcon(name: 'grip-vertical', size: 20),
+                    child: ColoredBox(
+                      color: Colors.transparent,
+                      child: Center(
+                        child: StackCardIcon(name: 'grip-vertical', size: 20),
+                      ),
                     ),
                   ),
                 ),
