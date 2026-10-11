@@ -71,6 +71,42 @@ bool portfolioHasDisplayContent(PortfolioContent content) {
       content.links.any((link) => link.visible && link.publishAllowed);
 }
 
+/// Порядок новых разделов; хранится в существующем content.blocks.
+const mainPortfolioSectionKinds = [
+  PortfolioBlockKind.links,
+  PortfolioBlockKind.skills,
+  PortfolioBlockKind.featuredProjects,
+  PortfolioBlockKind.experience,
+  PortfolioBlockKind.education,
+];
+
+List<PortfolioBlockKind> mainPortfolioSectionOrder(PortfolioContent content) {
+  final kinds = content.blocks.map((block) => block.kind).toList();
+  // Прежний constructor default не задавал порядок современного редактора.
+  final legacyDefault =
+      kinds.length == PortfolioBlockKind.values.length &&
+      Iterable<int>.generate(kinds.length)
+          .every((index) => kinds[index] == PortfolioBlockKind.values[index]);
+  if (legacyDefault) return List.unmodifiable(mainPortfolioSectionKinds);
+  return List.unmodifiable({
+    ...kinds.where(mainPortfolioSectionKinds.contains),
+    ...mainPortfolioSectionKinds,
+  });
+}
+
+/// GitHub — часть контактов; profile остаётся первым, legacy resume не выводится.
+List<PortfolioBlock> mainPortfolioBlocks(PortfolioContent content) => [
+  const PortfolioBlock(kind: PortfolioBlockKind.profile),
+  const PortfolioBlock(kind: PortfolioBlockKind.about),
+  const PortfolioBlock(kind: PortfolioBlockKind.location),
+  for (final kind in mainPortfolioSectionOrder(content)) ...[
+    PortfolioBlock(kind: kind),
+    if (kind == PortfolioBlockKind.links)
+      const PortfolioBlock(kind: PortfolioBlockKind.github),
+  ],
+  const PortfolioBlock(kind: PortfolioBlockKind.resume, visible: false),
+];
+
 /// Современные outputs не используют legacy images, layout и permissions.
 PortfolioContent? resolvedMainPortfolioContent(PortfolioContent workspace) {
   final document = mainPortfolioDocument(workspace);
@@ -79,18 +115,7 @@ PortfolioContent? resolvedMainPortfolioContent(PortfolioContent workspace) {
   return resolved.copyWith(
     profile: resolved.profile.copyWith(publishLocation: true),
     resumeText: '',
-    blocks: const [
-      PortfolioBlock(kind: PortfolioBlockKind.profile),
-      PortfolioBlock(kind: PortfolioBlockKind.about),
-      PortfolioBlock(kind: PortfolioBlockKind.location),
-      PortfolioBlock(kind: PortfolioBlockKind.featuredProjects),
-      PortfolioBlock(kind: PortfolioBlockKind.skills),
-      PortfolioBlock(kind: PortfolioBlockKind.experience),
-      PortfolioBlock(kind: PortfolioBlockKind.education),
-      PortfolioBlock(kind: PortfolioBlockKind.links),
-      PortfolioBlock(kind: PortfolioBlockKind.github),
-      PortfolioBlock(kind: PortfolioBlockKind.resume, visible: false),
-    ],
+    blocks: mainPortfolioBlocks(resolved),
     projects: resolved.projects
         .where((project) => project.visible)
         .map((project) => project.copyWith(imagePaths: const []))
@@ -149,6 +174,7 @@ PortfolioContent mainPortfolioMigrationContent(
               ),
         )
         .toList(),
+    blocks: mainPortfolioBlocks(source),
     // Legacy plain text сохраняется посимвольно, без попытки вывести из него факты.
     resumeText: source.resumeText,
   );

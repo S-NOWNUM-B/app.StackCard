@@ -1219,7 +1219,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                       ownerUid={user.uid}
                       username={content.githubUsername}
                       projects={content.projects}
-                      onUsername={saveGitHub}
+                      onSettings={() => navigate('settings', true)}
                       onImport={importProjects}
                       onBack={() => navigate('projects', true)}
                     />

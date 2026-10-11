@@ -5,12 +5,14 @@ import 'package:app_stackcard/core/theme/stackcard_theme.dart';
 import 'package:app_stackcard/features/github_import/github_import.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
+import 'package:app_stackcard/features/settings/settings_screen.dart';
 import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   testWidgets('Linked GitHub selection preview', (tester) async {
@@ -59,20 +61,22 @@ void main() {
   );
 
   testWidgets(
-    'Missing GitHub source accepts a profile URL and persists one normalized identity',
+    'Missing source opens the only GitHub settings form and returns with normalized identity',
     (tester) async {
       final local = await _local(source: '');
       final source = _Source();
       await _open(tester, local, source);
       expect(source.profileReads, 0);
-      await tester.tap(find.byKey(const ValueKey('github_source_save')));
-      await tester.pumpAndSettle();
-      expect(find.text('Добавьте GitHub-профиль'), findsOneWidget);
+      expect(find.byKey(const ValueKey('github_username')), findsNothing);
+      expect(find.byKey(const ValueKey('github_source_save')), findsNothing);
+      await _tap(tester, find.byKey(const ValueKey('github_source_settings')));
+      expect(find.byType(SettingsGitHubScreen), findsOneWidget);
       await tester.enterText(
-        find.byKey(const ValueKey('github_username')),
+        find.byKey(const Key('settings.github.username')),
         ' https://github.com/Octocat/ ',
       );
-      await _tap(tester, find.byKey(const ValueKey('github_source_save')));
+      await _tap(tester, find.byKey(const Key('settings.github.save')));
+      await _tap(tester, find.byTooltip('Назад'));
       expect((await local.read())!.content!.githubUsername, 'octocat');
       expect((await local.read())!.content!.profile.username, 'existing-slug');
       expect(source.profileReads, 1);
@@ -81,6 +85,43 @@ void main() {
     },
   );
 
+  testWidgets(
+    'Changing an existing source uses Settings and resets selection for the new identity',
+    (tester) async {
+      final local = await _local();
+      final source = _Source();
+      await _open(tester, local, source);
+      await _tap(tester, find.byKey(const ValueKey('github_repository_1')));
+      expect(
+        tester
+            .widget<StackCardButton>(
+              find.byKey(const ValueKey('github_import_selected')),
+            )
+            .onPressed,
+        isNotNull,
+      );
+      expect(find.byKey(const ValueKey('github_username')), findsNothing);
+      await _tap(tester, find.byKey(const ValueKey('github_source_settings')));
+      await tester.enterText(
+        find.byKey(const Key('settings.github.username')),
+        'https://github.com/Other',
+      );
+      await _tap(tester, find.byKey(const Key('settings.github.save')));
+      await _tap(tester, find.byTooltip('Назад'));
+      expect((await local.read())!.content!.githubUsername, 'other');
+      expect(find.text('@other'), findsOneWidget);
+      expect(
+        tester
+            .widget<StackCardButton>(
+              find.byKey(const ValueKey('github_import_selected')),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isFalse);
+      expect(source.profileReads, 2);
+    },
+  );
   testWidgets(
     'Bulk import saves Library immediately and leaves unrelated editor data and attachments alone',
     (tester) async {
@@ -229,6 +270,12 @@ void main() {
     await _tap(tester, find.text('Обновить GitHub'));
     expect(find.text('Нет соединения'), findsOneWidget);
     expect(find.byKey(const ValueKey('github_repository_1')), findsOneWidget);
+    expect(find.text('Обновить GitHub'), findsNothing);
+    expect(find.text('Повторить'), findsOneWidget);
+    source.profileFailure = null;
+    await _tap(tester, find.text('Повторить'));
+    expect(find.text('Обновить GitHub'), findsOneWidget);
+    expect(source.profileReads, 3);
     expect(tester.takeException(), isNull);
   });
 
@@ -312,10 +359,25 @@ Future<ProviderContainer> _open(
       githubImportRepositoryProvider.overrideWithValue(source),
     ],
   );
+  final router = GoRouter(
+    initialLocation: '/github-import',
+    routes: [
+      GoRoute(
+        path: '/github-import',
+        builder: (_, _) => const GitHubImportScreen(),
+      ),
+      GoRoute(
+        path: '/settings/github',
+        builder: (_, _) => const SettingsGitHubScreen(),
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: MaterialApp(
+      child: MaterialApp.router(
+        routerConfig: router,
         theme: StackCardTheme.light,
         locale: const Locale('ru'),
         supportedLocales: AppStrings.supportedLocales,
@@ -325,7 +387,6 @@ Future<ProviderContainer> _open(
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        home: const GitHubImportScreen(),
       ),
     ),
   );

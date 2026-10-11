@@ -12,6 +12,10 @@ import {
   attachment,
   migrateMainPortfolio,
   mainDocument,
+  mainPortfolioBlocks,
+  mainPortfolioSectionOrder,
+  mainPortfolioSectionKinds,
+  blockKinds,
   validateWorkspace,
   resolveDocument,
   decodeDraft,
@@ -63,6 +67,40 @@ const reload = (content: WorkspaceContent) =>
     },
     'owner',
   ).content!;
+test('main sections preserve saved order across cloud codec and preview without rewriting legacy defaults', () => {
+  const workspace = migrateMainPortfolio(emptyContent(), null);
+  const main = mainDocument(workspace)!;
+  assert.deepEqual(mainPortfolioSectionOrder(main.content), mainPortfolioSectionKinds);
+  const legacy = blockKinds.map((kind) => ({ kind, visible: true }));
+  assert.deepEqual(mainPortfolioSectionOrder({ blocks: legacy }), mainPortfolioSectionKinds);
+  assert.deepEqual(
+    legacy.map((b) => b.kind),
+    blockKinds,
+  );
+  const order = ['education', 'featuredProjects', 'links', 'experience', 'skills'] as const;
+  main.content.blocks = mainPortfolioBlocks({
+    blocks: order.map((kind) => ({ kind, visible: true })),
+  });
+  assert.deepEqual(mainPortfolioSectionOrder(main.content), order);
+  const saved = reload(workspace);
+  assert.deepEqual(mainPortfolioSectionOrder(mainDocument(saved)!.content), order);
+  const preview = documentPreview(saved, mainDocument(saved)!);
+  assert.deepEqual(
+    preview.blocks.map((block) => block.kind),
+    [
+      'profile',
+      'about',
+      'location',
+      'education',
+      'featuredProjects',
+      'links',
+      'github',
+      'experience',
+      'skills',
+    ],
+  );
+});
+
 test('saved project acknowledgement ignores decoder key order and detects actual newer edits', () => {
   const working = migrateMainPortfolio(emptyContent(), null);
   working.projects = [
@@ -106,12 +144,12 @@ test('explicit selected migration preserves ID, private kind and exact legacy co
       'profile',
       'about',
       'location',
-      'featuredProjects',
-      'skills',
-      'experience',
-      'education',
       'links',
       'github',
+      'skills',
+      'featuredProjects',
+      'experience',
+      'education',
       'resume',
     ],
   );

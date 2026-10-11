@@ -323,11 +323,36 @@ class _PortfolioProjectEditorScreenState
         context.strings.tr('mobileParity.removeTechnology', {'name': name}),
     enabled: !ref.watch(portfolioDraftControllerProvider).saving,
     onAdd: _addTechnology,
+    onReorder: _reorderTechnology,
     onRemove: (index) => setState(() {
       _technologies = [..._technologies]..removeAt(index);
       _saveFailed = false;
     }),
   );
+
+  void _reorderTechnology(int oldIndex, int newIndex) {
+    final state = ref.read(portfolioDraftControllerProvider);
+    if (!state.canEdit ||
+        state.saving ||
+        _confirmingExit ||
+        !identical(
+          _initialRepository,
+          ref.read(portfolioDraftRepositoryProvider),
+        ) ||
+        oldIndex == newIndex ||
+        oldIndex < 0 ||
+        oldIndex >= _technologies.length ||
+        newIndex < 0 ||
+        newIndex >= _technologies.length) {
+      return;
+    }
+    setState(() {
+      final technologies = List<String>.of(_technologies);
+      technologies.insert(newIndex, technologies.removeAt(oldIndex));
+      _technologies = technologies;
+      _saveFailed = false;
+    });
+  }
 
   Future<void> _addTechnology() async {
     final repository = _initialRepository;

@@ -2,6 +2,11 @@
 
 Действующий продуктовый контракт — [ADR 0005](../../decisions/0005-single-main-portfolio.md).
 Home/Projects/Editor — единственные roots; saved Home не использует buffer.
+Порядок пяти разделов main хранится в существующем `document.content.blocks`;
+`mainPortfolioSectionOrder` задаёт совместимый default и сохраняет выбранный порядок.
+Editor переставляет секции за точки в заголовках, Home/PDF читают saved snapshot.
+Технологии проекта переставляются через `BuilderTagsEditor.onReorder` с final index;
+сохранение остаётся отдельным scoped Save проекта.
 Legacy libraries/Builder/routes ниже — совместимость, старые deep links ведут
 в Editor. Только avatar Firestore/JPEG512/256KiB и catalog project icons;
 `locationText` вручную, GPS feature/dependencies/permissions удалены.
@@ -187,6 +192,8 @@ headless проверки не закрывают native visual, public/web ил
   и [DI](../../../apps/mobile/lib/features/github_import/github_import_providers.dart).
   Dio/JSON/cache — data; бизнес-модели и username/selection — pure Dart domain;
   cancellable loading/refresh/pagination/debounce — Riverpod controller.
+  Экран импорта использует сохранённый root `githubUsername`; изменить/добавить
+  профиль можно через `/settings/github`, без второй формы identity Save.
   API next links валидируются по host и identity профиля. Только явный retry,
   rate deadline блокирует запросы; поиск ограничен загруженными страницами.
   Async [response cache contract](../../../apps/mobile/lib/features/github_import/data/github_response_cache.dart)

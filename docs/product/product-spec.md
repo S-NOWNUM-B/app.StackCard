@@ -318,6 +318,30 @@ original SVG/Feather license перенесены из mobile в web с pinned h
 Логи: `/private/tmp/stackcard-project-links-preview-tests.log` и
 `/private/tmp/stackcard-project-links-analyze.log`.
 
+Цвет крестика mobile Library 2026-10-12: удаление использует чёрный `textPrimary`,
+как остальные крестики интерфейса. Existing mobile parity suite — **6/6 PASS**,
+анализ двух Dart-файлов — **0 issues**, формат и `git diff --check` — PASS.
+
+Аудит остальных экранов 2026-10-12: Import mobile/web больше не дублирует
+форму GitHub-профиля и ведёт в Settings; после возврата источник перечитывается.
+В mobile Inbox/Import ошибка содержит одно действие повторения; Notifications
+показывает включение либо отключение по состоянию, с отдельным retry cleanup
+только при незавершённой очистке. Повторный переход во «Входящие» убран.
+В web public reader удалены self-open и Share без Web Share API; Download
+сохраняет статус релизов без неработающих кнопок. Footer/demo используют
+канонические разделы вместо нескольких aliases в один Editor.
+Целевые mobile suites — **49/49 PASS**, анализ семи файлов — **0 issues**;
+web screen actions — **5/5 PASS**, typecheck, production build и формат — PASS.
+Общий snapshot Flutter — **1324 PASS, 8 FAIL** в параллельно изменённом
+виртуализированном Main Editor; общий анализ — один deprecated `cacheExtent`
+в том же редакторе. Web общий snapshot — **161 PASS, 1 FAIL** в параллельном
+`public-document.test.ts` (schema2 fixture возвращает null). Эти исходники
+не менялись ради обхода проверок. CUA вернул пустой список браузеров, поэтому
+runtime Copy/Share не подтверждён; временный harness остановлен и удалён.
+Логи mobile: `/private/tmp/stackcard_mobile_duplicates_final_tests.log`,
+`/private/tmp/stackcard-screen-dedup-final-tests.log`,
+`/private/tmp/stackcard-screen-dedup-final-analyze.log`.
+
 Основные логи: `/private/tmp/stackcard-single-portfolio-final-verified-tests.log`,
 `stackcard-single-portfolio-final-flutter-analyze.log`, `stackcard-web-tests-final.log`,
 `stackcard-web-build-final.log`, `stackcard-single-all-rules.log`,
@@ -1737,8 +1761,15 @@ mobile/web/publication scope
 проверки простых паролей, повторы, совпадение с почтой и raw SDK input сохранены.
 Mobile policy/auth UI/localization — **63/63 PASS**, web password tests —
 **5/5 PASS**; targeted Flutter analyze, web typecheck, Dart/Prettier format и
-`git diff --check` — PASS. Границы7/8 и128/129 покрыты. Live Firebase Auth policy
-не проверялась и не менялась; серверный минимум в репозитории не задан.
+`git diff --check` — PASS. Границы7/8 и128/129 покрыты.
+
+По дополнительному прямому запросу 2026-10-12 live Firebase Auth проекта
+`stackcard-dev-snownumb` настроен через Identity Toolkit Admin API: политика
+`ENFORCE`, `minPasswordLength: 8`, без принудительного обновления пароля при входе.
+До изменения отдельная политика отсутствовала. Повторное server GET подтвердило
+сохранённый минимум8; рабочие аккаунты и пароли не менялись. Создание аккаунта
+с новым минимумом отдельно не проверялось; source Firebase configs этой настройкой
+не управляют.
 
 **Google Auth и публичные API keys — 11 октября 2026**
 

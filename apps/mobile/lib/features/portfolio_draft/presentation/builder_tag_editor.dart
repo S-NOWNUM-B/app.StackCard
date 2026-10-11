@@ -26,6 +26,8 @@ class BuilderTagsEditor extends StatelessWidget {
     this.addKey,
     this.onEdit,
     this.iconName,
+    this.headerLeading,
+    this.onReorder,
   });
 
   final String title;
@@ -39,6 +41,8 @@ class BuilderTagsEditor extends StatelessWidget {
   final Key? addKey;
   final ValueChanged<int>? onEdit;
   final String Function(int)? iconName;
+  final Widget? headerLeading;
+  final void Function(int oldIndex, int newIndex)? onReorder;
 
   Widget _label(BuildContext context, int index) {
     if (onEdit == null) return StackCardTechnologyBadge(label: items[index]);
@@ -86,6 +90,7 @@ class BuilderTagsEditor extends StatelessWidget {
       children: [
         Row(
           children: [
+            ?headerLeading,
             Expanded(
               child: Text(title, style: Theme.of(context).textTheme.titleLarge),
             ),
@@ -99,35 +104,94 @@ class BuilderTagsEditor extends StatelessWidget {
         ),
         if (items.isNotEmpty) ...[
           const SizedBox(height: StackCardSpacing.md),
-          Wrap(
-            spacing: StackCardSpacing.sm,
-            runSpacing: StackCardSpacing.sm,
-            children: [
-              for (var index = 0; index < items.length; index++)
-                DecoratedBox(
+          if (onReorder != null)
+            ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              padding: EdgeInsets.zero,
+              itemCount: items.length,
+              itemBuilder: (context, index) => Padding(
+                key: ValueKey(
+                  '$keyPrefix.item.${items[index]}.${items.take(index).where((item) => item == items[index]).length}',
+                ),
+                padding: const EdgeInsets.only(bottom: StackCardSpacing.sm),
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: context.colors.surfaceElevated,
                     borderRadius: BorderRadius.circular(StackCardRadius.small),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: StackCardSpacing.xs),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(child: _label(context, index)),
-                        const SizedBox(width: StackCardSpacing.xs),
-                        IconButton(
-                          key: ValueKey('$keyPrefix.remove.$index'),
-                          tooltip: removeLabel(items[index]),
-                          onPressed: enabled ? () => onRemove(index) : null,
-                          icon: const Icon(Icons.close_rounded, size: 20),
+                  child: Row(
+                    children: [
+                      Semantics(
+                        label: 'Изменить порядок ${items[index]}',
+                        hint: 'Удерживайте точки и перетащите',
+                        child: ReorderableDelayedDragStartListener(
+                          key: ValueKey('$keyPrefix.drag.$index'),
+                          index: index,
+                          enabled: enabled,
+                          child: const SizedBox(
+                            width: StackCardSize.touchTarget,
+                            height: StackCardSize.touchTarget,
+                            child: ColoredBox(
+                              color: Colors.transparent,
+                              child: Center(
+                                child: StackCardIcon(
+                                  name: 'grip-vertical',
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                      Expanded(child: _label(context, index)),
+                      IconButton(
+                        key: ValueKey('$keyPrefix.remove.$index'),
+                        tooltip: removeLabel(items[index]),
+                        onPressed: enabled ? () => onRemove(index) : null,
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                      ),
+                    ],
                   ),
                 ),
-            ],
-          ),
+              ),
+              onReorderItem: (oldIndex, newIndex) {
+                if (enabled) onReorder!(oldIndex, newIndex);
+              },
+            )
+          else
+            Wrap(
+              spacing: StackCardSpacing.sm,
+              runSpacing: StackCardSpacing.sm,
+              children: [
+                for (var index = 0; index < items.length; index++)
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: context.colors.surfaceElevated,
+                      borderRadius: BorderRadius.circular(
+                        StackCardRadius.small,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: StackCardSpacing.xs),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(child: _label(context, index)),
+                          const SizedBox(width: StackCardSpacing.xs),
+                          IconButton(
+                            key: ValueKey('$keyPrefix.remove.$index'),
+                            tooltip: removeLabel(items[index]),
+                            onPressed: enabled ? () => onRemove(index) : null,
+                            icon: const Icon(Icons.close_rounded, size: 20),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
         ],
       ],
     ),

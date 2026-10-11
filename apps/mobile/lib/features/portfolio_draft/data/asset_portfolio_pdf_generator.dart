@@ -177,118 +177,134 @@ Future<Uint8List> generatePortfolioPdfBytes(
     if (includes(PortfolioBlockKind.location) && profile.publishLocation) {
       paragraph(profile.locationText, centered: true);
     }
-    final projects = includes(PortfolioBlockKind.featuredProjects)
-        ? content.projects.where((project) => project.visible).toList()
-        : <PortfolioProject>[];
-    if (projects.isNotEmpty) {
-      heading('Проекты');
-      for (final project in projects) {
-        final id = _iconIds.contains(project.iconId)
-            ? project.iconId
-            : 'folder';
-        final svg = stockIconSvg[id] ?? stockIconSvg['folder'];
-        if (svg == null) {
-          throw const PortfolioPdfFailure(PortfolioPdfFailureKind.invalidData);
-        }
-        widgets.add(pw.NewPage(freeSpace: 48));
-        widgets.add(
-          pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.SvgImage(
-                svg: svg.replaceAll('currentColor', '#151518'),
-                width: 20,
-                height: 20,
+    for (final kind in mainPortfolioSectionOrder(content)) {
+      if (kind == PortfolioBlockKind.featuredProjects) {
+        final projects = includes(PortfolioBlockKind.featuredProjects)
+            ? content.projects.where((project) => project.visible).toList()
+            : <PortfolioProject>[];
+        if (projects.isNotEmpty) {
+          heading('Проекты');
+          for (final project in projects) {
+            final id = _iconIds.contains(project.iconId)
+                ? project.iconId
+                : 'folder';
+            final svg = stockIconSvg[id] ?? stockIconSvg['folder'];
+            if (svg == null) {
+              throw const PortfolioPdfFailure(
+                PortfolioPdfFailureKind.invalidData,
+              );
+            }
+            widgets.add(pw.NewPage(freeSpace: 48));
+            widgets.add(
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.SvgImage(
+                    svg: svg.replaceAll('currentColor', '#151518'),
+                    width: 20,
+                    height: 20,
+                  ),
+                  pw.SizedBox(width: 12),
+                  pw.Expanded(
+                    child: text(
+                      project.title,
+                      style: headingStyle.copyWith(fontSize: 11),
+                    ),
+                  ),
+                ],
               ),
-              pw.SizedBox(width: 12),
-              pw.Expanded(
-                child: text(
-                  project.title,
-                  style: headingStyle.copyWith(fontSize: 11),
-                ),
-              ),
-            ],
-          ),
-        );
-        widgets.add(pw.SizedBox(height: 8));
-        paragraph(project.description);
-        paragraph(project.contribution);
-        if (project.technologies.isNotEmpty) {
-          paragraph(project.technologies.join(' · '));
+            );
+            widgets.add(pw.SizedBox(height: 8));
+            paragraph(project.description);
+            paragraph(project.contribution);
+            if (project.technologies.isNotEmpty) {
+              paragraph(project.technologies.join(' · '));
+            }
+            link('Проект', project.liveUrl);
+            link('Исходный код', project.repositoryUrl);
+            widgets.add(pw.SizedBox(height: 8));
+          }
         }
-        link('Проект', project.liveUrl);
-        link('Исходный код', project.repositoryUrl);
-        widgets.add(pw.SizedBox(height: 8));
       }
-    }
-    final skills = includes(PortfolioBlockKind.skills)
-        ? content.skills.where((skill) => skill.name.trim().isNotEmpty).toList()
-        : <Skill>[];
-    if (skills.isNotEmpty) {
-      heading('Навыки');
-      paragraph(skills.map((skill) => skill.name).join(' · '));
-    }
-    final experience = includes(PortfolioBlockKind.experience)
-        ? content.experience.where(
-            (item) => [
-              item.role,
-              item.organization,
-              item.period,
-              item.description,
-            ].any((value) => value.trim().isNotEmpty),
-          )
-        : <Experience>[];
-    if (experience.isNotEmpty) {
-      heading('Опыт');
-      for (final item in experience) {
-        paragraph(item.role);
-        paragraph(
-          [
-            item.organization,
-            item.period,
-          ].where((value) => value.trim().isNotEmpty).join(' · '),
+      if (kind == PortfolioBlockKind.skills) {
+        final skills = includes(PortfolioBlockKind.skills)
+            ? content.skills
+                  .where((skill) => skill.name.trim().isNotEmpty)
+                  .toList()
+            : <Skill>[];
+        if (skills.isNotEmpty) {
+          heading('Навыки');
+          paragraph(skills.map((skill) => skill.name).join(' · '));
+        }
+      }
+      if (kind == PortfolioBlockKind.experience) {
+        final experience = includes(PortfolioBlockKind.experience)
+            ? content.experience.where(
+                (item) => [
+                  item.role,
+                  item.organization,
+                  item.period,
+                  item.description,
+                ].any((value) => value.trim().isNotEmpty),
+              )
+            : <Experience>[];
+        if (experience.isNotEmpty) {
+          heading('Опыт');
+          for (final item in experience) {
+            paragraph(item.role);
+            paragraph(
+              [
+                item.organization,
+                item.period,
+              ].where((value) => value.trim().isNotEmpty).join(' · '),
+            );
+            paragraph(item.description);
+          }
+        }
+      }
+      if (kind == PortfolioBlockKind.education) {
+        final education = includes(PortfolioBlockKind.education)
+            ? content.education.where(
+                (item) => [
+                  item.qualification,
+                  item.institution,
+                  item.period,
+                  item.description,
+                ].any((value) => value.trim().isNotEmpty),
+              )
+            : <Education>[];
+        if (education.isNotEmpty) {
+          heading('Образование');
+          for (final item in education) {
+            paragraph(item.qualification);
+            paragraph(
+              [
+                item.institution,
+                item.period,
+              ].where((value) => value.trim().isNotEmpty).join(' · '),
+            );
+            paragraph(item.description);
+          }
+        }
+      }
+      if (kind == PortfolioBlockKind.links) {
+        final contacts = content.links.where(
+          (contact) =>
+              contact.visible &&
+              contact.publishAllowed &&
+              includes(
+                contact.kind == SocialLinkKind.github
+                    ? PortfolioBlockKind.github
+                    : PortfolioBlockKind.links,
+              ) &&
+              _safeHref(contact.url) != null,
         );
-        paragraph(item.description);
-      }
-    }
-    final education = includes(PortfolioBlockKind.education)
-        ? content.education.where(
-            (item) => [
-              item.qualification,
-              item.institution,
-              item.period,
-              item.description,
-            ].any((value) => value.trim().isNotEmpty),
-          )
-        : <Education>[];
-    if (education.isNotEmpty) {
-      heading('Образование');
-      for (final item in education) {
-        paragraph(item.qualification);
-        paragraph(
-          [
-            item.institution,
-            item.period,
-          ].where((value) => value.trim().isNotEmpty).join(' · '),
-        );
-        paragraph(item.description);
-      }
-    }
-    final contacts = content.links.where(
-      (contact) =>
-          contact.visible &&
-          contact.publishAllowed &&
-          includes(
-            contact.kind == SocialLinkKind.github
-                ? PortfolioBlockKind.github
-                : PortfolioBlockKind.links,
-          ) &&
-          _safeHref(contact.url) != null,
-    );
-    if (contacts.isNotEmpty) {
-      heading('Контакты и ссылки');
-      for (final contact in contacts) {
-        link(contact.label, contact.url);
+        if (contacts.isNotEmpty) {
+          heading('Контакты и ссылки');
+          for (final contact in contacts) {
+            link(contact.label, contact.url);
+          }
+        }
       }
     }
     document.addPage(

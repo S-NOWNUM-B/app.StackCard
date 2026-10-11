@@ -116,6 +116,8 @@ void main() {
         find.textContaining('Не удалось загрузить обращения'),
         findsOneWidget,
       );
+      expect(find.text('Повторить'), findsOneWidget);
+      expect(find.text('Обновить'), findsNothing);
       expect(find.text('Visitor'), findsNothing);
     },
   );
@@ -182,17 +184,79 @@ void main() {
       );
       await _tap(tester, find.byKey(const Key('inbox.markRead')));
       expect(inbox.items.single.unread, isTrue);
-      expect(find.byKey(const Key('inbox.markRead')), findsOneWidget);
+      expect(find.byKey(const Key('inbox.markRead')), findsNothing);
+      expect(find.text('Повторить'), findsOneWidget);
       expect(
         find.textContaining('Не удалось связаться с сервером'),
         findsOneWidget,
       );
       inbox.readFailure = null;
-      await _tap(tester, find.byKey(const Key('inbox.markRead')));
+      await _tap(tester, find.text('Повторить'));
       expect(inbox.reads, 2);
       expect(inbox.items.single.unread, isFalse);
       expect(find.byKey(const Key('inbox.markRead')), findsNothing);
       expect(find.text('Прочитано'), findsOneWidget);
+    },
+  );
+  testWidgets(
+    'Inbox load failure has one retry action and restores regular refresh after recovery',
+    (tester) async {
+      final inbox = TestInbox('a')
+        ..listing = (_) async =>
+            throw const InboxFailure(InboxFailureKind.network);
+      await _open(
+        tester,
+        TestAuth(const AuthUser(uid: 'a')),
+        location: '/inbox',
+        inboxes: {'a': inbox},
+      );
+      expect(find.text('Повторить'), findsOneWidget);
+      expect(find.text('Обновить'), findsNothing);
+      expect(inbox.lists, 1);
+      inbox.listing = null;
+      await _tap(tester, find.text('Повторить'));
+      expect(inbox.lists, 2);
+      expect(find.text('Visitor'), findsOneWidget);
+      expect(find.text('Повторить'), findsNothing);
+      expect(find.text('Обновить'), findsOneWidget);
+    },
+  );
+  testWidgets(
+    'Notifications shows one applicable action and keeps failed cleanup retry available',
+    (tester) async {
+      final messaging = TestMessaging();
+      final controller = NotificationsController(
+        messaging: messaging,
+        registrationForOwner: (uid) => TestRegistration(uid),
+      );
+      addTearDown(() async {
+        await _drain(tester, controller.dispose());
+        await _drain(tester, messaging.close());
+      });
+      await _open(
+        tester,
+        TestAuth(const AuthUser(uid: 'a')),
+        location: '/settings/notifications',
+        notifications: controller,
+      );
+      expect(find.byKey(const Key('notifications.enable')), findsOneWidget);
+      expect(find.byKey(const Key('notifications.disable')), findsNothing);
+      expect(find.text('Входящие'), findsNothing);
+      await _tap(tester, find.byKey(const Key('notifications.enable')));
+      expect(controller.state.enabled, isTrue);
+      expect(find.byKey(const Key('notifications.enable')), findsNothing);
+      expect(find.text('Отключить уведомления'), findsOneWidget);
+      messaging.deleteFailure = StateError('native cleanup failed');
+      await _tap(tester, find.byKey(const Key('notifications.disable')));
+      expect(controller.state.enabled, isFalse);
+      expect(controller.state.cleanupFailed, isTrue);
+      expect(find.byKey(const Key('notifications.enable')), findsOneWidget);
+      expect(find.text('Повторить очистку'), findsOneWidget);
+      messaging.deleteFailure = null;
+      await _tap(tester, find.text('Повторить очистку'));
+      expect(controller.state.cleanupFailed, isFalse);
+      expect(find.byKey(const Key('notifications.disable')), findsNothing);
+      expect(find.byKey(const Key('notifications.enable')), findsOneWidget);
     },
   );
   testWidgets(

@@ -45,6 +45,90 @@ async function fixture(name: string, blob: Blob): Promise<void> {
   await writeFile(join(directory, name), new Uint8Array(await blob.arrayBuffer()));
 }
 
+test('PDF sections follow saved blocks and group GitHub contacts without exposing hidden links', async () => {
+  const content = seedDocument(emptyContent());
+  content.skills = [{ id: 'skill', name: 'SKILL_CONTENT' }];
+  content.experience = [
+    { id: 'work', role: 'ROLE_CONTENT', organization: 'Studio', period: '', description: '' },
+  ];
+  content.education = [
+    {
+      id: 'edu',
+      institution: 'University',
+      qualification: 'EDUCATION_CONTENT',
+      period: '',
+      description: '',
+    },
+  ];
+  content.projects = [
+    {
+      id: 'project',
+      title: 'PROJECT_CONTENT',
+      description: '',
+      contribution: '',
+      technologies: [],
+      repositoryUrl: '',
+      liveUrl: '',
+      featured: false,
+      visible: true,
+      source: 'manual',
+      githubMetadata: null,
+      imagePaths: [],
+      iconId: 'folder',
+    },
+  ];
+  content.links = [
+    {
+      id: 'site',
+      label: 'CONTACT_CONTENT',
+      url: 'https://example.com',
+      kind: 'website',
+      visible: true,
+      publishAllowed: true,
+    },
+    {
+      id: 'github',
+      label: 'GITHUB_CONTENT',
+      url: 'https://github.com/example',
+      kind: 'github',
+      visible: true,
+      publishAllowed: true,
+    },
+    {
+      id: 'hidden',
+      label: 'HIDDEN_CONTACT',
+      url: 'https://hidden.example',
+      kind: 'website',
+      visible: false,
+      publishAllowed: true,
+    },
+  ];
+  const loaded = await assets();
+  for (const order of [
+    ['education', 'featuredProjects', 'links', 'experience', 'skills'],
+    ['skills', 'links', 'featuredProjects', 'education', 'experience'],
+  ] as const) {
+    content.blocks = [
+      ...order.map((kind) => ({ kind, visible: true })),
+      { kind: 'github', visible: true },
+    ];
+    const text = textOf(await createPortfolioPdfDocument(content, loaded));
+    const marker = {
+      education: 'EDUCATION_CONTENT',
+      featuredProjects: 'PROJECT_CONTENT',
+      links: 'CONTACT_CONTENT',
+      experience: 'ROLE_CONTENT',
+      skills: 'SKILL_CONTENT',
+    };
+    const positions = order.map((kind) => text.indexOf(marker[kind]));
+    assert.ok(positions.every((p, i) => p >= 0 && (!i || p > positions[i - 1])));
+    assert.ok(text.indexOf('GITHUB_CONTENT') > text.indexOf('CONTACT_CONTENT'));
+    assert.ok(!text.includes('HIDDEN_CONTACT'));
+  }
+  content.blocks = content.blocks.filter((block) => block.kind !== 'github');
+  assert.ok(!textOf(await createPortfolioPdfDocument(content, loaded)).includes('GITHUB_CONTENT'));
+});
+
 test('empty PDF is a real document with no artificial headings or placeholder identity', async () => {
   const content = seedDocument(emptyContent());
   const loaded = await assets();

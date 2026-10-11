@@ -97,7 +97,7 @@ void main() {
     expect(button.style!.backgroundColor!.resolve({}), colors.surface);
     expect(
       tester.widget<IconButton>(find.byType(IconButton)).color,
-      colors.error,
+      colors.textPrimary,
     );
     expect(find.byIcon(Icons.close_rounded), findsOneWidget);
     expect(find.text('Удалить'), findsNothing);

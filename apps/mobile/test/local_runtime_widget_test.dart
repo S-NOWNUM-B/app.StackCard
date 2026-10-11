@@ -94,11 +94,15 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('github_source_settings')));
+      await tester.pumpAndSettle();
       await tester.enterText(
-        find.byKey(const ValueKey('github_username')),
+        find.byKey(const Key('settings.github.username')),
         'octocat',
       );
-      await tester.tap(find.byKey(const ValueKey('github_source_save')));
+      await tester.tap(find.byKey(const Key('settings.github.save')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
       expect(find.text('@octocat'), findsOneWidget);
       expect(find.text('Сохранённая копия GitHub'), findsOneWidget);

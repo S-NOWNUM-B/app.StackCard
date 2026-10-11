@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { MarketingPage, PageIntro } from '@/components/marketing';
-import { Button, Icon, LinkButton } from '@/components/ui';
+import { Icon, LinkButton } from '@/components/ui';
 
 export const metadata: Metadata = {
   title: 'Мобильное приложение',
@@ -50,9 +50,6 @@ export default function DownloadPage() {
               Сборка для скачивания ещё недоступна. Пока вы можете работать со своими документами в
               браузере.
             </p>
-            <Button disabled aria-describedby="release-android">
-              Скачать для Android
-            </Button>
           </article>
           <article className="platform-card stack">
             <span className="numbered-label">Мобильное приложение</span>
@@ -61,9 +58,6 @@ export default function DownloadPage() {
             <p id="release-ios">
               Версия для iPhone — целевая платформа проекта. Ссылки на установку пока нет.
             </p>
-            <Button disabled aria-describedby="release-ios">
-              Скачать для iOS
-            </Button>
           </article>
         </div>
       </section>

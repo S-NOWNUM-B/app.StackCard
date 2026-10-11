@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Button, Field, Icon, Notice } from './ui';
-import { normalizeGitHubUsername, type GitHubSource, type Project } from '@/lib/model';
+import type { GitHubSource, Project } from '@/lib/model';
 import {
   loadGitHubPage,
   readGitHubCache,
@@ -12,19 +12,18 @@ export function GitHubImporter({
   ownerUid,
   username,
   projects,
-  onUsername,
+  onSettings,
   onImport,
   onBack,
 }: {
   ownerUid: string;
   username: string;
   projects: Project[];
-  onUsername: (value: string) => Promise<void>;
+  onSettings: () => void;
   onImport: (sources: GitHubSource[]) => Promise<void>;
   onBack: () => void;
 }) {
-  const [profile, setProfile] = useState(username),
-    [pages, setPages] = useState<GitHubPage[]>([]),
+  const [pages, setPages] = useState<GitHubPage[]>([]),
     [search, setSearch] = useState(''),
     [selected, setSelected] = useState(new Set<number>()),
     [busy, setBusy] = useState(false),
@@ -33,7 +32,6 @@ export function GitHubImporter({
   const controller = useRef<AbortController | null>(null),
     generation = useRef(0);
   useEffect(() => {
-    setProfile(username);
     setSelected(new Set());
     setPages(username ? readGitHubCache(localStorage, ownerUid, username) : []);
     setCached(true);
@@ -72,17 +70,6 @@ export function GitHubImporter({
       if (token === generation.current) setBusy(false);
     }
   }
-  async function link() {
-    setBusy(true);
-    setError('');
-    try {
-      await onUsername(normalizeGitHubUsername(profile));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не удалось сохранить GitHub.');
-    } finally {
-      setBusy(false);
-    }
-  }
   async function importSelected() {
     setBusy(true);
     setError('');
@@ -114,19 +101,19 @@ export function GitHubImporter({
       <h1>Импортировать из GitHub</h1>
       {!username ? (
         <>
-          <Field
-            label="GitHub-профиль"
-            value={profile}
-            placeholder="https://github.com/username"
-            onChange={(e) => setProfile(e.target.value)}
-          />
-          <Button disabled={busy} onClick={() => void link()}>
-            Сохранить
-          </Button>
+          <p className="muted">
+            Добавьте GitHub-профиль в настройках, чтобы импортировать проекты.
+          </p>
+          <Button onClick={onSettings}>Открыть настройки</Button>
         </>
       ) : (
         <>
-          <p className="muted">github.com/{username}</p>
+          <div className="row">
+            <p className="muted">github.com/{username}</p>
+            <Button variant="quiet" onClick={onSettings} disabled={busy}>
+              Открыть настройки
+            </Button>
+          </div>
           <Field
             label="Поиск по названию и описанию"
             type="search"

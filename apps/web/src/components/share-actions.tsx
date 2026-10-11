@@ -5,10 +5,12 @@ import { Button } from '@/components/ui';
 
 export function ShareActions({ title }: { title: string }) {
   const [url, setUrl] = useState('');
+  const [canShare, setCanShare] = useState(false);
   const [status, setStatus] = useState('');
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => {
     setUrl(`${window.location.origin}${window.location.pathname}`);
+    setCanShare(typeof navigator.share === 'function');
   }, []);
   function selectLink() {
     input.current?.focus();
@@ -28,10 +30,7 @@ export function ShareActions({ title }: { title: string }) {
     }
   }
   async function share() {
-    if (!navigator.share) {
-      await copy();
-      return;
-    }
+    if (!navigator.share) return;
     try {
       await navigator.share({ title, url });
       setStatus('Ссылка отправлена.');
@@ -57,19 +56,12 @@ export function ShareActions({ title }: { title: string }) {
         <Button variant="secondary" onClick={copy} disabled={!url}>
           Копировать
         </Button>
-        <a
-          className="button secondary"
-          href={url || undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-disabled={!url}
-        >
-          Открыть
-        </a>
+        {canShare && (
+          <Button variant="quiet" onClick={share} disabled={!url}>
+            Поделиться
+          </Button>
+        )}
       </div>
-      <Button variant="quiet" onClick={share} disabled={!url}>
-        Поделиться
-      </Button>
       <p className="muted" role="status" aria-live="polite">
         {status}
       </p>

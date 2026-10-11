@@ -1,4 +1,10 @@
-import { clone, resolveDocument, type WorkspaceContent, type PortfolioDocument } from './model';
+import {
+  clone,
+  mainPortfolioBlocks,
+  resolveDocument,
+  type WorkspaceContent,
+  type PortfolioDocument,
+} from './model';
 import type { PublicDocumentContent } from './public-document';
 // Только owner preview. Настоящую публичную проекцию создаёт доверенный backend.
 export function documentPreview(
@@ -54,7 +60,9 @@ export function documentPreview(
           visible(l.kind === 'github' ? 'github' : 'links'),
       )
       .map(({ id, label, url, kind }) => ({ id, label, url, kind })),
-    blocks: content.blocks.filter((b) => b.visible).map((b) => ({ kind: b.kind, visible: true })),
+    blocks: (modern ? mainPortfolioBlocks(content) : content.blocks)
+      .filter((b) => b.visible)
+      .map((b) => ({ kind: b.kind, visible: true })),
     resumeText: modern ? '' : visible('resume') ? content.resumeText : '',
     theme: content.theme,
   };

@@ -106,6 +106,19 @@ void main() {
       final base = _workspace('Стас', bio: 'Описание профиля');
       final document = base.documents.single.copyWith(
         content: base.documents.single.content.copyWith(
+          blocks: [
+            for (final kind in PortfolioBlockKind.values)
+              if (!mainPortfolioSectionKinds.contains(kind))
+                PortfolioBlock(kind: kind),
+            for (final kind in const [
+              PortfolioBlockKind.education,
+              PortfolioBlockKind.links,
+              PortfolioBlockKind.featuredProjects,
+              PortfolioBlockKind.experience,
+              PortfolioBlockKind.skills,
+            ])
+              PortfolioBlock(kind: kind),
+          ],
           skills: const [Skill(id: 'flutter', name: 'Flutter')],
           links: const [
             SocialLink(
@@ -166,7 +179,12 @@ void main() {
       );
       final working = saved.copyWith(
         documents: [
-          document.copyWith(projects: document.projects.reversed.toList()),
+          document.copyWith(
+            projects: document.projects.reversed.toList(),
+            content: document.content.copyWith(
+              blocks: document.content.blocks.reversed.toList(),
+            ),
+          ),
         ],
       );
       await _open(tester, saved: saved, working: working);
@@ -174,11 +192,11 @@ void main() {
       final sections = [
         find.byKey(const Key('main.portfolio.bio')),
         for (final key in [
+          'education',
           'links',
-          'skills',
           'projects',
           'experience',
-          'education',
+          'skills',
         ])
           find.byKey(ValueKey('main.section.$key')),
       ];

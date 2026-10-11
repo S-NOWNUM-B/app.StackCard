@@ -1,6 +1,10 @@
 import React from 'react';
 import type { Styles } from '@react-pdf/renderer';
-import type { DocumentContent } from './model';
+import {
+  mainPortfolioSectionOrder,
+  type DocumentContent,
+  type MainPortfolioSectionKind,
+} from './model';
 import { safePublicHref } from './public-document';
 
 export type PortfolioPdfAssets = {
@@ -161,6 +165,82 @@ export async function createPortfolioPdfDocument(
         {label ? `${label} — ${value}` : value}
       </Link>
     ) : null;
+  const sections: Record<MainPortfolioSectionKind, React.ReactNode> = {
+    featuredProjects: (
+      <>
+        {projects.length > 0 && title('Проекты')}
+        {projects.map((project) => (
+          <React.Fragment key={project.id}>
+            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 8 }} minPresenceAhead={32}>
+              <StockIcon id={project.iconId ?? 'folder'} assets={assets} renderer={renderer} />
+              <Text style={{ ...body, fontWeight: 700, flex: 1, marginBottom: 0 }}>
+                {project.title}
+              </Text>
+            </View>
+            {paragraph(project.description, `${project.id}-description`)}
+            {paragraph(project.contribution, `${project.id}-contribution`)}
+            {paragraph(project.technologies.join(' · '), `${project.id}-technologies`)}
+            {href('Проект', project.liveUrl, `${project.id}-live`)}
+            {href('Исходный код', project.repositoryUrl, `${project.id}-source`)}
+          </React.Fragment>
+        ))}
+      </>
+    ),
+    skills: (
+      <>
+        {skills.length > 0 && (
+          <>
+            {title('Навыки')}
+            {paragraph(skills.map((s) => s.name).join(' · '), 'skills')}
+          </>
+        )}
+      </>
+    ),
+    experience: (
+      <>
+        {experience.length > 0 && title('Опыт')}
+        {experience.map((item) => (
+          <React.Fragment key={item.id}>
+            {paragraph(item.role, `${item.id}-role`)}
+            {paragraph(
+              [item.organization, item.period].filter((v) => v.trim()).join(' · '),
+              `${item.id}-organization`,
+            )}
+            {paragraph(item.description, `${item.id}-description`)}
+          </React.Fragment>
+        ))}
+      </>
+    ),
+    education: (
+      <>
+        {education.length > 0 && title('Образование')}
+        {education.map((item) => (
+          <React.Fragment key={item.id}>
+            {paragraph(item.qualification, `${item.id}-qualification`)}
+            {paragraph(
+              [item.institution, item.period].filter((v) => v.trim()).join(' · '),
+              `${item.id}-institution`,
+            )}
+            {paragraph(item.description, `${item.id}-description`)}
+          </React.Fragment>
+        ))}
+      </>
+    ),
+    links: (
+      <>
+        {contacts.length > 0 && title('Контакты и ссылки')}
+        {contacts.map((contact) => (
+          <Link
+            key={contact.id}
+            src={contact.url}
+            style={{ ...body, color: '#151518', textDecoration: 'underline' }}
+          >
+            {contact.label ? `${contact.label} — ${contact.url}` : contact.url}
+          </Link>
+        ))}
+      </>
+    ),
+  };
   return (
     <Document title="Портфолио" creator="StackCard">
       <Page
@@ -191,59 +271,8 @@ export async function createPortfolioPdfDocument(
         {visible.has('location') &&
           profile.publishLocation &&
           paragraph(profile.locationText, 'location', centered)}
-        {projects.length > 0 && title('Проекты')}
-        {projects.map((project) => (
-          <React.Fragment key={project.id}>
-            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 8 }} minPresenceAhead={32}>
-              <StockIcon id={project.iconId ?? 'folder'} assets={assets} renderer={renderer} />
-              <Text style={{ ...body, fontWeight: 700, flex: 1, marginBottom: 0 }}>
-                {project.title}
-              </Text>
-            </View>
-            {paragraph(project.description, `${project.id}-description`)}
-            {paragraph(project.contribution, `${project.id}-contribution`)}
-            {paragraph(project.technologies.join(' · '), `${project.id}-technologies`)}
-            {href('Проект', project.liveUrl, `${project.id}-live`)}
-            {href('Исходный код', project.repositoryUrl, `${project.id}-source`)}
-          </React.Fragment>
-        ))}
-        {skills.length > 0 && (
-          <>
-            {title('Навыки')}
-            {paragraph(skills.map((s) => s.name).join(' · '), 'skills')}
-          </>
-        )}
-        {experience.length > 0 && title('Опыт')}
-        {experience.map((item) => (
-          <React.Fragment key={item.id}>
-            {paragraph(item.role, `${item.id}-role`)}
-            {paragraph(
-              [item.organization, item.period].filter((v) => v.trim()).join(' · '),
-              `${item.id}-organization`,
-            )}
-            {paragraph(item.description, `${item.id}-description`)}
-          </React.Fragment>
-        ))}
-        {education.length > 0 && title('Образование')}
-        {education.map((item) => (
-          <React.Fragment key={item.id}>
-            {paragraph(item.qualification, `${item.id}-qualification`)}
-            {paragraph(
-              [item.institution, item.period].filter((v) => v.trim()).join(' · '),
-              `${item.id}-institution`,
-            )}
-            {paragraph(item.description, `${item.id}-description`)}
-          </React.Fragment>
-        ))}
-        {contacts.length > 0 && title('Контакты и ссылки')}
-        {contacts.map((contact) => (
-          <Link
-            key={contact.id}
-            src={contact.url}
-            style={{ ...body, color: '#151518', textDecoration: 'underline' }}
-          >
-            {contact.label ? `${contact.label} — ${contact.url}` : contact.url}
-          </Link>
+        {mainPortfolioSectionOrder(content).map((kind) => (
+          <React.Fragment key={kind}>{sections[kind]}</React.Fragment>
         ))}
         <Text
           fixed
