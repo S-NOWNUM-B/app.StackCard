@@ -21,8 +21,8 @@
 Актуальные требования — [Design v2](../redesign/requirements.md), scope/acceptance —
 [план](../redesign/plan.md). R3 DS/Manrope приняты; Brand A выбран D024.
 Shared theme/controls/assets перенесены D040. Функциональный mobile scope
-2026-10-07 использует четыре stateful roots, смешанную Home library,
-независимые Resume/Portfolio и секционные редакторы с прежними shared controls.
+2026-10-07 был заменён [ADR 0005](../decisions/0005-single-main-portfolio.md):
+три stateful roots, saved portfolio Home и единый вертикальный Editor.
 Legacy Builder/resumeText сохранены для совместимости. D048 (2026-10-08)
 добавляет mobile privacy/attachments/publication и Next.js owner/public surfaces;
 контракты/remaining acceptance — в [prerequisites](../redesign/prerequisites.md);
@@ -47,6 +47,18 @@ categories/artwork требования не переопределяют Design
 ---
 
 ## Действующий runtime contract R8
+
+Функциональный контракт ADR 0005: «Главная / Проекты / Редактор», gear рядом
+с StackCard. На главной ровно два постоянных действия «Скачать портфолио» и
+«Поделиться», затем сохранённый профиль и только непустые разделы. Avatar128
+центрирован; в Editor маленький pencil открывает Gallery/Camera/Remove menu.
+Library/портфолио/PDF показывают stock icon и текст проекта, без project photos,
+обложек, метрик и действий публикации на строке. Выбор catalog icon — простая grid.
+Editor — вертикальные группы optional полей и явный Save; ни grid/CSS/colors,
+ни библиотек Resume/Portfolio в повседневном UI. Город/страна вводятся вручную.
+Горизонтальный отступ16, ритм8/12/16/24, controls48/input56, content max600;
+320px/text2/keyboard проверяются по настоящим экранам. Старый D048 layout ниже
+сохраняется как история и не переопределяет этот контракт.
 
 [StackCardColors](../../apps/mobile/lib/core/theme/stackcard_colors.dart),
 [StackCardTheme](../../apps/mobile/lib/core/theme/stackcard_theme.dart) и
@@ -101,7 +113,7 @@ focus/loading/disabled/error сохраняют доступное имя и inp
 объединяет его с OS `MediaQuery.disableAnimations`, nav duration становится zero.
 Web сочетает `prefers-reduced-motion` с local preference из Account settings;
 prototype/native playback отдельно.
-Shell сохраняет bottom navigation на phone/tablet и четыре stateful roots
+Исторический D048 shell сохранял bottom navigation на phone/tablet и четыре roots
 Home/Resumes/Projects/Portfolios с постоянными labels. Settings открывается gear;
 редакторы/appearance/account standalone. Home — mixed library с тремя фильтрами,
 без readiness dashboard. Projects — Import/Create/Search/List, query-only без

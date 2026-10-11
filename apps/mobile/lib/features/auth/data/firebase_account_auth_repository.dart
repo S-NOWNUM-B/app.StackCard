@@ -7,7 +7,10 @@ import '../domain/auth_failure.dart';
 import '../domain/auth_user.dart';
 
 class FirebaseAccountAuthRepository
-    implements AccountAuthRepository, AccountManagementRepository {
+    implements
+        AccountAuthRepository,
+        AccountAuthCreationRepository,
+        AccountManagementRepository {
   FirebaseAccountAuthRepository({
     required this._auth,
     this._googleClientId,
@@ -59,11 +62,28 @@ class FirebaseAccountAuthRepository
 
   @override
   Future<void> registerEmail(String email, String password) => _guard(() async {
-    await _auth.createUserWithEmailAndPassword(
-      email: email.trim(),
-      password: password,
-    );
+    await _createEmail(email, password);
   });
+
+  Future<UserCredential> _createEmail(String email, String password) => _auth
+      .createUserWithEmailAndPassword(email: email.trim(), password: password);
+
+  @override
+  Future<AccountAuthResult> registerEmailWithResult(
+    String email,
+    String password,
+  ) => _guard(() async => _creationResult(await _createEmail(email, password)));
+
+  AccountAuthResult _creationResult(UserCredential credential) {
+    final uid = credential.user?.uid;
+    if (uid == null || uid.isEmpty) {
+      throw const AuthFailure(AuthFailureKind.unknown);
+    }
+    return AccountAuthResult(
+      uid: uid,
+      isNewUser: credential.additionalUserInfo?.isNewUser == true,
+    );
+  }
 
   @override
   Future<void> sendPasswordReset(String email) => _guard(() async {
@@ -77,10 +97,18 @@ class FirebaseAccountAuthRepository
 
   @override
   Future<void> signInGoogle() => _guard(() async {
+    await _signInGoogleCredential();
+  });
+
+  Future<UserCredential> _signInGoogleCredential() async {
     final credential =
         await (_googleCredential?.call() ?? _getGoogleCredential());
-    await _auth.signInWithCredential(credential);
-  });
+    return _auth.signInWithCredential(credential);
+  }
+
+  @override
+  Future<AccountAuthResult> signInGoogleWithResult() =>
+      _guard(() async => _creationResult(await _signInGoogleCredential()));
 
   @override
   Future<void> signOut() => _guard(() async {
@@ -266,9 +294,9 @@ class FirebaseAccountAuthRepository
     }
   }
 
-  Future<void> _guard(Future<void> Function() action) async {
+  Future<T> _guard<T>(Future<T> Function() action) async {
     try {
-      await action();
+      return await action();
     } catch (error) {
       throw _failure(error);
     }

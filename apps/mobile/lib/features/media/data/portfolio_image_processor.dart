@@ -25,11 +25,11 @@ final class PortfolioImageProcessor {
     }
   }
 
-  Future<void> validatePrepared(Uint8List bytes) async {
+  Future<void> validatePrepared(Uint8List bytes, {bool legacy = false}) async {
     try {
       await compute(
         _validatePreparedImage,
-        bytes,
+        (bytes: bytes, legacy: legacy),
         debugLabel: 'portfolio-image-validate',
       ).timeout(const Duration(seconds: 30));
     } on TimeoutException {
@@ -80,15 +80,15 @@ Uint8List _prepareImage(({Uint8List bytes, String? mimeType}) input) {
       throw const PortfolioMediaFailure(PortfolioMediaFailureKind.invalidImage);
     }
     var resized = image.bakeOrientation(decoded);
-    if (resized.width > portfolioImageMaxDimension ||
-        resized.height > portfolioImageMaxDimension) {
+    if (resized.width > portfolioAvatarMaxDimension ||
+        resized.height > portfolioAvatarMaxDimension) {
       resized = image.copyResize(
         resized,
         width: resized.width >= resized.height
-            ? portfolioImageMaxDimension
+            ? portfolioAvatarMaxDimension
             : null,
         height: resized.height > resized.width
-            ? portfolioImageMaxDimension
+            ? portfolioAvatarMaxDimension
             : null,
         interpolation: image.Interpolation.average,
       );
@@ -102,7 +102,7 @@ Uint8List _prepareImage(({Uint8List bytes, String? mimeType}) input) {
     image.fill(flattened, color: image.ColorRgb8(255, 255, 255));
     image.compositeImage(flattened, resized);
     final output = image.encodeJpg(flattened, quality: 85);
-    if (output.length > portfolioImageMaxBytes) {
+    if (output.length > portfolioAvatarMaxBytes) {
       throw const PortfolioMediaFailure(PortfolioMediaFailureKind.tooLarge);
     }
     return output;
@@ -113,8 +113,15 @@ Uint8List _prepareImage(({Uint8List bytes, String? mimeType}) input) {
   }
 }
 
-void _validatePreparedImage(Uint8List bytes) {
-  if (bytes.length > portfolioImageMaxBytes) {
+void _validatePreparedImage(({Uint8List bytes, bool legacy}) input) {
+  final bytes = input.bytes;
+  final maxBytes = input.legacy
+      ? portfolioImageMaxBytes
+      : portfolioAvatarMaxBytes;
+  final maxDimension = input.legacy
+      ? portfolioImageMaxDimension
+      : portfolioAvatarMaxDimension;
+  if (bytes.length > maxBytes) {
     throw const PortfolioMediaFailure(PortfolioMediaFailureKind.tooLarge);
   }
   if (_imageMimeType(bytes) != 'image/jpeg') {
@@ -126,11 +133,11 @@ void _validatePreparedImage(Uint8List bytes) {
     if (info == null || info.width < 1 || info.height < 1) {
       throw const PortfolioMediaFailure(PortfolioMediaFailureKind.invalidImage);
     }
-    if (info.width > portfolioImageMaxDimension ||
-        info.height > portfolioImageMaxDimension) {
+    if (info.width > maxDimension || info.height > maxDimension) {
       throw const PortfolioMediaFailure(PortfolioMediaFailureKind.tooLarge);
     }
-    if (decoder.decodeFrame(0) == null) {
+    final decoded = decoder.decodeFrame(0);
+    if (decoded == null || (!input.legacy && !decoded.exif.isEmpty)) {
       throw const PortfolioMediaFailure(PortfolioMediaFailureKind.invalidImage);
     }
   } on PortfolioMediaFailure {

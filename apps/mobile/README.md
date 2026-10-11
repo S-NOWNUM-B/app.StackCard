@@ -7,7 +7,7 @@
 
 # StackCard Mobile
 
-**Flutter-клиент для Android и iOS с общей базой, резюме и портфолио**
+**Flutter-клиент для Android и iOS с одним портфолио и библиотекой проектов**
 
 ![Flutter 3.47.4](https://img.shields.io/badge/Flutter-3.47.4-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 
@@ -27,28 +27,22 @@
 
 ## Назначение
 
-Мобильное приложение использует общую профессиональную базу,
-одну Projects Library и несколько независимых Resume/Portfolio.
-Четыре stateful вкладки сохраняют состояние; Home показывает mixed library
-с фильтрами Все/Резюме/Проекты, Settings открывается через gear.
-Новые документные библиотеки используют actual workspace; пустая база остаётся
-пустой, демонстрационные данные не копируются при создании документа.
-Текущий scope/оставшаяся работа — в
-[product status](../../docs/product/product-spec.md#статус-и-границы-текущей-работы).
+Три stateful вкладки: Главная (сохранённое портфолио), Проекты (Library),
+Редактор (optional вертикальные группы с явным Save). Settings открывается gear;
+авторизация и four-step пропускаемая персонализация используют тот же UID.
+[ADR 0005](../../docs/decisions/0005-single-main-portfolio.md) сохраняет прежние
+документы и backup при явном выборе основы; публичные URLs не меняются сами.
+Главная содержит только PDF/Share и непустые разделы сохранённого портфолио.
+Project photos не отображаются; stock icon выбирается из каталога.
 
-Location поддерживает ручной город/страну и опциональное определение города по
-нажатию, с подтверждением перед Apply/Save. Карта и Google Maps исключены;
-координаты/адрес не сохраняются. Отказ permissions не блокирует ручной ввод.
-Контракт — в [architecture](../../docs/architecture/architecture.md#выбор-города-и-страны--phase-12),
-приёмка — в [Phase 12](../../docs/product/product-spec.md#phase-12--location).
-
-Media поддерживает приватные avatar/project images: camera/gallery, validation,
-resize/compression, upload progress/retry и отображение по Storage path.
-Guest остаётся local-only; Apply и Save отдельны. Облачные media требуют доступного
-Storage, который в текущем Spark-окружении не развёрнут. Контракт —
-[ADR 0003](../../docs/decisions/0003-private-portfolio-media.md), setup и проверка —
-[CONTRIBUTING](../../CONTRIBUTING.md#media-storage-и-native-acceptance);
-фактическая приёмка — в product spec.
+Город/страна вводятся вручную в optional `locationText`; GPS feature/packages
+и permissions удалены. Avatar128 редактируется через pencil menu Camera/Gallery/
+Remove, boundedJPEG512/256KiB хранится owner-only в Firestore на Spark.
+Legacy Storage reads сохраняются. Save не публикует; sharing требует actual
+trusted backend и подтверждённую ссылку. PDF использует оригинальный Manrope,
+Cyrillic/pages/links/avatar/icons и настоящий native file-save.
+Setup и проверка — в [CONTRIBUTING](../../CONTRIBUTING.md#media-storage-и-native-acceptance).
+Текущий scope/remaining gates — в [product status](../../docs/product/product-spec.md#статус-и-границы-текущей-работы).
 
 Мобильное приложение StackCard — самостоятельный редактор портфолио, который
 использует тот же аккаунт, draft и правила публикации, что и web.
@@ -59,8 +53,8 @@ Hive сохраняет response cache с offline fallback и отдельный
 SharedPreferences — совместимые настройки приложения; runtime всегда light/ru.
 Локальный Builder позволяет собрать профиль, ручные проекты и разделы,
 выбрать порядок и видимость блоков и посмотреть рабочий результат.
-Общая база и документы читаются через прежний draft API; legacy Builder остаётся
-редактором базы. Demo сохранён для изолированного preview/read-model сценария.
+Основное портфолио и Library читаются через прежний draft API; legacy Builder
+сохранён для совместимости без обычного route. Demo сохранён для изолированного preview/read-model сценария.
 Общий stateful app shell и Material 3 сохранены. После одобрения web
 2026-10-11 применяется светлый Openship-derived дизайн StackCard: белые
 поверхности, чёрные кнопки, Manrope, Brand A и русский интерфейс.

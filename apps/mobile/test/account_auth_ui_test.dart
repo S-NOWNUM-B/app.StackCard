@@ -73,6 +73,26 @@ class _AuthRepository implements AccountAuthRepository {
   Future<void> signOut() => _complete('signOut');
 }
 
+class _CreationAuthRepository extends _AuthRepository
+    implements AccountAuthCreationRepository {
+  bool isNewUser = true;
+
+  @override
+  Future<AccountAuthResult> registerEmailWithResult(
+    String email,
+    String password,
+  ) async {
+    await registerEmail(email, password);
+    return AccountAuthResult(uid: 'owner', isNewUser: isNewUser);
+  }
+
+  @override
+  Future<AccountAuthResult> signInGoogleWithResult() async {
+    await signInGoogle();
+    return AccountAuthResult(uid: 'owner', isNewUser: isNewUser);
+  }
+}
+
 Future<void> _pumpAuth(
   WidgetTester tester,
   _AuthRepository repository, {
@@ -102,6 +122,11 @@ Future<void> _pumpAuth(
       GoRoute(
         path: '/home',
         builder: (_, _) => const Scaffold(body: Text('Destination home')),
+      ),
+      GoRoute(
+        path: '/personalization',
+        builder: (_, _) =>
+            const Scaffold(body: Text('Personalization destination')),
       ),
       GoRoute(
         path: '/portfolio/builder',
@@ -229,6 +254,34 @@ void main() {
     view.resetPhysicalSize();
     view.resetDevicePixelRatio();
   });
+
+  testWidgets('Registration and new Google account open personalization', (
+    tester,
+  ) async {
+    final repository = _CreationAuthRepository();
+    await _pumpAuth(tester, repository, location: '/register');
+    await _enter(tester, 'account.email', 'private@example.dev');
+    await _enter(tester, 'account.password', 'long private phrase');
+    await _enter(tester, 'account.confirmPassword', 'long private phrase');
+    await _tap(tester, 'account.submit');
+    expect(find.text('Personalization destination'), findsOneWidget);
+    expect(repository.requests, ['register']);
+  });
+
+  for (final isNew in [true, false]) {
+    testWidgets('Google isNewUser $isNew controls one-time personalization', (
+      tester,
+    ) async {
+      final repository = _CreationAuthRepository()..isNewUser = isNew;
+      await _pumpAuth(tester, repository);
+      await _tap(tester, 'account.google');
+      expect(
+        find.text(isNew ? 'Personalization destination' : 'Destination home'),
+        findsOneWidget,
+      );
+      expect(repository.requests, ['google']);
+    });
+  }
 
   testWidgets(
     'Email form validates, obscures password and preserves its spaces',

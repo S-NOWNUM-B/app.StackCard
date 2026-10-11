@@ -138,6 +138,301 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
   String createId() =>
       '${DateTime.now().toUtc().microsecondsSinceEpoch}-${++_idCounter}';
 
+  Future<bool> initializeMainPortfolio({
+    String? sourceDocumentId,
+    bool newAccount = false,
+    bool includeBaseProjects = false,
+    PortfolioContent? expectedWorkspace,
+    required PortfolioDraftRepository expectedRepository,
+  }) {
+    if (state.canEdit &&
+        !state.saving &&
+        identical(
+          ref.read(portfolioDraftRepositoryProvider),
+          expectedRepository,
+        ) &&
+        state.draft?.content?.mainPortfolioId != null &&
+        (expectedWorkspace == null ||
+            expectedWorkspace == state.draft?.content)) {
+      return Future.value(true);
+    }
+    final now = DateTime.now().toUtc();
+    final id = createId();
+    final basis =
+        expectedWorkspace ?? state.draft?.content ?? PortfolioContent();
+    PortfolioContent initialize(PortfolioContent workspace) {
+      if (workspace != basis) throw _conflict;
+      if (workspace.mainPortfolioId != null) return workspace;
+      final source = sourceDocumentId == null
+          ? null
+          : workspace.documents
+                .where((document) => document.id == sourceDocumentId)
+                .firstOrNull;
+      if (sourceDocumentId != null && source == null) throw _conflict;
+      final snapshot = newAccount
+          ? PortfolioContent()
+          : mainPortfolioMigrationContent(
+              workspace,
+              source?.content ?? workspace,
+            );
+      final sourceContent = source?.content ?? workspace;
+      final projectsVisible = sourceContent.blocks.any(
+        (block) =>
+            block.kind == PortfolioBlockKind.featuredProjects && block.visible,
+      );
+      final document = source == null
+          ? PortfolioDocument(
+              id: id,
+              title: 'Портфолио',
+              kind: PortfolioDocumentKind.portfolio,
+              createdAt: now,
+              updatedAt: now,
+              content: snapshot,
+              projects: newAccount || !includeBaseProjects
+                  ? const []
+                  : [
+                      for (final project in workspace.projects.where(
+                        (project) => projectsVisible && project.visible,
+                      ))
+                        PortfolioProjectAttachment(
+                          projectId: project.id,
+                          visible: project.visible,
+                          featured: project.featured,
+                        ),
+                    ],
+            )
+          : source.copyWith(
+              content: snapshot,
+              projects: [
+                for (final attachment in source.projects)
+                  if (projectsVisible &&
+                      attachment.visible &&
+                      workspace.projects.any(
+                        (project) =>
+                            project.id == attachment.projectId &&
+                            project.visible,
+                      ))
+                    attachment,
+              ],
+              updatedAt: now,
+              clearAttachedResumeId: true,
+            );
+      return _withDocument(workspace, document).copyWith(
+        mainPortfolioId: document.id,
+        legacyMainSnapshot:
+            source ??
+            (newAccount
+                ? null
+                : PortfolioDocument(
+                    id: 'legacy-base',
+                    title: 'Прежняя общая база',
+                    kind: PortfolioDocumentKind.portfolio,
+                    createdAt: now,
+                    updatedAt: now,
+                    content: seedDocumentContent(workspace),
+                    projects: [
+                      for (final project in workspace.projects)
+                        PortfolioProjectAttachment(
+                          projectId: project.id,
+                          visible: project.visible,
+                          featured: project.featured,
+                        ),
+                    ],
+                  )),
+        personalization: PortfolioPersonalization(
+          status: newAccount
+              ? PortfolioPersonalizationStatus.inProgress
+              : PortfolioPersonalizationStatus.notRequired,
+        ),
+      );
+    }
+
+    return _saveScope(
+      expectedRepository: expectedRepository,
+      change: initialize,
+      mergeWorking: (workspace) => workspace,
+    );
+  }
+
+  Future<bool> saveMainPortfolio(
+    PortfolioDocument document, {
+    PortfolioDocument? expectedDocument,
+    Map<String, String> projectIconUpdates = const {},
+    String? githubUsername,
+    String? expectedGitHubUsername,
+    required PortfolioDraftRepository expectedRepository,
+  }) {
+    final icons = Map<String, String>.unmodifiable(projectIconUpdates);
+    final capturedMain = mainPortfolioDocument(
+      state.content ?? PortfolioContent(),
+    );
+    final expectedIcons = {
+      for (final project
+          in state.draft?.content?.projects ?? <PortfolioProject>[])
+        project.id: project.iconId,
+    };
+    final normalized = githubUsername == null
+        ? null
+        : normalizePortfolioGitHubUsername(githubUsername);
+    final expectedUsername =
+        expectedGitHubUsername ?? state.draft?.content?.githubUsername ?? '';
+    PortfolioContent applyIcons(PortfolioContent workspace) {
+      if (icons.keys.any(
+            (id) => !workspace.projects.any((project) => project.id == id),
+          ) ||
+          icons.values.any((icon) => !portfolioProjectIconIds.contains(icon))) {
+        throw _invalidContent;
+      }
+      return workspace.copyWith(
+        projects: [
+          for (final project in workspace.projects)
+            icons.containsKey(project.id)
+                ? project.copyWith(iconId: icons[project.id])
+                : project,
+        ],
+      );
+    }
+
+    return _saveScope(
+      expectedRepository: expectedRepository,
+      change: (workspace) {
+        if (githubUsername != null && normalized == null) throw _invalidContent;
+        if (workspace.mainPortfolioId != document.id ||
+            mainPortfolioDocument(workspace) != expectedDocument ||
+            (githubUsername != null &&
+                workspace.githubUsername != expectedUsername) ||
+            icons.keys.any(
+              (id) =>
+                  workspace.projects
+                      .where((project) => project.id == id)
+                      .firstOrNull
+                      ?.iconId !=
+                  expectedIcons[id],
+            )) {
+          throw _conflict;
+        }
+        return _withDocument(
+          applyIcons(workspace),
+          document,
+        ).copyWith(githubUsername: normalized);
+      },
+      mergeWorking: (workspace) {
+        final merged = workspace.copyWith(
+          projects: [
+            for (final project in workspace.projects)
+              if (icons.containsKey(project.id) &&
+                  project.iconId == expectedIcons[project.id])
+                project.copyWith(iconId: icons[project.id])
+              else
+                project,
+          ],
+        );
+        final current = mainPortfolioDocument(merged);
+        return current == capturedMain || current == document
+            ? _withDocument(merged, document)
+            : merged;
+      },
+    );
+  }
+
+  Future<bool> saveGitHubIdentity(
+    String input, {
+    required PortfolioDraftRepository expectedRepository,
+  }) {
+    final username = normalizePortfolioGitHubUsername(input);
+    final expectedUsername = state.draft?.content?.githubUsername ?? '';
+    return _saveScope(
+      expectedRepository: expectedRepository,
+      change: (workspace) {
+        if (username == null) throw _invalidContent;
+        if (workspace.githubUsername != expectedUsername) throw _conflict;
+        return workspace.copyWith(githubUsername: username);
+      },
+      mergeWorking: (workspace) => workspace,
+    );
+  }
+
+  Future<bool> savePersonalizationStep({
+    required int step,
+    required PortfolioPersonalizationStatus status,
+    PortfolioProfile? profile,
+    String? githubUsername,
+    required PortfolioDraftRepository expectedRepository,
+  }) {
+    final normalized = githubUsername == null
+        ? null
+        : normalizePortfolioGitHubUsername(githubUsername);
+    final expected = state.draft?.content;
+    return _saveScope(
+      expectedRepository: expectedRepository,
+      change: (workspace) {
+        if (step < 0 ||
+            step > 3 ||
+            (githubUsername != null && normalized == null)) {
+          throw _invalidContent;
+        }
+        if (workspace.personalization !=
+                (expected?.personalization ??
+                    const PortfolioPersonalization()) ||
+            workspace.githubUsername != (expected?.githubUsername ?? '')) {
+          throw _conflict;
+        }
+        final main = mainPortfolioDocument(workspace);
+        if (main == null ||
+            main != mainPortfolioDocument(expected ?? PortfolioContent())) {
+          throw _conflict;
+        }
+        final next = profile == null
+            ? workspace
+            : _withDocument(
+                workspace,
+                main.copyWith(
+                  content: main.content.copyWith(profile: profile),
+                  updatedAt: DateTime.now().toUtc(),
+                ),
+              );
+        return next.copyWith(
+          githubUsername: normalized,
+          personalization: PortfolioPersonalization(status: status, step: step),
+        );
+      },
+      mergeWorking: (workspace) => workspace,
+    );
+  }
+
+  Future<bool> importSelectedGitHubRepositories(
+    List<github.GitHubProjectSource> sources, {
+    Map<int, DateTime> validatedAt = const {},
+    required PortfolioDraftRepository expectedRepository,
+  }) {
+    final captured = List<github.GitHubProjectSource>.unmodifiable(sources);
+    final times = Map<int, DateTime>.unmodifiable(validatedAt);
+    final expectedUsername = state.draft?.content?.githubUsername ?? '';
+    return _saveScope(
+      expectedRepository: expectedRepository,
+      change: (workspace) {
+        if (workspace.githubUsername != expectedUsername) throw _conflict;
+        final seen = <int>{};
+        for (final source in captured) {
+          if (!seen.add(source.repositoryId)) continue;
+          try {
+            workspace = github.addGitHubProject(
+              workspace,
+              source,
+              validatedAt: times[source.repositoryId],
+            );
+          } on github.PortfolioGitHubFailure catch (failure) {
+            throw failure.kind == github.PortfolioGitHubFailureKind.conflict
+                ? _conflict
+                : _invalidContent;
+          }
+        }
+        return workspace;
+      },
+      mergeWorking: (workspace) => workspace,
+    );
+  }
+
   /// Сохраняет только выбранный документ; соседний ввод и notes остаются рабочими.
   Future<bool> saveDocument(
     PortfolioDocument document, {
@@ -389,6 +684,7 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
     PortfolioContent content,
     String id,
   ) => content.copyWith(
+    clearMainPortfolioId: content.mainPortfolioId == id,
     documents: [
       for (final item in content.documents)
         if (item.id != id)
@@ -429,12 +725,29 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
     PortfolioDraftFailureKind.conflict,
   );
 
+  static const _invalidContent = PortfolioDraftFailure(
+    PortfolioDraftFailureKind.invalidContent,
+  );
+
   // Обновляет неизменённые slices из durable, сохраняя ввод соседних редакторов.
   static PortfolioContent _mergeWorkspace(
     PortfolioContent baseline,
     PortfolioContent saved,
     PortfolioContent working,
   ) => working.copyWith(
+    mainPortfolioId: working.mainPortfolioId == baseline.mainPortfolioId
+        ? saved.mainPortfolioId
+        : working.mainPortfolioId,
+    clearMainPortfolioId:
+        working.mainPortfolioId == baseline.mainPortfolioId &&
+        saved.mainPortfolioId == null,
+    githubUsername: working.githubUsername == baseline.githubUsername
+        ? saved.githubUsername
+        : working.githubUsername,
+    personalization: working.personalization == baseline.personalization
+        ? saved.personalization
+        : working.personalization,
+    legacyMainSnapshot: saved.legacyMainSnapshot,
     profile: working.profile == baseline.profile
         ? saved.profile
         : working.profile,

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_stackcard/features/auth/auth.dart';
+import 'package:app_stackcard/app/app_router.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/projects/projects.dart';
@@ -47,15 +48,39 @@ class _SessionRepository implements AccountAuthRepository {
   Future<void> signOut() async => emit(null);
 }
 
+class _CreationSessionRepository extends _SessionRepository
+    implements AccountAuthCreationRepository {
+  Completer<void>? pending;
+  bool isNewUser = true;
+
+  @override
+  Future<AccountAuthResult> registerEmailWithResult(
+    String email,
+    String password,
+  ) async {
+    await registerEmail(email, password);
+    if (pending != null) await pending!.future;
+    return AccountAuthResult(uid: 'a', isNewUser: isNewUser);
+  }
+
+  @override
+  Future<AccountAuthResult> signInGoogleWithResult() async {
+    await signInGoogle();
+    if (pending != null) await pending!.future;
+    return AccountAuthResult(uid: 'a', isNewUser: isNewUser);
+  }
+}
+
 class _DelayedNotesRepository implements PortfolioDraftRepository {
   _DelayedNotesRepository(this.source);
   final MemoryPortfolioDraftRepository source;
   final completion = Completer<void>();
+  bool delay = false;
   @override
   Future<PortfolioDraft?> read() => source.read();
   @override
   Future<PortfolioDraft> saveNotes(String notes) async {
-    await completion.future;
+    if (delay) await completion.future;
     return source.saveNotes(notes);
   }
 
@@ -64,20 +89,68 @@ class _DelayedNotesRepository implements PortfolioDraftRepository {
     PortfolioContent content, {
     required int expectedRevision,
     required String notes,
-  }) => source.save(content, expectedRevision: expectedRevision, notes: notes);
+  }) async {
+    if (delay) await completion.future;
+    return source.save(
+      content,
+      expectedRevision: expectedRevision,
+      notes: notes,
+    );
+  }
 }
 
 Future<MemoryPortfolioDraftRepository> _seed(String notes, String name) async {
   final repository = MemoryPortfolioDraftRepository();
-  if (name.isEmpty) {
-    await repository.saveNotes(notes);
-  } else {
-    await repository.save(
-      PortfolioContent(profile: PortfolioProfile(name: name)),
-      expectedRevision: 0,
-      notes: notes,
-    );
-  }
+  final now = DateTime.utc(2026, 1, 1);
+  const id = '0123456789abcdef0123456789abcdef';
+  final profile = PortfolioProfile(name: name);
+  await repository.save(
+    PortfolioContent(
+      profile: profile,
+      mainPortfolioId: id,
+      documents: [
+        PortfolioDocument(
+          id: id,
+          title: 'Портфолио',
+          kind: PortfolioDocumentKind.portfolio,
+          createdAt: now,
+          updatedAt: now,
+          content: PortfolioContent(profile: profile),
+        ),
+      ],
+    ),
+    expectedRevision: 0,
+    notes: notes,
+  );
+  return repository;
+}
+
+Future<MemoryPortfolioDraftRepository> _seedMain({
+  PortfolioPersonalizationStatus status =
+      PortfolioPersonalizationStatus.notRequired,
+  int step = 0,
+}) async {
+  final repository = MemoryPortfolioDraftRepository();
+  final now = DateTime.utc(2026, 1, 1);
+  const id = '0123456789abcdef0123456789abcdef';
+  await repository.save(
+    PortfolioContent(
+      mainPortfolioId: id,
+      personalization: PortfolioPersonalization(status: status, step: step),
+      documents: [
+        PortfolioDocument(
+          id: id,
+          title: 'Портфолио',
+          kind: PortfolioDocumentKind.portfolio,
+          createdAt: now,
+          updatedAt: now,
+          content: PortfolioContent(),
+        ),
+      ],
+    ),
+    expectedRevision: 0,
+    notes: 'Приватные заметки',
+  );
   return repository;
 }
 
@@ -113,13 +186,11 @@ ProviderContainer _scope(WidgetTester tester) =>
 GoRouter _router(WidgetTester tester) =>
     GoRouter.of(tester.element(find.byType(Scaffold).last));
 
-String _notes(WidgetTester tester) => tester
-    .widget<StackCardInput>(find.byType(StackCardInput).last)
-    .controller!
-    .text;
+String _notes(WidgetTester tester) =>
+    _scope(tester).read(portfolioDraftControllerProvider).notes;
 
 Future<void> _openNotes(WidgetTester tester) async {
-  _router(tester).goNamed('portfolioDraft');
+  _router(tester).goNamed('editor');
   await tester.pumpAndSettle();
 }
 
@@ -136,6 +207,122 @@ void main() {
     view.resetPhysicalSize();
     view.resetDevicePixelRatio();
   });
+
+  test('Safe return routes normalize legacy editor links and reject external paths', () {
+    expect(safeAuthDestination('/resumes/old/edit'), '/editor');
+    expect(safeAuthDestination('/settings/profile/contact'), '/editor');
+    expect(safeAuthDestination('/portfolio/builder/profile'), '/editor');
+    expect(safeAuthDestination('/editor'), '/editor');
+    expect(safeAuthDestination('https://example.com/editor'), '/home');
+  });
+
+  testWidgets(
+    'Shell has exactly Home Projects Editor and legacy forms redirect',
+    (tester) async {
+      final auth = _SessionRepository(const AuthUser(uid: 'a'));
+      await _pumpApp(tester, auth, {'a': await _seedMain()});
+      expect(find.text('Главная'), findsOneWidget);
+      expect(find.text('Проекты'), findsOneWidget);
+      expect(find.text('Редактор'), findsOneWidget);
+      expect(find.text('Резюме'), findsNothing);
+      expect(find.text('Портфолио'), findsNothing);
+      for (final route in [
+        '/resumes',
+        '/portfolio',
+        '/settings/profile',
+        '/settings/contacts/links',
+        '/settings/privacy',
+      ]) {
+        _router(tester).go(route);
+        await tester.pumpAndSettle();
+        expect(
+          _router(tester).routeInformationProvider.value.uri.path,
+          '/editor',
+        );
+        expect(find.byType(MainPortfolioEditorScreen), findsOneWidget);
+        expect(find.byType(PortfolioProfileEditorScreen), findsNothing);
+        expect(find.byType(PortfolioLinksEditorScreen), findsNothing);
+      }
+    },
+  );
+
+  testWidgets(
+    'Persisted unfinished personalization redirects to saved step after restore',
+    (tester) async {
+      final auth = _SessionRepository(const AuthUser(uid: 'a'));
+      await _pumpApp(tester, auth, {
+        'a': await _seedMain(
+          status: PortfolioPersonalizationStatus.inProgress,
+          step: 2,
+        ),
+      });
+      expect(
+        _router(tester).routeInformationProvider.value.uri.path,
+        '/personalization',
+      );
+      expect(find.text('Шаг 3 из 4'), findsOneWidget);
+      _router(tester).go('/projects');
+      await tester.pumpAndSettle();
+      expect(
+        _router(tester).routeInformationProvider.value.uri.path,
+        '/personalization',
+      );
+    },
+  );
+
+  testWidgets(
+    'A completed empty personalization is not repeated on existing sign-in',
+    (tester) async {
+      final auth = _SessionRepository(const AuthUser(uid: 'a'));
+      await _pumpApp(tester, auth, {
+        'a': await _seedMain(
+          status: PortfolioPersonalizationStatus.completed,
+          step: 3,
+        ),
+      }, location: '/sign-in');
+      expect(_router(tester).routeInformationProvider.value.uri.path, '/home');
+      expect(find.byType(PersonalizationScreen), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'Early SDK session waits for creation result then starts personalization',
+    (tester) async {
+      final auth = _CreationSessionRepository()..pending = Completer<void>();
+      await _pumpApp(tester, auth, {}, location: '/register');
+      for (final entry in [
+        ('account.email', 'owner@example.dev'),
+        ('account.password', 'long private phrase'),
+        ('account.confirmPassword', 'long private phrase'),
+      ]) {
+        await tester.enterText(
+          find.descendant(
+            of: find.byKey(Key(entry.$1)),
+            matching: find.byType(TextFormField),
+          ),
+          entry.$2,
+        );
+      }
+      await tester.ensureVisible(find.byKey(const Key('account.submit')));
+      await tester.tap(find.byKey(const Key('account.submit')));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        _scope(tester).read(accountAuthControllerProvider).isLoading,
+        isTrue,
+      );
+      expect(
+        _router(tester).routeInformationProvider.value.uri.path,
+        '/register',
+      );
+      auth.pending!.complete();
+      await tester.pumpAndSettle();
+      expect(
+        _router(tester).routeInformationProvider.value.uri.path,
+        '/personalization',
+      );
+      expect(find.text('Шаг 1 из 4'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'Unauthorized nested editor keeps return destination and email session opens it',
@@ -168,10 +355,10 @@ void main() {
       await tester.ensureVisible(find.byKey(const Key('account.submit')));
       await tester.tap(find.byKey(const Key('account.submit')));
       await tester.pumpAndSettle();
-      expect(find.byType(PortfolioProfileEditorScreen), findsOneWidget);
+      expect(find.byType(MainPortfolioEditorScreen), findsOneWidget);
       expect(
         _router(tester).routeInformationProvider.value.uri.path,
-        '/portfolio/builder/profile',
+        '/editor',
       );
       expect(tester.takeException(), isNull);
     },
@@ -271,7 +458,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(SignInScreen), findsOneWidget);
       expect(find.text('Account secret'), findsNothing);
-      _router(tester).goNamed('portfolioDraft');
+      _router(tester).goNamed('editor');
       await tester.pumpAndSettle();
       expect(find.byType(PortfolioDraftScreen), findsNothing);
       await tester.ensureVisible(find.byKey(const Key('account.guest')));
@@ -303,6 +490,7 @@ void main() {
       await _pumpApp(tester, auth, drafts, location: '/portfolio-draft');
       final scope = _scope(tester);
       final controller = scope.read(portfolioDraftControllerProvider.notifier);
+      delayed.delay = true;
       controller.editNotes('New unsaved A');
       final saving = controller.save();
       await tester.pump();
@@ -335,15 +523,18 @@ void main() {
       await tester.ensureVisible(find.byKey(const Key('account.guest')));
       await tester.tap(find.byKey(const Key('account.guest')));
       await tester.pumpAndSettle();
-      _router(tester).goNamed('editProfile');
+      _router(tester).goNamed('editor');
       await tester.pumpAndSettle();
       await tester.enterText(
-        find.byKey(const ValueKey('builder_form_name')),
+        find.descendant(
+          of: find.byKey(const ValueKey('main.editor.name')),
+          matching: find.byType(TextFormField),
+        ),
         'PRIVATE GUEST FIELD',
       );
       auth.emit(const AuthUser(uid: 'a'));
       await tester.pumpAndSettle();
-      expect(find.byType(PortfolioProfileEditorScreen), findsNothing);
+      expect(find.byType(MainPortfolioEditorScreen), findsNothing);
       expect(find.text('PRIVATE GUEST FIELD'), findsNothing);
       expect(
         _scope(tester)
@@ -354,12 +545,12 @@ void main() {
         'Owner A',
       );
       expect((await drafts['a']!.read())!.content!.profile.name, 'Owner A');
-      _router(tester).goNamed('editProfile');
+      _router(tester).goNamed('editor');
       await tester.pumpAndSettle();
       expect(
         tester
             .widget<StackCardInput>(
-              find.byKey(const ValueKey('builder_form_name')),
+              find.byKey(const ValueKey('main.editor.name')),
             )
             .controller!
             .text,
@@ -382,7 +573,7 @@ void main() {
         drafts,
         location: '/portfolio/builder/skills',
       );
-      final add = find.byKey(const ValueKey('builder_collection_add'));
+      final add = find.byKey(const ValueKey('main.editor.addSkill'));
       await tester.ensureVisible(add);
       await tester.tap(add);
       await tester.pumpAndSettle();

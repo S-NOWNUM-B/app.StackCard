@@ -152,30 +152,51 @@ void main() {
   });
 
   testWidgets(
-    'Project Apply preserves existing images and adds selected image',
+    'Avatar is centered at128 and actions appear only in compact menu',
     (tester) async {
-      final old = _path('owner', 'b');
-      final h = await _pump(
+      await _pump(tester, media: _MediaRepository());
+      final avatar = find.byKey(const ValueKey('media_avatar_edit'));
+      expect(tester.getSize(avatar), const Size(128, 128));
+      expect(tester.getCenter(avatar).dx, 195);
+      expect(find.byKey(const ValueKey('media_gallery')), findsNothing);
+      expect(find.byKey(const ValueKey('media_camera')), findsNothing);
+      await _tap(tester, 'media_avatar_menu');
+      expect(find.byKey(const ValueKey('media_gallery')), findsOneWidget);
+      expect(find.byKey(const ValueKey('media_camera')), findsOneWidget);
+      expect(find.text(russianMediaStrings['media.remove']!), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'Late upload cannot replace a newly changed avatar in same account',
+    (tester) async {
+      final media = _MediaRepository()..pending = Completer<String>();
+      var paths = <String>[];
+      late StateSetter update;
+      await _pump(
         tester,
-        media: _MediaRepository(),
-        editor: const PortfolioProjectEditorScreen(projectId: 'project'),
-        content: PortfolioContent(
-          projects: [
-            PortfolioProject(
-              id: 'project',
-              title: 'Project',
-              description: '',
-              technologies: const [],
-              imagePaths: [old],
-            ),
-          ],
+        media: media,
+        editor: Scaffold(
+          body: StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return PortfolioMediaEditor(
+                paths: paths,
+                onChanged: (value) => setState(() => paths = value),
+                onBusyChanged: (_) {},
+              );
+            },
+          ),
         ),
       );
-      await _tap(tester, 'media_gallery');
-      expect(h.content.projects.single.imagePaths, [old]);
-      await _tap(tester, 'builder_form_apply');
-      expect(h.content.projects.single.imagePaths, [old, _path('owner', 'a')]);
-      expect(h.draft.saves, 1);
+      await _tap(tester, 'media_gallery', settle: false);
+      final newer = _path('owner', 'c');
+      update(() => paths = [newer]);
+      await tester.pump();
+      media.pending!.complete(_path('owner', 'a'));
+      await tester.pumpAndSettle();
+      expect(paths, [newer]);
+      expect(media.deleted, [_path('owner', 'a')]);
     },
   );
 
@@ -184,7 +205,12 @@ void main() {
   ) async {
     final h = await _pump(tester);
     expect(find.text(russianMediaStrings['media.guest']!), findsOneWidget);
-    expect(_button(tester, 'media_gallery').onPressed, isNull);
+    expect(
+      tester
+          .widget<IconButton>(find.byKey(const ValueKey('media_avatar_menu')))
+          .onPressed,
+      isNull,
+    );
     final field = find.byKey(const ValueKey('builder_form_name'));
     await tester.ensureVisible(field);
     await tester.enterText(
@@ -282,13 +308,23 @@ StackCardButton _button(WidgetTester tester, String key) =>
 
 Future<void> _tap(WidgetTester tester, String key, {bool settle = true}) async {
   final finder = find.byKey(ValueKey(key));
+  if ((key == 'media_gallery' ||
+          key == 'media_camera' ||
+          key.startsWith('media_remove_')) &&
+      finder.evaluate().isEmpty) {
+    final menu = find.byKey(const ValueKey('media_avatar_menu'));
+    await tester.ensureVisible(menu);
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+  }
   await tester.ensureVisible(finder);
   await tester.tap(finder);
   if (settle) {
     await tester.pumpAndSettle();
   } else {
+    // Закрыть bottom sheet, оставив управляемый upload Future незавершённым.
     await tester.pump();
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
   }
 }
 

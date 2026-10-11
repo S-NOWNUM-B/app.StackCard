@@ -42,6 +42,17 @@ const unique = (items, key = 'id') => {
   if (new Set(ids).size !== ids.length) invalid();
 };
 
+export const projectIconIds = Object.freeze(['folder', 'file-text', 'panels-top-left', 'home', 'image', 'camera', 'user-round']);
+export const publicDocumentMaxBytes = 900 * 1024;
+
+export function validatePublicDocumentSize(value) {
+  // Запас учитывает поля envelope/journal и Firestore encoding overhead.
+  if (Buffer.byteLength(JSON.stringify(value), 'utf8') > publicDocumentMaxBytes) {
+    throw new PublicationError('resource-exhausted', 'Portfolio is too large to publish', 413);
+  }
+  return value;
+}
+
 function url(value, required = false) {
   text(value, 2048, required);
   if (!value && !required) return value;
@@ -134,11 +145,12 @@ function metadata(value) {
 }
 
 function project(value, uid) {
-  const keys = ['id', 'title', 'description', 'contribution', 'technologies', 'repositoryUrl', 'liveUrl', 'featured', 'visible', 'imagePaths', 'updatedAt', 'source', 'githubMetadata'];
+  const keys = ['id', 'title', 'description', 'contribution', 'technologies', 'repositoryUrl', 'liveUrl', 'featured', 'visible', 'imagePaths', 'updatedAt', 'source', 'githubMetadata', 'iconId'];
   object(value, keys, ['id', 'title', 'description', 'technologies', 'repositoryUrl', 'liveUrl', 'featured', 'visible']);
   id(value.id); text(value.title, 120, true); text(value.description, 4000); text(value.contribution ?? '', 4000);
   for (const technology of list(value.technologies, 20)) text(technology, 60, true);
   url(value.repositoryUrl); url(value.liveUrl); boolean(value.featured); boolean(value.visible);
+  if (own(value, 'iconId')) enumeration(value.iconId, projectIconIds);
   for (const path of list(value.imagePaths ?? [], 6)) { if (!path) invalid(); mediaPath(path, uid); }
   if (value.updatedAt !== undefined && value.updatedAt !== null) date(value.updatedAt);
   enumeration(value.source ?? 'manual', ['manual', 'github']);
@@ -148,8 +160,9 @@ function project(value, uid) {
 }
 
 const contentKeys = ['profile', 'skills', 'projects', 'experience', 'education', 'links', 'blocks', 'resumeText', 'theme', 'ignoredGitHubRepositories', 'documents'];
+const mainKeys = ['mainPortfolioId', 'githubUsername', 'personalization', 'legacyMainSnapshot'];
 function content(value, uid, workspace = false) {
-  object(value, workspace ? contentKeys : contentKeys.filter((key) => key !== 'documents'), contentKeys.slice(0, 9));
+  object(value, workspace ? [...contentKeys, ...mainKeys] : contentKeys.filter((key) => key !== 'documents'), contentKeys.slice(0, 9));
   sections(value, uid); blocks(value.blocks); text(value.resumeText, 20000); enumeration(value.theme, ['dark', 'light']);
   for (const item of list(value.projects)) project(item, uid);
   unique(value.projects);
@@ -158,11 +171,7 @@ function content(value, uid, workspace = false) {
   if (!workspace && (value.projects.length || ignored.length)) invalid();
 }
 
-export function validateWorkspace(value, uid) {
-  content(value, uid, true);
-  const documents = list(value.documents ?? [], 20);
-  const projectIds = new Set(value.projects.map((item) => item.id));
-  for (const document of documents) {
+function validateDocument(document, uid, projectIds = null) {
     object(document, ['id', 'title', 'kind', 'createdAt', 'updatedAt', 'content', 'projects', 'attachedResumeId', 'baseSnapshot'], ['id', 'title', 'kind', 'createdAt', 'updatedAt', 'content', 'projects', 'attachedResumeId']);
     id(document.id); text(document.title, 120, true); enumeration(document.kind, ['resume', 'portfolio']);
     date(document.createdAt); date(document.updatedAt);
@@ -174,7 +183,7 @@ export function validateWorkspace(value, uid) {
     for (const attachment of list(document.projects)) {
       object(attachment, ['projectId', 'visible', 'featured', 'titleOverride', 'descriptionOverride', 'contributionOverride'], ['projectId', 'visible', 'featured']);
       id(attachment.projectId); boolean(attachment.visible); boolean(attachment.featured);
-      if (!projectIds.has(attachment.projectId)) invalid();
+      if (projectIds && !projectIds.has(attachment.projectId)) invalid();
       for (const [key, max] of [['titleOverride', 120], ['descriptionOverride', 4000], ['contributionOverride', 4000]]) {
         if (attachment[key] !== undefined && attachment[key] !== null) text(attachment[key], max, key === 'titleOverride');
       }
@@ -182,11 +191,34 @@ export function validateWorkspace(value, uid) {
     unique(document.projects, 'projectId');
     if (document.attachedResumeId !== null) id(document.attachedResumeId);
     if (document.kind === 'resume' && document.attachedResumeId !== null) invalid();
-  }
+}
+
+export function validateWorkspace(value, uid) {
+  content(value, uid, true);
+  const modern = mainKeys.some((key) => own(value, key));
+  const documents = list(value.documents ?? [], modern ? 21 : 20);
+  const projectIds = new Set(value.projects.map((item) => item.id));
+  for (const document of documents) validateDocument(document, uid, projectIds);
   unique(documents);
   for (const document of documents) {
     if (document.attachedResumeId !== null && !documents.some((candidate) => candidate.id === document.attachedResumeId && candidate.kind === 'resume')) invalid();
   }
+  if (own(value, 'mainPortfolioId') && value.mainPortfolioId !== null) {
+    id(value.mainPortfolioId);
+    if (!documents.some((document) => document.id === value.mainPortfolioId)) invalid();
+  }
+  if (own(value, 'githubUsername')) {
+    text(value.githubUsername, 39);
+    if (value.githubUsername && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.githubUsername)) invalid();
+  }
+  if (own(value, 'personalization')) {
+    object(value.personalization, ['status', 'step']);
+    enumeration(value.personalization.status, ['notRequired', 'inProgress', 'completed']);
+    integer(value.personalization.step);
+    if (value.personalization.step > 3) invalid();
+  }
+  // Backup не зависит от нынешней Library: удаление проекта не уничтожает архив.
+  if (own(value, 'legacyMainSnapshot')) validateDocument(value.legacyMainSnapshot, uid);
   return value;
 }
 
@@ -209,6 +241,7 @@ export function projectPublicDocument(workspace, documentId, uid, publicId, vers
   const document = workspace.documents.find((item) => item.id === documentId);
   if (!document) throw new PublicationError('deleted', 'Document is unavailable', 409);
   const snapshot = document.content;
+  const modernMain = workspace.mainPortfolioId === document.id;
   const visible = (kind) => snapshot.blocks.some((block) => block.kind === kind && block.visible);
   const media = [];
   const publicMedia = (source) => {
@@ -222,38 +255,38 @@ export function projectPublicDocument(workspace, documentId, uid, publicId, vers
   const projectedProfile = {
     name: visible('profile') ? p.name : '', username: visible('profile') ? p.username : '',
     headline: visible('profile') ? p.headline : '', bio: visible('about') ? p.bio : '',
-    locationText: visible('location') && workspace.profile.publishLocation === true && p.publishLocation === true ? p.locationText : '',
+    locationText: visible('location') && (modernMain || (workspace.profile.publishLocation === true && p.publishLocation === true)) ? p.locationText : '',
     avatarUrl: visible('profile') ? publicMedia(p.avatarPath) || publicExternalAvatar(p.avatarUrl) : '',
   };
   const library = new Map(workspace.projects.map((item) => [item.id, item]));
   const projects = visible('featuredProjects') ? document.projects.flatMap((attachment) => {
     const original = library.get(attachment.projectId);
-    if (!attachment.visible || !original.visible) return [];
+    if (!attachment.visible || (!modernMain && !original.visible)) return [];
     return [{
       id: original.id, title: attachment.titleOverride ?? original.title,
       description: attachment.descriptionOverride ?? original.description,
       contribution: attachment.contributionOverride ?? original.contribution ?? '',
       technologies: [...original.technologies], repositoryUrl: original.repositoryUrl,
       liveUrl: original.liveUrl, featured: attachment.featured, visible: true,
-      imageUrls: (original.imagePaths ?? []).map(publicMedia),
+      iconId: original.iconId ?? 'folder',
     }];
   }) : [];
   const allowedContacts = new Set(workspace.links.filter((link) => link.publishAllowed === true && link.visible !== false).map((link) => link.id));
-  const links = snapshot.links.filter((link) => allowedContacts.has(link.id) && link.publishAllowed === true && link.visible !== false
+  const links = snapshot.links.filter((link) => (modernMain || allowedContacts.has(link.id)) && link.publishAllowed === true && link.visible !== false
     && visible(link.kind === 'github' ? 'github' : 'links')).map(({ id, label, url, kind }) => ({ id, label, url, kind }));
   const result = {
     // Private relation plan проходит те же visibility правила, что и public content.
-    attachedResumeId: visible('resume') ? document.attachedResumeId : null, media,
+    attachedResumeId: null, media,
     publicDocument: {
-      schemaVersion: 1, publicId, version, title: document.title, kind: document.kind,
+      schemaVersion: 2, publicId, version, title: document.title, kind: 'portfolio',
       attachedResumePublicId: null,
       content: {
         profile: projectedProfile, projects,
         skills: visible('skills') ? snapshot.skills.map(({ id, name }) => ({ id, name })) : [],
         experience: visible('experience') ? snapshot.experience.map(({ id, role, organization, period, description }) => ({ id, role, organization, period, description })) : [],
         education: visible('education') ? snapshot.education.map(({ id, institution, qualification, period, description }) => ({ id, institution, qualification, period, description })) : [],
-        links, blocks: snapshot.blocks.filter((block) => block.visible).map(({ kind }) => ({ kind, visible: true })),
-        resumeText: visible('resume') ? snapshot.resumeText : '', theme: snapshot.theme,
+        links, blocks: snapshot.blocks.filter((block) => block.visible && block.kind !== 'resume').map(({ kind }) => ({ kind, visible: true })),
+        resumeText: '', theme: snapshot.theme,
       },
     },
   };
@@ -262,6 +295,17 @@ export function projectPublicDocument(workspace, documentId, uid, publicId, vers
   for (const key of ['skills', 'projects', 'experience', 'education', 'links']) {
     list(result.publicDocument.content[key], 200);
   }
+  const output = result.publicDocument.content;
+  output.blocks = output.blocks.filter(({ kind }) => {
+    if (kind === 'profile') return Boolean(output.profile.name || output.profile.username || output.profile.headline || output.profile.avatarUrl);
+    if (kind === 'about') return Boolean(output.profile.bio);
+    if (kind === 'location') return Boolean(output.profile.locationText);
+    if (kind === 'featuredProjects') return output.projects.length > 0;
+    if (kind === 'github') return output.links.some((link) => link.kind === 'github');
+    if (kind === 'links') return output.links.some((link) => link.kind !== 'github');
+    return (output[kind]?.length ?? 0) > 0;
+  });
+  validatePublicDocumentSize(result.publicDocument);
   return result;
 }
 

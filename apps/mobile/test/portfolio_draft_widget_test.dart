@@ -1,13 +1,19 @@
 import 'dart:async';
 
+import 'package:app_stackcard/core/localization/app_strings.dart';
 import 'package:app_stackcard/core/state/app_settings.dart';
+import 'package:app_stackcard/core/state/appearance_controller.dart';
+import 'package:app_stackcard/core/theme/stackcard_theme.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/main.dart';
 import 'package:app_stackcard/shared/widgets/stackcard_input.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart' as legacy_provider;
 
 void main() {
   setUp(() {
@@ -21,6 +27,43 @@ void main() {
         TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
     view.resetPhysicalSize();
     view.resetDevicePixelRatio();
+  });
+
+  testWidgets('Legacy notes route opens the current editor without writing', (
+    tester,
+  ) async {
+    final repository = MemoryPortfolioDraftRepository();
+    final saved = await repository.save(
+      PortfolioContent(profile: const PortfolioProfile(name: 'Старый профиль')),
+      expectedRevision: 0,
+      notes: 'PRIVATE_LEGACY_NOTES',
+    );
+    await tester.pumpWidget(
+      StackCardApp(
+        initialLocation: '/portfolio-draft',
+        providerOverrides: [
+          portfolioDraftRepositoryProvider.overrideWithValue(repository),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(MainPortfolioEditorScreen), findsOneWidget);
+    expect(find.byType(PortfolioDraftScreen), findsNothing);
+    expect(find.byKey(const Key('main.editor.migrate')), findsOneWidget);
+    expect(find.textContaining('PRIVATE_LEGACY_NOTES'), findsNothing);
+    expect(
+      GoRouter.of(tester.element(find.byType(MainPortfolioEditorScreen)))
+          .routeInformationProvider
+          .value
+          .uri
+          .path,
+      '/editor',
+    );
+    final reopened = (await repository.read())!;
+    expect(reopened.notes, saved.notes);
+    expect(reopened.revision, saved.revision);
+    expect(reopened.content, saved.content);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets(
@@ -242,9 +285,19 @@ void main() {
             ),
             theme: theme,
           );
+          final context = tester.element(find.byType(PortfolioDraftScreen));
+          expect(Theme.of(context).brightness, Brightness.light);
+          expect(Localizations.localeOf(context), const Locale('ru'));
+          expect(
+            legacy_provider.Provider.of<AppearanceController>(
+              context,
+              listen: false,
+            ).settings.theme,
+            theme,
+          );
           expect(tester.takeException(), isNull);
           await tester.drag(
-            find.byType(SingleChildScrollView),
+            find.byType(SingleChildScrollView).first,
             const Offset(0, -3000),
           );
           await tester.pumpAndSettle();
@@ -272,13 +325,45 @@ Future<void> _open(
   AppTheme theme = AppTheme.dark,
   AppLanguage language = AppLanguage.ru,
 }) async {
+  // Старый экран заметок доступен только этому тестовому router.
+  final router = GoRouter(
+    initialLocation: '/portfolio-draft',
+    routes: [
+      GoRoute(
+        path: '/portfolio-draft',
+        builder: (_, _) => const PortfolioDraftScreen(),
+      ),
+      GoRoute(
+        path: '/portfolio',
+        builder: (_, _) => const Scaffold(body: Text('Test destination')),
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
   await tester.pumpWidget(
-    StackCardApp(
-      initialLocation: '/portfolio-draft',
-      initialSettings: AppSettings(theme: theme, language: language),
-      providerOverrides: [
+    ProviderScope(
+      overrides: [
         portfolioDraftRepositoryProvider.overrideWithValue(repository),
       ],
+      child: legacy_provider.ChangeNotifierProvider(
+        create: (_) => AppearanceController(
+          initialSettings: AppSettings(theme: theme, language: language),
+        ),
+        child: MaterialApp.router(
+          routerConfig: router,
+          debugShowCheckedModeBanner: false,
+          theme: StackCardTheme.light,
+          themeMode: ThemeMode.light,
+          locale: const Locale('ru'),
+          supportedLocales: AppStrings.supportedLocales,
+          localizationsDelegates: const [
+            AppStrings.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+        ),
+      ),
     ),
   );
   await tester.pumpAndSettle();

@@ -27,8 +27,18 @@ abstract interface class EvictableGitHubResponseCache
   Future<void> remove(String key);
 }
 
-final class MemoryGitHubResponseCache implements EvictableGitHubResponseCache {
+/// Полная очистка только воспроизводимого public source cache.
+abstract interface class ClearableGitHubResponseCache
+    implements GitHubResponseCache {
+  Future<void> clear();
+}
+
+final class MemoryGitHubResponseCache
+    implements EvictableGitHubResponseCache, ClearableGitHubResponseCache {
   final _responses = <String, CachedGitHubResponse>{};
+
+  @override
+  Future<void> clear() async => _responses.clear();
 
   @override
   Future<CachedGitHubResponse?> read(String key) async => _responses[key];

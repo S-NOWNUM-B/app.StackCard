@@ -34,12 +34,16 @@ Scope и фактическая приёмка остаются в [product spec
   Live Spark использует `src/server.mjs` и `npm start` с private ADC/HMAC env;
   `src/index.mjs` — прежний Functions adapter только для demo emulators.
   Cloud Functions/App Hosting/Storage/TTL live не развёртывать: требуют billing.
-  Без Storage разрешён text-only Publish; media операции и account delete
-  завершаются configuration error до необратимой записи.
+  Без Storage разрешён Publish с bounded Firestore avatar по ADR 0005.
+  Новые owner media docs immutable JPEG512/256KiB; trusted reencode и общий
+  public JSON≤900KiB проверяются до journal/write. Legacy Storage fallback
+  сохраняет read-only совместимость. Account delete без bucket допускается
+  только после доказанного operator cutover из FIRESTORE_MEDIA_ONLY_ACCOUNTS_SINCE;
+  default пуст, неизвестные legacy объекты дают configuration error до lock.
   Admin SDK обходит Rules; server validation tests обязательны отдельно.
 - [storage.rules](../../../firebase/storage.rules) и `features/media` владеют
   Phase 11 private image доступом. Path `accounts/{uid}/media/{32hex}.jpg`:
-  owner get/create/delete при active account, immutable objects, JPEG до 2 MiB;
+  legacy owner get/delete при active account; новые Storage create закрыты;
   list закрыт. `publicMedia/publicId/version/32hex.jpg` создаёт только handler,
   anonymous get требует current publicDocument version; list/client write запрещены.
   App читает SDK bytes без download tokens. Bearer URL при раскрытии
@@ -65,10 +69,10 @@ Scope и фактическая приёмка остаются в [product spec
 - Private notes/account data не смешивать с public snapshot; hidden content
   удаляется public projection перед записью, а не только скрывается renderer.
   Source snapshots, override flags и Ignore registry также private и удаляются
-  public codec. Private writer schema 6 читает 1–6; Rules запрещают downgrade,
-  legacy publicPortfolios schema1 сохраняется, новый publicDocuments schema1
+  public codec. Private writer schema7 читает1–7; Rules запрещают downgrade,
+  legacy publicPortfolios schema1 сохраняется, новый publicDocuments schema2 (reader1|2)
   отдельный и исключает notes/owner/baseSnapshot/source/hidden/private paths. Documents list
-  ограничен 20; Rules проверяют owner media path каждого snapshot/baseSnapshot, codec —
+  ограничен20 в legacy,21 в schema7 с выбранным main; Rules проверяют owner media path каждого snapshot/baseSnapshot, codec —
   структуру, ID и Library/resume relations. Schema5 проверяет пару canonical avatar
   paths одним RE2 matcher с literal UID quoting, включая вложенный `\E`, чтобы
   20 документов укладывались в бюджет выражений. Legacy отсутствие baseline key
@@ -77,7 +81,8 @@ Scope и фактическая приёмка остаются в [product spec
   дополнительно рекурсивно валидирует nested структуру до public write. Public
   collection limit200 применяется после visibility/privacy projection; private
   база не ограничивается200 поверх прежних field/document/Firestore-size limits.
-  Attached Resume требует видимую Resume секцию и отдельно published target. GitHub миграция — в
+  Новый main projection исключает attached Resume и изображения проектов;
+  schema1 reader сохраняет совместимость URL, изображения не отображает. GitHub миграция — в
   [ADR 0002](../../decisions/0002-github-import-and-review.md), media — в ADR 0003.
 - Publish/Update/Unpublish используют owner/document permanent mapping и
   request fingerprint/expected mutation/version/generation. Server transaction
@@ -111,8 +116,8 @@ Scope и фактическая приёмка остаются в [product spec
   glob, включая publication service integration; `test:service` — только реальный
   service с Admin SDK на demo Auth/Firestore/Storage. `test:storage` — Storage,
   `test:rules` сохраняет Firestore-only contract. Native media SDK acceptance
-  использует Auth/Storage emulators и отдельные named apps; системный picker,
-  отказ permissions и live bucket требуют отдельной приёмки. Billing/deploy
+  использует Auth/Firestore emulators и отдельные named apps; системный picker,
+  отказ permissions и live Firestore требуют отдельной приёмки. Billing/deploy
   автоматически не выполняются; Spark-only правило обязательно. Для handler из `firebase/functions` — `npm run check`
   и `npm test`; команды полного emulated integration берутся из actual manifest.
 - Native acceptance имеет explicit opt-in, отдельный test storage/disposable

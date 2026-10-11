@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../../core/localization/app_strings.dart';
 
+import '../../portfolio_draft/portfolio_draft.dart';
 import '../domain/project.dart';
 import '../domain/project_filters.dart';
 
@@ -32,7 +33,10 @@ final projectFiltersProvider =
 
 class ProjectFiltersNotifier extends Notifier<ProjectFilters> {
   @override
-  ProjectFilters build() => const ProjectFilters();
+  ProjectFilters build() {
+    ref.watch(portfolioDraftRepositoryProvider);
+    return const ProjectFilters();
+  }
 
   void setQuery(String query) {
     state = ProjectFilters(query: query, filter: state.filter);

@@ -39,6 +39,81 @@ before(async () => {
 beforeEach(async () => environment.clearFirestore());
 after(async () => environment?.cleanup());
 
+function modernWorkspace(count = 1) {
+  const value = workspaceDocuments(count);
+  value.mainPortfolioId = value.documents.at(-1)?.id ?? null;
+  value.githubUsername = 'snow-numb';
+  value.personalization = { status: 'completed', step: 3 };
+  return value;
+}
+
+test('schema7 saves main metadata, twenty archived documents plus main, and immutable archive privacy', async () => {
+  const alice = database();
+  const value = modernWorkspace(21);
+  value.legacyMainSnapshot = structuredClone(value.documents[0]);
+  await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 7, content: value }));
+  const reviewed = { ...workspaceBaseReviews(21), mainPortfolioId: value.mainPortfolioId, githubUsername: value.githubUsername, personalization: value.personalization };
+  reviewed.legacyMainSnapshot = structuredClone(reviewed.documents[0]);
+  await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 7, content: reviewed }));
+  for (const count of Array.from({ length: 22 }, (_, index) => index)) {
+    const resized = { ...workspaceBaseReviews(count), mainPortfolioId: count ? `resume-${count - 1}` : null, githubUsername: value.githubUsername, personalization: value.personalization };
+    if (count) resized.legacyMainSnapshot = structuredClone(resized.documents[0]);
+    await assert.doesNotReject(() => assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 7, content: resized })), `schema7 reviewed ${count} documents`);
+  }
+  await environment.withSecurityRulesDisabled((context) => setDoc(doc(context.firestore(), 'accounts/alice'), { lifecycleState: 'active', deletedDocumentIds: ['removed-legacy'] }));
+  await assert.doesNotReject(() => assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 7, content: reviewed })), 'schema7 reviewed21 with active account and tombstones');
+  await environment.withSecurityRulesDisabled((context) => updateDoc(doc(context.firestore(), 'accounts/alice'), { deletedDocumentIds: ['resume-20'] }));
+  await assertFails(saveDraft(alice, 'alice', { schemaVersion: 7, content: reviewed }));
+  await environment.withSecurityRulesDisabled((context) => updateDoc(doc(context.firestore(), 'accounts/alice'), { deletedDocumentIds: [] }));
+  for (const field of ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl']) {
+    for (const invalid of [1, null, [], {}]) {
+      const malformed = modernWorkspace(1); malformed.profile[field] = invalid;
+      await assertFails(saveDraft(alice, 'alice', { schemaVersion: 7, content: malformed }));
+    }
+  }
+  for (const invalid of ['', {}, null]) {
+    const malformed = modernWorkspace(1); malformed.documents = invalid;
+    await assertFails(saveDraft(alice, 'alice', { schemaVersion: 7, content: malformed }));
+  }
+  await assertFails(saveDraft(alice, 'alice', { schemaVersion: 6, content: workspaceDocuments(20) }));
+  await assertFails(saveDraft(alice, 'alice', { schemaVersion: 7, content: modernWorkspace(22) }));
+  for (const modify of [
+    (w) => { w.mainPortfolioId = 'missing'; },
+    (w) => { w.githubUsername = 'https://github.com/user'; },
+    (w) => { w.personalization.step = 4; },
+    (w) => { w.personalization.extra = 'private'; },
+    (w) => { w.documents[20].content.profile.avatarPath = 'accounts/bob/media/' + '0'.repeat(32) + '.jpg'; },
+    (w) => { w.legacyMainSnapshot.content.profile.avatarPath = 'accounts/bob/media/' + '0'.repeat(32) + '.jpg'; },
+    (w) => { w.legacyMainSnapshot.baseSnapshot = { profile: { avatarPath: 'accounts/bob/media/' + '0'.repeat(32) + '.jpg' } }; },
+  ]) {
+    const changed = structuredClone(value); modify(changed);
+    await assertFails(saveDraft(alice, 'alice', { schemaVersion: 7, content: changed }));
+  }
+});
+
+test('Spark Firestore JPEG media is owner-only immutable bounded content with no list access', async () => {
+  const path = 'accounts/alice/media/' + '0'.repeat(32) + '.jpg';
+  const value = { schemaVersion: 1, contentType: 'image/jpeg', base64: '/9j/2Q==' };
+  const alice = database();
+  await assertSucceeds(setDoc(doc(alice, path), value));
+  await assertSucceeds(getDoc(doc(alice, path)));
+  await assertFails(setDoc(doc(alice, path), value));
+  await assertFails(getDocs(collection(alice, 'accounts/alice/media')));
+  for (const uid of ['bob', null]) {
+    await assertFails(getDoc(doc(database(uid), path)));
+    await assertFails(setDoc(doc(database(uid), path.replace('0'.repeat(32), '1'.repeat(32))), value));
+    await assertFails(deleteDoc(doc(database(uid), path)));
+  }
+  await assertSucceeds(deleteDoc(doc(alice, path)));
+  for (const changed of [
+    { ...value, ownerUid: 'alice' }, { ...value, schemaVersion: 2 },
+    { ...value, contentType: 'image/svg+xml' }, { ...value, base64: '' },
+    { ...value, base64: 'unsafe SVG' }, { ...value, base64: '/9j/' + 'A'.repeat(349529) },
+  ]) await assertFails(setDoc(doc(alice, path), changed));
+  await environment.withSecurityRulesDisabled((context) => setDoc(doc(context.firestore(), 'accounts/alice'), { lifecycleState: 'deleting' }));
+  await assertFails(setDoc(doc(alice, path), value));
+});
+
 function database(uid = 'alice') {
   return (uid === null
     ? environment.unauthenticatedContext()

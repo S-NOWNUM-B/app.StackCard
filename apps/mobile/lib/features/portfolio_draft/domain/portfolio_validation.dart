@@ -119,6 +119,12 @@ List<PortfolioValidationCode> validatePortfolioContent(
   }
 
   final profile = content.profile;
+  if (content.personalization.step < 0 ||
+      content.personalization.step > 3 ||
+      normalizePortfolioGitHubUsername(content.githubUsername) !=
+          content.githubUsername) {
+    issues.add(PortfolioValidationCode.invalidStructure);
+  }
   text(profile.name, 100);
   add(validatePortfolioUsername(profile.username));
   text(profile.headline, 160);
@@ -137,6 +143,9 @@ List<PortfolioValidationCode> validatePortfolioContent(
       issues.add(PortfolioValidationCode.invalidStructure);
     }
     text(project.title, 120, required: true);
+    if (!portfolioProjectIconIds.contains(project.iconId)) {
+      issues.add(PortfolioValidationCode.invalidStructure);
+    }
     text(project.description, 4000);
     text(project.contribution, 4000);
     if (project.technologies.length > 20) {
@@ -209,6 +218,34 @@ List<PortfolioValidationCode> validatePortfolioContent(
   final documentsById = {
     for (final document in content.documents) document.id: document,
   };
+  if (content.mainPortfolioId != null &&
+      !documentsById.containsKey(content.mainPortfolioId)) {
+    issues.add(PortfolioValidationCode.invalidStructure);
+  }
+  final archive = content.legacyMainSnapshot;
+  if (archive != null) {
+    if (archive.attachedResumeId != null) {
+      text(archive.attachedResumeId!, 200, required: true);
+    }
+    // Архивные связи не зависят от текущей Library после удаления проекта.
+    issues.addAll(
+      validatePortfolioContent(
+        PortfolioContent(
+          projects: archive.projects
+              .map(
+                (attachment) => PortfolioProject(
+                  id: attachment.projectId,
+                  title: 'legacy',
+                  description: '',
+                  technologies: const [],
+                ),
+              )
+              .toList(),
+          documents: [archive.copyWith(clearAttachedResumeId: true)],
+        ),
+      ),
+    );
+  }
   for (final document in content.documents) {
     text(document.title, 120, required: true);
     if (!document.createdAt.isUtc ||
@@ -219,7 +256,11 @@ List<PortfolioValidationCode> validatePortfolioContent(
     final snapshot = document.content;
     if (snapshot.documents.isNotEmpty ||
         snapshot.projects.isNotEmpty ||
-        snapshot.ignoredGitHubRepositories.isNotEmpty) {
+        snapshot.ignoredGitHubRepositories.isNotEmpty ||
+        snapshot.mainPortfolioId != null ||
+        snapshot.githubUsername.isNotEmpty ||
+        snapshot.personalization != const PortfolioPersonalization() ||
+        snapshot.legacyMainSnapshot != null) {
       issues.add(PortfolioValidationCode.invalidStructure);
     }
     // Невалидную вложенность не обходим рекурсивно; она уже отклонена выше.

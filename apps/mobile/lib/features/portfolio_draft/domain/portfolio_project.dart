@@ -3,6 +3,16 @@ import 'portfolio_github_sync.dart';
 
 enum PortfolioProjectSource { manual, github }
 
+const portfolioProjectIconIds = {
+  'folder',
+  'file-text',
+  'panels-top-left',
+  'home',
+  'image',
+  'camera',
+  'user-round',
+};
+
 final class PortfolioProject {
   PortfolioProject({
     required this.id,
@@ -17,6 +27,7 @@ final class PortfolioProject {
     this.source = PortfolioProjectSource.manual,
     this.githubMetadata,
     this.updatedAt,
+    this.iconId = 'folder',
     List<String> imagePaths = const [],
   }) : technologies = List.unmodifiable(technologies),
        imagePaths = List.unmodifiable(imagePaths);
@@ -34,6 +45,7 @@ final class PortfolioProject {
   final GitHubProjectMetadata? githubMetadata;
   final List<String> imagePaths;
   final DateTime? updatedAt;
+  final String iconId;
 
   int? get githubRepositoryId => githubMetadata?.acceptedSource.repositoryId;
   DateTime? get lastGitHubSyncAt => githubMetadata?.lastGitHubSyncAt;
@@ -52,6 +64,7 @@ final class PortfolioProject {
     GitHubProjectMetadata? githubMetadata,
     List<String>? imagePaths,
     DateTime? updatedAt,
+    String? iconId,
   }) => PortfolioProject(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -66,6 +79,7 @@ final class PortfolioProject {
     githubMetadata: githubMetadata ?? this.githubMetadata,
     imagePaths: imagePaths ?? this.imagePaths,
     updatedAt: updatedAt ?? this.updatedAt,
+    iconId: iconId ?? this.iconId,
   );
 
   /// Track changed source-backed fields, while retaining the accepted snapshot.
@@ -105,6 +119,7 @@ final class PortfolioProject {
       source: source,
       githubMetadata: metadata?.copyWith(overrideFields: overrides),
       imagePaths: imagePaths,
+      iconId: edited.iconId,
       updatedAt: edited.updatedAt ?? updatedAt,
     );
   }
@@ -121,6 +136,7 @@ final class PortfolioProject {
     source,
     githubMetadata,
     updatedAt,
+    iconId,
   );
 
   @override

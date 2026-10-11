@@ -43,7 +43,7 @@ function fakeAuth(onDelete = async () => {}) {
   let deleted = false;
   return {
     async deleteUser(uid) { await onDelete(uid); deleted = true; },
-    async getUser(uid) { if (deleted) throw Object.assign(new Error(), { code: 'auth/user-not-found' }); return { uid }; },
+    async getUser(uid) { if (deleted) throw Object.assign(new Error(), { code: 'auth/user-not-found' }); return { uid, metadata: { creationTime: '2026-01-02T00:00:00.000Z' } }; },
   };
 }
 function service(overrides = {}) {
@@ -65,6 +65,66 @@ function request(action = 'publish', overrides = {}) {
   return { action, documentId: 'first', operationId: `${action}-operation`, expectedMutationId: fixture.mutationId, expectedVersion: 0, expectedGeneration: 0, ...overrides };
 }
 const rejected = (code) => (error) => error.code === code;
+
+async function saveModernAvatar() {
+  await saveFixture({ mutate: (value) => {
+    value.schemaVersion = 7;
+    value.content.documents = [value.content.documents[0]];
+    value.content.mainPortfolioId = 'first';
+    value.content.githubUsername = '';
+    value.content.personalization = { status: 'completed', step: 3 };
+    value.content.documents[0].content.profile.avatarPath = privatePath;
+    value.content.projects[0].iconId = 'camera';
+  } });
+  await database.doc(privatePath).set({ schemaVersion: 1, contentType: 'image/jpeg', base64: jpeg.toString('base64') });
+}
+
+test('Spark publication resolves Firestore JPEG without Storage, preserves old identity and withdraws inline copy', async () => {
+  await saveModernAvatar();
+  const api = service({ bucket: null });
+  const result = await api.execute('owner', request());
+  assert.equal(result.status, 'completed');
+  assert.equal(result.publication.publicId, permanentPublicId('owner', 'first'));
+  const reference = database.doc(`publicDocuments/${result.publication.publicId}`);
+  const value = (await reference.get()).data();
+  assert.equal(value.schemaVersion, 2); assert.equal(value.kind, 'portfolio');
+  assert.match(value.content.profile.avatarUrl, /^data:image\/jpeg;base64,/);
+  const decoded = Buffer.from(value.content.profile.avatarUrl.split(',')[1], 'base64');
+  assert.equal((await sharp(decoded).metadata()).exif, undefined);
+  assert.equal(value.content.projects[0].iconId, 'camera');
+  assert.equal(JSON.stringify(value).includes('accounts/'), false);
+  const publication = (await database.doc('accounts/owner/publications/first').get()).data();
+  assert.deepEqual(publication.mediaPaths, []);
+  const anonymous = environment.unauthenticatedContext().firestore();
+  await assertSucceeds(getDoc(doc(anonymous, reference.path)));
+  await assertFails(getDoc(doc(anonymous, privatePath)));
+  await api.execute('owner', request('unpublish', { expectedVersion: 1, expectedGeneration: 1 }));
+  assert.equal((await reference.get()).exists, false);
+  assert.equal((await database.doc(privatePath).get()).exists, true);
+});
+
+test('invalid Firestore avatar fails before public snapshot or operation journal is written', async () => {
+  await saveModernAvatar();
+  await database.doc(privatePath).set({ schemaVersion: 1, contentType: 'image/jpeg', base64: '/9j/invalid' });
+  await assert.rejects(service({ bucket: null }).execute('owner', request()), rejected('invalid-media'));
+  assert.equal((await database.collection('publicDocuments').get()).empty, true);
+  assert.equal((await database.doc('accounts/owner/publicationOperations/publish-operation').get()).exists, false);
+});
+
+test('Firestore-only account deletion requires explicit verified cutover and deletes Auth last', async () => {
+  await saveModernAvatar();
+  const api = service({ bucket: null, firestoreMediaOnlyAccountsSince: '2026-01-01T00:00:00.000Z', auth: fakeAuth(async () => {
+    assert.equal((await database.doc(privatePath).get()).exists, false);
+    assert.equal((await database.doc('accounts/owner/drafts/current').get()).exists, false);
+    assert.equal((await database.collection('publicDocuments').get()).empty, true);
+  }) });
+  const published = await api.execute('owner', request());
+  const deleted = await api.execute('owner', { action: 'deleteAccount', operationId: 'firestore-delete', expectedGeneration: 1, recoveryKey }, { auth_time: Math.floor(instant() / 1000) });
+  assert.equal(deleted.status, 'completed');
+  assert.equal((await database.doc(`publicDocuments/${published.publication.publicId}`).get()).exists, false);
+  const recovered = await api.execute(null, { action: 'deletionStatus', operationId: 'firestore-delete', ownerUid: 'owner', recoveryKey });
+  assert.equal(recovered.status, 'completed');
+});
 
 test('without Storage text-only publication and withdrawal work, photos fail before journal writes', async () => {
   await saveFixture();
@@ -170,7 +230,7 @@ test('public JPEG is sanitized, token-free, version-bound and revoked by real St
   const result = await api.execute('owner', request());
   const snapshot = (await database.doc(`publicDocuments/${result.publication.publicId}`).get()).data();
   const path = snapshot.content.profile.avatarUrl;
-  assert.equal(snapshot.content.projects[0].imageUrls[0], path);
+  assert.equal(Object.hasOwn(snapshot.content.projects[0], 'imageUrls'), false);
   const [metadata] = await bucket.file(path).getMetadata();
   assert.equal(metadata.metadata?.firebaseStorageDownloadTokens, undefined);
   assert.equal(metadata.cacheControl, 'private, no-store, max-age=0');

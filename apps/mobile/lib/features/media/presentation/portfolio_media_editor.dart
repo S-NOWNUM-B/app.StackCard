@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/localization/app_strings.dart';
@@ -18,10 +19,11 @@ class PortfolioMediaEditor extends ConsumerStatefulWidget {
     required this.paths,
     required this.onChanged,
     required this.onBusyChanged,
-    this.maxImages = 6,
-    this.titleKey = 'media.projectImages',
+    this.maxImages = 1,
+    this.titleKey = 'media.avatar',
     this.enabled = true,
     this.emptyState,
+    this.hasExternalAvatar = false,
   });
 
   final List<String> paths;
@@ -31,6 +33,7 @@ class PortfolioMediaEditor extends ConsumerStatefulWidget {
   final String titleKey;
   final bool enabled;
   final Widget? emptyState;
+  final bool hasExternalAvatar;
 
   @override
   ConsumerState<PortfolioMediaEditor> createState() =>
@@ -46,6 +49,24 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
   bool _picking = false;
   double _progress = 0;
   int _generation = 0;
+  List<String> _operationPaths = const [];
+  bool _operationExternalAvatar = false;
+
+  @override
+  void didUpdateWidget(covariant PortfolioMediaEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_busy &&
+        (!listEquals(oldWidget.paths, widget.paths) ||
+            oldWidget.hasExternalAvatar != widget.hasExternalAvatar)) {
+      _generation++;
+      _busy = false;
+      _prepared = null;
+      _failure = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onBusyChanged(false);
+      });
+    }
+  }
 
   /// Родитель вызывает только после успешного применения paths к working draft.
   void retainUploads({Iterable<String>? paths}) {
@@ -70,6 +91,8 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
   bool _current(PortfolioMediaRepository repository, int generation) =>
       mounted &&
       generation == _generation &&
+      listEquals(_operationPaths, widget.paths) &&
+      _operationExternalAvatar == widget.hasExternalAvatar &&
       identical(repository, ref.read(portfolioMediaRepositoryProvider));
 
   void _setBusy(bool value, {bool picking = false}) {
@@ -84,6 +107,8 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
     final repository = ref.read(portfolioMediaRepositoryProvider);
     if (repository == null || _busy || !widget.enabled) return;
     final generation = ++_generation;
+    _operationPaths = List.of(widget.paths);
+    _operationExternalAvatar = widget.hasExternalAvatar;
     _operationRepository = repository;
     _setBusy(true, picking: true);
     setState(() {
@@ -154,19 +179,17 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
           PortfolioMediaFailureKind.invalidImage,
         );
       }
-      final replaced = widget.maxImages == 1 ? widget.paths : const <String>[];
+      final replaced = widget.paths;
       _created[path] = repository;
-      widget.onChanged(
-        List.unmodifiable([if (widget.maxImages != 1) ...widget.paths, path]),
-      );
+      setState(() => _prepared = null);
+      _setBusy(false);
+      widget.onChanged(List.unmodifiable([path]));
       for (final previous in replaced) {
         final createdRepository = _created.remove(previous);
         if (createdRepository != null) {
           createdRepository.delete(previous).ignore();
         }
       }
-      setState(() => _prepared = null);
-      _setBusy(false);
     } on PortfolioMediaFailure catch (failure) {
       if (!_current(repository, generation)) return;
       setState(() => _failure = failure.kind);
@@ -187,6 +210,65 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
     if (repository != null) repository.delete(path).ignore();
   }
 
+  Future<void> _menu(List<String> paths) async {
+    if (_busy ||
+        !widget.enabled ||
+        ref.read(portfolioMediaRepositoryProvider) == null) {
+      return;
+    }
+    final selection = await showModalBottomSheet<String>(
+      context: context,
+      useSafeArea: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.sm),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                key: const ValueKey('media_gallery'),
+                leading: const StackCardIcon(name: 'image'),
+                title: Text(context.strings.tr('media.gallery')),
+                onTap: () => Navigator.pop(context, 'gallery'),
+              ),
+              ListTile(
+                key: const ValueKey('media_camera'),
+                leading: const StackCardIcon(name: 'camera'),
+                title: Text(context.strings.tr('media.camera')),
+                onTap: () => Navigator.pop(context, 'camera'),
+              ),
+              if (paths.isNotEmpty || widget.hasExternalAvatar)
+                ListTile(
+                  key: ValueKey(
+                    'media_remove_${paths.isEmpty ? 'external' : paths.first}',
+                  ),
+                  leading: Icon(
+                    Icons.delete_outline,
+                    color: context.colors.error,
+                  ),
+                  title: Text(
+                    context.strings.tr('media.remove'),
+                    style: TextStyle(color: context.colors.error),
+                  ),
+                  onTap: () => Navigator.pop(context, 'remove'),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (selection == 'gallery') await _pick(PortfolioImageSource.gallery);
+    if (selection == 'camera') await _pick(PortfolioImageSource.camera);
+    if (selection == 'remove' && listEquals(paths, widget.paths)) {
+      if (paths.isEmpty && widget.hasExternalAvatar) {
+        widget.onChanged(const []);
+      } else if (paths.isNotEmpty) {
+        _remove(paths.first);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final repository = ref.watch(portfolioMediaRepositoryProvider);
@@ -201,11 +283,7 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
       });
       widget.onBusyChanged(false);
     });
-    final canAdd =
-        widget.enabled &&
-        repository != null &&
-        !_busy &&
-        (widget.maxImages == 1 || widget.paths.length < widget.maxImages);
+    final canAdd = widget.enabled && repository != null && !_busy;
     final paths = repository == null
         ? const <String>[]
         : widget.paths
@@ -219,89 +297,96 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(context.strings.tr(widget.titleKey), style: text.titleMedium),
-        const SizedBox(height: StackCardSpacing.sm),
-        if (paths.isEmpty &&
-            _prepared == null &&
-            widget.emptyState != null) ...[
-          widget.emptyState!,
-          const SizedBox(height: StackCardSpacing.sm),
-        ],
-        if (paths.isNotEmpty || _prepared != null) ...[
-          Wrap(
-            spacing: StackCardSpacing.sm,
-            runSpacing: StackCardSpacing.sm,
-            children: [
-              for (final path in paths)
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    PortfolioMediaImage(path: path),
-                    IconButton(
-                      key: ValueKey('media_remove_$path'),
-                      tooltip: context.strings.tr('media.remove'),
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: _busy || !widget.enabled
-                          ? null
-                          : () => _remove(path),
-                    ),
-                  ],
-                ),
-              if (_prepared != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(StackCardRadius.small),
-                  child: Image.memory(
-                    _prepared!.bytes,
-                    key: const ValueKey('media_prepared_preview'),
-                    width: 120,
-                    height: 90,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const SizedBox(
-                      width: 120,
-                      height: 90,
-                      child: Icon(Icons.image_outlined),
+        Text(
+          context.strings.tr(widget.titleKey),
+          style: text.titleMedium,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: StackCardSpacing.md),
+        Center(
+          child: Semantics(
+            button: true,
+            label: context.strings.tr('media.avatar'),
+            child: SizedBox.square(
+              dimension: 128,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Material(
+                      color: context.colors.surfaceElevated,
+                      shape: CircleBorder(
+                        side: BorderSide(color: context.colors.borderStrong),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        key: const ValueKey('media_avatar_edit'),
+                        onTap: canAdd ? () => _menu(paths) : null,
+                        child: IgnorePointer(
+                          child: paths.isNotEmpty
+                              ? PortfolioMediaImage(
+                                  path: paths.first,
+                                  width: 128,
+                                  height: 128,
+                                )
+                              : _prepared != null
+                              ? Image.memory(
+                                  _prepared!.bytes,
+                                  key: const ValueKey('media_prepared_preview'),
+                                  width: 128,
+                                  height: 128,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) => const Center(
+                                    child: StackCardIcon(
+                                      name: 'user-round',
+                                      size: 40,
+                                    ),
+                                  ),
+                                )
+                              : widget.emptyState ??
+                                    const Center(
+                                      child: StackCardIcon(
+                                        name: 'user-round',
+                                        size: 40,
+                                      ),
+                                    ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-            ],
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Material(
+                      color: context.colors.primary,
+                      shape: CircleBorder(
+                        side: BorderSide(
+                          color: context.colors.surface,
+                          width: 2,
+                        ),
+                      ),
+                      child: IconButton(
+                        key: const ValueKey('media_avatar_menu'),
+                        tooltip: context.strings.tr('builderForm.edit'),
+                        onPressed: canAdd ? () => _menu(paths) : null,
+                        icon: StackCardIcon(
+                          name: 'pencil',
+                          size: 22,
+                          color: context.colors.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: StackCardSpacing.sm),
-        ],
-        Wrap(
-          spacing: StackCardSpacing.sm,
-          runSpacing: StackCardSpacing.sm,
-          children: [
-            StackCardButton(
-              key: const ValueKey('media_gallery'),
-              label: context.strings.tr('media.gallery'),
-              iconWidget: const StackCardIcon(name: 'image', size: 18),
-              onPressed: canAdd
-                  ? () => _pick(PortfolioImageSource.gallery)
-                  : null,
-            ),
-            StackCardButton(
-              key: const ValueKey('media_camera'),
-              label: context.strings.tr('media.camera'),
-              iconWidget: const StackCardIcon(name: 'camera', size: 18),
-              onPressed: canAdd
-                  ? () => _pick(PortfolioImageSource.camera)
-                  : null,
-            ),
-          ],
         ),
         if (repository == null) ...[
           const SizedBox(height: StackCardSpacing.sm),
           Text(
             context.strings.tr(isGuest ? 'media.guest' : 'media.unconfigured'),
             style: text.bodySmall?.copyWith(color: context.colors.textMeta),
-          ),
-        ],
-        if (widget.maxImages > 1 &&
-            widget.paths.length >= widget.maxImages) ...[
-          const SizedBox(height: StackCardSpacing.sm),
-          Text(
-            context.strings.tr('media.limit', {'limit': widget.maxImages}),
-            style: text.bodySmall?.copyWith(color: context.colors.textMeta),
+            textAlign: TextAlign.center,
           ),
         ],
         if (_busy) ...[
@@ -333,7 +418,7 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
           ),
           if (_prepared != null)
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.center,
               child: StackCardButton(
                 key: const ValueKey('media_retry'),
                 label: context.strings.tr('common.retry'),

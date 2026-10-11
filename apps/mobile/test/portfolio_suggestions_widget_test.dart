@@ -5,9 +5,9 @@ import 'package:app_stackcard/core/state/app_settings.dart';
 import 'package:app_stackcard/core/theme/stackcard_theme.dart';
 import 'package:app_stackcard/features/auth/auth.dart';
 import 'package:app_stackcard/features/github_import/github_import.dart';
+import 'package:app_stackcard/features/github_import/presentation/github_source_cards.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
-import 'package:app_stackcard/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,12 +52,12 @@ void main() {
   );
 
   testWidgets(
-    'New source advice reuses Preview and leaves import, Save and publication explicit',
+    'Archival source advice previews without changing import, Save or publication',
     (tester) async {
       final content = PortfolioContent();
       final local = await _local(content);
       await _openGitHub(tester, local, _repository());
-      final container = _container(tester, GitHubImportScreen);
+      final container = _container(tester, _ArchivalGitHubSourceSurface);
       await _visible(
         tester,
         find.byKey(const ValueKey('github_suggestions_42')),
@@ -82,7 +82,7 @@ void main() {
   );
 
   testWidgets(
-    'Current repository update advice keeps curated description and featured choice',
+    'Archival source update advice keeps curated description and featured choice',
     (tester) async {
       final source = _repository(description: '');
       final content = _importedContent(
@@ -96,7 +96,7 @@ void main() {
         local,
         _repository(description: 'Incoming public description'),
       );
-      final container = _container(tester, GitHubImportScreen);
+      final container = _container(tester, _ArchivalGitHubSourceSurface);
       await _visible(
         tester,
         find.byKey(const ValueKey('github_suggestions_42')),
@@ -197,13 +197,12 @@ void main() {
   });
 
   testWidgets(
-    'Legacy English choice shows Russian source advice and existing Preview',
+    'Archival source advice uses Russian runtime labels and existing Preview',
     (tester) async {
       await _openGitHub(
         tester,
         await _local(PortfolioContent()),
         _repository(),
-        language: AppLanguage.en,
       );
       await _visible(
         tester,
@@ -250,7 +249,7 @@ void main() {
   });
 
   testWidgets(
-    'Public GitHub browsing does not open private data or offer suggestions',
+    'Archival public source preview does not open private data or offer suggestions',
     (tester) async {
       final local = _Local();
       final auth = _SignedOutAuth();
@@ -428,27 +427,61 @@ Future<void> _openGitHub(
   WidgetTester tester,
   _Local local,
   GitHubRepository repository, {
-  AppLanguage language = AppLanguage.ru,
   AccountAuthRepository? auth,
 }) async {
   await tester.pumpWidget(
-    StackCardApp(
-      initialLocation: '/github-import',
-      initialSettings: AppSettings(language: language),
-      providerOverrides: [
+    ProviderScope(
+      overrides: [
         portfolioDraftRepositoryProvider.overrideWithValue(local),
         portfolioSuggestionClockProvider.overrideWithValue(() => _now),
         githubImportRepositoryProvider.overrideWithValue(_Source(repository)),
         if (auth != null) accountAuthRepositoryProvider.overrideWithValue(auth),
       ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: StackCardTheme.light,
+        locale: const Locale('ru'),
+        supportedLocales: AppStrings.supportedLocales,
+        localizationsDelegates: const [
+          AppStrings.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const _ArchivalGitHubSourceSurface(),
+      ),
     ),
   );
   await tester.pumpAndSettle();
   await _container(
     tester,
-    GitHubImportScreen,
+    _ArchivalGitHubSourceSurface,
   ).read(githubImportControllerProvider.notifier).load('octocat');
   await tester.pumpAndSettle();
+}
+
+// Source advice относится к сохранённому компоненту прежнего импорта. Проверяем
+// его guards напрямую: современный /github-import содержит bulk selection.
+class _ArchivalGitHubSourceSurface extends ConsumerWidget {
+  const _ArchivalGitHubSourceSurface();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(githubImportControllerProvider);
+    return Scaffold(
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          for (final repository in state.repositories)
+            GitHubRepositoryCard(
+              repository: repository,
+              validatedAt:
+                  state.repositoryReadMetadata[repository.id]?.validatedAt,
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 ProviderContainer _container(WidgetTester tester, Type type) =>

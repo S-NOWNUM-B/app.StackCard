@@ -36,20 +36,33 @@ void main() {
     box = await Hive.openBox<dynamic>('privacy', path: directory.path);
   }
 
-  test('shared schema6 fixture matches the Dart cloud writer without dropping fields', () {
-    final fixture = jsonDecode(
-      File('../../fixtures/workspace/schema6.json').readAsStringSync(),
-    ) as Map<String, dynamic>;
-    final timestamp = DateTime.parse(fixture['updatedAt'] as String);
-    final draft = decodeCloudPortfolioDraft({
-      ...fixture,
-      'updatedAt': Timestamp.fromDate(timestamp),
-    }, ownerUid: 'owner');
-    expect(draft.content, _workspace(now, theme: PortfolioTheme.dark));
-    final encoded = encodeCloudPortfolioDraft(draft);
-    encoded['updatedAt'] = timestamp.toIso8601String();
-    expect(encoded, fixture);
-  });
+  test(
+    'shared legacy schema6 fixture upgrades to cloud7 without dropping fields',
+    () {
+      final fixture = jsonDecode(
+        File('../../fixtures/workspace/schema6.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
+      final timestamp = DateTime.parse(fixture['updatedAt'] as String);
+      final draft = decodeCloudPortfolioDraft({
+        ...fixture,
+        'updatedAt': Timestamp.fromDate(timestamp),
+      }, ownerUid: 'owner');
+      expect(draft.content, _workspace(now, theme: PortfolioTheme.dark));
+      final encoded = encodeCloudPortfolioDraft(draft);
+      encoded['updatedAt'] = timestamp.toIso8601String();
+      final upgraded = jsonDecode(jsonEncode(fixture)) as Map<String, dynamic>;
+      upgraded['schemaVersion'] = 7;
+      final content = upgraded['content'] as Map<String, dynamic>;
+      content['mainPortfolioId'] = null;
+      content['githubUsername'] = '';
+      content['personalization'] = {'status': 'notRequired', 'step': 0};
+      for (final project in content['projects'] as List) {
+        (project as Map)['iconId'] = 'folder';
+      }
+      expect(encoded, upgraded);
+      expect(fixture['schemaVersion'], 6);
+    },
+  );
 
   test('document presentation resolves independently and clearing inherits latest Library', () {
     final workspace = _workspace(now);
@@ -405,7 +418,7 @@ void main() {
         expect(box.get('draft.v6.backup'), raw);
         expect(
           (jsonDecode(box.get('draft') as String) as Map)['schemaVersion'],
-          7,
+          HivePortfolioDraftRepository.schemaVersion,
         );
         final restored = (await HivePortfolioDraftRepository(box).read())!;
         expect(
@@ -473,7 +486,7 @@ void main() {
         content: workspace,
       ),
     );
-    expect(encoded['schemaVersion'], 6);
+    expect(encoded['schemaVersion'], 7);
     final stored = {...encoded, 'updatedAt': Timestamp.fromDate(now)};
     expect(
       decodeCloudPortfolioDraft(stored, ownerUid: 'owner').content,
@@ -489,7 +502,7 @@ void main() {
     expect(old.projects.single.contribution, isEmpty);
     expect(old.links.single.publishAllowed, isFalse);
     expect(old.documents.first.baseSnapshot!.links.single.visible, isTrue);
-    for (final version in [1, 2, 3, 4, 5, 7]) {
+    for (final version in [1, 2, 3, 4, 5, 6, 8]) {
       expect(
         () => decodeCloudPortfolioDraft({
           ...stored,

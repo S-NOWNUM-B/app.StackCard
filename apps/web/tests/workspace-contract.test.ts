@@ -51,8 +51,15 @@ test('new web documents use light appearance while preserving saved dark workspa
 });
 test('actual Dart encoded schema6 fixture roundtrips byte shape with independent document overrides', () => {
   const d = draft();
-  assert.deepEqual(d.content, fixture.content);
-  assert.deepEqual(validateWorkspace(d.content!, 'owner'), fixture.content);
+  const expected = {
+    ...clone(fixture.content),
+    mainPortfolioId: null,
+    githubUsername: '',
+    personalization: { status: 'notRequired', step: 0 },
+    projects: fixture.content.projects.map((p: object) => ({ ...p, iconId: 'folder' })),
+  };
+  assert.deepEqual(d.content, expected);
+  assert.deepEqual(validateWorkspace(d.content!, 'owner'), expected);
   const content = resolveDocument(d.content!, d.content!.documents[0]);
   assert.equal(content.projects[0].title, 'Document title');
   assert.equal(content.projects[0].description, '');
@@ -62,7 +69,7 @@ test('actual Dart encoded schema6 fixture roundtrips byte shape with independent
 });
 test('unknown envelope, schema, nested keys and timestamp fail before any write', () => {
   for (const mutate of [
-    (r: ReturnType<typeof raw>) => (r.schemaVersion = 7),
+    (r: ReturnType<typeof raw>) => (r.schemaVersion = 8),
     (r: ReturnType<typeof raw>) => (r.content.future = true),
     (r: ReturnType<typeof raw>) => (r.content.documents[0].content.profile.future = true),
     (r: ReturnType<typeof raw>) => delete r.content,

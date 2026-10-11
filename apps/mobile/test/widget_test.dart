@@ -35,35 +35,34 @@ void main() {
     await tester.enterText(find.byType(TextFormField), 'alex@example.dev');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
-    expect(find.text('Пока нет работ'), findsOneWidget);
+    expect(find.text('Портфолио пока пустое'), findsOneWidget);
     expect(find.text('Привет, Alex'), findsNothing);
     expect(find.byType(NavigationBar), findsOneWidget);
   });
 
   testWidgets(
-    'Four root branches keep Settings origin and do not push tab history',
+    'Three root branches keep Settings origin and do not push tab history',
     (tester) async {
       await tester.pumpWidget(const StackCardApp(initialLocation: '/home'));
       await tester.pumpAndSettle();
       expect(find.byType(HomeScreen), findsOneWidget);
       expect(find.byType(StackCardPoster), findsNothing);
       for (final filter in [0, 1, 2]) {
-        expect(find.byKey(ValueKey('home.filter.$filter')), findsOneWidget);
+        expect(find.byKey(ValueKey('home.filter.$filter')), findsNothing);
       }
       expect(find.textContaining('%'), findsNothing);
       final router =
           tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig!
               as GoRouter;
       for (final item in [
-        (index: 1, label: 'Резюме', path: '/resumes', title: 'Пока нет резюме'),
-        (index: 2, label: 'Проекты', path: '/projects', title: 'Проекты: 4'),
+        (index: 1, label: 'Проекты', path: '/projects', title: 'Проекты: 4'),
+        (index: 2, label: 'Редактор', path: '/editor', title: 'Профиль'),
         (
-          index: 3,
-          label: 'Портфолио',
-          path: '/portfolio',
-          title: 'Пока нет портфолио',
+          index: 0,
+          label: 'Главная',
+          path: '/home',
+          title: 'Портфолио пока пустое',
         ),
-        (index: 0, label: 'Главная', path: '/home', title: 'Пока нет работ'),
       ]) {
         await tester.tap(_destination(item.label));
         await tester.pumpAndSettle();
@@ -115,98 +114,90 @@ void main() {
   );
 
   testWidgets(
-    'Document libraries open the selected document in its standalone editor',
+    'Saved Home and main Editor read the selected document without changing Library or private notes',
     (tester) async {
       final repository = MemoryPortfolioDraftRepository();
       final date = DateTime.utc(2026, 10, 7);
-      final resume = PortfolioDocument(
+      final archived = PortfolioDocument(
         id: 'resume-a',
-        title: 'Backend role',
+        title: 'Archived resume',
         kind: PortfolioDocumentKind.resume,
         createdAt: date,
         updatedAt: date,
         content: PortfolioContent(
-          profile: const PortfolioProfile(name: 'Resume name'),
+          profile: const PortfolioProfile(name: 'Archived name'),
         ),
       );
-      final portfolio = PortfolioDocument(
+      final main = PortfolioDocument(
         id: 'portfolio-a',
         title: 'Selected work',
         kind: PortfolioDocumentKind.portfolio,
         createdAt: date,
         updatedAt: date,
         content: PortfolioContent(
-          profile: const PortfolioProfile(name: 'Portfolio name'),
+          profile: const PortfolioProfile(name: 'Selected name'),
         ),
       );
+      final library = [
+        PortfolioProject(
+          id: 'library-a',
+          title: 'Library survives',
+          description: '',
+          technologies: const [],
+        ),
+      ];
       await repository.save(
         PortfolioContent(
-          profile: const PortfolioProfile(name: 'Shared name'),
-          documents: [resume, portfolio],
+          profile: const PortfolioProfile(name: 'Legacy shared name'),
+          projects: library,
+          documents: [archived, main],
+          mainPortfolioId: main.id,
         ),
         expectedRevision: 0,
         notes: 'Private notes',
       );
       await tester.pumpWidget(
         StackCardApp(
-          initialLocation: '/resumes',
+          initialLocation: '/home',
           providerOverrides: [
             portfolioDraftRepositoryProvider.overrideWithValue(repository),
           ],
         ),
       );
       await tester.pumpAndSettle();
-      for (final document in [resume, portfolio]) {
-        if (document.kind == PortfolioDocumentKind.portfolio) {
-          await tester.tap(_destination('Портфолио'));
-          await tester.pumpAndSettle();
-        }
-        final card = find.byKey(ValueKey('document.open.${document.id}'));
-        expect(card, findsOneWidget);
-        final other = document.id == resume.id ? portfolio : resume;
-        expect(find.byKey(ValueKey('document.open.${other.id}')), findsNothing);
-        await tester.ensureVisible(card);
-        await tester.tap(card);
-        await tester.pumpAndSettle();
-        final editor = tester.widget<PortfolioDocumentEditorScreen>(
-          find.byType(PortfolioDocumentEditorScreen),
-        );
-        expect(editor.documentId, document.id);
-        expect(editor.kind, document.kind);
-        expect(find.byType(NavigationBar), findsNothing);
-        expect(find.text(document.title), findsOneWidget);
-        await tester.tap(find.byKey(const Key('document.section.profile')));
-        await tester.pumpAndSettle();
-        for (final field in [
-          (name: 'title', value: document.title),
-          (name: 'name', value: document.content.profile.name),
-        ]) {
-          final input = find.descendant(
-            of: find.byKey(ValueKey('builder_form_${field.name}')),
-            matching: find.byType(TextFormField),
-          );
-          expect(
-            tester.widget<TextFormField>(input).controller!.text,
-            field.value,
-          );
-        }
-        await tester.tap(find.byKey(const Key('document.back')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('document.back')));
-        await tester.pumpAndSettle();
-        expect(
-          find.byKey(ValueKey('document.open.${document.id}')),
-          findsOneWidget,
-        );
-        expect((await repository.read())!.revision, 1);
-        expect((await repository.read())!.content!.profile.name, 'Shared name');
-      }
+      expect(find.text('Selected name'), findsOneWidget);
+      expect(find.text('Archived name'), findsNothing);
+      expect(find.text('Legacy shared name'), findsNothing);
+      expect(find.text('Private notes'), findsNothing);
+      expect(find.byKey(ValueKey('document.open.${main.id}')), findsNothing);
+      await tester.tap(_destination('Редактор'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MainPortfolioEditorScreen), findsOneWidget);
+      expect(find.byType(NavigationBar), findsOneWidget);
+      final input = find.descendant(
+        of: find.byKey(const Key('main.editor.name')),
+        matching: find.byType(TextFormField),
+      );
+      expect(
+        tester.widget<TextFormField>(input).controller!.text,
+        'Selected name',
+      );
+      await tester.tap(_destination('Главная'));
+      await tester.pumpAndSettle();
+      expect(find.text('Selected name'), findsOneWidget);
+      final restored = (await repository.read())!;
+      expect(restored.revision, 1);
+      expect(restored.notes, 'Private notes');
+      expect(restored.content!.profile.name, 'Legacy shared name');
+      expect(restored.content!.projects, library);
+      expect(restored.content!.documents, [archived, main]);
+      expect(restored.content!.mainPortfolioId, main.id);
       expect(tester.takeException(), isNull);
     },
   );
 
   testWidgets(
-    'Project search filters by technology, empty result can reset and details close',
+    'Project search filters by technology and resets without creating tab history',
     (tester) async {
       await tester.pumpWidget(const StackCardApp(initialLocation: '/projects'));
       await tester.pumpAndSettle();
@@ -234,21 +225,17 @@ void main() {
         ),
         findsOneWidget,
       );
-      final preview = find.byKey(
-        const ValueKey('project_preview_Atlas UI Kit'),
-      );
-      await tester.ensureVisible(preview);
-      await tester.tap(preview);
-      await tester.pumpAndSettle();
-      expect(find.byType(BottomSheet), findsOneWidget);
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      expect(find.byType(BottomSheet), findsNothing);
+      final router =
+          tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig!
+              as GoRouter;
+      expect(router.routeInformationProvider.value.uri.path, '/projects');
+      expect(router.canPop(), isFalse);
+      expect(tester.takeException(), isNull);
     },
   );
 
   testWidgets(
-    'Settings opens appearance and account routes with working back',
+    'Settings opens application, GitHub and account routes with working back',
     (tester) async {
       await tester.pumpWidget(const StackCardApp(initialLocation: '/settings'));
       await tester.pumpAndSettle();
@@ -268,6 +255,21 @@ void main() {
       expect(find.text('Тёмная'), findsNothing);
       expect(find.text('Системная'), findsNothing);
       expect(find.text('English'), findsNothing);
+      expect(
+        tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig,
+        same(router),
+      );
+      await tester.tap(find.byTooltip('Назад'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      final github = find.byKey(const Key('settings.group.github'));
+      await tester.ensureVisible(github);
+      await tester.tap(github);
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsGitHubScreen), findsOneWidget);
+      expect(find.byKey(const Key('settings.github.username')), findsOneWidget);
+      expect(find.byKey(const Key('settings.github.save')), findsOneWidget);
+      expect(find.byType(NavigationBar), findsNothing);
       expect(
         tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig,
         same(router),
@@ -304,7 +306,7 @@ void main() {
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
-      expect(find.text('Пока нет работ'), findsOneWidget);
+      expect(find.text('Портфолио пока пустое'), findsOneWidget);
       expect(find.text('Привет, Alex'), findsNothing);
       final destination = _destination('Проекты');
       var focused = false;
@@ -317,7 +319,12 @@ void main() {
           tester.widget<TextButton>(destination),
         );
       }
-      expect(focused, isTrue, reason: 'Tab reaches the Projects destination');
+      expect(
+        focused,
+        isTrue,
+        reason:
+            'Tab reaches the Projects destination\n${debugDescribeFocusTree()}',
+      );
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
       expect(
@@ -326,6 +333,64 @@ void main() {
               widget is Semantics && widget.properties.label == 'Проекты: 4',
         ),
         findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Keyboard exits populated Home and reverses through shell controls',
+    (tester) async {
+      final repository = MemoryPortfolioDraftRepository();
+      final date = DateTime.utc(2026, 10, 12);
+      await repository.save(
+        PortfolioContent(
+          mainPortfolioId: 'main',
+          documents: [
+            PortfolioDocument(
+              id: 'main',
+              title: 'Портфолио',
+              kind: PortfolioDocumentKind.portfolio,
+              createdAt: date,
+              updatedAt: date,
+              content: PortfolioContent(
+                profile: const PortfolioProfile(name: 'Сохранённый профиль'),
+              ),
+            ),
+          ],
+        ),
+        expectedRevision: 0,
+        notes: 'Приватные заметки',
+      );
+      await tester.pumpWidget(
+        StackCardApp(
+          initialLocation: '/home',
+          providerOverrides: [
+            portfolioDraftRepositoryProvider.overrideWithValue(repository),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      final projects = tester.widget<TextButton>(_destination('Проекты'));
+      var focused = false;
+      for (var index = 0; index < 24 && !focused; index++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+        focused = identical(
+          FocusManager.instance.primaryFocus?.context
+              ?.findAncestorWidgetOfExactType<TextButton>(),
+          projects,
+        );
+      }
+      expect(focused, isTrue);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+      expect(
+        FocusManager.instance.primaryFocus?.context
+            ?.findAncestorWidgetOfExactType<TextButton>(),
+        same(tester.widget<TextButton>(_destination('Главная'))),
       );
       expect(tester.takeException(), isNull);
     },

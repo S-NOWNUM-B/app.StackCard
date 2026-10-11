@@ -30,7 +30,25 @@ class _SdkProviderInfo extends Fake implements UserInfo {
   final String providerId;
 }
 
-class _SdkCredential extends Fake implements UserCredential {}
+class _SdkCredential extends Fake implements UserCredential {
+  _SdkCredential({this.isNewUser});
+
+  final bool? isNewUser;
+
+  @override
+  User? get user => _SdkUser();
+
+  @override
+  AdditionalUserInfo? get additionalUserInfo =>
+      isNewUser == null ? null : _SdkAdditionalUserInfo(isNewUser!);
+}
+
+class _SdkAdditionalUserInfo extends Fake implements AdditionalUserInfo {
+  _SdkAdditionalUserInfo(this.isNewUser);
+
+  @override
+  final bool isNewUser;
+}
 
 class _SdkAuth extends Fake implements FirebaseAuth {
   final sessions = StreamController<User?>.broadcast();
@@ -39,6 +57,7 @@ class _SdkAuth extends Fake implements FirebaseAuth {
   String? lastPassword;
   AuthCredential? credential;
   Object? failure;
+  bool? isNewUser;
 
   @override
   Stream<User?> authStateChanges() => sessions.stream;
@@ -56,7 +75,7 @@ class _SdkAuth extends Fake implements FirebaseAuth {
     lastEmail = email;
     lastPassword = password;
     _record('email');
-    return _SdkCredential();
+    return _SdkCredential(isNewUser: isNewUser);
   }
 
   @override
@@ -67,7 +86,7 @@ class _SdkAuth extends Fake implements FirebaseAuth {
     lastEmail = email;
     lastPassword = password;
     _record('register');
-    return _SdkCredential();
+    return _SdkCredential(isNewUser: isNewUser);
   }
 
   @override
@@ -83,7 +102,7 @@ class _SdkAuth extends Fake implements FirebaseAuth {
   Future<UserCredential> signInWithCredential(AuthCredential credential) async {
     this.credential = credential;
     _record('google');
-    return _SdkCredential();
+    return _SdkCredential(isNewUser: isNewUser);
   }
 
   @override
@@ -99,6 +118,29 @@ void main() {
     repository = FirebaseAccountAuthRepository(auth: sdk);
   });
   tearDown(() async => sdk.sessions.close());
+
+  test(
+    'Creation result reads SDK isNewUser and captured UID for both methods',
+    () async {
+      final google = FirebaseAccountAuthRepository(
+        auth: sdk,
+        googleCredential: () async =>
+            GoogleAuthProvider.credential(idToken: 'fixture'),
+      );
+      for (final isNew in [true, false, null]) {
+        sdk.isNewUser = isNew;
+        final email = await repository.registerEmailWithResult(
+          'owner@example.dev',
+          'long password fixture',
+        );
+        final federated = await google.signInGoogleWithResult();
+        for (final result in [email, federated]) {
+          expect(result.uid, 'real-firebase-uid');
+          expect(result.isNewUser, isNew == true);
+        }
+      }
+    },
+  );
 
   test(
     'SDK stream maps restored session and sign out to immutable domain values',

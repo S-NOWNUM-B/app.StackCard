@@ -1,12 +1,16 @@
+import 'package:app_stackcard/core/localization/app_strings.dart';
 import 'package:app_stackcard/core/state/app_settings.dart';
+import 'package:app_stackcard/core/state/appearance_controller.dart';
+import 'package:app_stackcard/core/theme/stackcard_theme.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
-import 'package:app_stackcard/main.dart';
 import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart' as legacy_provider;
 
 void main() {
   setUp(() {
@@ -337,13 +341,52 @@ Future<void> _open(
   AppTheme theme = AppTheme.dark,
   AppLanguage language = AppLanguage.ru,
 }) async {
+  // Legacy Builder проверяется отдельно от современных production routes.
+  final router = GoRouter(
+    initialLocation: route,
+    routes: [
+      GoRoute(
+        path: '/portfolio/builder',
+        builder: (_, _) => const PortfolioBuilderScreen(),
+      ),
+      GoRoute(
+        path: '/portfolio/preview',
+        builder: (_, _) => const PortfolioPreviewScreen(),
+      ),
+      GoRoute(
+        path: '/portfolio',
+        builder: (_, _) => const Scaffold(body: Text('Library')),
+      ),
+      GoRoute(
+        path: '/portfolio-draft',
+        builder: (_, _) => const PortfolioDraftScreen(),
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
   await tester.pumpWidget(
-    StackCardApp(
-      initialLocation: route,
-      initialSettings: AppSettings(theme: theme, language: language),
-      providerOverrides: [
+    ProviderScope(
+      overrides: [
         portfolioDraftRepositoryProvider.overrideWithValue(repository),
       ],
+      child: legacy_provider.ChangeNotifierProvider(
+        create: (_) => AppearanceController(
+          initialSettings: AppSettings(theme: theme, language: language),
+        ),
+        child: MaterialApp.router(
+          routerConfig: router,
+          theme: StackCardTheme.light,
+          themeMode: ThemeMode.light,
+          locale: const Locale('ru'),
+          supportedLocales: AppStrings.supportedLocales,
+          localizationsDelegates: const [
+            AppStrings.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+        ),
+      ),
     ),
   );
   await tester.pumpAndSettle();

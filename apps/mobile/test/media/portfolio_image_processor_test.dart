@@ -106,13 +106,13 @@ void main() {
         mimeType: 'image/png',
       );
       final decoded = image.decodeJpg(prepared.bytes)!;
-      expect(decoded.width, 1600);
-      expect(decoded.height, 800);
+      expect(decoded.width, 512);
+      expect(decoded.height, 256);
       expect(decoded.getPixel(0, 0).r, greaterThan(245));
       expect(decoded.getPixel(0, 0).g, greaterThan(245));
       expect(decoded.getPixel(0, 0).b, greaterThan(245));
       expect(decoded.exif.imageIfd.imageDescription, isNull);
-      expect(prepared.bytes.length, lessThanOrEqualTo(portfolioImageMaxBytes));
+      expect(prepared.bytes.length, lessThanOrEqualTo(portfolioAvatarMaxBytes));
       await processor.validatePrepared(prepared.bytes);
     },
   );
@@ -144,7 +144,7 @@ void main() {
     'Prepared boundary rejects oversized output and non-JPEG input',
     () async {
       await expectLater(
-        processor.validatePrepared(Uint8List(portfolioImageMaxBytes + 1)),
+        processor.validatePrepared(Uint8List(portfolioAvatarMaxBytes + 1)),
         throwsA(_failure(PortfolioMediaFailureKind.tooLarge)),
       );
       await expectLater(
@@ -155,10 +155,33 @@ void main() {
       );
       await expectLater(
         processor.validatePrepared(
-          image.encodeJpg(image.Image(width: 1601, height: 1)),
+          image.encodeJpg(image.Image(width: 513, height: 1)),
         ),
         throwsA(_failure(PortfolioMediaFailureKind.tooLarge)),
       );
+    },
+  );
+
+  test(
+    'New avatars reject EXIF while legacy reads preserve compatibility',
+    () async {
+      final legacy = image.Image(width: 900, height: 500);
+      legacy.exif.imageIfd.imageDescription = 'private metadata';
+      final bytes = image.encodeJpg(legacy);
+      await expectLater(
+        processor.validatePrepared(bytes),
+        throwsA(_failure(PortfolioMediaFailureKind.tooLarge)),
+      );
+      await processor.validatePrepared(bytes, legacy: true);
+      final small = image.Image(width: 2, height: 2);
+      small.exif.imageIfd.imageDescription = 'private metadata';
+      await expectLater(
+        processor.validatePrepared(image.encodeJpg(small)),
+        throwsA(_failure(PortfolioMediaFailureKind.invalidImage)),
+      );
+      final prepared = await processor.prepare(image.encodeJpg(legacy));
+      await processor.validatePrepared(prepared.bytes);
+      expect(image.decodeJpg(prepared.bytes)!.exif.isEmpty, isTrue);
     },
   );
 

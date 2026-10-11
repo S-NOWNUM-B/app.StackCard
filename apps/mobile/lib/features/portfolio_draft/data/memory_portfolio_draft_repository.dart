@@ -27,6 +27,10 @@ final class MemoryPortfolioDraftRepository implements PortfolioDraftRepository {
     if ((_draft?.revision ?? 0) != expectedRevision) {
       throw const PortfolioDraftFailure(PortfolioDraftFailureKind.conflict);
     }
+    final archive = _draft?.content?.legacyMainSnapshot;
+    if (archive != null && content.legacyMainSnapshot != archive) {
+      throw const PortfolioDraftFailure(PortfolioDraftFailureKind.conflict);
+    }
     if (validatePortfolioContent(content).isNotEmpty) {
       throw const PortfolioDraftFailure(
         PortfolioDraftFailureKind.invalidContent,

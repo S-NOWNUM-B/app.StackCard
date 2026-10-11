@@ -28,7 +28,7 @@ export function createContactService({ database, secret, now = () => Date.now(),
         // Lost ACK подтверждает прежний durable write даже после withdrawal; новый submit закрыт.
         return { ownerUid: accountRef.id, result: { status: 'accepted', requestId: request.requestId } };
       }
-      if (mapping.state !== 'published' || !snapshot || snapshot.schemaVersion !== 1
+      if (mapping.state !== 'published' || !snapshot || ![1, 2].includes(snapshot.schemaVersion)
           || snapshot.publicId !== request.publicId || snapshot.version !== mapping.version
           || typeof snapshot.title !== 'string' || !snapshot.title.trim() || snapshot.title.length > 120
           || !allowsPublicContact(snapshot)) unavailable();

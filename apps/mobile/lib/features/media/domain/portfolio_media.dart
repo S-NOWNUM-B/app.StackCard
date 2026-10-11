@@ -31,6 +31,11 @@ abstract interface class PortfolioImagePicker {
   Future<PreparedPortfolioImage?> pick(PortfolioImageSource source);
 }
 
+/// Read-only совместимость сохранённого внешнего avatar URL, без загрузки в cloud.
+abstract interface class PortfolioLegacyAvatarReader {
+  Future<Uint8List> read(String url);
+}
+
 abstract interface class PortfolioMediaRepository {
   String get ownerUid;
 
@@ -52,6 +57,11 @@ abstract interface class PortfolioMediaRepositoryLifecycle {
 const portfolioImageOriginalMaxBytes = 10 * 1024 * 1024;
 const portfolioImageMaxBytes = 2 * 1024 * 1024;
 const portfolioImageMaxDimension = 1600;
+
+/// Новый аватар помещается в ограниченный Firestore document на Spark.
+/// Legacy Storage limits выше сохраняются только для чтения прежних объектов.
+const portfolioAvatarMaxBytes = 256 * 1024;
+const portfolioAvatarMaxDimension = 512;
 
 bool isPortfolioMediaPathForOwner(String path, String uid) {
   if (uid.isEmpty || uid.contains('/')) return false;

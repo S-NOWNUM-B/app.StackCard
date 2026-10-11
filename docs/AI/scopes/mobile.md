@@ -1,5 +1,14 @@
 # Правила StackCard Mobile
 
+Действующий продуктовый контракт — [ADR 0005](../../decisions/0005-single-main-portfolio.md).
+Home/Projects/Editor — единственные roots; saved Home не использует buffer.
+Legacy libraries/Builder/routes ниже — совместимость, старые deep links ведут
+в Editor. Только avatar Firestore/JPEG512/256KiB и catalog project icons;
+`locationText` вручную, GPS feature/dependencies/permissions удалены.
+Hive8/cloud7/public2 читают старые данные без read-time write; migration
+выбирается явно с точной backup. Новые аккаунты — explicit SDK isNewUser и
+4step persisted UID-bound onboarding, пустые поля не признак completion.
+
 Phase 14 Contact/Inbox/FCM — [ADR 0004](../../decisions/0004-contact-inbox-notifications.md).
 `features/inbox` владеет ContactRequest и UID-bound repository; `features/notifications`
 владеет pure messaging/device contracts и controller, SDK только в data adapters.
@@ -27,8 +36,7 @@ guides. Этот файл дополняет их только для Flutter-п
 Ниже описан действующий Flutter runtime. [Design v2](../../redesign/README.md)
 задаёт target; [product status](../../product/product-spec.md#статус-и-границы-текущей-работы)
 задаёт разрешённый scope. С 2026-10-07 очередь фаз на паузе, разрешено развитие
-mobile capabilities: четыре root tabs, смешанная Home library, независимые
-Resume/Portfolio и общая база. D048 (2026-10-08) также разрешает завершение
+mobile capabilities, затем ADR 0005 заменил их одним main portfolio и тремя roots. D048 (2026-10-08) также разрешает завершение
 mobile settings/attachments и публикацию вместе с web. Механизм сохраняет existing draft repository,
 UID boundaries, Hive queue и outbox, без второго runtime/write store.
 Media и location используют прежние features; карта/Maps исключены.
@@ -100,7 +108,9 @@ headless проверки не закрывают native visual, public/web ил
 - Settings persistence:
   [SharedPreferencesSettingsRepository](../../../apps/mobile/lib/features/settings/data/shared_preferences_settings_repository.dart)
   использует SharedPreferencesAsync для одного versioned snapshot theme/language/
-  source descriptions/reducedMotion. Runtime объединяет reducedMotion с OS
+  source descriptions/reducedMotion. Legacy source descriptions сохраняются без
+  read-time write; переключателя нет, новый GitHub список показывает непустые
+  описания в две строки. Runtime объединяет reducedMotion с OS
   disableAnimations; nav duration становится zero. Controller последовательно сохраняет последнее состояние;
   failure оставляет выбор в UI с retry. Corrupt/unknown preferences дают defaults;
   пользовательский draft не хранится в preferences.
@@ -148,10 +158,10 @@ headless проверки не закрывают native visual, public/web ил
   Legacy `AuthRepository`/`DemoSession` остаются preview API без native configuration.
   Restoring/error/signedOut без guest access блокируют private routes и draft;
   нельзя читать guest или предыдущий UID как fallback. Error/retry остаётся явным.
-- Stateful Shell имеет четыре roots: `/home`, `/resumes`, `/projects`, `/portfolio`.
+- Stateful Shell имеет три roots: `/home`, `/projects`, `/editor`.
   Labels и bottom nav сохраняются на tablet; branch state сохраняется при смене
-  вкладки. Home фильтрует Все/Резюме/Проекты и включает Portfolio в «Все».
-  Resume/Portfolio roots показывают private document libraries. Gear≥48 открывает
+  вкладки. Home читает durable main portfolio; Editor guard предлагает
+  Save/Discard/Cancel до смены вкладки. Gear≥48 открывает
   standalone `/settings`; `/settings/appearance` и `/settings/account` вне Shell.
   Back возвращает origin; UID/access boundary сбрасывает private branch state.
 - Routes именованы в `app_router.dart`; `/register` и `/reset-password` — auth
@@ -188,7 +198,7 @@ headless проверки не закрывают native visual, public/web ил
   не меняет content. Save сохраняет захваченный snapshot, более новый ввод
   остаётся unsaved; повторная запись одновременно не выполняется.
   [HivePortfolioDraftRepository](../../../apps/mobile/lib/features/portfolio_draft/data/hive_portfolio_draft_repository.dart)
-  последовательно проверяет expected revision и пишет envelope v7; v1–v6 читаются
+  последовательно проверяет expected revision и пишет envelope v8; v1–v7 читаются
   без eager migration, explicit Save/ACK пишет текущую версию. Conflict
   сохраняет несохранённые правки и требует явного решения перечитать durable draft.
   `saveNotes` изменяет только notes, сохраняя content. Чтение v1 не пишет migration:
@@ -230,8 +240,8 @@ headless проверки не закрывают native visual, public/web ил
   GitHub cache и draft используют отдельные boxes:
   cache можно удалить/восстановить, draft не затрагивается. LocalStorage сохраняет
   нечитаемый cache file как backup; повреждённый draft не обрезается автоматически.
-- Builder routes: `/portfolio/builder` и дочерние `profile`, `skills`, `experience`,
-  `education`, `links`, `resume`; ручные проекты — `/projects/new`,
+- Legacy Builder compatibility (не современный UI): прежние `/portfolio/builder` и дочерние `profile`, `skills`, `experience`,
+  `education`, `links`, `resume` перенаправляются в `/editor`; ручные проекты — `/projects/new`,
   `/projects/:id/edit`; preview — `/portfolio/preview`. Десять уникальных блоков
   меняют порядок и видимость; preview читает текущий рабочий content.
   Пустые блоки пропускаются; Featured Projects показывает visible/featured проекты,
@@ -239,10 +249,10 @@ headless проверки не закрывают native visual, public/web ил
   `PortfolioTheme` dark/light сохраняется как data contract без read-time migration;
   оба значения отображаются через светлую StackCardTheme. Новые документы получают
   light; theme controls удалены, порядок/видимость блоков остаются. Legacy `resumeText` — обычный
-  текст с переносами строк, без Markdown/файлов. Private документы создаются/
-  редактируются по `/resumes/new`, `/resumes/:id/edit`, `/portfolio/new`,
-  `/portfolio/:id/edit`; Resume creation — пять шагов, существующий документ —
-  focused sections с собственным buffer. Scoped saveDocument/saveProject/
+  текст с переносами строк, без Markdown/файлов. Прежние `/resumes/new`,
+  `/resumes/:id/edit`, `/portfolio/new`, `/portfolio/:id/edit` перенаправляются
+  в `/editor`; прежние модели/формы сохраняются для чтения данных и compatibility
+  tests, без библиотек и мастера в повседневном UI. Scoped saveDocument/saveProject/
   saveDeveloperProfile используют captured repository/expected entity/revision;
   соседние unsaved slices/notes не отправляются этим Save. New Project в документе
   остаётся local buffer до `saveDocument(newProjects: ...)`: Library+relation
@@ -258,8 +268,9 @@ headless проверки не закрывают native visual, public/web ил
   null наследует Library, явное значение относится только к документу.
   `SocialLink` отделяет разрешение базы `publishAllowed` (default false) от
   выбора в документе `visible` (default true); email/phone/telegram — typed kinds.
-  Login email не является contact. `profile.publishLocation` default false;
-  server projection повторно проверяет актуальное разрешение общей базы.
+  Login email не является contact. Legacy `profile.publishLocation` читается
+  только ради приватности переноса: запрещённый город не раскрывается. В новом
+  UI есть только необязательное ручное поле, без географических разрешений.
   Pure domain validation/completion живут в `features/portfolio_draft/domain`;
   процент вычисляется, скрытие блоков его не увеличивает. Remote sync сохраняет
   existing Phase 8 boundary; document publication в D048 — отдельное действие.
@@ -290,28 +301,31 @@ headless проверки не закрывают native visual, public/web ил
   показывает ru/en причину и ведёт к прежним Preview/editor actions без записи.
   Domain, provider и widget tests — `test/portfolio_suggestions*_test.dart`;
   контракт — в [architecture](../../architecture/architecture.md#portfolio-suggestions).
-- Media: [public API](../../../apps/mobile/lib/features/media/media.dart),
-  [ADR 0003](../../decisions/0003-private-portfolio-media.md) и
-  [Storage Rules](../../../firebase/storage.rules). SDK принадлежит media data;
-  widgets читают public APIs. Camera/gallery вызываются явно; MIME/magic/size,
-  resize/compression и EXIF cleanup происходят до upload. Private paths
-  принадлежат UID, не download URLs. Progress/retry не меняют другой owner;
-  Apply и Save отдельны, cancel не меняет draft. Guest не загружает изображения.
-  Private bytes cache memory-only и исчезает при UID transition; external public
-  avatars используют cached_network_image. Не удалять прежние durable paths
-  при замене/ACK: offline/LWW может ещё ссылаться на них. Public projection
-  legacy codec исключает media fields, sync не публикует. Новый trusted handler
-  копирует выбранные изображения в immutable public namespace отдельно от private
-  объектов. Hive writer v7/private cloud writer6 читают legacy versions без
-  read-time rewrite; downgrade запрещён.
-- Location: [public API](../../../apps/mobile/lib/features/location/location.dart) и
+- Media: [public API](../../../apps/mobile/lib/features/media/media.dart) и
+  [ADR 0005](../../decisions/0005-single-main-portfolio.md). Новый аватар хранится
+  в owner-only Firestore как JPEG≤512px/256KiB без EXIF; Storage adapter служит
+  только чтению прежнего path при отсутствии Firestore object. SDK принадлежит
+  media data; widgets читают public APIs. Camera/gallery вызываются явно из меню
+  центрированного редактора128px. Progress/retry не меняют другого owner;
+  Apply и Save отдельны, cancel/error сохраняют прежнее фото. Guest не загружает
+  изображения. Private bytes cache memory-only и исчезает при UID transition.
+  Не удалять прежние durable paths при замене/ACK: offline/LWW может ещё ссылаться
+  на них. Trusted publication повторно проверяет JPEG и включает bounded data URI;
+  private paths и картинки проектов в новые public/PDF outputs не попадают.
+  [Legacy avatar reader](../../../apps/mobile/lib/features/media/data/dio_portfolio_legacy_avatar_reader.dart)
+  читает URL-only фото для PDF через client-only bounded stream≤2MiB/10s с
+  public URL guard и существующим preprocessing. Credentials/redirects/local
+  hosts запрещены; ошибка private path не переключается на URL.
+  Hive writer8/private cloud writer7 читают прежние версии без read-time rewrite.
+  [ADR 0003](../../decisions/0003-private-portfolio-media.md) описывает историю Storage,
+  новые create закрыты [Rules](../../../firebase/storage.rules); cleanup не разрешён.
+- Location (исторический Phase12 API удалён):
   [контракт](../../architecture/architecture.md#выбор-города-и-страны--phase-12).
-  Picker подтверждает город/страну, manual input работает без permissions.
-  Одно определение города вызывается явно; SDK/GPS/native geocoding — только data,
-  наружу возвращается `PortfolioPlace`, без координат/адреса и background updates.
-  Apply/Save отдельны; manual edits/Cancel/UID change защищены от позднего ответа.
-  Существующее `locationText` и схемы сохраняются; hidden Location исключён public
-  projection. Не возвращать карту, Maps SDK/API keys или billing в этот scope.
+  Современный Editor/персонализация сохраняют только ручной `locationText`.
+  GPS/geocoding packages, picker, permissions и прежние галочки удалены.
+  Существующие приватные данные сохраняются в legacy backup; запрещённый ранее
+  город не включается без нового сознательного ввода. Не возвращать карты,
+  координаты, Maps SDK/API keys или billing в этот scope.
 - Account sync: [pure contracts](../../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_sync.dart),
   [local-first repository](../../../apps/mobile/lib/features/portfolio_draft/data/synced_portfolio_draft_repository.dart),
   [Hive metadata](../../../apps/mobile/lib/features/portfolio_draft/data/hive_portfolio_sync_metadata_store.dart)
@@ -406,7 +420,7 @@ headless проверки не закрывают native visual, public/web ил
   `test/portfolio_draft_controller_test.dart`, `test/portfolio_draft_widget_test.dart`:
   revision, input retention, unknown schema, Save failures и навигация.
   Builder checks дополнительно проверяют validation/completion, CRUD, порядок/
-  видимость/тему preview, v1–v6 → v7 compatibility, stale revision и сохранение новых
+  видимость/тему legacy preview, v1–v7 → v8 compatibility, stale revision и сохранение новых
   правок во время Save; имена актуальных tests — в `apps/mobile/test`.
 - Локальные шрифты и лицензии: [assets/fonts](../../../apps/mobile/assets/fonts/);
   регистрация остаётся в pubspec. Manrope400/600/700/800 и OFL/pinned hashes

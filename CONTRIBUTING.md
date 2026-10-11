@@ -61,8 +61,8 @@ native/preview checks; headless checks не доказывают live/Figma acce
 | Документация | Уточнение сценариев, границ, источников и способов работы |
 | Mobile UI и storage | Builder/preview, ручные и импортированные проекты, private notes, GitHub Import/review/ignore с offline copy и app settings |
 | Mobile authentication | Firebase email/password, registration/reset, Google sign-in, session restoration/sign out; именованные защищённые routes и явный guest/UID draft transfer |
-| Sync и publication | Hive7/cloud6, durable outbox/exact ACK/LWW; trusted document publication с permanent ID, privacy/media/delete lifecycle и deny client public writes |
-| Web | Next.js landing/download/Auth/UID owner editors и anonymous /d/[publicId], совместимый cloud6 model; online-first Save/CAS и publication API |
+| Sync и publication | Hive8/cloud7/public2, durable outbox/exact ACK/LWW; trusted document publication с permanent ID, privacy/media/delete lifecycle и deny client public writes |
+| Web | Next.js landing/download/Auth/UID owner editors и anonymous /d/[publicId], совместимый cloud7 model; online-first Save/CAS и publication API |
 | Mobile state и architecture | Provider для ThemeMode/Locale/preferences; Riverpod для repository loading/actions, DI и filters; pure Dart contracts и data adapters, учебные patches вне runtime |
 | Структура | Согласование путей, ignore rules и общего AI-контекста |
 | Brand assets | Сохранение оригиналов и описания их применения |
@@ -815,93 +815,72 @@ Rules не разрешают его writes. Document UI/handler source не о�
 
 ### Location и native acceptance
 
-Phase 12 использует ручной город/страну и optional geolocator/native geocoding,
-без карты, Maps API keys и Maps billing. Контракт — в
-[architecture](docs/architecture/architecture.md#выбор-города-и-страны--phase-12).
-Android manifest запрашивает только `ACCESS_COARSE_LOCATION`, iOS Info.plist —
-`NSLocationWhenInUseUsageDescription`; background updates не включаются.
-При отказе, timeout, отсутствии locality/country или сбое native geocoder
-работает ручной ввод. Native geocoding может требовать сеть; это не поиск
-по каталогу городов, не гарантированный offline resolver и не отдельный HTTP API.
-
-macOS — zsh/bash, cwd `apps/mobile`, focused checks:
+Современный UI хранит только необязательный ручной `locationText`; GPS feature,
+geolocator/geocoding и Android/iOS location permissions удалены. История Phase12
+остаётся в product spec. macOS zsh/bash, cwd `apps/mobile`:
 
 ```zsh
-flutter test --no-pub test/location
+flutter test --no-pub test/manual_location_persistence_test.dart
 ```
-
-Opt-in [location_runtime_test.dart](apps/mobile/integration_test/location_runtime_test.dart)
-проверяет настоящий SDK и, для granted, отдельный Hive test storage после reopen
-и city-only public projection. Обычные account/draft не очищаются;
-`--no-uninstall` сохраняет данные приложения. До запуска подготовить состояние
-permissions/location services на dev device. `granted` требует разрешение,
-location services, доступный fix и native geocoder; `serviceDisabled` — выключенные
-services; `denied` — отказ в появившемся системном dialog; `permanentlyDenied` —
-запрет в OS. Не подменять отсутствующий native fix mocked координатами.
-
-```zsh
-flutter test --no-pub integration_test/location_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_LOCATION_ACCEPTANCE=true --dart-define=LOCATION_SCENARIO=manual
-flutter test --no-pub integration_test/location_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_LOCATION_ACCEPTANCE=true --dart-define=LOCATION_SCENARIO=granted
-flutter test --no-pub integration_test/location_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_LOCATION_ACCEPTANCE=true --dart-define=LOCATION_SCENARIO=serviceDisabled
-```
-
-После проверки восстановить прежние OS settings. SDK test не подтверждает
-системный permission dialog, работу всего picker или process restart;
-widget/unit checks и Android/iOS device acceptance фиксируются отдельно в product spec.
-`manual` проверяет настоящий picker без вызова геолокации, подтверждение и
-city-only Hive/public payload. После integration runner вернуть обычный entrypoint
-через `flutter run --no-pub -d emulator-5554 --no-resident`, без uninstall.
 
 ### Media Storage и native acceptance
 
-Phase 11 использует `features/media`, Storage paths в private draft и
-[Storage Rules](firebase/storage.rules). Контракт/cleanup —
-[ADR 0003](docs/decisions/0003-private-portfolio-media.md). Live Cloud Storage
-требует Blaze и созданный bucket; generated Firebase options содержит имя
-bucket, но это само по себе не доказывает его существование. Billing upgrade
-и deployment не выполняются автоматически. Перед live запуском после отдельного
-разрешения должны быть deployed и Storage Rules, и обновлённые Firestore Rules
-(private schema 6). Старые writers после нового schema update получат отказ.
+Действующий [ADR 0005](docs/decisions/0005-single-main-portfolio.md) использует
+Firestore avatar вместо новых Storage uploads: JPEG512/≤256KiB без EXIF,
+owner-only immutable `accounts/UID/media/32hex.jpg`, scoped cache/late UID guards.
+Legacy Storage paths сохраняются для чтения, новые create закрыты Rules.
+Project photos/gallery отсутствуют. Spark и Firestore достаточно для нового
+avatar, billing/Storage bucket не нужны. Перед live использованием отдельно
+развёртываются новые Rules после разрешения пользователя; эта задача не deploy.
 
-macOS — zsh/bash, cwd `firebase`, для локальной проверки без billing:
+macOS zsh/bash, cwd `firebase`, полный локальный gate:
 
-```sh
+```zsh
 npm run test:all-rules
 ```
 
-`test:storage` проверяет Storage отдельно; `test:rules` — прежние Firestore tests.
-Для native SDK acceptance сначала запустить demo Auth/Storage emulators.
-macOS — zsh/bash, cwd `firebase`:
+Для native SDK проверки открыть Auth/Firestore demo emulators, cwd `firebase`:
 
-```sh
-firebase emulators:start --only auth,storage --project demo-stackcard-test
+```zsh
+firebase emulators:start --only auth,firestore --project demo-stackcard-test
 ```
 
-macOS — zsh/bash, второй терминал, cwd `apps/mobile`, Android emulator:
+macOS zsh/bash, второй терминал, cwd `apps/mobile`:
 
-```sh
-flutter test integration_test/media_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_MEDIA_ACCEPTANCE=true
+```zsh
+flutter test --no-pub integration_test/media_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_AVATAR_ACCEPTANCE=true --dart-define=MEDIA_EMULATOR_HOST=10.0.2.2
 ```
 
-Named Firebase apps используют только demo namespace и не меняют обычный
-app session/draft. Этот тест проверяет native upload/read/progress и отказ
-foreign/unauthenticated SDK; он не открывает camera/gallery системный UI.
-Android debug network config допускает HTTP только к `10.0.2.2`, `127.0.0.1`
-и `localhost`; release не получает это исключение.
-В native app composition Storage emulator включается через
-`STORAGE_EMULATOR_HOST` и `STORAGE_EMULATOR_PORT`; Android host `10.0.2.2`,
-port — из [firebase.json](firebase/firebase.json). Auth/Firestore defines
-настраиваются отдельно; не смешивать emulator и live services случайно.
+Тест использует named apps/disposable demo users и отдельные media docs,
+не ordinary account/session/draft; проверяет native upload/read/ownership и
+повторное чтение новым adapter, но не системный picker или process restart.
+Обязательная device приёмка Gallery/Camera/cancel/denied/network/retry,
+Save→restart, UID during upload и PDF save/cancel фиксируется отдельно.
+iOS требует Xcode/device. Android SAF/iOS exporting picker сохраняют PDF bytes
+без новых storage permissions; web делает Blob download.
 
-Обязательная ручная приёмка: avatar и project image через camera/gallery,
-cancel без потери формы, отказ permissions, progress/retry после network
-failure, Apply → Save → restart → отображение и UID change во время upload.
-iOS требует проверки camera/photo permissions из Info.plist на доступном
-нативном устройстве. JPEG/PNG/WebP supported; HEIC выдаёт validation failure.
-Private image cache memory-only, public внешние avatars кешируются пакетом
-cached_network_image. Потерянный picker result после process death не
-применяется автоматически: выбор повторить. Новые отменённые uploads очищаются
-best effort; прежние saved paths сохраняются для offline/LWW, server GC нет.
+Отдельная native PDF проверка не открывает Auth/Hive и использует только
+одноразовый документ с кириллицей, аватаром и семью иконками. macOS zsh/bash,
+cwd `apps/mobile`; оператор управляет настоящими системными диалогами:
+
+```zsh
+flutter test --no-pub integration_test/pdf_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_PDF_ACCEPTANCE=true --reporter expanded
+```
+
+После `STACKCARD_PDF_ACCEPTANCE:SAVE_READY` сохранить
+`stackcard-native-acceptance.pdf` в Downloads. После `CANCEL_READY` сначала забрать
+original по напечатанному `EXPECTED_PATH` через `adb exec-out run-as`, сравнить
+SHA256 с экспортом, затем нажать Back. `SAVE_PASS/CANCEL_PASS/ALL_PASS` означают
+проверенные ответы native bridge. Прочитать PDF parser/render и проверить
+кириллицу/pages/avatar/URI отдельно; удалить только созданный тестом экспорт
+после проверки. Test finally удаляет приватный original. Для iOS использовать
+подключённый device вместо Android ID и соответствующий системный picker.
+
+`FIRESTORE_MEDIA_ONLY_ACCOUNTS_SINCE` в backend env пуст по умолчанию.
+Заполнять только после доказанного закрытия ВСЕХ новых Storage create в реальном
+окружении; дата исходников не доказательство rollout. Удаление неизвестного
+legacy account без bucket остаётся configuration error до lifecycle lock.
+Backend hosting по-прежнему отложен, env URLs не заменяются фиктивными.
 
 ### Остальные focused и visual проверки
 
@@ -914,7 +893,7 @@ flutter test --no-pub test/portfolio_document_base_review_test.dart test/portfol
 Проверяются сохранение local overrides и порядка, Apply/Cancel/Save/reopen,
 legacy без baseline, raw backups, UID transition и stale captured base. Rules
 проверяются отдельной командой `npm run test:rules` из `firebase`, включая все
-20 документов с baseline. Headless результаты не доказывают visual/native или
+все размеры0–21 документов с baseline и архивом. Headless результаты не доказывают visual/native или
 live sync нового payload. D048 visual/browser/native checks разрешены
 последующим явным ответом пользователя; результаты и ограничения среды отдельно.
 

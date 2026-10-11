@@ -36,6 +36,22 @@
 
 ## Статус и границы текущей работы
 
+**2026-10-12: функциональный редизайн одного основного портфолио** разрешён
+прямым заданием пользователя. [ADR 0005](../decisions/0005-single-main-portfolio.md)
+заменяет повседневный сценарий общей базы/независимых Resume/Portfolio:
+три раздела «Главная / Проекты / Редактор», сохранённое портфолио на главной,
+настоящий PDF, явная публикация, компактная Library и выборочный пакетный импорт
+из одного GitHub-профиля. Все персональные поля необязательны; пустой Save допустим.
+Новый аккаунт проходит четыре пропускаемых шага с устойчивым UID-bound progress.
+Единственное пользовательское изображение — avatar через бесплатный Firestore;
+город/страна вводятся вручную, GPS packages и permissions удалены.
+
+Перенос выбирает прежнюю основу явно и сохраняет неизменяемую копию. Старые
+документы, Library overrides и постоянные опубликованные URL не удаляются;
+Save/импорт/перенос не публикуют автоматически. Hive8/cloud7 и public schema2
+читают прежние версии. Deploy, billing, commit/push и Phase15 не запрошены.
+Результаты этой реализации фиксируются ниже отдельно от старых gates и live hosting.
+
 **2026-10-11: светлый web и mobile redesign** по прямому поручению адаптировать
 [Openship](https://openship.io/) под StackCard, удалить dark и добавить страницы.
 [Web brief](../redesign/web-openship.md) фиксирует композицию, русские тексты,
@@ -95,7 +111,7 @@ base review/атомарный выбор фото и выход из аккау
 Это разрешение функциональной разработки; история фаз и незакрытые проверки
 сохраняются. Карта и Google Maps по прежнему решению исключены.
 
-**Реализованный private mobile scope в исходниках:**
+**Исторический private mobile scope D048 (заменён ADR0005):**
 
 - Четыре stateful вкладки Home / Resumes / Projects / Portfolios с постоянными
   labels, Settings через gear, standalone редакторами и origin Back.
@@ -130,7 +146,7 @@ base review/атомарный выбор фото и выход из аккау
   перезапись. Полный контракт — в
   [architecture](../architecture/architecture.md#общая-база-и-независимые-документы).
 
-**D048 publication/web реализованы в source:** authenticated HTTP
+**Исторический D048 publication/web baseline:** authenticated HTTP
 `documentPublication` читает server-saved workspace, создаёт trusted public
 projection отдельного документа и постоянный `/d/<publicId>`. Реализованы exact
 saved mutation/CAS, inventory/version, recovery unknown operations, immutable
@@ -142,8 +158,9 @@ username API не определяет этот public contract.
 Private Resume attachment даёт public link только после отдельной подтверждённой
 публикации Resume. Фиктивные URL или success для отсутствующего сервиса запрещены.
 
-**Открытая приёмка:** полная Figma/visual/native/browser parity, полный password
-reset, iOS/APNs и оставшиеся media/location сценарии. Android Google-вход и
+**Открытая приёмка прежних фаз:** полная Figma parity, полный password reset,
+iOS/APNs и live media. Прежний GPS scope удалён ADR0005; результаты текущих
+visual/native проверок фиксируются отдельно. Android Google-вход и
 восстановление сессии приняты 2026-10-11; Android live Contact/FCM — 5/5 PASS
 по Phase 14. Постоянные HTTPS Node API и web hosting отложены; временный запуск
 не доказывает production availability. Cloud Functions/App Hosting/billing не
@@ -153,6 +170,41 @@ reset, iOS/APNs и оставшиеся media/location сценарии. Android
 Наличие кода не подтверждает проверку нового сценария. Итоговые проверки этой
 работы фиксируются здесь по фактам; прежние 950/1068 PASS относятся к своим
 историческим версиям и не доказывают новую document модель.
+
+### Проверки единого портфолио — 2026-10-12
+
+Реализация [ADR 0005](../decisions/0005-single-main-portfolio.md) проверена из
+активного checkout на macOS zsh. Прежние результаты ниже относятся к своим версиям.
+
+| Проверка | Фактический результат |
+| --- | --- |
+| Полный Flutter suite | `flutter test --no-pub --reporter expanded` — **1295/1295 PASS** после последних GitHub CAS и legacy avatar/PDF исправлений. Миграция/точный backup, Hive8/cloud7, Dart↔web, пустое Save, privacy, scoped imports/delete, UID/late ACK, сохранённая Home и явная публикация покрыты regressions. |
+| Анализ / формат | `flutter analyze --no-pub` — **0 issues**. Формат 110 затронутых Dart файлов — **0 changes**; `git diff --check` — PASS. |
+| Web | Typecheck, **142/142 tests**, форматирование и финальный production build — PASS. QA routes удалены; обычные 15 routes сохранены. Новая password policy/visibility согласована с mobile. |
+| Backend / Rules | Node syntax check и **42/42 unit tests** — PASS; `npm run test:all-rules` — **81/81 PASS** на demo Auth/Firestore/Storage. Проверены cloud7/cap21, public1/2, owner-only avatar и запрет новых Storage uploads. Это локальные эмуляторы, не deploy. |
+| PDF | Настоящие Manrope/Cyrillic PDF: mobile long fixture — 7 страниц, web — 6; повторённый длинный текст полностью сохранён, в каждом 1 avatar и 16 URI links, private/empty sections исключены. URL-only legacy avatar проходит bounded client reader и JPEG preprocessing; image embed, timeout/size/MIME/UID failures проверены тестами. |
+| Android PDF / media | На emulator-5554 системный SAF Save и Cancel — PASS. Сохранённый PDF: 30 858 bytes, 3 страницы, кириллица, 1 image и 15 URI links; SHA-256 совпал с original. Named demo SDK avatar upload/read/server persistence/repository reopen и ownership/lifecycle denials — PASS. Тестовые данные удалены. |
+| Настоящий web SDK | В локальном demo Auth/Firestore проверены регистрация, Skip/Back/resume/completion, пустое Save, проект/attachment/icon после reload и saved Home при dirty Editor. Browser download дал настоящий PDF сохранённой версии без позднего несохранённого текста. Два созданных тестовых аккаунта и drafts удалены. |
+| Компоновка / доступность | Width320, keyboard, text scale2, scroll/targets и Tab/Shift-Tab — PASS в widget tests. Убраны лишний заголовок Editor и ловушка focus пустой Home. Actual web owner просмотрен при320/desktop/text2; последняя обычная Android APK установлена без uninstall, просмотрены Auth, read-only Home с тремя вкладками и Settings. Legacy основу не выбирали и реальные drafts не изменяли. |
+| Документы / assets | Product/architecture/design/AI scopes и setup согласованы. Local docs links/format — PASS; `check_imports.py --require-brand --require-imported` — PASS. Android APK оставлена с обычным `lib/main.dart`; временные web servers/Firebase emulators остановлены, QA tabs закрыты. |
+
+Основные логи: `/private/tmp/stackcard-single-portfolio-final-verified-tests.log`,
+`stackcard-single-portfolio-final-flutter-analyze.log`, `stackcard-web-tests-final.log`,
+`stackcard-web-build-final.log`, `stackcard-single-all-rules.log`,
+`stackcard-native-pdf.log`, `stackcard-native-avatar.log` и
+`stackcard-single-portfolio-final-android-run.log`. Длинные PDF inspection results —
+`/private/tmp/stackcard-pdf-fixtures/inspection.json`.
+
+**Незакрытые средовые проверки:** новые Rules/indexes и Node service не deployed;
+API URLs/hosting остаются отключёнными, поэтому actual public URL/system Share в
+новом live окружении не подтверждены. UI сообщает о недоступности вместо фиктивного
+успеха. Native Gallery/Camera permissions и полный process restart с новым avatar
+этим gate не проверены; проверен reopen repository. Live CORS внешнего legacy avatar
+не подтверждён: IAB стал недоступен; сервер фото должен разрешать browser CORS.
+iOS runtime/build/document picker, APNs и новый Google `isNewUser` onboarding на
+device не подтверждены; Swift syntax и Info.plist lint — PASS. Xcode/iOS device
+недоступны. Эти ограничения не закрывают старые Phase13/14/Figma/release gates.
+Blaze/billing, commit, push и deploy не выполнялись.
 
 ### Сверка актуальной версии и документации — 2026-10-11
 

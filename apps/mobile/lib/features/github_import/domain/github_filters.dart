@@ -29,10 +29,8 @@ List<GitHubRepository> filterGitHubRepositories(
         GitHubRepositoryFilter.forks => repository.isFork,
         GitHubRepositoryFilter.archived => repository.archived,
       };
-      final searchText =
-          '${repository.name} ${repository.description ?? ''} '
-                  '${repository.language ?? ''}'
-              .toLowerCase();
+      final searchText = '${repository.name} ${repository.description ?? ''}'
+          .toLowerCase();
       return matchesFilter && searchText.contains(normalizedQuery);
     }),
   );

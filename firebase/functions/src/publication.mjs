@@ -1,7 +1,9 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import sharp from 'sharp';
-import { PublicationError, permanentPublicId, projectPublicDocument, publicOrigin, validateRequest } from './projection.mjs';
+import { PublicationError, permanentPublicId, projectPublicDocument, publicOrigin, validateRequest, validatePublicDocumentSize, validateWorkspace } from './projection.mjs';
+import { preparePublicAvatar } from './avatar-media.mjs';
+import { isFirestoreOnlyAccount, readMediaCutover, workspaceAvatarPaths } from './media-lifecycle.mjs';
 import { removeAccountPushBindings } from './contact-service.mjs';
 
 const conflict = () => { throw new PublicationError('conflict', 'State changed; reload before retry', 409); };
@@ -24,7 +26,8 @@ function publicationValue(data) {
   };
 }
 
-export function createPublicationService({ database, bucket, auth, origin, emulator = false, now = () => Date.now() }) {
+export function createPublicationService({ database, bucket, auth, origin, emulator = false, firestoreMediaOnlyAccountsSince = null, now = () => Date.now() }) {
+  const mediaCutover = readMediaCutover(firestoreMediaOnlyAccountsSince);
   const accountRef = (uid) => database.doc(`accounts/${uid}`);
   const draftRef = (uid) => accountRef(uid).collection('drafts').doc('current');
   const publicationRef = (uid, documentId) => accountRef(uid).collection('publications').doc(documentId);
@@ -37,7 +40,7 @@ export function createPublicationService({ database, bucket, auth, origin, emula
   function validDraft(draft, uid) {
     const fields = ['schemaVersion', 'ownerUid', 'mutationId', 'localRevision', 'notes', 'content', 'updatedAt'];
     if (!draft || Object.keys(draft).length !== fields.length || Object.keys(draft).some((key) => !fields.includes(key))
-        || ![4, 5, 6].includes(draft.schemaVersion) || draft.ownerUid !== uid
+        || ![4, 5, 6, 7].includes(draft.schemaVersion) || draft.ownerUid !== uid
         || typeof draft.mutationId !== 'string' || !draft.mutationId || draft.mutationId.length > 200
         || !Number.isSafeInteger(draft.localRevision) || draft.localRevision < 1
         || typeof draft.notes !== 'string' || !(draft.updatedAt instanceof Timestamp)) {
@@ -103,6 +106,16 @@ export function createPublicationService({ database, bucket, auth, origin, emula
         if (!draft || draft.ownerUid !== uid || draft.mutationId !== request.expectedMutationId) conflict();
         validDraft(draft, uid);
         projection = projectPublicDocument(draft.content, request.documentId, uid, publicId, version, request.operationId);
+        // Тот же immutable owner path: сначала бесплатный Firestore media store.
+        const storageMedia = [];
+        for (const item of projection.media) {
+          const image = await transaction.get(database.doc(item.source));
+          if (image.exists) {
+            projection.publicDocument.content.profile.avatarUrl = await preparePublicAvatar(image.data());
+          } else storageMedia.push(item);
+        }
+        projection.media = storageMedia;
+        validatePublicDocumentSize(projection.publicDocument);
         if (projection.attachedResumeId) {
           const resume = await transaction.get(publicationRef(uid, projection.attachedResumeId));
           if (resume.data()?.state === 'published') projection.publicDocument.attachedResumePublicId = resume.data().publicId;
@@ -237,6 +250,7 @@ export function createPublicationService({ database, bucket, auth, origin, emula
           ...draft, mutationId: `delete-${request.operationId}`, localRevision: draft.localRevision + 1,
           content: {
             ...draft.content,
+            ...(draft.schemaVersion >= 7 && draft.content.mainPortfolioId === request.documentId ? { mainPortfolioId: null } : {}),
             documents: draft.content.documents.filter((item) => item.id !== request.documentId)
               .map((item) => item.attachedResumeId === request.documentId ? { ...item, attachedResumeId: null } : item),
           }, updatedAt: timestamp(),
@@ -300,12 +314,17 @@ export function createPublicationService({ database, bucket, auth, origin, emula
     if (!Number.isInteger(token.auth_time) || now() / 1000 - token.auth_time > 300 || token.auth_time > now() / 1000 + 60) {
       throw new PublicationError('reauthentication-required', 'Sign in again before deleting account', 412);
     }
-    // Private/orphan objects нельзя подтвердить без Storage: не ставим lock и не удаляем identity.
-    requireStorage();
+    // Без явного подтверждённого cutover неизвестные orphan Storage остаются blocker.
+    if (!bucket && mediaCutover === null) requireStorage();
+    let creationTime;
+    if (!bucket) {
+      try { creationTime = (await auth.getUser(uid)).metadata.creationTime; } catch { requireStorage(); }
+    }
     const prepared = await database.runTransaction(async (transaction) => {
-      const [accountSnapshot, operationSnapshot, publications] = await Promise.all([
+      const [accountSnapshot, operationSnapshot, publications, draftSnapshot, operations] = await Promise.all([
         transaction.get(accountRef(uid)), transaction.get(operationRef(uid, request.operationId)),
-        transaction.get(accountRef(uid).collection('publications').where('state', '==', 'published')),
+        transaction.get(accountRef(uid).collection('publications')),
+        transaction.get(draftRef(uid)), transaction.get(accountRef(uid).collection('publicationOperations')),
       ]);
       const account = accountSnapshot.data();
       const operation = operationSnapshot.data();
@@ -314,10 +333,24 @@ export function createPublicationService({ database, bucket, auth, origin, emula
         return operation;
       }
       if (stateOf(account) !== 'active' || generationOf(account) !== request.expectedGeneration) conflict();
+      if (!bucket) {
+        const draft = draftSnapshot.data();
+        if (!isFirestoreOnlyAccount({ cutoff: mediaCutover, creationTime, draft, account,
+          publications: publications.docs.map((item) => item.data()), operations: operations.docs.map((item) => item.data()) })) requireStorage();
+        validDraft(draft, uid);
+        validateWorkspace(draft.content, uid);
+        // Только bounded Firestore references; отсутствие не заменяется фиктивной очисткой.
+        for (const path of workspaceAvatarPaths(draft.content)) {
+          const image = await transaction.get(database.doc(path));
+          if (!image.exists) requireStorage();
+          await preparePublicAvatar(image.data());
+        }
+      }
       let legacy = null;
       if (account?.username) legacy = await transaction.get(database.doc(`publicPortfolios/${account.username}`));
       const nextGeneration = generationOf(account) + 1;
       for (const publication of publications.docs) {
+        if (publication.data().state !== 'published') continue;
         transaction.delete(publicRef(publication.data().publicId));
         transaction.update(publication.ref, { state: 'deleted', url: null, version: publication.data().version + 1, mediaPaths: [], updatedAt: timestamp() });
       }
@@ -332,6 +365,7 @@ export function createPublicationService({ database, bucket, auth, origin, emula
       const pending = {
         action: 'deleteAccount', operationId: request.operationId, fingerprint: fingerprint(request),
         status: 'pending', expectedGeneration: request.expectedGeneration,
+        mediaBackend: bucket ? 'storage' : 'firestore',
         recoveryKeyHash: createHash('sha256').update(request.recoveryKey).digest('hex'),
         result: { lifecycleGeneration: nextGeneration }, createdAt: timestamp(),
       };
@@ -343,7 +377,7 @@ export function createPublicationService({ database, bucket, auth, origin, emula
   }
 
   async function cleanupAccount(uid, operationId, prepared) {
-    requireStorage();
+    if (prepared.mediaBackend !== 'firestore') requireStorage();
     try {
       // Account lock уже запрещает SDK writes; withdrawal подтверждён прежде cleanup.
       const [publications, operations] = await Promise.all([
@@ -358,8 +392,10 @@ export function createPublicationService({ database, bucket, auth, origin, emula
       for (const publication of publications.docs) {
         publicIds.add(publication.data().publicId);
       }
-      for (const publicId of publicIds) await bucket.deleteFiles({ prefix: `publicMedia/${publicId}/`, force: true });
-      await bucket.deleteFiles({ prefix: `accounts/${uid}/`, force: true });
+      if (bucket) {
+        for (const publicId of publicIds) await bucket.deleteFiles({ prefix: `publicMedia/${publicId}/`, force: true });
+        await bucket.deleteFiles({ prefix: `accounts/${uid}/`, force: true });
+      }
       await removeAccountPushBindings(database, uid);
       for (const collection of await accountRef(uid).listCollections()) {
         if (collection.id === 'publicationOperations') {

@@ -33,7 +33,7 @@ class SettingsEditorScaffold extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: StackCardSpacing.cardPadding,
+                  horizontal: StackCardSpacing.lg,
                   vertical: StackCardSpacing.md,
                 ),
                 child: Row(
@@ -62,7 +62,7 @@ class SettingsEditorScaffold extends StatelessWidget {
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(StackCardSpacing.cardPadding),
+                  padding: const EdgeInsets.all(StackCardSpacing.lg),
                   child: child,
                 ),
               ),
@@ -70,7 +70,7 @@ class SettingsEditorScaffold extends StatelessWidget {
                 ColoredBox(
                   color: context.colors.surface,
                   child: Padding(
-                    padding: const EdgeInsets.all(StackCardSpacing.cardPadding),
+                    padding: const EdgeInsets.all(StackCardSpacing.lg),
                     child: footer!,
                   ),
                 ),

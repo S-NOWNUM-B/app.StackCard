@@ -189,7 +189,11 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
     if (widget.mode == AuthFormMode.resetPassword) {
       setState(() => _resetSent = true);
     } else {
-      context.go(destination);
+      context.go(
+        ref.read(pendingPersonalizationUidProvider) != null
+            ? '/personalization'
+            : destination,
+      );
     }
   }
 
@@ -207,7 +211,13 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
     final success = await ref
         .read(accountAuthControllerProvider.notifier)
         .signInGoogle();
-    if (mounted && success) context.go(destination);
+    if (mounted && success) {
+      context.go(
+        ref.read(pendingPersonalizationUidProvider) != null
+            ? '/personalization'
+            : destination,
+      );
+    }
   }
 
   Widget _visibilityButton({required bool confirmation, required bool busy}) {

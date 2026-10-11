@@ -1,6 +1,5 @@
-import { TechnologyBadges } from '@/components/ui';
 import type { ReactNode } from 'react';
-import { safePublicHref, safePublicMedia } from '@/lib/public-document';
+import { publicProjectIcon, safePublicHref, safePublicMedia } from '@/lib/public-document';
 import type {
   PublicDocumentContent,
   PublicDocumentKind,
@@ -55,8 +54,8 @@ export function DocumentView({
       <img
         className="portrait"
         src={avatar}
-        width={80}
-        height={80}
+        width={128}
+        height={128}
         alt={`Фото ${profile.name || 'автора'}`}
         referrerPolicy="no-referrer"
       />
@@ -65,41 +64,38 @@ export function DocumentView({
   const visible = new Set(content.blocks.filter((b) => b.visible).map((b) => b.kind));
   const attached =
     attachedResumeUrl && /^\/d\/[a-f0-9]{32}$/.test(attachedResumeUrl) ? attachedResumeUrl : null;
+  const hasProfile =
+    visible.has('profile') && (profile.name.trim() || profile.headline.trim() || photo);
+  const bio = visible.has('about') && profile.bio.trim() ? profile.bio : '';
+  const location =
+    visible.has('location') && profile.locationText.trim() ? profile.locationText : '';
   return (
     <article
       className={`document-paper ${kind === 'resume' ? 'public-resume' : 'public-portfolio'}`}
       data-theme="light"
       aria-label={kind === 'resume' ? 'Резюме' : 'Портфолио'}
     >
+      {(hasProfile || bio || location) && (
+        <header className="identity document-profile">
+          {visible.has('profile') && photo}
+          {visible.has('profile') && profile.name.trim() && <h1>{profile.name}</h1>}
+          {visible.has('profile') && profile.headline.trim() && <h3>{profile.headline}</h3>}
+          {bio && <p>{bio}</p>}
+          {location && <p className="muted">{location}</p>}
+        </header>
+      )}
       {content.blocks
         .filter((block) => block.visible)
         .map((block) => {
           switch (block.kind) {
             case 'profile':
-              return profile.name || profile.headline || photo ? (
-                <div className="identity" key={block.kind}>
-                  {photo}
-                  {profile.name && <h1>{profile.name}</h1>}
-                  {profile.headline && <h3>{profile.headline}</h3>}
-                </div>
-              ) : null;
             case 'about':
-              return profile.bio ? (
-                <p className="document-section" key={block.kind}>
-                  {profile.bio}
-                </p>
-              ) : null;
             case 'location':
-              return profile.locationText ? (
-                <section className="document-section" key={block.kind}>
-                  <h3>Местоположение</h3>
-                  <p>{profile.locationText}</p>
-                </section>
-              ) : null;
+              return null;
             case 'skills':
               return content.skills.length ? (
                 <section className="document-section" key={block.kind}>
-                  <h3>Технологии</h3>
+                  <h3>Навыки</h3>
                   <p>{content.skills.map((s) => s.name).join(' · ')}</p>
                 </section>
               ) : null;
@@ -130,62 +126,54 @@ export function DocumentView({
                 </section>
               ) : null;
             case 'featuredProjects':
-              return content.projects.length ? (
+              return content.projects.some((project) => project.visible) ? (
                 <section className="document-section" id={id('projects')} key={block.kind}>
                   <h2>Проекты</h2>
-                  <div className={kind === 'portfolio' ? 'project-grid' : 'stack'}>
+                  <div className="document-project-list">
                     {content.projects
                       .filter((p) => p.visible)
-                      .map((project) => (
-                        <div className="stack" key={project.id}>
-                          <h3>{project.title}</h3>
-                          {project.description && <p>{project.description}</p>}
-                          {project.contribution && <p>{project.contribution}</p>}
-                          {project.imageUrls.map((value, index) => {
-                            const src = safePublicMedia(value, publicId, version);
-                            return src ? (
-                              <img
-                                className="project-image"
-                                key={value}
-                                src={src}
-                                alt={`${project.title} — изображение ${index + 1}`}
-                                loading="lazy"
-                                referrerPolicy="no-referrer"
-                              />
-                            ) : null;
-                          })}
-                          {project.technologies.length > 0 && (
-                            <TechnologyBadges items={project.technologies} />
-                          )}
-                          <div className="row">
-                            {safePublicHref(project.repositoryUrl) && (
-                              <a
-                                className="button secondary"
-                                href={project.repositoryUrl}
-                                target="_blank"
-                                rel="noopener noreferrer nofollow"
-                              >
-                                Исходный код
-                              </a>
-                            )}
-                            {safePublicHref(project.liveUrl) && (
-                              <a
-                                className="button secondary"
-                                href={project.liveUrl}
-                                target="_blank"
-                                rel="noopener noreferrer nofollow"
-                              >
-                                Открыть проект
-                              </a>
-                            )}
+                      .map((project) => {
+                        const href =
+                          safePublicHref(project.liveUrl) || safePublicHref(project.repositoryUrl);
+                        const details = (
+                          <>
+                            <img
+                              className="document-project-icon"
+                              src={`/icons/lucide/${publicProjectIcon(project.iconId)}.svg`}
+                              width={24}
+                              height={24}
+                              alt=""
+                              aria-hidden="true"
+                            />
+                            <div className="document-project-text">
+                              <h3>{project.title}</h3>
+                              {project.description.trim() && <p>{project.description}</p>}
+                            </div>
+                          </>
+                        );
+                        return href ? (
+                          <a
+                            className="document-project-row"
+                            key={project.id}
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer nofollow"
+                          >
+                            {details}
+                          </a>
+                        ) : (
+                          <div className="document-project-row" key={project.id}>
+                            {details}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                   </div>
                 </section>
               ) : null;
             case 'links': {
-              const links = content.links.filter((link) => link.kind !== 'github');
+              const links = content.links.filter(
+                (link) => link.kind !== 'github' && safePublicHref(link.url, link.kind),
+              );
               return links.length ? (
                 <section
                   className={`document-section ${kind === 'portfolio' ? 'section' : ''}`}
@@ -200,7 +188,9 @@ export function DocumentView({
               ) : null;
             }
             case 'github': {
-              const links = content.links.filter((link) => link.kind === 'github');
+              const links = content.links.filter(
+                (link) => link.kind === 'github' && safePublicHref(link.url, link.kind),
+              );
               return links.length ? (
                 <section
                   className="document-section"
@@ -214,7 +204,7 @@ export function DocumentView({
               ) : null;
             }
             case 'resume':
-              return content.resumeText || attached ? (
+              return content.resumeText.trim() || attached ? (
                 <section className="document-section" key={block.kind}>
                   {content.resumeText && <p>{content.resumeText}</p>}
                   {attached && (
@@ -261,7 +251,7 @@ export function exampleDocumentContent(
         liveUrl: '',
         featured: true,
         visible: true,
-        imageUrls: [],
+        iconId: 'panels-top-left',
       },
       {
         id: 'demo-pocket',
@@ -273,7 +263,7 @@ export function exampleDocumentContent(
         liveUrl: '',
         featured: false,
         visible: true,
-        imageUrls: [],
+        iconId: 'file-text',
       },
     ],
     experience: [

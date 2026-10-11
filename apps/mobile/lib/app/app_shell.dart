@@ -2,22 +2,23 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/localization/app_strings.dart';
 import '../core/theme/stackcard_colors.dart';
 import '../core/theme/stackcard_tokens.dart';
 import '../shared/widgets/stackcard_brand.dart';
 import '../shared/widgets/stackcard_icon.dart';
+import '../features/portfolio_draft/portfolio_draft.dart';
 
-// Четыре библиотеки сохраняют состояние при переключении вкладок.
+// Три раздела сохраняют состояние при переключении вкладок.
 const _destinations = [
   (path: '/home', label: 'nav.home', icon: 'home'),
-  (path: '/resumes', label: 'nav.resumes', icon: 'file-text'),
   (path: '/projects', label: 'nav.projects', icon: 'folder'),
-  (path: '/portfolio', label: 'nav.portfolio', icon: 'panels-top-left'),
+  (path: '/editor', label: 'nav.editor', icon: 'file-text'),
 ];
 
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerWidget {
   const AppShell({
     super.key,
     required this.location,
@@ -29,11 +30,15 @@ class AppShell extends StatelessWidget {
   final void Function(int)? onNavigate;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final selected = _destinations.indexWhere((item) => item.path == location);
     final index = selected < 0 ? 0 : selected;
     final compactHeader = MediaQuery.sizeOf(context).height < 400;
-    void navigate(int destination) {
+    Future<void> navigate(int destination) async {
+      if (_destinations[destination].path == location) return;
+      final guard = ref.read(mainPortfolioEditorNavigationProvider);
+      if (location == '/editor' && guard != null && !await guard()) return;
+      if (!context.mounted) return;
       if (_destinations[destination].path != location) {
         if (onNavigate != null) {
           onNavigate!(destination);
@@ -56,9 +61,9 @@ class AppShell extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    StackCardSpacing.cardPadding,
+                    StackCardSpacing.lg,
                     StackCardSpacing.md,
-                    StackCardSpacing.cardPadding,
+                    StackCardSpacing.lg,
                     StackCardSpacing.sm,
                   ),
                   child: DecoratedBox(
@@ -122,7 +127,17 @@ class AppShell extends StatelessWidget {
                               minWidth: StackCardSize.touchTarget,
                               minHeight: StackCardSize.touchTarget,
                             ),
-                            onPressed: () => context.push('/settings'),
+                            onPressed: () async {
+                              final guard = ref.read(
+                                mainPortfolioEditorNavigationProvider,
+                              );
+                              if (location == '/editor' &&
+                                  guard != null &&
+                                  !await guard()) {
+                                return;
+                              }
+                              if (context.mounted) context.push('/settings');
+                            },
                             icon: const StackCardIcon(name: 'settings'),
                           ),
                         ],
@@ -133,9 +148,9 @@ class AppShell extends StatelessWidget {
                 if (index != 0 && !compactHeader)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
-                      StackCardSpacing.cardPadding,
+                      StackCardSpacing.lg,
                       StackCardSpacing.xl,
-                      StackCardSpacing.cardPadding,
+                      StackCardSpacing.lg,
                       StackCardSpacing.xs,
                     ),
                     child: Semantics(

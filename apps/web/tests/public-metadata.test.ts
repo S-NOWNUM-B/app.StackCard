@@ -156,6 +156,24 @@ test('photo metadata uses only the current published public media version', asyn
   assert.ok(html.includes(encodeURIComponent(media)));
 });
 
+test('modern inline JPEG appears in the public portfolio but never in OG or Twitter metadata', async (t) => {
+  const document = fixture();
+  document.schemaVersion = 2;
+  document.kind = 'portfolio';
+  document.content.profile.avatarUrl =
+    'data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AKpAB//Z';
+  const calls = setup(t, async () => response(document));
+  const metadata = await generateMetadata(params());
+  assert.deepEqual(metadata.title, { absolute: 'Alex — Портфолио | StackCard' });
+  assert.deepEqual((metadata.openGraph as { images: unknown }).images, []);
+  assert.deepEqual((metadata.twitter as { images: unknown }).images, []);
+  assert.ok(!JSON.stringify(metadata).includes('data:image'));
+  const html = renderToStaticMarkup(await PublicDocumentPage(params()));
+  assert.ok(html.includes(document.content.profile.avatarUrl));
+  assert.ok(html.includes('document-profile'));
+  assertPublicReads(calls);
+});
+
 test('no photo and a disallowed external photo do not create a crawler image', async (t) => {
   const document = fixture();
   setup(t, async () => response(document));

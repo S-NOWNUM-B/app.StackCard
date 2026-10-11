@@ -12,7 +12,6 @@ import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../../../shared/widgets/stackcard_technology_badge.dart';
-import '../../media/media.dart';
 import '../../projects/projects.dart';
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_draft_repository.dart';
@@ -41,11 +40,9 @@ class _PortfolioProjectEditorScreenState
   PortfolioProject? _initialProject;
   PortfolioDraftRepository? _initialRepository;
   bool _stale = false;
-  var _mediaKey = GlobalKey<PortfolioMediaEditorState>();
-  List<String> _imagePaths = const [];
-  bool _mediaBusy = false;
+  String _iconId = 'folder';
+  String _baselineIconId = 'folder';
   Map<String, String>? _baselineValues;
-  List<String> _baselineImages = const [];
   bool _editingTechnologies = false;
   bool _allowPop = false;
   bool _confirmingExit = false;
@@ -54,7 +51,7 @@ class _PortfolioProjectEditorScreenState
   bool get _dirty =>
       _controllers != null &&
       (!mapEquals(_baselineValues, builderFieldValues(_controllers!)) ||
-          !listEquals(_baselineImages, _imagePaths));
+          _baselineIconId != _iconId);
 
   void _inputChanged() {
     if (mounted) setState(() => _saveFailed = false);
@@ -70,11 +67,9 @@ class _PortfolioProjectEditorScreenState
       _initialProject = null;
       _initialRepository = null;
       _stale = false;
-      _mediaKey = GlobalKey<PortfolioMediaEditorState>();
-      _imagePaths = const [];
-      _mediaBusy = false;
+      _iconId = 'folder';
+      _baselineIconId = 'folder';
       _baselineValues = null;
-      _baselineImages = const [];
       _editingTechnologies = false;
       _allowPop = false;
       _saveFailed = false;
@@ -99,7 +94,8 @@ class _PortfolioProjectEditorScreenState
     if (_fields != null) return;
     _initialProject = project;
     _initialRepository = ref.read(portfolioDraftRepositoryProvider);
-    _imagePaths = project?.imagePaths ?? const [];
+    _iconId = project?.iconId ?? 'folder';
+    _baselineIconId = _iconId;
     _featured = project?.featured ?? false;
     _visible = project?.visible ?? true;
     _fields = [
@@ -150,7 +146,6 @@ class _PortfolioProjectEditorScreenState
     ];
     _controllers = builderFieldControllers(_fields!);
     _baselineValues = builderFieldValues(_controllers!);
-    _baselineImages = List.of(_imagePaths);
     for (final controller in _controllers!.values) {
       controller.addListener(_inputChanged);
     }
@@ -175,7 +170,7 @@ class _PortfolioProjectEditorScreenState
   }
 
   Future<void> _apply() async {
-    if (_mediaBusy || ref.read(portfolioDraftControllerProvider).saving) return;
+    if (ref.read(portfolioDraftControllerProvider).saving) return;
     if (_formKey.currentState?.validate() != true) return;
     final state = ref.read(portfolioDraftControllerProvider);
     final current = state.content;
@@ -205,14 +200,11 @@ class _PortfolioProjectEditorScreenState
       liveUrl: values['liveUrl']!,
       featured: _featured,
       visible: _visible,
-      imagePaths: _imagePaths,
+      imagePaths: existingProject?.imagePaths ?? const [],
+      iconId: _iconId,
       updatedAt: DateTime.now().toUtc(),
     );
-    final project =
-        existingProject
-            ?.withUserEdits(edited)
-            .copyWith(imagePaths: _imagePaths, updatedAt: edited.updatedAt) ??
-        edited;
+    final project = existingProject?.withUserEdits(edited) ?? edited;
     final saved = await controller.saveProject(
       project,
       expectedProject: _initialProject,
@@ -234,11 +226,10 @@ class _PortfolioProjectEditorScreenState
     }
     _initialProject = project;
     _baselineValues = values;
-    _baselineImages = List.of(project.imagePaths);
-    _mediaKey.currentState?.retainUploads(paths: project.imagePaths);
+    _baselineIconId = project.iconId;
     // Ввод после нажатия Save остаётся в форме, даже если старый snapshot сохранён.
     if (!mapEquals(values, builderFieldValues(_controllers!)) ||
-        !listEquals(project.imagePaths, _imagePaths)) {
+        project.iconId != _iconId) {
       return;
     }
     _leave();
@@ -410,7 +401,9 @@ class _PortfolioProjectEditorScreenState
       builder: (context) => AlertDialog(
         scrollable: true,
         title: Text(context.strings.tr('workspace.deleteProjectTitle')),
-        content: Text(context.strings.tr('workspace.deleteProjectHint')),
+        content: const Text(
+          'Проект будет удалён из StackCard и портфолио. Репозиторий GitHub останется. Если проект опубликован, обновите публичную версию портфолио.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -461,11 +454,10 @@ class _PortfolioProjectEditorScreenState
         state.canEdit &&
         content != null &&
         found &&
-        !_mediaBusy &&
         !ownerChanged &&
         !state.saving;
     return PopScope<Object?>(
-      canPop: _allowPop || (!_dirty && !state.saving && !_mediaBusy),
+      canPop: _allowPop || (!_dirty && !state.saving),
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _close();
       },
@@ -493,7 +485,7 @@ class _PortfolioProjectEditorScreenState
                 maxWidth: StackCardSize.contentMaxWidth,
               ),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(StackCardSpacing.cardPadding),
+                padding: const EdgeInsets.all(StackCardSpacing.lg),
                 child: BuilderContentGate(
                   data: (content) {
                     if (ownerChanged) {
@@ -543,32 +535,37 @@ class _PortfolioProjectEditorScreenState
                           const SizedBox(height: StackCardSpacing.lg),
                           _technologiesSection(),
                           const SizedBox(height: StackCardSpacing.lg),
-                          StackCardCard(
-                            outlined: true,
-                            padding: const EdgeInsets.all(StackCardSpacing.lg),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                PortfolioMediaEditor(
-                                  key: _mediaKey,
-                                  titleKey: 'mobileParity.cover',
-                                  maxImages: portfolioProjectImageLimit,
-                                  paths: _imagePaths,
-                                  enabled: !state.saving && !ownerChanged,
-                                  emptyState: Text(
-                                    context.strings.tr('mobileParity.noCover'),
-                                    key: const ValueKey('project.cover.empty'),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium,
-                                  ),
-                                  onChanged: (paths) =>
-                                      setState(() => _imagePaths = paths),
-                                  onBusyChanged: (busy) =>
-                                      setState(() => _mediaBusy = busy),
+                          Row(
+                            children: [
+                              ProjectStockIcon(iconId: _iconId),
+                              const SizedBox(width: StackCardSpacing.md),
+                              Flexible(
+                                child: StackCardButton(
+                                  key: const ValueKey('project.icon.select'),
+                                  label: 'Иконка проекта',
+                                  onPressed: state.saving
+                                      ? null
+                                      : () async {
+                                          final selected =
+                                              await showProjectIconPicker(
+                                                context,
+                                                selectedIconId: _iconId,
+                                              );
+                                          if (!mounted ||
+                                              selected == null ||
+                                              !identical(
+                                                _initialRepository,
+                                                ref.read(
+                                                  portfolioDraftRepositoryProvider,
+                                                ),
+                                              )) {
+                                            return;
+                                          }
+                                          setState(() => _iconId = selected);
+                                        },
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: StackCardSpacing.lg),
                           _field('repositoryUrl'),
@@ -588,14 +585,7 @@ class _PortfolioProjectEditorScreenState
                                   )
                                 : _controllers!['title']!.text,
                             description: _controllers!['description']!.text,
-                            technologies: _technologies(
-                              _controllers!['technologies']!.text,
-                            ),
-                            sourceLabel:
-                                project?.source == PortfolioProjectSource.github
-                                ? 'GitHub'
-                                : context.strings.tr('filter.manual'),
-                            imagePaths: _imagePaths,
+                            iconId: _iconId,
                             showActions: false,
                           ),
                           if (project != null) ...[
@@ -629,9 +619,9 @@ class _PortfolioProjectEditorScreenState
                 ),
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
-                    StackCardSpacing.cardPadding,
                     StackCardSpacing.lg,
-                    StackCardSpacing.cardPadding,
+                    StackCardSpacing.lg,
+                    StackCardSpacing.lg,
                     StackCardSpacing.lg +
                         MediaQuery.viewInsetsOf(context).bottom,
                   ),

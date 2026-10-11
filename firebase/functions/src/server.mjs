@@ -9,6 +9,7 @@ import { getStorage } from 'firebase-admin/storage';
 import { createContactHttpHandler } from './contact-http.mjs';
 import { createPublicationHttpHandler } from './publication-http.mjs';
 import { publicOrigin } from './projection.mjs';
+import { readMediaCutover } from './media-lifecycle.mjs';
 
 const emulatorKeys = ['FIRESTORE_EMULATOR_HOST', 'FIREBASE_AUTH_EMULATOR_HOST', 'FIREBASE_STORAGE_EMULATOR_HOST'];
 const loopback = ['localhost', '127.0.0.1', '[::1]'];
@@ -35,8 +36,10 @@ export function readServerConfiguration(env = process.env) {
   if (storageBucket && (!emulator || !env.FIREBASE_STORAGE_EMULATOR_HOST
       || !/^[a-z0-9][a-z0-9._-]{1,220}[a-z0-9]$/.test(storageBucket))) throw new Error('configuration-required');
   const port = Number(env.BACKEND_PORT);
+  const firestoreMediaOnlyAccountsSince = env.FIRESTORE_MEDIA_ONLY_ACCOUNTS_SINCE || null;
+  readMediaCutover(firestoreMediaOnlyAccountsSince);
   if (!/^[0-9]+$/.test(env.BACKEND_PORT ?? '') || !Number.isInteger(port) || port < 1 || port > 65535) throw new Error('configuration-required');
-  return { projectId, emulator, origin, appId, secret, storageBucket, port };
+  return { projectId, emulator, origin, appId, secret, storageBucket, port, firestoreMediaOnlyAccountsSince };
 }
 
 function readBody(request, limit) {
@@ -123,7 +126,8 @@ export async function startServer({ app, env = process.env } = {}) {
       messaging: configuration.emulator ? undefined : getMessaging(adminApp), ...configuration }),
     publicationHandler: createPublicationHttpHandler({ database, auth,
       bucket: configuration.storageBucket ? getStorage(adminApp).bucket(configuration.storageBucket) : null,
-      origin: configuration.origin, emulator: configuration.emulator }),
+      origin: configuration.origin, emulator: configuration.emulator,
+      firestoreMediaOnlyAccountsSince: configuration.firestoreMediaOnlyAccountsSince }),
   });
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(configuration.port, '127.0.0.1', resolve); });
   return server;

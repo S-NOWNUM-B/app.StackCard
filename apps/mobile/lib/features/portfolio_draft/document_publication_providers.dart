@@ -59,6 +59,21 @@ final documentPublicationExpectedMutationProvider = Provider<String?>((ref) {
   return sync.confirmedMutationId;
 });
 
+/// Главная публикует durable snapshot, даже если в редакторе остался буфер.
+final documentPublicationSavedMutationProvider = Provider<String?>((ref) {
+  final draft = ref.watch(portfolioDraftControllerProvider);
+  final sync = ref.watch(portfolioSyncStateProvider);
+  if (!draft.canEdit ||
+      draft.saving ||
+      draft.remoteUpdateAvailable ||
+      draft.draft == null ||
+      draft.draft!.pendingSync ||
+      sync.status != PortfolioSyncStatus.synced) {
+    return null;
+  }
+  return sync.confirmedMutationId;
+});
+
 final class DocumentPublicationState {
   const DocumentPublicationState({
     this.inventory,
@@ -89,11 +104,13 @@ final class DocumentPublicationState {
 
 class DocumentPublicationController extends Notifier<DocumentPublicationState> {
   int _generation = 0;
+  Future<void>? _loadOperation;
   DocumentPublicationRepository? _repository;
   DocumentPublicationOperationStore? _store;
 
   @override
   DocumentPublicationState build() {
+    _loadOperation = null;
     _repository = ref.watch(documentPublicationRepositoryProvider);
     final session = ref.watch(accountSessionProvider);
     final uid = !session.isLoading && !session.hasError
@@ -112,15 +129,26 @@ class DocumentPublicationController extends Notifier<DocumentPublicationState> {
 
   bool _active(int generation) => ref.mounted && generation == _generation;
 
-  Future<void> load() async {
-    if (state.busy) return;
+  Future<void> load() {
+    if (state.busy) return Future<void>.value();
+    final loading = _loadOperation;
+    if (loading != null) return loading;
+    late final Future<void> operation;
+    operation = _loadInventory().whenComplete(() {
+      if (identical(_loadOperation, operation)) _loadOperation = null;
+    });
+    _loadOperation = operation;
+    return operation;
+  }
+
+  Future<void> _loadInventory() async {
     final repository = _repository;
     final store = _store;
     if (repository == null || store == null) {
       state = const DocumentPublicationState(loading: false);
       return;
     }
-    final generation = _generation;
+    final generation = ++_generation;
     state = DocumentPublicationState(
       inventory: state.inventory,
       loading: true,
@@ -129,6 +157,7 @@ class DocumentPublicationController extends Notifier<DocumentPublicationState> {
     DocumentPublicationMutation? pending = state.pending;
     try {
       pending = await store.read();
+      if (!_active(generation)) return;
       final inventory = await repository.inventory();
       if (!_active(generation)) return;
       for (final item in inventory.publications.where(
@@ -161,11 +190,14 @@ class DocumentPublicationController extends Notifier<DocumentPublicationState> {
   Future<bool> perform({
     required DocumentPublicationAction action,
     required String documentId,
+    bool savedVersion = false,
   }) async {
     final repository = _repository;
     final store = _store;
     final expectedMutation = ref.read(
-      documentPublicationExpectedMutationProvider,
+      savedVersion
+          ? documentPublicationSavedMutationProvider
+          : documentPublicationExpectedMutationProvider,
     );
     if (repository == null ||
         store == null ||
@@ -187,7 +219,7 @@ class DocumentPublicationController extends Notifier<DocumentPublicationState> {
       expectedVersion: state.forDocument(documentId)?.version ?? 0,
       expectedGeneration: state.inventory!.lifecycleGeneration,
     );
-    final generation = _generation;
+    final generation = _beginMutation();
     state = DocumentPublicationState(
       inventory: state.inventory,
       loading: false,
@@ -216,20 +248,21 @@ class DocumentPublicationController extends Notifier<DocumentPublicationState> {
     if (pending == null || state.busy || state.loading || _repository == null) {
       return false;
     }
+    final generation = _beginMutation();
     state = DocumentPublicationState(
       inventory: state.inventory,
       loading: false,
       busy: true,
       pending: pending,
     );
-    return _send(pending, _generation);
+    return _send(pending, generation);
   }
 
   Future<bool> checkOperation() async {
     final pending = state.pending;
     final repository = _repository;
     if (pending == null || repository == null || state.busy) return false;
-    final generation = _generation;
+    final generation = _beginMutation();
     state = DocumentPublicationState(
       inventory: state.inventory,
       loading: false,
@@ -266,6 +299,12 @@ class DocumentPublicationController extends Notifier<DocumentPublicationState> {
       if (_active(generation)) _retainUnknown(mutation, _failure(error));
       return false;
     }
+  }
+
+  // Ответ начатого ранее inventory не заменяет journal и состояние операции.
+  int _beginMutation() {
+    _loadOperation = null;
+    return ++_generation;
   }
 
   Future<bool> _handleFailure(

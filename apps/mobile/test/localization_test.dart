@@ -86,7 +86,7 @@ void main() {
   );
 
   testWidgets(
-    'Preference write retains Russian route and a failure retries explicitly',
+    'Reduced motion retains Russian route and failed persistence retries explicitly',
     (tester) async {
       final repository = _Settings()..failNext = true;
       await tester.pumpWidget(
@@ -99,11 +99,9 @@ void main() {
       final router = tester
           .widget<MaterialApp>(find.byType(MaterialApp))
           .routerConfig;
-      final descriptionSwitch = find.byKey(
-        const Key('settings.sourceDescriptions'),
-      );
-      await tester.ensureVisible(descriptionSwitch);
-      await tester.tap(descriptionSwitch);
+      final motionSwitch = find.byKey(const Key('settings.reducedMotion'));
+      await tester.ensureVisible(motionSwitch);
+      await tester.tap(motionSwitch);
       await tester.pumpAndSettle();
       expect(find.byType(SettingsAppearanceScreen), findsOneWidget);
       expect(
@@ -112,26 +110,31 @@ void main() {
       );
       expect(find.text('Не удалось сохранить настройки'), findsOneWidget);
       expect(repository.stored.language, AppLanguage.ru);
-      expect(repository.stored.showSourceDescriptions, isTrue);
+      expect(repository.stored.reducedMotion, isFalse);
+      expect(
+        MediaQuery.disableAnimationsOf(tester.element(motionSwitch)),
+        isTrue,
+      );
       await tester.ensureVisible(find.text('Повторить'));
       await tester.tap(find.text('Повторить'));
       await tester.pumpAndSettle();
       expect(repository.stored.language, AppLanguage.ru);
       expect(find.text('Не удалось сохранить настройки'), findsNothing);
-      expect(repository.stored.showSourceDescriptions, isFalse);
+      expect(repository.stored.reducedMotion, isTrue);
+      expect(repository.stored.showSourceDescriptions, isTrue);
       expect(find.text('English'), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
 
   for (final item in [
-    (route: '/home', heading: 'Пока нет работ'),
-    (route: '/resumes', heading: 'Пока нет резюме'),
-    (route: '/portfolio', heading: 'Пока нет портфолио'),
+    (route: '/home', heading: 'Портфолио пока пустое'),
+    (route: '/editor', heading: 'Профиль'),
     (route: '/projects', heading: 'Проекты: 4'),
     (route: '/settings', heading: 'Настройки'),
     (route: '/settings/appearance', heading: 'Приложение'),
     (route: '/settings/account', heading: 'Аккаунт и безопасность'),
+    (route: '/settings/github', heading: 'GitHub'),
   ]) {
     testWidgets(
       'Russian UI ignores English legacy choice on ${item.route} with enlarged text',

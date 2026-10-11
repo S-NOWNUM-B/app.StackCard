@@ -32,6 +32,7 @@ Map<String, Object?> encodePortfolioContent(
           'featured': item.featured,
           'visible': item.visible,
           'imagePaths': item.imagePaths,
+          'iconId': item.iconId,
           if (item.updatedAt != null)
             'updatedAt': item.updatedAt!.toIso8601String(),
           'source': item.source.name,
@@ -90,13 +91,26 @@ Map<String, Object?> encodePortfolioContent(
       .toList(),
   if (includeDocuments)
     'documents': content.documents.map(_encodePortfolioDocument).toList(),
+  if (includeDocuments) 'mainPortfolioId': content.mainPortfolioId,
+  if (includeDocuments) 'githubUsername': content.githubUsername,
+  if (includeDocuments)
+    'personalization': {
+      'status': content.personalization.status.name,
+      'step': content.personalization.step,
+    },
+  if (includeDocuments && content.legacyMainSnapshot != null)
+    'legacyMainSnapshot': _encodePortfolioDocument(content.legacyMainSnapshot!),
 };
 
 Map<String, Object?> _encodePortfolioDocument(PortfolioDocument document) {
   final snapshot = document.content;
   if (snapshot.documents.isNotEmpty ||
       snapshot.projects.isNotEmpty ||
-      snapshot.ignoredGitHubRepositories.isNotEmpty) {
+      snapshot.ignoredGitHubRepositories.isNotEmpty ||
+      snapshot.mainPortfolioId != null ||
+      snapshot.githubUsername.isNotEmpty ||
+      snapshot.personalization != const PortfolioPersonalization() ||
+      snapshot.legacyMainSnapshot != null) {
     throw const FormatException('Документ содержит вложенную базу');
   }
   return {
@@ -292,8 +306,21 @@ PortfolioContent decodePortfolioContent(
   bool allowDocuments = true,
   bool allowBaseSnapshot = true,
   bool allowPresentationPrivacy = true,
+  bool allowMainPortfolio = true,
 }) {
   final json = _map(raw);
+  const mainKeys = {
+    'mainPortfolioId',
+    'githubUsername',
+    'personalization',
+    'legacyMainSnapshot',
+  };
+  if ((!allowMainPortfolio || !allowDocuments) &&
+      json.keys.any(mainKeys.contains)) {
+    throw const FormatException(
+      'Основное портфолио требует новую версию draft',
+    );
+  }
   if (!allowDocuments && json.containsKey('documents')) {
     throw const FormatException('Документы требуют новую версию draft');
   }
@@ -413,6 +440,7 @@ PortfolioContent decodePortfolioContent(
                 }
                 return value;
               }).toList(),
+        iconId: item.containsKey('iconId') ? _string(item, 'iconId') : 'folder',
         source: item.containsKey('source')
             ? _enum(item, 'source', PortfolioProjectSource.values)
             : PortfolioProjectSource.manual,
@@ -451,11 +479,34 @@ PortfolioContent decodePortfolioContent(
                 ),
               )
               .toList(),
+    mainPortfolioId: _nullableString(json, 'mainPortfolioId'),
+    githubUsername: json.containsKey('githubUsername')
+        ? _string(json, 'githubUsername')
+        : '',
+    personalization: json.containsKey('personalization')
+        ? _decodePersonalization(json['personalization'])
+        : const PortfolioPersonalization(),
+    legacyMainSnapshot: json['legacyMainSnapshot'] == null
+        ? null
+        : _decodePortfolioDocument(
+            json['legacyMainSnapshot'],
+            allowBaseSnapshot: allowBaseSnapshot,
+            allowPresentationPrivacy: allowPresentationPrivacy,
+          ),
   );
   if (validatePortfolioContent(content).isNotEmpty) {
     throw const FormatException('Некорректный Builder content');
   }
   return content;
+}
+
+PortfolioPersonalization _decodePersonalization(Object? raw) {
+  final value = _map(raw);
+  _fields(value, {'status', 'step'});
+  return PortfolioPersonalization(
+    status: _enum(value, 'status', PortfolioPersonalizationStatus.values),
+    step: _integer(value, 'step'),
+  );
 }
 
 Map<String, Object?> encodeGitHubProjectMetadata(

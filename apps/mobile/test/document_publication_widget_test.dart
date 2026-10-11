@@ -295,6 +295,7 @@ class _PublicationController extends DocumentPublicationController {
   Future<bool> perform({
     required DocumentPublicationAction action,
     required String documentId,
+    bool savedVersion = false,
   }) async {
     actions.add(action);
     return true;

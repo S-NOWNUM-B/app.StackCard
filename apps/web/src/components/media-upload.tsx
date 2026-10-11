@@ -1,10 +1,228 @@
 'use client';
 import type { User } from 'firebase/auth';
-import { ref, uploadBytes, getBytes } from 'firebase/storage';
 import { useState, useEffect, useRef } from 'react';
 import { firebaseServices } from '@/lib/firebase';
-import { uid } from '@/lib/model';
-import { Notice } from './ui';
+import { safeHttpUrl } from '@/lib/model';
+import {
+  portfolioMediaRepository,
+  prepareAvatar,
+  readAvatarBytes,
+} from '@/lib/portfolio-media-repository';
+import { Button, Icon, Notice } from './ui';
+
+function useAvatar(user: User, path: string) {
+  const [image, setImage] = useState({ url: '', uid: '', path: '' }),
+    [error, setError] = useState(''),
+    [retry, setRetry] = useState(0);
+  useEffect(() => {
+    let cancelled = false,
+      current = '';
+    setImage({ url: '', uid: user.uid, path });
+    setError('');
+    if (!path) return;
+    void readAvatarBytes(user, path)
+      .then((bytes) => {
+        if (cancelled || firebaseServices().auth.currentUser?.uid !== user.uid) return;
+        current = URL.createObjectURL(new Blob([bytes.slice().buffer], { type: 'image/jpeg' }));
+        setImage({ url: current, uid: user.uid, path });
+      })
+      .catch(() => {
+        if (!cancelled && firebaseServices().auth.currentUser?.uid === user.uid)
+          setError('Фотография недоступна. Повторите попытку.');
+      });
+    return () => {
+      cancelled = true;
+      if (current) URL.revokeObjectURL(current);
+    };
+  }, [user.uid, path, retry]);
+  return {
+    url: image.uid === user.uid && image.path === path ? image.url : '',
+    error,
+    retry: () => setRetry((value) => value + 1),
+  };
+}
+
+export function AvatarEditor({
+  user,
+  path,
+  onChange,
+  onBusyChanged,
+  disabled = false,
+  externalUrl = '',
+}: {
+  user: User;
+  path: string;
+  onChange: (path: string) => void;
+  onBusyChanged?: (busy: boolean) => void;
+  disabled?: boolean;
+  externalUrl?: string;
+}) {
+  const image = useAvatar(user, path),
+    gallery = useRef<HTMLInputElement>(null),
+    camera = useRef<HTMLInputElement>(null);
+  const [menu, setMenu] = useState(false),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState('');
+  const generation = useRef(0),
+    alive = useRef(true),
+    current = useRef({ uid: user.uid, path, disabled, externalUrl });
+  current.current = { uid: user.uid, path, disabled, externalUrl };
+  const busyCallback = useRef(onBusyChanged);
+  busyCallback.current = onBusyChanged;
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+      generation.current++;
+    };
+  }, []);
+  useEffect(() => {
+    generation.current++;
+    setBusy(false);
+    setMenu(false);
+    setError('');
+    busyCallback.current?.(false);
+  }, [user.uid, path, externalUrl]);
+
+  async function upload(file: File) {
+    if (busy || disabled) return;
+    const owner = user.uid,
+      previousPath = path,
+      operation = ++generation.current;
+    const valid = () =>
+      alive.current &&
+      generation.current === operation &&
+      current.current.uid === owner &&
+      current.current.path === previousPath &&
+      current.current.externalUrl === externalUrl &&
+      firebaseServices().auth.currentUser?.uid === owner;
+    setBusy(true);
+    setMenu(false);
+    setError('');
+    busyCallback.current?.(true);
+    try {
+      const bytes = await prepareAvatar(file);
+      if (!valid()) return;
+      const repository = portfolioMediaRepository(user),
+        uploaded = await repository.upload(bytes);
+      if (!valid() || current.current.disabled) {
+        // Only this new immutable object is eligible for cleanup.
+        void repository.delete(uploaded).catch(() => {});
+        return;
+      }
+      setBusy(false);
+      busyCallback.current?.(false);
+      onChange(uploaded);
+    } catch (failure) {
+      if (valid())
+        setError(
+          failure instanceof Error
+            ? failure.message
+            : 'Не удалось загрузить фотографию. Повторите попытку.',
+        );
+    } finally {
+      if (alive.current && generation.current === operation) {
+        setBusy(false);
+        busyCallback.current?.(false);
+      }
+    }
+  }
+
+  return (
+    <div className="avatar-editor">
+      <button
+        type="button"
+        className="avatar-trigger"
+        aria-label={path || externalUrl ? 'Изменить фотографию' : 'Добавить фотографию'}
+        aria-expanded={menu}
+        disabled={busy || disabled}
+        onClick={() => setMenu((value) => !value)}
+      >
+        {image.url || (!path && externalUrl && safeHttpUrl(externalUrl)) ? (
+          <img
+            className="avatar-photo"
+            src={image.url || externalUrl}
+            alt="Фото профиля"
+            width={128}
+            height={128}
+          />
+        ) : (
+          <Icon name="user-round" size={40} />
+        )}
+        <span className="avatar-pencil" aria-hidden="true">
+          <Icon name="pencil" size={22} />
+        </span>
+      </button>
+      {menu && (
+        <div className="avatar-menu" aria-label="Действия с фотографией">
+          <Button variant="quiet" onClick={() => gallery.current?.click()}>
+            <Icon name="image" />
+            Выбрать из галереи
+          </Button>
+          <Button variant="quiet" onClick={() => camera.current?.click()}>
+            <Icon name="camera" />
+            Сделать фото
+          </Button>
+          {(path || externalUrl) && (
+            <Button
+              variant="danger"
+              onClick={() => {
+                setMenu(false);
+                setError('');
+                onChange('');
+              }}
+            >
+              Удалить фото
+            </Button>
+          )}
+        </div>
+      )}
+      <input
+        ref={gallery}
+        className="avatar-file"
+        type="file"
+        hidden
+        accept="image/jpeg,image/png,image/webp"
+        disabled={busy || disabled}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void upload(file);
+          event.target.value = '';
+        }}
+      />
+      <input
+        ref={camera}
+        className="avatar-file"
+        type="file"
+        hidden
+        accept="image/jpeg,image/png,image/webp"
+        capture="user"
+        disabled={busy || disabled}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void upload(file);
+          event.target.value = '';
+        }}
+      />
+      {busy && (
+        <p className="avatar-status muted" role="status">
+          Загружаем фотографию…
+        </p>
+      )}
+      {error && <Notice error>{error}</Notice>}
+      {image.error && !busy && (
+        <>
+          <Notice error>{image.error}</Notice>
+          <Button variant="quiet" onClick={image.retry}>
+            Повторить
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Compatibility export; modern owner screens use one AvatarEditor. */
 export function MediaUpload({
   user,
   onUploaded,
@@ -12,104 +230,27 @@ export function MediaUpload({
   user: User;
   onUploaded: (path: string) => void;
 }) {
-  const alive = useRef(true);
-  useEffect(() => {
-    alive.current = true;
-    return () => {
-      alive.current = false;
-    };
-  }, []);
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState('');
-  async function upload(file: File) {
-    setBusy(true);
-    setError('');
-    try {
-      if (!file.type.startsWith('image/')) throw new Error('Выберите изображение.');
-      const bitmap = await createImageBitmap(file, {
-        imageOrientation: 'from-image',
-      });
-      const size = Math.min(1, 2048 / Math.max(bitmap.width, bitmap.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(bitmap.width * size));
-      canvas.height = Math.max(1, Math.round(bitmap.height * size));
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Не удалось обработать фото.');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      bitmap.close();
-      const jpeg = await new Promise<Blob>((resolve, reject) =>
-        canvas.toBlob(
-          (b) => (b ? resolve(b) : reject(new Error('Не удалось обработать фото.'))),
-          'image/jpeg',
-          0.85,
-        ),
-      );
-      if (jpeg.size > 2 * 1024 * 1024)
-        throw new Error('Изображение слишком большое. Выберите другое фото.');
-      const { auth, storage } = firebaseServices();
-      if (auth.currentUser?.uid !== user.uid) throw new Error('Аккаунт изменился.');
-      const path = `accounts/${user.uid}/media/${uid()}.jpg`;
-      await uploadBytes(ref(storage, path), jpeg, {
-        contentType: 'image/jpeg',
-      });
-      if (!alive.current || auth.currentUser?.uid !== user.uid) return;
-      onUploaded(path);
-    } catch (e) {
-      if (alive.current) setError(e instanceof Error ? e.message : 'Не удалось загрузить фото.');
-    } finally {
-      if (alive.current) setBusy(false);
-    }
-  }
-  return (
-    <div className="stack">
-      <label className="field">
-        <span>{busy ? 'Загружаем изображение…' : 'Выбрать приватное изображение'}</span>
-        <input
-          type="file"
-          accept="image/*"
-          disabled={busy}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) void upload(file);
-            e.target.value = '';
-          }}
-        />
-      </label>
-      <small className="muted">
-        Фото нормализуется в JPEG без EXIF. Публичная копия создаётся только при Publish.
-      </small>
-      {error && <Notice error>{error}</Notice>}
-    </div>
-  );
+  return <AvatarEditor user={user} path="" onChange={onUploaded} />;
 }
+
 export function PrivateImage({
   user,
   path,
-  alt = 'Фото',
+  alt = 'Фото профиля',
 }: {
   user: User;
   path: string;
   alt?: string;
 }) {
-  const [url, setUrl] = useState('');
-  useEffect(() => {
-    let cancelled = false,
-      current = '';
-    setUrl('');
-    if (!path || !path.startsWith(`accounts/${user.uid}/media/`)) return;
-    void getBytes(ref(firebaseServices().storage, path), 2 * 1024 * 1024)
-      .then((bytes) => {
-        if (cancelled || firebaseServices().auth.currentUser?.uid !== user.uid) return;
-        current = URL.createObjectURL(new Blob([bytes], { type: 'image/jpeg' }));
-        setUrl(current);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-      if (current) URL.revokeObjectURL(current);
-    };
-  }, [user, path]);
-  return url ? <img className="portrait" src={url} alt={alt} width={80} height={80} /> : null;
+  const image = useAvatar(user, path);
+  if (!path) return null;
+  return image.url ? (
+    <img className="portrait" src={image.url} alt={alt} width={128} height={128} />
+  ) : image.error ? (
+    <Notice error>{image.error}</Notice>
+  ) : (
+    <span className="muted" role="status">
+      Загружаем фотографию…
+    </span>
+  );
 }

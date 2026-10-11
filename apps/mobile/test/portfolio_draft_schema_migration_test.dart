@@ -160,7 +160,7 @@ void main() {
         content: content,
       ),
     );
-    expect(encoded['schemaVersion'], 6);
+    expect(encoded['schemaVersion'], 7);
     final restored = decodeCloudPortfolioDraft({
       ...encoded,
       'updatedAt': Timestamp.fromDate(now),

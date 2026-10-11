@@ -4,11 +4,13 @@ import 'portfolio_project.dart';
 import 'portfolio_sections.dart';
 import 'portfolio_github_sync.dart';
 import 'portfolio_document.dart';
+import 'main_portfolio.dart';
 
 export 'portfolio_profile.dart';
 export 'portfolio_project.dart';
 export 'portfolio_sections.dart';
 export 'portfolio_document.dart';
+export 'main_portfolio.dart';
 
 /// Редактируемый контент портфолио; private notes остаются в PortfolioDraft.
 final class PortfolioContent {
@@ -24,6 +26,10 @@ final class PortfolioContent {
     List<GitHubIgnoredRepository> ignoredGitHubRepositories = const [],
     List<PortfolioDocument> documents = const [],
     this.theme = PortfolioTheme.light,
+    this.mainPortfolioId,
+    this.githubUsername = '',
+    this.personalization = const PortfolioPersonalization(),
+    this.legacyMainSnapshot,
   }) : skills = List.unmodifiable(skills),
        projects = List.unmodifiable(projects),
        experience = List.unmodifiable(experience),
@@ -49,6 +55,10 @@ final class PortfolioContent {
   final PortfolioTheme theme;
   final List<GitHubIgnoredRepository> ignoredGitHubRepositories;
   final List<PortfolioDocument> documents;
+  final String? mainPortfolioId;
+  final String githubUsername;
+  final PortfolioPersonalization personalization;
+  final PortfolioDocument? legacyMainSnapshot;
 
   PortfolioContent copyWith({
     PortfolioProfile? profile,
@@ -62,6 +72,12 @@ final class PortfolioContent {
     PortfolioTheme? theme,
     List<GitHubIgnoredRepository>? ignoredGitHubRepositories,
     List<PortfolioDocument>? documents,
+    String? mainPortfolioId,
+    bool clearMainPortfolioId = false,
+    String? githubUsername,
+    PortfolioPersonalization? personalization,
+    PortfolioDocument? legacyMainSnapshot,
+    bool clearLegacyMainSnapshot = false,
   }) => PortfolioContent(
     profile: profile ?? this.profile,
     skills: skills ?? this.skills,
@@ -75,6 +91,14 @@ final class PortfolioContent {
     ignoredGitHubRepositories:
         ignoredGitHubRepositories ?? this.ignoredGitHubRepositories,
     documents: documents ?? this.documents,
+    mainPortfolioId: clearMainPortfolioId
+        ? null
+        : mainPortfolioId ?? this.mainPortfolioId,
+    githubUsername: githubUsername ?? this.githubUsername,
+    personalization: personalization ?? this.personalization,
+    legacyMainSnapshot: clearLegacyMainSnapshot
+        ? null
+        : legacyMainSnapshot ?? this.legacyMainSnapshot,
   );
 
   @override
@@ -83,6 +107,10 @@ final class PortfolioContent {
       other.profile == profile &&
       other.resumeText == resumeText &&
       other.theme == theme &&
+      other.mainPortfolioId == mainPortfolioId &&
+      other.githubUsername == githubUsername &&
+      other.personalization == personalization &&
+      other.legacyMainSnapshot == legacyMainSnapshot &&
       portfolioListEquals(other.skills, skills) &&
       portfolioListEquals(other.projects, projects) &&
       portfolioListEquals(other.experience, experience) &&
@@ -100,6 +128,10 @@ final class PortfolioContent {
     profile,
     resumeText,
     theme,
+    mainPortfolioId,
+    githubUsername,
+    personalization,
+    legacyMainSnapshot,
     Object.hashAll(skills),
     Object.hashAll(projects),
     Object.hashAll(experience),

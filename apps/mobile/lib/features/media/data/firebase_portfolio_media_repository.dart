@@ -128,7 +128,7 @@ final class FirebasePortfolioMediaRepository
           PortfolioMediaFailureKind.invalidImage,
         );
       }
-      await _processor.validatePrepared(bytes);
+      await _processor.validatePrepared(bytes, legacy: true);
       _ensureActive();
       return Uint8List.fromList(bytes).asUnmodifiableView();
     } catch (error) {

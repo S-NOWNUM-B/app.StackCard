@@ -13,10 +13,13 @@ import {
   readPublicDocument,
   safePublicHref,
   safePublicMedia,
+  safePublicSocialMedia,
 } from '../src/lib/public-document';
 
 const publicId = 'a'.repeat(32);
 const otherId = 'b'.repeat(32);
+const jpeg =
+  'data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AKpAB//Z';
 function fixture(): Record<string, unknown> {
   return {
     schemaVersion: 1,
@@ -87,6 +90,14 @@ function fixture(): Record<string, unknown> {
 function content(value: Record<string, unknown>) {
   return value.content as Record<string, unknown>;
 }
+function modernFixture(): Record<string, unknown> {
+  const data = { ...fixture(), schemaVersion: 2, kind: 'portfolio' };
+  for (const project of content(data).projects as Record<string, unknown>[]) {
+    delete project.imageUrls;
+    project.iconId = 'folder';
+  }
+  return data;
+}
 function firestoreValue(value: unknown): unknown {
   if (value === null) return { nullValue: null };
   if (typeof value === 'string') return { stringValue: value };
@@ -135,9 +146,150 @@ test('public IDs reject usernames, traversal, uppercase and private paths', () =
 });
 test('unknown schema, identity mismatch and absent envelope are rejected', () => {
   assert.equal(parsePublicDocument(null), null);
-  assert.equal(parsePublicDocument({ ...fixture(), schemaVersion: 2 }), null);
+  assert.equal(parsePublicDocument({ ...fixture(), schemaVersion: 3 }), null);
   assert.equal(parsePublicDocument(fixture(), otherId), null);
   assert.equal(parsePublicDocument({ ...fixture(), publishedAt: null }), null);
+});
+test('schema2 accepts the modern portfolio allowlist and rejects legacy fields or arbitrary icons', () => {
+  const data = modernFixture();
+  const project = (content(data).projects as Record<string, unknown>[])[0];
+  for (const iconId of [
+    'folder',
+    'file-text',
+    'panels-top-left',
+    'home',
+    'image',
+    'camera',
+    'user-round',
+  ]) {
+    project.iconId = iconId;
+    const document = parsePublicDocument(data);
+    assert.ok(document);
+    assert.equal(document.schemaVersion, 2);
+    assert.equal(document.content.projects[0].iconId, iconId);
+    assert.ok(!Object.hasOwn(document.content.projects[0], 'imageUrls'));
+  }
+  for (const iconId of ['../private', 'https://evil.test/icon.svg', '<svg>', 'unknown', null]) {
+    project.iconId = iconId;
+    assert.equal(parsePublicDocument(data), null);
+  }
+  project.iconId = 'folder';
+  project.imageUrls = [];
+  assert.equal(parsePublicDocument(data), null);
+  delete project.imageUrls;
+  delete project.iconId;
+  assert.equal(parsePublicDocument(data), null);
+  assert.equal(parsePublicDocument({ ...modernFixture(), kind: 'resume' }), null);
+  assert.equal(parsePublicDocument({ ...modernFixture(), attachedResumePublicId: otherId }), null);
+  const resume = modernFixture();
+  content(resume).resumeText = 'Legacy text';
+  (content(resume).blocks as Record<string, unknown>[]).push({ kind: 'resume', visible: true });
+  assert.equal(parsePublicDocument(resume), null);
+});
+test('legacy project images are validated then discarded while the public URL remains readable', () => {
+  const data = fixture();
+  (content(data).projects as Record<string, unknown>[])[0].imageUrls = [
+    'https://images.unsplash.com/legacy-project',
+  ];
+  const document = parsePublicDocument(data, publicId);
+  assert.ok(document);
+  assert.equal(document.schemaVersion, 1);
+  assert.equal(document.content.projects[0].iconId, 'folder');
+  assert.ok(!Object.hasOwn(document.content.projects[0], 'imageUrls'));
+  const html = renderToStaticMarkup(
+    createElement(DocumentView, { content: document.content, kind: document.kind }),
+  );
+  assert.ok(!html.includes('legacy-project'));
+  assert.ok(!html.includes('project-image'));
+  assert.ok(html.includes('/icons/lucide/folder.svg'));
+  assert.ok(html.includes('document-project-row'));
+});
+test('bounded canonical JPEG avatars render inline but are never social metadata images', () => {
+  const data = modernFixture();
+  (content(data).profile as Record<string, unknown>).avatarUrl = jpeg;
+  const document = parsePublicDocument(data);
+  assert.ok(document);
+  assert.equal(safePublicMedia(jpeg), jpeg);
+  assert.equal(safePublicSocialMedia(jpeg), null);
+  const html = renderToStaticMarkup(
+    createElement(DocumentView, { content: document.content, kind: document.kind }),
+  );
+  assert.ok(html.includes(`src="${jpeg}"`));
+  assert.ok(html.includes('width="128"'));
+  for (const value of [
+    'data:image/svg+xml;base64,PHN2Zz4=',
+    'data:image/jpeg;base64,PHN2Zz4=',
+    jpeg.replace('/9j/', '/9j_'),
+    `${jpeg}\n`,
+    jpeg.slice(0, -4),
+    jpeg.replace('base64,', 'base64, '),
+    `data:image/jpeg;base64,${Buffer.alloc(256 * 1024 + 1).toString('base64')}`,
+  ]) {
+    assert.equal(safePublicMedia(value), null);
+    (content(data).profile as Record<string, unknown>).avatarUrl = value;
+    assert.equal(parsePublicDocument(data), null);
+  }
+});
+test('REST reader preserves bounded inline JPEG strings larger than the former generic string limit', async () => {
+  const data = modernFixture();
+  const bytes = Buffer.alloc(256 * 1024);
+  bytes.set([0xff, 0xd8, 0xff], 0);
+  bytes.set([0xff, 0xd9], bytes.length - 2);
+  const avatar = `data:image/jpeg;base64,${bytes.toString('base64')}`;
+  (content(data).profile as Record<string, unknown>).avatarUrl = avatar;
+  const document = await readPublicDocument(publicId, {
+    projectId: 'demo-stackcard',
+    fetch: async () => new Response(firestoreResponse(data)),
+  });
+  assert.ok(document);
+  assert.equal(document.content.profile.avatarUrl, avatar);
+  const tooLarge = Buffer.concat([bytes.subarray(0, -2), Buffer.from([0, 0xff, 0xd9])]);
+  assert.equal(safePublicMedia(`data:image/jpeg;base64,${tooLarge.toString('base64')}`), null);
+});
+test('empty public sections omit their headings, separators and artificial profile placeholders', () => {
+  const data = modernFixture();
+  const c = content(data);
+  c.profile = { name: '', username: '', headline: '', bio: '', locationText: '', avatarUrl: '' };
+  for (const key of ['skills', 'projects', 'experience', 'education', 'links']) c[key] = [];
+  const document = parsePublicDocument(data);
+  assert.ok(document);
+  const html = renderToStaticMarkup(
+    createElement(DocumentView, { content: document.content, kind: document.kind }),
+  );
+  for (const omitted of [
+    'document-section',
+    'document-profile',
+    '<h1',
+    '<h2',
+    '<h3',
+    '<img',
+    'Имя не указано',
+    'Нет фото',
+  ])
+    assert.ok(!html.includes(omitted), omitted);
+});
+test('project rows use one safe existing link and retain icon and text without gallery or large metadata', () => {
+  const data = modernFixture();
+  const project = (content(data).projects as Record<string, unknown>[])[0];
+  project.iconId = 'camera';
+  project.liveUrl = 'https://example.com/live';
+  const document = parsePublicDocument(data);
+  assert.ok(document);
+  const html = renderToStaticMarkup(
+    createElement(DocumentView, { content: document.content, kind: document.kind }),
+  );
+  assert.ok(html.includes('/icons/lucide/camera.svg'));
+  assert.ok(html.includes('href="https://example.com/live"'));
+  assert.ok(html.includes('rel="noopener noreferrer nofollow"'));
+  assert.ok(!html.includes('href="https://github.com/example/atlas"'));
+  assert.ok(!html.includes('Design'));
+  assert.ok(!html.includes('technology-badges'));
+  document.content.projects[0].iconId = '../unsafe' as 'folder';
+  const safe = renderToStaticMarkup(
+    createElement(DocumentView, { content: document.content, kind: document.kind }),
+  );
+  assert.ok(safe.includes('/icons/lucide/folder.svg'));
+  assert.ok(!safe.includes('../unsafe'));
 });
 test('private fields at envelope, content, profile and project boundaries are rejected', () => {
   for (const key of ['uid', 'notes', 'draft', 'ownerId', 'documentId'])
@@ -366,7 +518,7 @@ test('renderer escapes author text and shows saved dark content in light without
   assert.ok(!html.includes('<script>'));
   assert.ok(html.includes('mailto:hello@example.com'));
   assert.ok(html.includes('Atlas'));
-  assert.ok(html.includes('Технологии'));
+  assert.ok(html.includes('Навыки'));
 });
 test('renderer independently rejects unsafe contacts/media and private attachments', () => {
   const document = parsePublicDocument(fixture());

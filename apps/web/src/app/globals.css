@@ -2381,3 +2381,475 @@ h2.section-heading,
     display: none;
   }
 }
+/* ADR 0005: единое портфолио, общая шкала отступов и три корневые вкладки. */
+.single-portfolio-workspace .workspace-body {
+  display: block;
+}
+.single-portfolio-workspace .workspace-main {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: var(--xl) var(--lg) 176px;
+}
+.single-portfolio-workspace .workspace-nav {
+  position: fixed;
+  inset: auto 16px max(12px, env(safe-area-inset-bottom));
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(calc(100% - 32px), 640px);
+  margin: auto;
+  padding: var(--sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  gap: var(--sm);
+}
+.single-portfolio-workspace .workspace-nav .button {
+  min-width: 0;
+  min-height: 64px;
+  flex-direction: column;
+  padding: var(--sm) 4px;
+  gap: 4px;
+  border-radius: var(--radius);
+}
+.single-portfolio-workspace .workspace-nav .active {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.single-portfolio-workspace .workspace-nav .active .icon img {
+  filter: invert(1);
+}
+.single-portfolio-workspace .workspace-footer {
+  position: fixed;
+  bottom: calc(104px + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  width: min(100%, 720px);
+  margin: auto;
+  z-index: 35;
+  display: flex;
+  gap: var(--sm);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: var(--sm) var(--lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.single-portfolio-workspace .workspace-fieldset {
+  min-width: 0;
+}
+.single-portfolio-workspace h1 {
+  font-size: 24px;
+}
+.single-portfolio-workspace h2 {
+  font-size: 20px;
+}
+.single-portfolio-workspace h3 {
+  font-size: 16px;
+}
+.portfolio-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sm);
+}
+.portfolio-actions .button {
+  min-width: 0;
+}
+@media (max-width: 360px) {
+  .portfolio-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.portfolio-editor {
+  gap: var(--xl);
+}
+.editor-group {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 var(--xl);
+  gap: var(--lg);
+}
+.entry-editor {
+  padding: var(--lg) 0;
+  border-bottom: 1px solid var(--border);
+}
+.entry-editor:last-of-type {
+  border-bottom: 0;
+}
+.project-row {
+  display: flex;
+  align-items: center;
+  gap: var(--md);
+  width: 100%;
+  padding: var(--md) 0;
+  min-height: 64px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.project-row > .icon,
+.document-project-row > .icon {
+  flex-shrink: 0;
+}
+.project-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--xs);
+}
+.project-copy p,
+.project-copy small {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+.project-actions {
+  display: flex;
+  gap: var(--sm);
+  flex-wrap: wrap;
+}
+.project-actions .button {
+  padding: var(--sm);
+}
+.text-danger {
+  color: var(--danger) !important;
+  border-color: transparent !important;
+  background: transparent !important;
+}
+.icon-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7em), 1fr));
+  gap: var(--sm);
+}
+.icon-picker .button {
+  min-width: 0;
+  flex-direction: column;
+  min-height: 80px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.icon-picker-label {
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+.icon-picker .selected {
+  background: var(--surface-elevated);
+  border-color: var(--outline);
+}
+.repository-choice input,
+.project-row input[type='radio'] {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+.document-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--md);
+  padding: var(--xl) 0;
+  border: 0;
+}
+.document-profile .portrait {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.document-profile .avatar-placeholder {
+  display: none;
+}
+.document-profile h1 {
+  font-size: 24px;
+}
+.document-profile .headline {
+  font-size: 18px;
+}
+.document-project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.document-project-row {
+  display: flex;
+  gap: var(--md);
+  align-items: center;
+  min-height: 64px;
+  padding: var(--md) 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.document-project-row > img {
+  flex-shrink: 0;
+}
+.document-project-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--xs);
+}
+.document-project-text h3 {
+  font-size: 16px;
+}
+.document-project-text p {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.avatar-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--md);
+}
+.avatar-trigger {
+  display: block;
+  width: 128px;
+  height: 128px;
+  padding: 0;
+  position: relative;
+  border: 1px solid var(--outline);
+  border-radius: 50%;
+  background: var(--surface-elevated);
+}
+.avatar-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.avatar-pencil {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.avatar-pencil .icon img {
+  filter: invert(1);
+}
+.avatar-menu {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 256px);
+  padding: var(--sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.avatar-file {
+  display: none;
+}
+.avatar-status {
+  text-align: center;
+}
+.empty-portfolio {
+  text-align: center;
+  padding: var(--xl) 0;
+  display: grid;
+  gap: var(--sm);
+}
+.personalization {
+  max-width: 440px;
+  margin: var(--xl) auto;
+}
+.personalization h1,
+.personalization > p {
+  text-align: center;
+}
+.account-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sm);
+  overflow-wrap: anywhere;
+}
+.account-bottom > span {
+  min-width: 0;
+}
+.account-divider {
+  border-top-color: var(--outline);
+  margin: var(--sm) 0;
+}
+.single-portfolio-workspace .field input,
+.single-portfolio-workspace .field select {
+  min-height: 56px;
+  padding-block: 12px;
+}
+.single-portfolio-workspace .field textarea {
+  min-height: 112px;
+}
+.single-portfolio-workspace .row {
+  flex-wrap: wrap;
+}
+.single-portfolio-workspace .row > .field {
+  min-width: 0;
+  flex: 1 1 180px;
+}
+.single-portfolio-workspace .dialog {
+  width: min(calc(100% - 32px), 440px);
+  max-height: 85dvh;
+  overflow-y: auto;
+  padding: var(--xl);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+@media (max-width: 480px) {
+  .library-project {
+    flex-wrap: wrap;
+  }
+  .library-project .project-copy {
+    flex-basis: calc(100% - 40px);
+  }
+  .project-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .portfolio-actions .button {
+    padding: var(--sm);
+    font-size: 13px;
+  }
+  .single-portfolio-workspace .workspace-footer {
+    position: static;
+    margin: -150px auto 104px;
+  }
+}
+.single-portfolio-workspace {
+  height: auto;
+  min-height: 100dvh;
+  background: var(--background);
+}
+.single-portfolio-workspace .workspace-body {
+  overflow: visible;
+}
+.single-portfolio-workspace .workspace-nav {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  align-self: auto;
+}
+.single-portfolio-workspace .workspace-nav .button {
+  justify-content: center;
+}
+.single-portfolio-workspace .workspace-nav .icon {
+  display: inline-flex;
+}
+.single-portfolio-workspace .workspace-settings-access {
+  display: inline-flex;
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  padding: 12px;
+}
+.single-portfolio-workspace .workspace-footer {
+  flex-direction: row;
+}
+.single-portfolio-workspace .workspace-footer > .row {
+  width: auto;
+  max-width: none;
+  margin: 0;
+}
+.document-paper .document-profile h1 {
+  font-size: 24px;
+  letter-spacing: -0.4px;
+}
+.document-paper .document-profile h3 {
+  font-size: 18px;
+}
+.document-paper .document-section {
+  margin-top: var(--xl);
+  padding-top: var(--lg);
+}
+.auth-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--xl);
+  padding: var(--xl) var(--lg);
+  background: var(--background);
+}
+.auth-screen .header-auth {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.auth-screen .header-primary {
+  justify-content: center;
+}
+.auth-screen .brand {
+  width: 240px;
+  overflow: hidden;
+}
+.auth-screen .wordmark,
+.auth-screen .wordmark img {
+  width: 350px;
+  max-width: none;
+  height: 48px;
+}
+.auth-screen .auth-card {
+  width: min(100%, 440px);
+  max-width: 440px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  gap: var(--xl);
+}
+.auth-screen .field input {
+  min-height: 56px;
+  padding-block: 12px;
+}
+.auth-screen .auth-forgot {
+  align-self: center;
+}
+.password-field {
+  position: relative;
+}
+.password-field input {
+  padding-right: 64px;
+}
+.password-toggle {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 48px;
+  height: 48px;
+  padding: 12px;
+}
+.password-rules {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--sm);
+  font-size: 12px;
+}
+.password-rules li {
+  display: flex;
+  gap: var(--sm);
+}
+.password-rules li > span:first-child {
+  width: 16px;
+  flex-shrink: 0;
+}

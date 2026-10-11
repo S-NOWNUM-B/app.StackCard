@@ -1,6 +1,20 @@
 export type PublicDocumentKind = 'resume' | 'portfolio';
 export type PublicLinkKind =
   'other' | 'github' | 'website' | 'linkedin' | 'email' | 'phone' | 'telegram';
+export const publicProjectIconIds = [
+  'folder',
+  'file-text',
+  'panels-top-left',
+  'home',
+  'image',
+  'camera',
+  'user-round',
+] as const;
+export type PublicProjectIconId = (typeof publicProjectIconIds)[number];
+export const publicProjectIcon = (value: unknown): PublicProjectIconId =>
+  typeof value === 'string' && publicProjectIconIds.includes(value as PublicProjectIconId)
+    ? (value as PublicProjectIconId)
+    : 'folder';
 export interface PublicProject {
   id: string;
   title: string;
@@ -11,7 +25,7 @@ export interface PublicProject {
   liveUrl: string;
   featured: boolean;
   visible: true;
-  imageUrls: string[];
+  iconId: PublicProjectIconId;
 }
 export interface PublicDocumentContent {
   profile: {
@@ -44,7 +58,7 @@ export interface PublicDocumentContent {
   theme: 'dark' | 'light';
 }
 export interface PublicDocument {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   publicId: string;
   version: number;
   title: string;
@@ -77,6 +91,32 @@ const linkKinds: PublicLinkKind[] = [
   'telegram',
 ];
 const mediaHosts = new Set(['avatars.githubusercontent.com', 'images.unsplash.com']);
+const jpegDataPrefix = 'data:image/jpeg;base64,';
+const maximumAvatarBytes = 256 * 1024;
+const maximumAvatarDataLength = jpegDataPrefix.length + Math.ceil(maximumAvatarBytes / 3) * 4;
+
+function safeInlineAvatar(value: string): string | null {
+  if (!value.startsWith(jpegDataPrefix) || value.length > maximumAvatarDataLength) return null;
+  const encoded = value.slice(jpegDataPrefix.length);
+  if (encoded.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) return null;
+  try {
+    const bytes = atob(encoded);
+    if (
+      bytes.length < 5 ||
+      bytes.length > maximumAvatarBytes ||
+      btoa(bytes) !== encoded ||
+      bytes.charCodeAt(0) !== 0xff ||
+      bytes.charCodeAt(1) !== 0xd8 ||
+      bytes.charCodeAt(2) !== 0xff ||
+      bytes.charCodeAt(bytes.length - 2) !== 0xff ||
+      bytes.charCodeAt(bytes.length - 1) !== 0xd9
+    )
+      return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
 
 export function safePublicHref(value: string, kind?: PublicLinkKind): string | null {
   if (!value || value.length > 2048 || /[\s\x00-\x1f\x7f]/.test(value)) return null;
@@ -103,6 +143,7 @@ export function safePublicHref(value: string, kind?: PublicLinkKind): string | n
 }
 
 export function safePublicMedia(value: string, publicId?: string, version?: number): string | null {
+  if (value.startsWith('data:')) return safeInlineAvatar(value);
   const match = /^publicMedia\/([a-f0-9]{32})\/([1-9][0-9]*)\/([a-f0-9]{32})\.jpg$/.exec(value);
   if (match) {
     if (
@@ -125,6 +166,16 @@ export function safePublicMedia(value: string, publicId?: string, version?: numb
   if (!safePublicHref(value)) return null;
   const url = new URL(value);
   return url.protocol === 'https:' && mediaHosts.has(url.hostname) && !url.port ? value : null;
+}
+
+// Социальным crawler нужен HTTP URL; inline avatar остаётся только в документе.
+export function safePublicSocialMedia(
+  value: string,
+  publicId?: string,
+  version?: number,
+): string | null {
+  const url = safePublicMedia(value, publicId, version);
+  return url && /^https?:\/\//.test(url) ? url : null;
 }
 
 class InvalidPublicDocument extends Error {}
@@ -165,8 +216,13 @@ function unique(items: { id: string }[]) {
   if (new Set(items.map((item) => item.id)).size !== items.length) invalid();
 }
 function publicMedia(value: unknown, publicId: string, version: number): string {
-  const result = text(value, 2048);
+  const result = text(value, maximumAvatarDataLength);
   if (!result) return '';
+  if (result.startsWith('data:')) {
+    if (!safeInlineAvatar(result)) invalid();
+    return result;
+  }
+  if (result.length > 2048) invalid();
   if (result.startsWith('publicMedia/')) {
     if (!new RegExp(`^publicMedia/${publicId}/${version}/[a-f0-9]{32}\\.jpg$`).test(result))
       invalid();
@@ -196,7 +252,7 @@ export function parsePublicDocument(
       'publishedAt',
     ]);
     if (
-      d.schemaVersion !== 1 ||
+      ![1, 2].includes(d.schemaVersion as number) ||
       typeof d.publicId !== 'string' ||
       !isPublicId(d.publicId) ||
       (expectedPublicId && d.publicId !== expectedPublicId) ||
@@ -208,6 +264,8 @@ export function parsePublicDocument(
       invalid();
     const publicId = d.publicId as string;
     const version = d.version as number;
+    const modern = d.schemaVersion === 2;
+    if (modern && (d.kind !== 'portfolio' || d.attachedResumePublicId !== null)) invalid();
     if (
       d.attachedResumePublicId !== null &&
       (typeof d.attachedResumePublicId !== 'string' ||
@@ -299,9 +357,16 @@ export function parsePublicDocument(
         'liveUrl',
         'featured',
         'visible',
-        'imageUrls',
+        modern ? 'iconId' : 'imageUrls',
       ]);
       if (p.visible !== true || typeof p.featured !== 'boolean') invalid();
+      if (modern && !publicProjectIconIds.includes(p.iconId as PublicProjectIconId)) invalid();
+      if (!modern) {
+        // Старый snapshot остаётся читаемым, но его project media больше не выводятся.
+        for (const value of list(p.imageUrls, 6)) {
+          if (!publicMedia(value, publicId, version)) invalid();
+        }
+      }
       return {
         id: identifier(p.id),
         title: text(p.title, 120, true),
@@ -312,11 +377,7 @@ export function parsePublicDocument(
         liveUrl: optionalUrl(p.liveUrl),
         featured: p.featured as boolean,
         visible: true as const,
-        imageUrls: list(p.imageUrls, 6).map((value) => {
-          const result = publicMedia(value, publicId, version);
-          if (!result) invalid();
-          return result;
-        }),
+        iconId: modern ? (p.iconId as PublicProjectIconId) : ('folder' as const),
       };
     });
     const blocks = list(c.blocks, 10).map((value) => {
@@ -347,8 +408,9 @@ export function parsePublicDocument(
     )
       invalid();
     for (const items of [skills, experience, education, links, projects]) unique(items);
+    if (modern && c.resumeText !== '') invalid();
     return {
-      schemaVersion: 1,
+      schemaVersion: d.schemaVersion as 1 | 2,
       publicId,
       version,
       title: text(d.title, 120, true),
@@ -377,7 +439,7 @@ function decodeFirestoreValue(value: unknown, depth = 0): unknown {
   if (depth > 12 || !value || typeof value !== 'object' || Array.isArray(value)) invalid();
   const entry = value as Record<string, unknown>;
   if (Object.keys(entry).length !== 1) invalid();
-  if ('stringValue' in entry) return text(entry.stringValue, 100000);
+  if ('stringValue' in entry) return text(entry.stringValue, maximumAvatarDataLength);
   if ('timestampValue' in entry) return text(entry.timestampValue, 40);
   if ('integerValue' in entry) {
     if (

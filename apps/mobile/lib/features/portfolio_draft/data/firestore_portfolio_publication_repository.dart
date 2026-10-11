@@ -72,7 +72,7 @@ final class FirestorePortfolioPublicationRepository
         }
         transaction.set(claimRef, {'ownerUid': _uid, 'username': username});
         transaction.set(_firestore.doc('publicPortfolios/$username'), {
-          'schemaVersion': 1,
+          'schemaVersion': 2,
           'ownerUid': _uid,
           'username': username,
           'publicationVersion': version,

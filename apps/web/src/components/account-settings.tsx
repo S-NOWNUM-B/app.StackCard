@@ -15,7 +15,7 @@ import {
   verifyBeforeUpdateEmail,
   type User,
 } from 'firebase/auth';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { firebaseServices } from '@/lib/firebase';
 import {
   inventory,
@@ -234,6 +234,51 @@ export function AccountSettings({ user, onSignedOut }: { user: User; onSignedOut
   return <AccountSettingsForUser key={user.uid} user={user} onSignedOut={onSignedOut} />;
 }
 
+export function ApplicationPreferences({ children }: { children?: ReactNode }) {
+  const [reduceMotion, setReduceMotion] = useState(false),
+    [systemReduced, setSystemReduced] = useState(false),
+    [error, setError] = useState('');
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const changed = () => setSystemReduced(media.matches);
+    changed();
+    media.addEventListener('change', changed);
+    try {
+      setReduceMotion(localStorage.getItem('stackcard.reducedMotion') === 'true');
+    } catch {
+      setError('Настройка браузера недоступна для чтения.');
+    }
+    return () => media.removeEventListener('change', changed);
+  }, []);
+  function preference(value: boolean) {
+    setReduceMotion(value);
+    document.documentElement.dataset.reducedMotion = String(value);
+    setError('');
+    try {
+      localStorage.setItem('stackcard.reducedMotion', String(value));
+    } catch {
+      setError('Выбор применён, но не сохранён в браузере.');
+    }
+  }
+  return (
+    <section className="editor-group stack" aria-labelledby="app-preferences">
+      <h2 id="app-preferences">Приложение</h2>
+      <label className="list-row">
+        <span>Сократить анимации</span>
+        <input
+          type="checkbox"
+          checked={reduceMotion || systemReduced}
+          disabled={systemReduced}
+          onChange={(e) => preference(e.target.checked)}
+        />
+      </label>
+      {systemReduced && <p className="muted">Анимации сокращены по настройке системы.</p>}
+      {error && <Notice error>{error}</Notice>}
+      {children}
+    </section>
+  );
+}
+
 function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut?: () => void }) {
   const active = useRef(true),
     running = useRef(false);
@@ -250,24 +295,15 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
   const [deletion, setDeletion] = useState<AccountDeletionJournal | null>(null);
   const [deletionStatus, setDeletionStatus] = useState<'pending' | 'unknown' | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
-  const [reduceMotion, setReduceMotion] = useState(false),
-    [systemReduced, setSystemReduced] = useState(false);
-
   useEffect(() => {
     active.current = true;
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const updateMotion = () => setSystemReduced(media.matches);
-    updateMotion();
-    media.addEventListener('change', updateMotion);
     try {
       setDeletion(readDeletionJournal(localStorage, user.uid));
-      setReduceMotion(localStorage.getItem('stackcard.reducedMotion') === 'true');
     } catch (failure) {
       setError(accountErrorMessage(failure));
     }
     return () => {
       active.current = false;
-      media.removeEventListener('change', updateMotion);
     };
   }, [user.uid]);
 
@@ -378,19 +414,10 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
       await finishDeletion(journal, checkedDeletionResult(await deletionRequest(journal), journal));
     });
   }
-  function preference(value: boolean) {
-    setReduceMotion(value);
-    document.documentElement.dataset.reducedMotion = String(value);
-    try {
-      localStorage.setItem('stackcard.reducedMotion', String(value));
-    } catch {
-      setError('Выбор применён, но не сохранён в браузере.');
-    }
-  }
   const passwordLinked = providers.includes('password');
   return (
     <div className="stack">
-      <h2>Аккаунт</h2>
+      <h2>Аккаунт и безопасность</h2>
       {error && <Notice error>{error}</Notice>}
       {message && <Notice>{message}</Notice>}
       <section className="section stack" aria-labelledby="account-login">
@@ -583,35 +610,6 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
             Подключить Google
           </Button>
         )}
-      </section>
-      <section className="section stack" aria-labelledby="app-preferences">
-        <h3 id="app-preferences">Приложение</h3>
-        <label className="list-row">
-          <span>Сократить анимации</span>
-          <input
-            type="checkbox"
-            checked={reduceMotion || systemReduced}
-            disabled={systemReduced}
-            onChange={(e) => preference(e.target.checked)}
-          />
-        </label>
-        {systemReduced && <p className="muted">Анимации сокращены по настройке системы.</p>}
-        <p className="muted">Входящие доступны из настроек и работают независимо от уведомлений.</p>
-      </section>
-      <section className="section stack" aria-labelledby="account-session">
-        <h3 id="account-session">Сеанс</h3>
-        <Button
-          variant="quiet"
-          disabled={busy}
-          onClick={() =>
-            void run(async () => {
-              await signOut(firebaseServices().auth);
-              if (active.current) onSignedOut?.();
-            })
-          }
-        >
-          Выйти из аккаунта
-        </Button>
       </section>
       <section className="section stack" aria-labelledby="account-delete">
         <h3 id="account-delete">Удаление аккаунта</h3>

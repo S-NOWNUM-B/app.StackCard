@@ -4,7 +4,7 @@ import 'portfolio_content.dart';
 enum PortfolioDocumentKind { resume, portfolio }
 
 // Firestore Rules проверяют owner каждого snapshot в ограниченном списке.
-const portfolioDocumentLimit = 20;
+const portfolioDocumentLimit = 21;
 
 /// Проект остаётся в Library; документ хранит связь, флаги и свой текст.
 final class PortfolioProjectAttachment {
@@ -156,6 +156,10 @@ PortfolioContent seedDocumentContent(PortfolioContent workspace) =>
       projects: const [],
       documents: const [],
       ignoredGitHubRepositories: const [],
+      clearMainPortfolioId: true,
+      githubUsername: '',
+      personalization: const PortfolioPersonalization(),
+      clearLegacyMainSnapshot: true,
     );
 
 /// Порядок и флаги принадлежат документу, содержимое проектов — общей Library.
