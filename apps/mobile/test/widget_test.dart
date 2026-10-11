@@ -56,7 +56,7 @@ void main() {
               as GoRouter;
       for (final item in [
         (index: 1, label: 'Проекты', path: '/projects', title: 'Проекты: 4'),
-        (index: 2, label: 'Редактор', path: '/editor', title: 'Профиль'),
+        (index: 2, label: 'Редактор', path: '/editor', title: 'Имя'),
         (
           index: 0,
           label: 'Главная',
