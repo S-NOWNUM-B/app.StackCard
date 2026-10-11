@@ -770,7 +770,6 @@ class _MainPortfolioEditorScreenState
                 ),
                 const SizedBox(height: StackCardSpacing.lg),
               ],
-              _title('Профиль'),
               PortfolioMediaEditor(
                 key: _mediaKey,
                 maxImages: 1,

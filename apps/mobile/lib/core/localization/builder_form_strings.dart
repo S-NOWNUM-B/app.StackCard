@@ -26,7 +26,7 @@ const builderFormRussianStrings = <String, String>{
   'builderForm.role': 'Должность',
   'builderForm.organization': 'Организация',
   'builderForm.period': 'Период',
-  'builderForm.description': 'Описание',
+  'builderForm.description': 'О себе',
   'builderForm.institution': 'Учебное заведение',
   'builderForm.qualification': 'Специальность или квалификация',
   'builderForm.linkLabel': 'Название ссылки',

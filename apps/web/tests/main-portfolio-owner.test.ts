@@ -287,7 +287,7 @@ test('actual owner editor renders optional personal inputs, shared groups and no
     createElement(ContentEditor, { content: mainDocument(w)!.content, onChange: () => {} }),
   );
   for (const text of [
-    'Профиль',
+    'Имя',
     'Контакты и ссылки',
     'Навыки',
     'Опыт',

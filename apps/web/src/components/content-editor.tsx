@@ -29,7 +29,6 @@ export function ContentEditor({
   return (
     <div className="stack portfolio-editor">
       <section className="editor-group stack">
-        <h2>Профиль</h2>
         {photo}
         <Field
           label="Имя"
