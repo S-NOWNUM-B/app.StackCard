@@ -180,24 +180,6 @@ class _AccountCardState extends ConsumerState<AccountCard> {
                         loading: busy,
                         onPressed: action,
                       ),
-                    if (ready && user != null)
-                      PopupMenuButton<String>(
-                        key: const Key('account.sessionMenu'),
-                        tooltip: strings.tr('account.actions'),
-                        enabled: !busy,
-                        icon: const Icon(Icons.more_vert_rounded, size: 20),
-                        constraints: const BoxConstraints(minWidth: 160),
-                        onSelected: (_) => context.push('/settings/account'),
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Text(
-                              strings.tr('settings.deleteAccount'),
-                              style: TextStyle(color: context.colors.error),
-                            ),
-                          ),
-                        ],
-                      ),
                   ],
                 ),
               ),

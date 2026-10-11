@@ -805,8 +805,8 @@ class _MainPortfolioEditorScreenState
               const SizedBox(height: StackCardSpacing.lg),
               _field('name', 'Имя', 100),
               _field('headline', 'Должность', 160),
-              _field('bio', 'Описание', 4000, multiline: true),
               _field('locationText', 'Город / страна', 200),
+              _field('bio', 'О себе', 4000, multiline: true),
               _title('Контакты и ссылки'),
               for (final link in _buffer!.links)
                 _record(

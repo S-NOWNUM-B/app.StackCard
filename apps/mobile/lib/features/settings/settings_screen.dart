@@ -322,7 +322,7 @@ class _SettingsGitHubState
       titleKey: 'settings.github',
       children: [
         const Text(
-          'Один профиль GitHub используется для импорта проектов. Он не меняет адрес портфолио и не импортирует репозитории автоматически.',
+          'Профиль GitHub используется для импорта проектов',
         ),
         const SizedBox(height: StackCardSpacing.xl),
         StackCardInput(

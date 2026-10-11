@@ -10,7 +10,6 @@ import '../../shared/widgets/stackcard_card.dart';
 import '../../shared/widgets/stackcard_states.dart';
 import '../auth/auth.dart';
 import '../portfolio_draft/portfolio_draft.dart';
-import 'account_settings_section.dart';
 import 'settings_editor_scaffold.dart';
 import 'settings_providers.dart';
 
@@ -580,7 +579,6 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
                 ),
                 child: Semantics(liveRegion: true, child: Text(_tr(_message!))),
               ),
-            const AccountSettingsSection(),
             const SizedBox(height: StackCardSpacing.lg),
             StackCardCard(
               child: Column(
