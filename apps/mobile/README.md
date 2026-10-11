@@ -145,8 +145,9 @@ feature, `StackCardApp.providerOverrides`
 Запусти приложение на Android-устройстве/эмуляторе или iOS-устройстве/симуляторе.
 Native Sign In использует Firebase email/password, registration/password reset
 и Google adapter; session stream определяет текущего владельца.
-В dev project включён Email/Password; Google provider ещё требует завершения
-Console configuration и live проверки. Можно явно открыть local guest-режим
+В dev project включены Email/Password и Google; Android OAuth configuration
+обновлена. Фактическая native приёмка и открытые targets — в product spec.
+Можно явно открыть local guest-режим
 без account. Ошибка configuration/restoring/session не открывает чужой draft.
 Legacy demo-email/`openDemo` остаётся только preview/test harness `StackCardApp`
 без native account configuration; обычный запуск этот путь не использует.

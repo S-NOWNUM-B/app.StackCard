@@ -68,7 +68,7 @@ export function DocumentView({
   return (
     <article
       className={`document-paper ${kind === 'resume' ? 'public-resume' : 'public-portfolio'}`}
-      data-theme={content.theme}
+      data-theme="light"
       aria-label={kind === 'resume' ? 'Резюме' : 'Портфолио'}
     >
       {content.blocks
@@ -239,9 +239,9 @@ export function exampleDocumentContent(
 ): PublicDocumentContent {
   return {
     profile: {
-      name: 'Alex Morgan',
+      name: 'Алекс Морган',
       username: '',
-      headline: 'Flutter & Web Developer',
+      headline: 'Flutter- и веб-разработчик',
       bio: 'Создаю понятные цифровые продукты: от небольших мобильных приложений до интерфейсов для веба. Люблю чистую типографику, продуманные детали и код, который легко поддерживать.',
       locationText: 'Алматы, Казахстан',
       avatarUrl: portrait ? '/images/demo-portrait.png' : '',
@@ -256,7 +256,7 @@ export function exampleDocumentContent(
         title: 'Atlas UI Kit',
         description: 'Набор компонентов для спокойных и удобных интерфейсов.',
         contribution: '',
-        technologies: ['Flutter', 'Dart', 'UI Design'],
+        technologies: ['Flutter', 'Dart', 'Дизайн интерфейсов'],
         repositoryUrl: '',
         liveUrl: '',
         featured: true,
@@ -279,8 +279,8 @@ export function exampleDocumentContent(
     experience: [
       {
         id: 'demo-experience',
-        role: 'Frontend Developer',
-        organization: 'Studio Example',
+        role: 'Разработчик интерфейсов',
+        organization: 'Демонстрационная студия',
         period: '2024–2026',
         description: '',
       },
@@ -289,7 +289,7 @@ export function exampleDocumentContent(
       {
         id: 'demo-education',
         institution: 'Пример учебного профиля',
-        qualification: 'Software Engineering',
+        qualification: 'Программная инженерия',
         period: '2023–2027',
         description: '',
       },
@@ -320,6 +320,6 @@ export function exampleDocumentContent(
       : ['profile', 'about', 'skills', 'featuredProjects', 'links']
     ).map((kind) => ({ kind, visible: true })),
     resumeText: '',
-    theme: 'dark',
+    theme: 'light',
   };
 }

@@ -112,7 +112,10 @@ void main() {
       _router(tester).go('/inbox');
       await tester.pumpAndSettle();
       expect(find.byType(InboxScreen), findsOneWidget);
-      expect(find.textContaining('Сервис пока не настроен'), findsOneWidget);
+      expect(
+        find.textContaining('Не удалось загрузить обращения'),
+        findsOneWidget,
+      );
       expect(find.text('Visitor'), findsNothing);
     },
   );

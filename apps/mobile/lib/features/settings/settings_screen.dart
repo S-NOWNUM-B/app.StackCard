@@ -38,14 +38,12 @@ class SettingsScreen extends riverpod.ConsumerWidget {
           key: const Key('settings.group.profile'),
           icon: Icons.person_outline_rounded,
           title: strings.tr('workspace.profile'),
-          subtitle: strings.tr('workspace.profileHint'),
           onPressed: () => context.push('/settings/profile'),
         ),
         _SettingsRow(
           key: const Key('settings.group.contacts'),
           icon: Icons.link_rounded,
           title: strings.tr('settings.contacts'),
-          subtitle: strings.tr('workspace.contactsHint'),
           onPressed: () => context.push('/settings/contacts'),
         ),
         // В demo режиме ошибка draft уже показана profile AsyncView ниже.
@@ -64,35 +62,30 @@ class SettingsScreen extends riverpod.ConsumerWidget {
           key: const Key('settings.group.account'),
           icon: Icons.shield_outlined,
           title: strings.tr('settings.accountSecurity'),
-          subtitle: strings.tr('settings.accountSecurityNote'),
           onPressed: () => context.push('/settings/account'),
         ),
         _SettingsRow(
           key: const Key('settings.group.privacy'),
           icon: Icons.lock_outline_rounded,
           title: strings.tr('settings.privacy'),
-          subtitle: strings.tr('settingsManagement.privacyHint'),
           onPressed: () => context.push('/settings/privacy'),
         ),
         _SettingsRow(
           key: const Key('settings.group.appearance'),
           icon: Icons.tune_rounded,
           title: strings.tr('settings.application'),
-          subtitle: strings.tr('settings.applicationNote'),
           onPressed: () => context.push('/settings/appearance'),
         ),
         _SettingsRow(
           key: const Key('settings.group.inbox'),
           icon: Icons.inbox_outlined,
           title: strings.tr('inbox.title'),
-          subtitle: strings.tr('inbox.hint'),
           onPressed: () => context.push('/inbox'),
         ),
         _SettingsRow(
           key: const Key('settings.group.notifications'),
           icon: Icons.notifications_none_rounded,
           title: strings.tr('settings.notifications'),
-          subtitle: strings.tr('notifications.hint'),
           onPressed: () => context.push('/settings/notifications'),
         ),
         const SizedBox(height: StackCardSpacing.xl),
@@ -101,7 +94,7 @@ class SettingsScreen extends riverpod.ConsumerWidget {
         if (hasAccountRepository)
           const AccountSettingsSection()
         else
-          const _DemoAccountSection(),
+          const _LocalAccountSection(),
         const SizedBox(height: StackCardSpacing.xl),
         StackCardButton(
           key: const Key('settings.deleteAccount'),
@@ -188,19 +181,14 @@ class SettingsAppearanceScreen extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: StackCardSpacing.sm),
-        _SettingsNote(text: strings.tr('settings.languageNote')),
         const SizedBox(height: StackCardSpacing.xl),
         SwitchListTile.adaptive(
           key: const Key('settings.sourceDescriptions'),
           contentPadding: EdgeInsets.zero,
           title: Text(strings.tr('settings.sourceDescriptions')),
-          subtitle: Text(strings.tr('settings.sourceDescriptionsNote')),
           value: appearance.showSourceDescriptions,
           onChanged: appearance.setShowSourceDescriptions,
         ),
-        const SizedBox(height: StackCardSpacing.lg),
-        _SettingsNote(text: strings.tr('settings.localPreferencesNote')),
         if (appearance.isSaving) ...[
           const SizedBox(height: StackCardSpacing.md),
           Semantics(
@@ -221,20 +209,15 @@ class SettingsAppearanceScreen extends StatelessWidget {
         _SettingsRow(
           icon: Icons.notifications_none_rounded,
           title: strings.tr('settings.notifications'),
-          subtitle: strings.tr('notifications.hint'),
           onPressed: () => context.push('/settings/notifications'),
         ),
         SwitchListTile.adaptive(
           key: const Key('settings.reducedMotion'),
           contentPadding: EdgeInsets.zero,
           title: Text(strings.tr('settings.reducedMotion')),
-          subtitle: Text(
-            strings.tr(
-              MediaQuery.disableAnimationsOf(context)
-                  ? 'settingsManagement.systemMotion'
-                  : 'settingsManagement.reducedHint',
-            ),
-          ),
+          subtitle: MediaQuery.disableAnimationsOf(context)
+              ? Text(strings.tr('settingsManagement.systemMotion'))
+              : null,
           value: appearance.reducedMotion,
           onChanged: appearance.setReducedMotion,
         ),
@@ -324,13 +307,11 @@ class _SettingsRow extends StatelessWidget {
     super.key,
     required this.icon,
     required this.title,
-    required this.subtitle,
     this.onPressed,
   });
 
   final IconData icon;
   final String title;
-  final String subtitle;
   final VoidCallback? onPressed;
 
   @override
@@ -349,13 +330,9 @@ class _SettingsRow extends StatelessWidget {
             ),
             const SizedBox(width: StackCardSpacing.md),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: StackCardSpacing.xs),
-                  _SettingsNote(text: subtitle),
-                ],
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
             if (onPressed != null) ...[
@@ -402,34 +379,17 @@ class _SettingsHeading extends StatelessWidget {
   );
 }
 
-class _SettingsNote extends StatelessWidget {
-  const _SettingsNote({required this.text});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Text(
-    text,
-    style: Theme.of(context).textTheme.bodyMedium
-        ?.copyWith(color: context.colors.textSecondary),
-  );
-}
-
-class _DemoAccountSection extends riverpod.ConsumerWidget {
-  const _DemoAccountSection();
+class _LocalAccountSection extends riverpod.ConsumerWidget {
+  const _LocalAccountSection();
 
   @override
   Widget build(BuildContext context, riverpod.WidgetRef ref) {
-    final isDemo = ref.watch(portfolioWorkingContentProvider) == null;
     return StackCardCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            context.strings.tr(
-              isDemo
-                  ? 'settings.demoAccount'
-                  : 'builderIntegration.localProfile',
-            ),
+            context.strings.tr('account.guestTitle'),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),

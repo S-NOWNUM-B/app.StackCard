@@ -28,14 +28,14 @@ void main() {
     await tester.pumpWidget(const StackCardApp());
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField), 'invalid');
-    await tester.ensureVisible(find.text('Открыть демо'));
-    await tester.tap(find.text('Открыть демо'));
+    await tester.ensureVisible(find.text('Продолжить'));
+    await tester.tap(find.text('Продолжить'));
     await tester.pumpAndSettle();
     expect(find.text('Укажите корректный email'), findsOneWidget);
     await tester.enterText(find.byType(TextFormField), 'alex@example.dev');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
-    expect(find.text('Здесь появятся твои работы'), findsOneWidget);
+    expect(find.text('Пока нет работ'), findsOneWidget);
     expect(find.text('Привет, Alex'), findsNothing);
     expect(find.byType(NavigationBar), findsOneWidget);
   });
@@ -63,12 +63,7 @@ void main() {
           path: '/portfolio',
           title: 'Пока нет портфолио',
         ),
-        (
-          index: 0,
-          label: 'Главная',
-          path: '/home',
-          title: 'Здесь появятся твои работы',
-        ),
+        (index: 0, label: 'Главная', path: '/home', title: 'Пока нет работ'),
       ]) {
         await tester.tap(_destination(item.label));
         await tester.pumpAndSettle();
@@ -113,7 +108,7 @@ void main() {
       await tester.ensureVisible(find.text('Вернуться ко входу'));
       await tester.tap(find.text('Вернуться ко входу'));
       await tester.pumpAndSettle();
-      expect(find.text('Открыть демо'), findsOneWidget);
+      expect(find.text('Продолжить'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -313,7 +308,7 @@ void main() {
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
-      expect(find.text('Здесь появятся твои работы'), findsOneWidget);
+      expect(find.text('Пока нет работ'), findsOneWidget);
       expect(find.text('Привет, Alex'), findsNothing);
       final destination = _destination('Проекты');
       var focused = false;

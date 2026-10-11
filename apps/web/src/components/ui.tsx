@@ -64,7 +64,7 @@ export function TechnologyBadges({ items }: { items: string[] }) {
         return (
           <span className="badge" key={item + i}>
             {['flutter', 'dart', 'react', 'typescript'].includes(key) && (
-              <span className="technology-icon">
+              <span className={`technology-icon technology-${key}`}>
                 <img src={`/icons/technology/${key}.svg`} alt="" width={18} height={18} />
               </span>
             )}
@@ -88,40 +88,67 @@ export function Header({
     links ??
     (context === 'marketing'
       ? [
-          { href: '/#features', label: 'Возможности' },
+          { href: '/features', label: 'Возможности' },
+          { href: '/use-cases', label: 'Для кого' },
+          { href: '/examples', label: 'Примеры' },
+          { href: '/help', label: 'Помощь' },
+          { href: '/about', label: 'О проекте' },
           { href: '/download', label: 'Приложение' },
         ]
       : context === 'auth'
         ? [{ href: '/', label: 'На главную' }]
         : []);
   return (
-    <header className="web-header">
+    <header className={`web-header header-${context}`}>
       <div className="header-primary">
         <Link className="brand" href="/" aria-label="StackCard — на главную">
           <span className="wordmark">
             <img
-              className="brand-dark"
-              src="/branding/stackcard-v2-wordmark-accent.svg"
-              alt="StackCard"
-            />
-            <img
-              className="brand-light"
               src="/branding/stackcard-v2-wordmark-ink.svg"
               alt="StackCard"
+              width={350}
+              height={48}
             />
           </span>
         </Link>
-        {context === 'marketing' && <LinkButton href="/sign-in">Войти</LinkButton>}
+        {context === 'marketing' && (
+          <div className="header-actions">
+            <LinkButton href="/sign-in" variant="quiet">
+              Войти
+            </LinkButton>
+            <LinkButton href="/workspace" variant="primary">
+              Открыть StackCard
+            </LinkButton>
+          </div>
+        )}
         {actions}
       </div>
       {nav.length > 0 && (
         <nav className="header-navigation" aria-label="Главная навигация">
           {nav.map((n) => (
-            <Link className="button quiet" key={n.href} href={n.href}>
+            <Link key={n.href} href={n.href}>
               {n.label}
             </Link>
           ))}
         </nav>
+      )}
+      {context === 'marketing' && (
+        <details className="mobile-menu">
+          <summary aria-label="Открыть навигацию">
+            <span aria-hidden="true">≡</span>
+          </summary>
+          <nav aria-label="Мобильная навигация">
+            {nav.map((n) => (
+              <Link key={n.href} href={n.href}>
+                {n.label}
+              </Link>
+            ))}
+            <Link href="/sign-in">Войти</Link>
+            <Link className="button primary" href="/workspace">
+              Открыть StackCard
+            </Link>
+          </nav>
+        </details>
       )}
     </header>
   );

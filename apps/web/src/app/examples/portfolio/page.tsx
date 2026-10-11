@@ -3,7 +3,7 @@ import { DocumentView, exampleDocumentContent } from '@/components/document-view
 import { Header, LinkButton } from '@/components/ui';
 
 export const metadata: Metadata = {
-  title: 'Демонстрационное портфолио | StackCard',
+  title: 'Демонстрационное портфолио',
   robots: { index: false, follow: false },
 };
 export default function ExamplePortfolioPage() {
@@ -20,7 +20,7 @@ export default function ExamplePortfolioPage() {
         <div className="stack public-page-label">
           <p className="muted">Демонстрационное портфолио</p>
           <p className="muted">
-            Alex Morgan и проекты — вымышленные примеры. Они не являются публикацией пользователя.
+            Алекс Морган и проекты — вымышленные примеры. Они не являются публикацией пользователя.
           </p>
         </div>
         <DocumentView kind="portfolio" content={exampleDocumentContent('portfolio')} />

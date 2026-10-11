@@ -5,7 +5,7 @@ const russianWorkspaceStrings = <String, String>{
   'workspace.portfolio': 'Портфолио',
   'workspace.createResume': 'Создать резюме',
   'workspace.createPortfolio': 'Создать портфолио',
-  'workspace.emptyHome': 'Здесь появятся твои работы',
+  'workspace.emptyHome': 'Пока нет работ',
   'workspace.emptyHomeHint':
       'Создай проект, резюме или портфолио в соответствующем разделе.',
   'workspace.emptyResumes': 'Пока нет резюме',
@@ -44,7 +44,7 @@ const englishWorkspaceStrings = <String, String>{
   'workspace.portfolio': 'Portfolio',
   'workspace.createResume': 'Create resume',
   'workspace.createPortfolio': 'Create portfolio',
-  'workspace.emptyHome': 'Your work will appear here',
+  'workspace.emptyHome': 'No work yet',
   'workspace.emptyHomeHint':
       'Create a project, resume or portfolio in its section.',
   'workspace.emptyResumes': 'No resumes yet',

@@ -19,7 +19,7 @@ class StackCardStateView extends StatelessWidget {
     super.key,
     required this.kind,
     required this.title,
-    required this.message,
+    this.message = '',
     this.onRetry,
   });
 
@@ -75,14 +75,16 @@ class StackCardStateView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: textTheme.titleMedium?.copyWith(color: colors.textPrimary),
             ),
-            const SizedBox(height: StackCardSpacing.sm),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: textTheme.bodyMedium?.copyWith(
-                color: colors.textSecondary,
+            if (message.isNotEmpty) ...[
+              const SizedBox(height: StackCardSpacing.sm),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colors.textSecondary,
+                ),
               ),
-            ),
+            ],
             if (canRetry) ...[
               const SizedBox(height: StackCardSpacing.lg),
               StackCardButton(

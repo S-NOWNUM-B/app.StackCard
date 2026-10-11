@@ -167,7 +167,6 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
           StackCardStateView(
             kind: StackCardViewState.loading,
             title: context.strings.tr('github.loading'),
-            message: context.strings.tr('github.loadingHint'),
           ),
         if (state.failure case final failure?)
           GitHubFailureView(failure: failure, onRetry: controller.retry),
@@ -266,11 +265,6 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
                   ? 'github.emptyRepos'
                   : 'github.emptySearch',
             ),
-            message: context.strings.tr(
-              state.repositories.isEmpty
-                  ? 'github.emptyReposHint'
-                  : 'github.emptySearchHint',
-            ),
           ),
           if (state.query.isNotEmpty ||
               state.filter != GitHubRepositoryFilter.all)
@@ -368,14 +362,6 @@ class _GitHubDraftActions extends ConsumerWidget {
             ),
             if (state.remoteUpdateAvailable)
               Text(strings.tr('sync.remoteUpdate')),
-            if (state.hasUnsavedChanges) ...[
-              const SizedBox(height: StackCardSpacing.sm),
-              Text(
-                strings.tr('githubSync.draftNote'),
-                style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(color: context.colors.textSecondary),
-              ),
-            ],
           ],
         ],
       ),

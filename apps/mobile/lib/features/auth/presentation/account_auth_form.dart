@@ -214,10 +214,6 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                 textAlign: TextAlign.left,
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
-              if (widget.mode == AuthFormMode.resetPassword) ...[
-                const SizedBox(height: 8),
-                Text(strings.tr('account.resetDescription')),
-              ],
               if (session.isLoading) ...[
                 const SizedBox(height: 16),
                 Semantics(
@@ -384,13 +380,6 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
                   strings.tr('account.guest'),
                   textAlign: TextAlign.left,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                strings.tr('account.guestNote'),
-                textAlign: TextAlign.left,
-                style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(color: context.colors.textSecondary),
               ),
             ],
           ),

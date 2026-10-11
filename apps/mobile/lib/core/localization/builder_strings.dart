@@ -9,7 +9,7 @@ const builderRussianStrings = <String, String>{
   'builder.saving': 'Сохраняем портфолио…',
   'builder.saved': 'Сохранено на устройстве',
   'builder.unsaved': 'Есть несохранённые изменения',
-  'builder.pending': 'Ожидает синхронизации. Облако пока не подключено.',
+  'builder.pending': 'Ожидает синхронизации',
   'builder.revision': 'Последняя сохранённая версия: {revision}',
   'builder.preview': 'Предпросмотр',
   'builder.previewTitle': 'Предпросмотр портфолио',
@@ -90,8 +90,7 @@ const builderEnglishStrings = <String, String>{
   'builder.saving': 'Saving portfolio…',
   'builder.saved': 'Saved on device',
   'builder.unsaved': 'You have unsaved changes',
-  'builder.pending':
-      'Pending synchronization. Cloud sync is not connected yet.',
+  'builder.pending': 'Pending sync',
   'builder.revision': 'Last saved revision: {revision}',
   'builder.preview': 'Preview',
   'builder.previewTitle': 'Portfolio preview',

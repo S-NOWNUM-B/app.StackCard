@@ -23,8 +23,6 @@ class InboxScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(strings.tr('inbox.hint')),
-          const SizedBox(height: StackCardSpacing.lg),
           if (state.loading)
             StackCardStateView(
               kind: StackCardViewState.loading,
@@ -40,7 +38,6 @@ class InboxScreen extends ConsumerWidget {
             StackCardStateView(
               kind: StackCardViewState.empty,
               title: strings.tr('inbox.empty'),
-              message: strings.tr('inbox.emptyHint'),
             ),
           for (final request in state.requests)
             Padding(

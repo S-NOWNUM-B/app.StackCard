@@ -128,7 +128,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   StackCardStateView(
                     kind: StackCardViewState.empty,
                     title: context.strings.tr('workspace.emptyHome'),
-                    message: context.strings.tr('workspace.emptyHomeHint'),
                   ),
                 for (final entry in entries) ...[
                   entry.card,

@@ -16,6 +16,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
   const router = useRouter(),
     params = useSearchParams();
   const destination = safeReturnPath(params.get('returnTo'));
+  const returnQuery = `?returnTo=${encodeURIComponent(destination)}`;
   const session = useSession();
   const [email, setEmail] = useState(''),
     [password, setPassword] = useState(''),
@@ -84,7 +85,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
             <p>
               Если аккаунт с этой почтой существует, вы получите письмо для восстановления пароля.
             </p>
-            <LinkButton href="/sign-in">Вернуться ко входу</LinkButton>
+            <LinkButton href={`/sign-in${returnQuery}`}>Вернуться ко входу</LinkButton>
           </>
         ) : (
           <form
@@ -127,7 +128,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
             )}
             {error && <Notice error>{error}</Notice>}
             {mode === 'login' && (
-              <LinkButton variant="quiet" href="/reset-password">
+              <LinkButton variant="quiet" href={`/reset-password${returnQuery}`}>
                 Забыли пароль?
               </LinkButton>
             )}
@@ -141,7 +142,10 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
                 >
                   Продолжить с Google
                 </Button>
-                <LinkButton variant="quiet" href={mode === 'login' ? '/sign-up' : '/sign-in'}>
+                <LinkButton
+                  variant="quiet"
+                  href={`${mode === 'login' ? '/sign-up' : '/sign-in'}${returnQuery}`}
+                >
                   {mode === 'login' ? 'Создать аккаунт' : 'Уже есть аккаунт? Войти'}
                 </LinkButton>
               </>

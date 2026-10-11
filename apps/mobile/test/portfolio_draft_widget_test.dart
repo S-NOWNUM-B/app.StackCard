@@ -39,19 +39,14 @@ void main() {
       await tester.ensureVisible(find.text('Есть несохранённые изменения'));
       expect(find.text('Есть несохранённые изменения'), findsOneWidget);
       await _save(tester);
-      expect(find.text('Заметки сохранены на устройстве'), findsOneWidget);
+      expect(find.text('Заметки сохранены'), findsOneWidget);
       expect(find.text('Последняя сохранённая версия: 1'), findsNothing);
       final details = find.byKey(const ValueKey('portfolio_draft_details'));
       await tester.ensureVisible(details);
       await tester.tap(details);
       await tester.pumpAndSettle();
       expect(find.text('Последняя сохранённая версия: 1'), findsOneWidget);
-      expect(
-        find.text(
-          'Ожидает синхронизации. Облачная синхронизация пока не подключена.',
-        ),
-        findsOneWidget,
-      );
+      expect(find.text('Ожидает синхронизации'), findsOneWidget);
       expect(_saveButton(tester).onPressed, isNull);
       await tester.pumpWidget(const SizedBox.shrink());
       await _open(tester, repository);
@@ -62,7 +57,7 @@ void main() {
         input.controller!.text,
         'Описание моего будущего портфолио\nВторая строка',
       );
-      expect(find.text('Заметки сохранены на устройстве'), findsOneWidget);
+      expect(find.text('Заметки сохранены'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -102,10 +97,10 @@ void main() {
     await tester.pump();
     await tester.ensureVisible(find.text('Сохраняем заметки…'));
     expect(find.text('Сохраняем заметки…'), findsOneWidget);
-    expect(find.text('Заметки сохранены на устройстве'), findsNothing);
+    expect(find.text('Заметки сохранены'), findsNothing);
     pending.complete(_draft('Pending note'));
     await tester.pumpAndSettle();
-    expect(find.text('Заметки сохранены на устройстве'), findsOneWidget);
+    expect(find.text('Заметки сохранены'), findsOneWidget);
   });
 
   testWidgets(
@@ -125,7 +120,7 @@ void main() {
       await tester.pump();
       await _save(tester);
       expect(find.text('Заметки не сохранены'), findsOneWidget);
-      expect(find.text('Заметки сохранены на устройстве'), findsNothing);
+      expect(find.text('Заметки сохранены'), findsNothing);
       expect(find.textContaining('/private/'), findsNothing);
       final input = tester.widget<TextFormField>(
         find.descendant(of: _notes, matching: find.byType(TextFormField)),
@@ -133,7 +128,7 @@ void main() {
       expect(input.controller!.text, 'Keep this input');
       expect(writes, 1);
       await _save(tester);
-      expect(find.text('Заметки сохранены на устройстве'), findsOneWidget);
+      expect(find.text('Заметки сохранены'), findsOneWidget);
       expect(writes, 2);
       expect(tester.takeException(), isNull);
     },
@@ -187,7 +182,7 @@ void main() {
           findsOneWidget,
         );
         expect(_saveButton(tester).onPressed, isNull);
-        expect(find.text('Заметки сохранены на устройстве'), findsNothing);
+        expect(find.text('Заметки сохранены'), findsNothing);
         expect(tester.takeException(), isNull);
       },
     );
@@ -205,14 +200,14 @@ void main() {
       ),
       language: AppLanguage.en,
     );
-    expect(find.text('Local draft'), findsOneWidget);
+    expect(find.text('Notes'), findsNWidgets(2));
     expect(
       find.text(
         'Notes are not part of the portfolio and do not appear in the preview.',
       ),
       findsOneWidget,
     );
-    expect(find.text('Save on device'), findsOneWidget);
+    expect(find.text('Save'), findsOneWidget);
     await tester.enterText(_notes, 'English note');
     await tester.pump();
     await tester.ensureVisible(find.text('You have unsaved changes'));

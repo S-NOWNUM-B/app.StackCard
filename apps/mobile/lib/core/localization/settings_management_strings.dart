@@ -2,7 +2,7 @@ const russianSettingsManagementStrings = <String, String>{
   'settingsManagement.contacts': 'Контакты и ссылки',
   'settingsManagement.save': 'Сохранить',
   'settingsManagement.confirm': 'Подтвердить',
-  'settingsManagement.publicEmail': 'Публичная почта',
+  'settingsManagement.publicEmail': 'Email',
   'settingsManagement.publicEmailHint':
       'Для связи через документы. Почта входа — в аккаунте.',
   'settingsManagement.emailPermission': 'Разрешить выбор почты в документах',
@@ -10,7 +10,7 @@ const russianSettingsManagementStrings = <String, String>{
   'settingsManagement.phoneHint':
       'Необязательно. Международный формат: +77001234567.',
   'settingsManagement.contactsHint': 'Выберите контакты, которыми хотите делиться. Почта для входа меняется в аккаунте.',
-  'settingsManagement.privacyHint': 'Выберите, что предлагать для новых документов. Существующие документы и публикации сохраняют собственный выбор.',
+  'settingsManagement.privacyHint': 'Для новых документов',
   'settingsManagement.publishAllowed': 'Разрешить выбор в документах',
   'settingsManagement.visible': 'Показывать в документе',
   'settingsManagement.links': 'Ссылки',
@@ -39,8 +39,8 @@ const russianSettingsManagementStrings = <String, String>{
   'settingsManagement.locationHint':
       'Разрешить использование местоположения в новых документах.',
   'settingsManagement.requests': 'Принимать обращения',
-  'settingsManagement.requestsUnavailable': 'Форма обращений пока не подключена. Опубликованные выбранные контакты доступны напрямую.',
-  'settingsManagement.saved': 'Изменения сохранены на устройстве',
+  'settingsManagement.requestsUnavailable': 'Обращения недоступны.',
+  'settingsManagement.saved': 'Изменения сохранены',
   'settingsManagement.unsaved': 'Есть несохранённые изменения',
   'settingsManagement.unchanged': 'Без изменений',
   'settingsManagement.saveError':
@@ -98,7 +98,7 @@ const englishSettingsManagementStrings = <String, String>{
   'settingsManagement.contacts': 'Contacts and links',
   'settingsManagement.save': 'Save',
   'settingsManagement.confirm': 'Confirm',
-  'settingsManagement.publicEmail': 'Public email',
+  'settingsManagement.publicEmail': 'Email',
   'settingsManagement.publicEmailHint':
       'For contact through documents. Login email is in Account.',
   'settingsManagement.emailPermission': 'Allow email selection in documents',
@@ -107,7 +107,7 @@ const englishSettingsManagementStrings = <String, String>{
       'Optional. International format: +77001234567.',
   'settingsManagement.contactsHint':
       'Choose contacts to share. Login email is changed in Account.',
-  'settingsManagement.privacyHint': 'Choose defaults for new documents. Existing documents and publications keep their own choices.',
+  'settingsManagement.privacyHint': 'For new documents',
   'settingsManagement.publishAllowed': 'Allow selection in documents',
   'settingsManagement.visible': 'Show in document',
   'settingsManagement.links': 'Links',
@@ -135,8 +135,8 @@ const englishSettingsManagementStrings = <String, String>{
   'settingsManagement.locationHint':
       'Allow use of your location in new documents.',
   'settingsManagement.requests': 'Accept requests',
-  'settingsManagement.requestsUnavailable': 'The request form is not connected yet. Selected published contacts can be used directly.',
-  'settingsManagement.saved': 'Changes saved on this device',
+  'settingsManagement.requestsUnavailable': 'Contact requests unavailable.',
+  'settingsManagement.saved': 'Changes saved',
   'settingsManagement.unsaved': 'You have unsaved changes',
   'settingsManagement.unchanged': 'No changes',
   'settingsManagement.saveError':

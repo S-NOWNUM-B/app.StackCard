@@ -553,7 +553,6 @@ class _PortfolioDocumentEditorScreenState
                               ],
                               maxImages: 1,
                               titleKey: 'documentEditor.photo',
-                              formNoteKey: 'documentEditor.photoHint',
                               enabled: !_saving,
                               onBusyChanged: (busy) {
                                 if (mounted && _sameOwner) {
@@ -731,7 +730,6 @@ class _PortfolioDocumentEditorScreenState
       BuilderFieldSpec(
         name: 'title',
         labelKey: 'documentEditor.title',
-        hintKey: 'documentEditor.titleHint',
         maxLength: 120,
         required: true,
       ),
@@ -754,8 +752,6 @@ class _PortfolioDocumentEditorScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(_tr('profileHint')),
-          const SizedBox(height: StackCardSpacing.lg),
           BuilderFields(fields: fields, controllers: _fields!),
           const SizedBox(height: StackCardSpacing.lg),
           if (photo && profile.avatarPath.isEmpty)
@@ -796,7 +792,6 @@ class _PortfolioDocumentEditorScreenState
                     );
                   })
                 : null,
-            unavailableReason: photo ? null : _tr('noPhoto'),
           ),
         ],
       ),
@@ -821,8 +816,6 @@ class _PortfolioDocumentEditorScreenState
   Widget _contacts(PortfolioContent workspace) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text(_tr('contactsHint')),
-      const SizedBox(height: StackCardSpacing.lg),
       for (final link in [
         ..._content!.links,
         ...workspace.links.where(

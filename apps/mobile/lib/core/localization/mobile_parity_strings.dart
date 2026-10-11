@@ -1,5 +1,5 @@
 const russianMobileParityStrings = <String, String>{
-  'mobileParity.demoLink': 'Ссылка на демо',
+  'mobileParity.demoLink': 'Ссылка на проект',
   'mobileParity.noLink': 'Нет ссылки',
   'mobileParity.noLinkHint': 'Ссылка не добавлена',
   'mobileParity.copy': 'Копировать',
@@ -10,10 +10,7 @@ const russianMobileParityStrings = <String, String>{
   'mobileParity.contributionHint': 'Что вы сделали в этом проекте',
   'mobileParity.cover': 'Обложка',
   'mobileParity.noCover': 'Без изображения',
-  'mobileParity.coverHint':
-      'В карточке будет нейтральный placeholder. Обложка необязательна.',
   'mobileParity.technologiesEmpty': 'Технологии не добавлены',
-  'mobileParity.projectLibraryHint': 'Проект сохраняется в общей библиотеке. Включение в резюме и портфолио настраивается отдельно.',
   'mobileParity.preview': 'Предпросмотр карточки',
   'mobileParity.save': 'Сохранить',
   'mobileParity.unsaved': 'Есть несохранённые изменения',
@@ -26,12 +23,10 @@ const russianMobileParityStrings = <String, String>{
   'mobileParity.discard': 'Выйти без сохранения',
   'mobileParity.projectNameEmpty': 'Название проекта',
   'mobileParity.limit': 'До {limit} символов',
-  'mobileParity.repositoryHint': 'Необязательно; https:// или http://',
-  'mobileParity.demoHint': 'Необязательно; публичная демоссылка',
 };
 
 const englishMobileParityStrings = <String, String>{
-  'mobileParity.demoLink': 'Demo link',
+  'mobileParity.demoLink': 'Project link',
   'mobileParity.noLink': 'No link',
   'mobileParity.noLinkHint': 'No link added',
   'mobileParity.copy': 'Copy',
@@ -42,10 +37,7 @@ const englishMobileParityStrings = <String, String>{
   'mobileParity.contributionHint': 'What you contributed to this project',
   'mobileParity.cover': 'Cover',
   'mobileParity.noCover': 'No image',
-  'mobileParity.coverHint':
-      'The card will use a neutral placeholder. A cover is optional.',
   'mobileParity.technologiesEmpty': 'No technologies added',
-  'mobileParity.projectLibraryHint': 'The project is saved to the shared library. Its use in resumes and portfolios is configured separately.',
   'mobileParity.preview': 'Card preview',
   'mobileParity.save': 'Save',
   'mobileParity.unsaved': 'Unsaved changes',
@@ -58,6 +50,4 @@ const englishMobileParityStrings = <String, String>{
   'mobileParity.discard': 'Leave without saving',
   'mobileParity.projectNameEmpty': 'Project name',
   'mobileParity.limit': 'Up to {limit} characters',
-  'mobileParity.repositoryHint': 'Optional; https:// or http://',
-  'mobileParity.demoHint': 'Optional; public demo link',
 };

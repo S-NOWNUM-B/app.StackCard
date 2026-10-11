@@ -147,14 +147,6 @@ class _DeveloperProfileScreenState
                 data: (content) => ListView(
                   padding: const EdgeInsets.all(StackCardSpacing.cardPadding),
                   children: [
-                    Text(
-                      context.strings.tr(
-                        widget.contactsOnly
-                            ? 'workspace.contactsHint'
-                            : 'workspace.profileHint',
-                      ),
-                    ),
-                    const SizedBox(height: StackCardSpacing.lg),
                     if (!widget.contactsOnly)
                       for (final item in [
                         (

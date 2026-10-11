@@ -424,16 +424,6 @@ export function ContentEditor({ content, onChange, isBase = false, contacts = []
           </details>
           <details className="editor-section">
             <summary>Оформление</summary>
-            <label className="field">
-              <span>Тема документа</span>
-              <select
-                value={content.theme}
-                onChange={(e) => patch({ theme: e.target.value as 'dark' | 'light' })}
-              >
-                <option value="dark">Тёмная</option>
-                <option value="light">Светлая</option>
-              </select>
-            </label>
             <Field
               label="Дополнительный текст резюме"
               textarea

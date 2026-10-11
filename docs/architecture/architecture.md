@@ -287,13 +287,20 @@ Dart и TypeScript реализуют их независимо в своих с
 
 | **Группа** | **Ответственность и доступ** |
 |:---|:---|
-| `/`, `/download` | Публичная информация о проекте и мобильных релизах. |
+| `/`, `/features`, `/use-cases`, `/about`, `/download` | Публичная информация о StackCard, возможностях, сценариях и доступности мобильных релизов. |
+| `/help` | Начало работы, отдельные Save/Publish и приватность; инструкция с реальными маршрутами. |
+| `/examples`, `/examples/resume`, `/examples/portfolio` | Явно обозначенные демонстрационные документы; не читают private данные и не создают owner session. |
 | Auth routes | Sign-in/register/reset; SDK session и owner access guard. |
 | `/account-deletion` | Restricted recovery прежней deletion operation из локального journal после утраты Auth; private data не читает. |
 | Private кабинет и editor по document ID | Общая база/Library, независимые Resume/Portfolio, scoped Save/base review, preview и отдельный Publish/Unpublish; только своего UID. Phase 14 Inbox доступен из Settings, отдельно от draft. |
 | `/d/[publicId]` | Published-only Resume/Portfolio, metadata/SEO; missing/unpublished/deleted не раскрывают private existence. Phase 14 Contact form использует только открытые projected typed contacts. |
 
 </div>
+
+Web visual target 2026-10-11 — [светлая композиция по Openship](../redesign/web-openship.md).
+Общие CSS/shared controls показывают только light. Mobile/cloud тема `dark | light`
+остаётся частью совместимой модели: web rendering не мигрирует сохранённые данные,
+новые документы web создаются с light. Flutter target этим переносом не меняется.
 
 Защита маршрута помогает UX, но не заменяет ownership checks в Firebase Rules
 и на доверенной стороне. Владелец читает/изменяет свою базу/Library и независимые документы из обоих клиентов;
@@ -428,6 +435,13 @@ FlutterFire-generated sources обновляются генератором, run
 остаётся обычным code в `LocalRuntime`. Dev Auth Emulator выбирается через
 `FIREBASE_AUTH_EMULATOR_HOST` и `FIREBASE_AUTH_EMULATOR_PORT`; этот режим не
 заменяет проверку реального Google flow и native session restore.
+
+Android Google adapter использует web OAuth client из generated
+`google-services.json` через Google Services Gradle plugin; отдельный Dart
+`serverClientId` не требуется. Firebase app связывает package name и signing
+SHA-1 с Android OAuth client. После включения provider native configuration
+обновляется через Firebase CLI. iOS client ID/URL scheme и device приёмка
+проверяются отдельно; Android setup не закрывает этот target.
 
 [`LocalDraftAccounts`](../../apps/mobile/lib/features/portfolio_draft/data/local_draft_accounts.dart)
 сохраняет guest в прежних keys `draft`/`draft.v1.backup`, а каждый account — в

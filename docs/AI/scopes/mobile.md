@@ -359,6 +359,11 @@ headless проверки не закрывают native visual, public/web ил
   запускается отдельно с explicit opt-in на signed-out dev device; создаёт/удаляет
   disposable account, reset подтверждает только SDK/backend acceptance.
   Setup и команды — в [CONTRIBUTING](../../../CONTRIBUTING.md#firebase-configuration-и-окружение).
+  Google native acceptance — `integration_test/google_auth_runtime_test.dart`:
+  explicit Android opt-in, real Google picker, named Auth/Firestore, memory-only
+  workspace и seed/check process pair. Default session/Hive сохраняются;
+  Google/Firebase account не удаляется. Server owner read при отсутствии draft
+  не доказывает sync. Setup — [CONTRIBUTING](../../../CONTRIBUTING.md#android-google-acceptance).
 - Firestore checks: [sync repository tests](../../../apps/mobile/test/portfolio_sync_repository_test.dart)
   проверяют offline Save, durable outbox/reopen, crash recovery, newer Save during
   ACK, LWW, UID disposal и сохранность unsaved ввода. SDK mapping/projection и

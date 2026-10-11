@@ -150,11 +150,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                                         ? 'project.emptyTitle'
                                         : 'project.noResultsTitle',
                                   ),
-                                  message: context.strings.tr(
-                                    filters.query.trim().isEmpty
-                                        ? 'project.emptyMessage'
-                                        : 'project.noResultsMessage',
-                                  ),
                                 ),
                                 if (filters.query.trim().isNotEmpty)
                                   StackCardButton(
@@ -346,12 +341,7 @@ void _showProjectDetails(BuildContext context, Project project) {
                     const SizedBox(height: StackCardSpacing.lg),
                   ],
                   Text(
-                    context.strings.tr(
-                      project.id == null
-                          ? 'projects.sourceNote'
-                          : 'githubSync.sourceNote',
-                      {'source': project.source.labelFor(context)},
-                    ),
+                    project.source.labelFor(context),
                     style: Theme.of(context).textTheme.bodySmall
                         ?.copyWith(color: context.colors.textMeta),
                   ),

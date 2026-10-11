@@ -31,6 +31,15 @@
 
 ## Статус и границы текущей работы
 
+**2026-10-11: светлый web redesign** по прямому поручению адаптировать
+[Openship](https://openship.io/) под StackCard, удалить dark и добавить страницы.
+[Web brief](../redesign/web-openship.md) фиксирует композицию, русские тексты,
+новые `/features`, `/use-cases`, `/examples`, `/help`, `/about` и обновлённый
+`/download`. White-only охватывает Auth, кабинет, preview и public reader.
+Совместимая mobile/cloud тема старых документов сохраняется без миграции при
+чтении. Редизайн Flutter по этому референсу ждёт оценки web пользователем.
+Это работа внутри существующего web scope; Phase15, deploy и выпуск не начаты.
+
 **2026-10-09: переход к Phase14 разрешён** прямым поручением «переходи к следующей
 фазе разработки». Активная разработка — ContactRequest/Contact me, private Inbox
 в mobile/web и mobile FCM по [ADR0004](../decisions/0004-contact-inbox-notifications.md).
@@ -134,6 +143,21 @@ Functions/web ещё не подтверждены. Live FCM, QR/Developer Card,
 Наличие кода не подтверждает проверку нового сценария. Итоговые проверки этой
 работы фиксируются здесь по фактам; прежние 950/1068 PASS относятся к своим
 историческим версиям и не доказывают новую document модель.
+
+### Проверки светлого web — 2026-10-11
+
+| Проверка | Результат |
+| --- | --- |
+| TypeScript / форматирование | `npm run typecheck` и `npm run format:check` — PASS. |
+| Контракты | `npm test` — **97/97 PASS**. Старые dark данные читаются без изменения; renderer светлый, создание из базы получает light. ReturnTo принимает только owner paths и разрешённые workspace hashes. |
+| Production build | `npm run build` — PASS; 15 маршрутов приложения и служебный `/_not-found`. Финальный preview запущен через `npm run start` локально. |
+| Браузер / компоновка | Главная, пять новых страниц, download, примеры документов и Auth просмотрены; ширины 375/390/768/1280/1920, горизонтальная прокрутка на проверенных экранах отсутствует. Desktop hero сопоставлен с Openship при 1280×720. |
+| Взаимодействия | Переключение портфолио/резюме, mobile menu, FAQ, якоря помощи и переход к `/workspace#base` через вход — PASS. Keyboard Enter/Tab и видимый focus проверены на demo и меню. Console errors финального preview — 0. |
+
+Desktop и phone screenshots сохранены как артефакты текущей задачи. Команды
+подтверждены tool output; отдельные log-файлы не создавались. Авторизованные
+live Save/Publish и обмен с mobile в этом пакете повторно не запускались;
+пользовательская оценка нового дизайна и Flutter перенос остаются открытыми.
 
 ### Проверки base review и UID — 2026-10-09
 
@@ -601,7 +625,7 @@ MVP соответствует общей базе и нескольким до�
 | Website | Landing/download, защищённый кабинет с базой/Library/документами, anonymous Resume/Portfolio. |
 | Inbox / Notifications | ContactRequest по published документу и owner Inbox в обоих клиентах; FCM после подключения настоящего сервиса. |
 | Offline | Mobile local draft/cache/outbox; web online-first с настоящими saving/error/retry и conflict states. |
-| Settings / Sharing | Theme light/dark/system, ru/en, reduced motion, account/privacy, native share и Card/QR по возможностям платформы. |
+| Settings / Sharing | Mobile theme light/dark/system и ru/en; web только light и русский. Reduced motion, account/privacy, native share и Card/QR по возможностям платформы. |
 
 </div>
 
@@ -1391,8 +1415,8 @@ mobile/web/publication scope
 - [x] Подключить Firebase configuration для Android/iOS; описать generation,
   dev environment и необязательный Auth Emulator в CONTRIBUTING.
 - [ ] Завершить email/password и Google sign-in, регистрацию, восстановление пароля,
-  auth state и sign out: реализация готова; Google provider/OAuth configuration
-  и native Google приёмка остаются открытыми.
+  auth state и sign out: реализация готова; Android Google provider/OAuth
+  configuration завершена 2026-10-10, native Google приёмка остаётся открытой.
 - [x] Добавить именованные routes, параметры, вложенную навигацию и auth redirects
   в GoRouter; unit/widget проверки transitions и session restore проходят.
 - [x] Привязать local draft к Firebase UID; реализовать явный guest transfer
@@ -1819,6 +1843,10 @@ trusted validation → public reader → доступные Publish/Copy/Open д
 Ни Figma frame, ни новый scaffold не доказывают готовность этих сценариев.
 
 #### 13a — Public shell
+
+Web target переопределён поручением 2026-10-11: только светлая тема и
+[русский StackCard по Openship](../redesign/web-openship.md). Отмеченные ниже
+R6 задачи сохраняют историю реализации; новый target не изменяет Flutter.
 
 **Задачи**
 
@@ -2305,3 +2333,61 @@ Web-редактор добавляет работу сверх обязател
   coverage, DevTools до/после, CI artifact, Crashlytics report и release materials.
 - После разрешённых commits использовать историю изменений для объяснения этапов.
   На защите уметь самостоятельно объяснить код, ограничения и принятые решения.
+
+### Проверка требований недель 7–8 — 2026-10-10
+
+По предоставленному учебному заданию полное соответствие неделе 8 пока
+не подтверждено. Навигация, email/password и Firestore работают; Android
+Google configuration завершена, live вход ещё проверяется; постоянный сервис
+FCM отложен владельцем проекта.
+
+| Требование | Фактический результат текущей проверки |
+| --- | --- |
+| GoRouter, параметры, nested navigation, protected redirect | **190/190 PASS**: account navigation, widget, responsive и state management suites. Четыре stateful root-вкладки сохраняют свою навигацию, проверены UID transitions и безопасный возврат после входа. |
+| Телефон/планшет, portrait/landscape | Responsive suite входит в указанные 190 tests: **168 PASS**, семь размеров от 320×568 до 1024×768, две темы, text scale 1×/2×, шесть экранов. Это headless widget evidence; физические телефон/планшет и iOS в этом аудите не запускались. |
+| Email/password, Firestore sync, notifications logic | Отдельный focused Flutter suite — **112/112 PASS**. В живом dev Firebase зарегистрированы два demo email/password аккаунта; sign out/relogin и owner server read/write прошли через клиентский SDK. Native offline/restart/LWW evidence сохраняется в Phase 8. |
+| Google Authentication | Google provider включён после подтверждения владельцем support email и названия StackCard Development. Android config заново получена Firebase CLI: Android OAuth связан с package/debug SHA-1, web OAuth client доступен Gradle plugin. Native real Google suite запущена и ожидает вход владельца в системном экране Android; mocked tests не закрывают этот пункт. |
+| Firestore Security Rules | **30/30 PASS** на demo эмуляторе. Actual deployed Rules совпадают с repository source. Live client SDK отклонил чтение A→B, B→A и anonymous→A с `permission-denied`. Firebase остаётся Spark без billing. |
+| Push на устройстве | Историческая Android live acceptance **5/5 PASS** описана в Phase 14. В обычной сборке без `CONTACT_INBOX_API_URL` registration unavailable; постоянный hosting отложен пользователем. Для текущей демонстрации push требуется отдельно подключённый HTTPS backend. iOS/APNs остаются открытыми. |
+| РК1 | Оценка и сдача заданий недель 1–7 относятся к преподавателю; наличие runtime/tests не подтверждает выставленные баллы или сдачу материалов. |
+
+Для просмотра реальных коллекций созданы аккаунты с вымышленными профилями
+Айданы Сейтовой и Данияра Омарова. Auth emails используют `example.invalid`:
+вход работает, почтовые сообщения на эти адреса недоступны. Каждый owner имеет
+`accounts/{uid}` с lifecycle metadata и `accounts/{uid}/drafts/current` schema 6:
+private notes, profile, skills, experience, education, links, Projects Library,
+Resume/Portfolio snapshots и связь Portfolio→Resume. Коллекции проектов и
+резюме отдельно не создавались: они входят в existing `content` aggregate.
+Публикация и фиктивные push tokens не создавались; passwords/tokens не входят
+в Firestore или Git. Account delete/cleanup не выполнялись.
+
+Для завершения учебной приёмки остаются Google live sign-in,
+подключение FCM backend для повторяемой демонстрации и материалы РК1.
+Недельный аудит не запускает следующую продуктовую фазу и не закрывает
+полную iOS/release/Figma приёмку.
+
+### Упрощение мобильных текстов — 2026-10-11
+
+По прямому поручению пользователя очищены Home, вход/регистрация, Settings,
+Projects, редакторы Resume/Portfolio, Inbox и уведомления: убраны постоянные
+поясняющие абзацы, demo/будущие этапы и технические сведения о локальном режиме,
+placeholder и Firebase. Пустые списки оставляют один короткий заголовок.
+Проектные ссылки названы «Ссылка на проект», фото — с краткой причиной disabled
+состояния; ошибки, несохранённые изменения и подтверждения опасных действий
+сохранены. Ru/en обновлены вместе; shared `StackCardStateView` допускает
+отсутствие дополнительного сообщения. Правило copy — в existing design guide.
+
+- Focused mobile gate: **384/384 PASS** в 18 существующих suites: auth/navigation,
+  settings/localization, responsive, project/document editors, media, persistence,
+  GitHub, Inbox и publication UI. Ожидания прежних надписей обновлены; проверка
+  контактов при text2 подтвердила читаемость короткой подписи Email.
+- Итоговый `flutter analyze --no-pub`: **0 issues**; format затронутых Dart files
+  и `git diff --check`: **PASS**. Full mobile suite и backend/web не повторялись.
+- Обычная Android debug сборка установлена на `emulator-5554` без uninstall/clear.
+  Actual вход/Home/Project editor и блок обложки/ссылок просмотрены; тестовые
+  проекты не сохранялись. Это не новая Firebase/Google/FCM или iOS приёмка.
+
+Логи: `/private/tmp/stackcard-ui-copy-verified-tests.log`,
+`stackcard-ui-copy-final-analyze.log`, `stackcard-ui-copy-final-native.log`;
+снимки `stackcard-ui-copy-screen.png`, `stackcard-ui-copy-home.png`,
+`stackcard-ui-copy-project-editor.png`, `stackcard-ui-copy-project-cover.png`.

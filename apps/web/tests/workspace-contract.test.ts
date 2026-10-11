@@ -37,6 +37,18 @@ function raw() {
 function draft() {
   return decodeDraft(raw(), 'owner');
 }
+test('new web documents use light appearance while preserving saved dark workspace data', () => {
+  const workspace = draft().content!;
+  workspace.theme = 'dark';
+  const original = clone(workspace);
+  for (const kind of ['resume', 'portfolio'] as const) {
+    const created = createDocument(workspace, kind, 'Новый документ');
+    assert.equal(created.content.theme, 'light');
+    assert.equal(created.content.profile.name, workspace.profile.name);
+  }
+  assert.deepEqual(workspace, original);
+  assert.deepEqual(validateWorkspace(workspace, 'owner'), original);
+});
 test('actual Dart encoded schema6 fixture roundtrips byte shape with independent document overrides', () => {
   const d = draft();
   assert.deepEqual(d.content, fixture.content);
@@ -376,11 +388,24 @@ test('contact URL grammar matches mobile and blocks header/query/control injecti
 test('auth return path only permits owner workspace and never open redirect', () => {
   assert.equal(safeReturnPath('/workspace/document/a'), '/workspace/document/a');
   for (const path of [
+    '/workspace#base',
+    '/workspace#projects',
+    '/workspace#resumes',
+    '/workspace#portfolios',
+    '/workspace#inbox/0123456789abcdef0123456789abcdef',
+    '/workspace#document/my-document',
+  ])
+    assert.equal(safeReturnPath(path), path);
+  for (const path of [
     'https://evil.example',
     '//evil.example',
     '/workspace/../../d/x',
     '/workspace%2f%2fevil',
     '/d/x',
+    '/workspace#//evil.example',
+    '/workspace#unknown',
+    '/workspace#document/../../d/x',
+    '/workspace#projects\n',
   ])
     assert.equal(safeReturnPath(path), '/workspace');
 });

@@ -158,7 +158,7 @@ export function emptyContent(): WorkspaceContent {
     links: [],
     blocks: blockKinds.map((kind) => ({ kind, visible: true })),
     resumeText: '',
-    theme: 'dark',
+    theme: 'light',
     ignoredGitHubRepositories: [],
     documents: [],
   };
@@ -190,7 +190,7 @@ export function createDocument(
     kind,
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
-    content: seedDocument(content),
+    content: { ...seedDocument(content), theme: 'light' },
     projects: [],
     attachedResumeId: null,
     baseSnapshot: baseData(content),
@@ -264,7 +264,11 @@ export function withProjectEdits(project: Project, patch: Partial<Project>): Pro
   };
 }
 export function safeReturnPath(path: string | null): string {
-  return path && /^\/workspace(?:\/[A-Za-z0-9_-]+)*(?:\?[A-Za-z0-9_=&%-]*)?$/.test(path)
+  return path &&
+    path === path.trim() &&
+    /^\/workspace(?:\/[A-Za-z0-9_-]+)*(?:\?[A-Za-z0-9_=&%-]*)?(?:#(?:home|base|resumes|projects|portfolios|settings|inbox(?:\/[a-f0-9]{32})?|document\/[A-Za-z0-9_-]+))?$/.test(
+      path,
+    )
     ? path
     : '/workspace';
 }
