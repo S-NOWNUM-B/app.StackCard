@@ -5,6 +5,7 @@ import 'package:app_stackcard/core/theme/stackcard_theme.dart';
 import 'package:app_stackcard/features/auth/auth.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:app_stackcard/shared/widgets/stackcard_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -201,15 +202,23 @@ void main() {
   });
 
   testWidgets(
-    'Four skipped steps save completion without public identity or contact',
+    'Next allows four empty steps without public identity or contact',
     (tester) async {
       final repository = _Workspace();
       final container = await _pump(tester, _Accounts(), repository);
       expect(container.read(pendingPersonalizationUidProvider), isNull);
       expect(find.text('Шаг 1 из 4'), findsOneWidget);
-      expect(find.byKey(const Key('personalization.back')), findsNothing);
+      expect(find.text('Пропустить'), findsNothing);
+      expect(
+        tester
+            .widget<StackCardButton>(
+              find.byKey(const Key('personalization.back')),
+            )
+            .onPressed,
+        isNull,
+      );
       for (var step = 0; step < 4; step++) {
-        await _tap(tester, 'personalization.skip');
+        await _tap(tester, 'personalization.next');
       }
       expect(find.text('Главная готова'), findsOneWidget);
       final workspace = (await repository.read())!.content!;
@@ -235,6 +244,14 @@ void main() {
   ) async {
     final repository = _Workspace();
     await _pump(tester, _Accounts(), repository);
+    expect(
+      tester
+          .widget<StackCardInput>(
+            find.byKey(const Key('personalization.github')),
+          )
+          .label,
+      'GitHub-профиль',
+    );
     await _enter(
       tester,
       'personalization.github',
@@ -242,25 +259,35 @@ void main() {
     );
     await _tap(tester, 'personalization.next');
     expect(
-      find.text('Введите username или ссылку на профиль GitHub'),
+      find.text(
+        'Введите имя пользователя или ссылку вида https://github.com/username',
+      ),
       findsOneWidget,
     );
     expect(find.text('Шаг 1 из 4'), findsOneWidget);
     await _enter(
       tester,
       'personalization.github',
-      'https://github.com/SNOWNUMB/',
+      'https://github.com/LINESKL',
+    );
+    expect(
+      find.text(
+        'Введите имя пользователя или ссылку вида https://github.com/username',
+      ),
+      findsNothing,
     );
     await _tap(tester, 'personalization.next');
     await _enter(tester, 'personalization.name', 'Стас');
     await _enter(tester, 'personalization.headline', 'Разработчик');
-    await _tap(tester, 'personalization.next');
-    await _enter(tester, 'personalization.bio', 'Создаю приложения');
     await _enter(tester, 'personalization.location', 'Алматы / Казахстан');
+    await _tap(tester, 'personalization.next');
+    expect(find.byKey(const Key('personalization.location')), findsNothing);
+    await _enter(tester, 'personalization.bio', 'Создаю приложения');
     await _tap(tester, 'personalization.back');
     expect(find.text('Шаг 2 из 4'), findsOneWidget);
+    expect(find.text('Алматы / Казахстан'), findsOneWidget);
     final workspace = (await repository.read())!.content!;
-    expect(workspace.githubUsername, 'snownumb');
+    expect(workspace.githubUsername, 'lineskl');
     expect(workspace.projects, isEmpty);
     final profile = resolvedMainPortfolioContent(workspace)!.profile;
     expect(profile.name, 'Стас');
@@ -275,8 +302,8 @@ void main() {
     (tester) async {
       final repository = _Workspace();
       await _pump(tester, _Accounts(), repository);
-      await _tap(tester, 'personalization.skip');
-      await _tap(tester, 'personalization.skip');
+      await _tap(tester, 'personalization.next');
+      await _tap(tester, 'personalization.next');
       await tester.pumpWidget(const SizedBox());
       final saved = (await repository.read())!.content!;
       expect(saved.personalization.step, 2);
@@ -291,7 +318,7 @@ void main() {
     final repository = _Workspace();
     await _pump(tester, _Accounts(), repository);
     for (var step = 0; step < 4; step++) {
-      await _tap(tester, 'personalization.skip');
+      await _tap(tester, 'personalization.next');
     }
     await tester.pumpWidget(const SizedBox());
     await _pump(tester, _Accounts(), repository, newAccount: false);
@@ -299,52 +326,56 @@ void main() {
     expect(find.byKey(const Key('personalization.step')), findsNothing);
   });
 
-  testWidgets('Skip advances while keeping valid entered optional fields', (
+  testWidgets('Next advances while keeping valid entered optional fields', (
     tester,
   ) async {
     final repository = _Workspace();
     await _pump(tester, _Accounts(), repository);
     await _enter(tester, 'personalization.github', 'SNOWNUMB');
-    await _tap(tester, 'personalization.skip');
+    await _tap(tester, 'personalization.next');
     await _enter(tester, 'personalization.name', 'Стас');
-    await _tap(tester, 'personalization.skip');
+    await _tap(tester, 'personalization.next');
     final workspace = (await repository.read())!.content!;
     expect(workspace.githubUsername, 'snownumb');
     expect(resolvedMainPortfolioContent(workspace)!.profile.name, 'Стас');
     expect(workspace.personalization.step, 2);
   });
 
-  testWidgets('Skipping a resumed city preserves the stored legacy privacy', (
-    tester,
-  ) async {
-    final repository = _Workspace();
-    final container = await _pump(tester, _Accounts(), repository);
-    await container
-        .read(portfolioDraftControllerProvider.notifier)
-        .savePersonalizationStep(
-          step: 2,
-          status: PortfolioPersonalizationStatus.inProgress,
-          profile: const PortfolioProfile(
-            locationText: 'Сохранённый частный город',
-          ),
-          expectedRepository: repository,
-        );
-    await tester.pumpWidget(const SizedBox());
-    await _pump(tester, _Accounts(), repository, newAccount: false);
-    await _tap(tester, 'personalization.skip');
-    final profile = mainPortfolioDocument((await repository.read())!.content!)!
-        .content
-        .profile;
-    expect(profile.locationText, 'Сохранённый частный город');
-    expect(profile.publishLocation, isFalse);
-  });
+  testWidgets(
+    'Next with an unchanged resumed city preserves stored legacy privacy',
+    (tester) async {
+      final repository = _Workspace();
+      final container = await _pump(tester, _Accounts(), repository);
+      await container
+          .read(portfolioDraftControllerProvider.notifier)
+          .savePersonalizationStep(
+            step: 1,
+            status: PortfolioPersonalizationStatus.inProgress,
+            profile: const PortfolioProfile(
+              locationText: 'Сохранённый частный город',
+            ),
+            expectedRepository: repository,
+          );
+      await tester.pumpWidget(const SizedBox());
+      await _pump(tester, _Accounts(), repository, newAccount: false);
+      expect(find.text('Сохранённый частный город'), findsOneWidget);
+      await _tap(tester, 'personalization.next');
+      expect(find.byKey(const Key('personalization.location')), findsNothing);
+      await _tap(tester, 'personalization.next');
+      final profile = mainPortfolioDocument(
+        (await repository.read())!.content!,
+      )!.content.profile;
+      expect(profile.locationText, 'Сохранённый частный город');
+      expect(profile.publishLocation, isFalse);
+    },
+  );
 
   testWidgets('Save failure keeps entered values and does not advance', (
     tester,
   ) async {
     final repository = _Workspace();
     await _pump(tester, _Accounts(), repository);
-    await _tap(tester, 'personalization.skip');
+    await _tap(tester, 'personalization.next');
     await _enter(tester, 'personalization.name', 'Стас');
     repository.fail = true;
     await _tap(tester, 'personalization.next');
@@ -367,7 +398,7 @@ void main() {
   ) async {
     final repository = _Workspace();
     await _pump(tester, _Accounts(), repository);
-    await _tap(tester, 'personalization.skip');
+    await _tap(tester, 'personalization.next');
     await _enter(tester, 'personalization.name', 'Несохранённое имя');
     await Navigator.of(tester.element(find.byType(PersonalizationScreen)))
         .maybePop();
@@ -491,13 +522,22 @@ void main() {
       tester.view.viewInsets = const FakeViewPadding(bottom: 240);
       addTearDown(tester.view.resetViewInsets);
       await tester.pump();
-      await _tap(tester, 'personalization.skip');
-      expect(find.text('Шаг 2 из 4'), findsOneWidget);
+      for (var step = 0; step < 4; step++) {
+        final back = find.byKey(const Key('personalization.back'));
+        final next = find.byKey(const Key('personalization.next'));
+        await tester.ensureVisible(next);
+        expect(tester.getTopLeft(back).dy, tester.getTopLeft(next).dy);
+        expect(
+          tester.getTopLeft(back).dx,
+          lessThan(tester.getTopLeft(next).dx),
+        );
+        expect(tester.getSize(back).height, greaterThanOrEqualTo(48));
+        expect(tester.getSize(next).height, greaterThanOrEqualTo(48));
+        expect(find.text('Пропустить'), findsNothing);
+        await _tap(tester, 'personalization.next');
+      }
+      expect(find.text('Главная готова'), findsOneWidget);
       expect(tester.takeException(), isNull);
-      expect(
-        tester.getSize(find.byKey(const Key('personalization.next'))).height,
-        greaterThanOrEqualTo(48),
-      );
     },
   );
 }
