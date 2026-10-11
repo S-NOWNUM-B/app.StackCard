@@ -45,8 +45,7 @@ const russianDocumentPublicationStrings = <String, String>{
       'Название и ник можно менять. Ссылка на этот документ сохранится.',
   'documentPublication.linkUnavailable':
       'У документа нет подтверждённой публичной ссылки.',
-  'documentPublication.linkActionsUnavailable':
-      'Открытие ссылок и системный Share недоступны в этом окружении.',
+  'documentPublication.linkActionsUnavailable': 'Открытие ссылок и отправка через «Поделиться» недоступны в этом окружении.',
   'documentPublication.actionFailed':
       'Не удалось выполнить действие. Ссылка сохранена, попробуйте снова.',
   'documentPublication.unpublishTitle': 'Снять документ с публикации?',

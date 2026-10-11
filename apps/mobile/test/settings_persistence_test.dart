@@ -146,7 +146,10 @@ void main() {
     () async {
       final gate = Completer<void>();
       final repository = _Settings(gate: gate);
-      final controller = AppearanceController(settingsRepository: repository);
+      final controller = AppearanceController(
+        themeMode: ThemeMode.dark,
+        settingsRepository: repository,
+      );
       addTearDown(controller.dispose);
       final first = controller.setThemeMode(ThemeMode.light);
       await Future<void>.delayed(Duration.zero);

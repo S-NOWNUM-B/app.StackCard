@@ -22,9 +22,7 @@ class PortfolioContentView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Theme(
-    data: content.theme == PortfolioTheme.dark
-        ? StackCardTheme.dark
-        : StackCardTheme.light,
+    data: StackCardTheme.light,
     child: Builder(
       builder: (context) {
         final sections = <Widget>[];

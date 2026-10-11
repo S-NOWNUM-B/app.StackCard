@@ -9,7 +9,7 @@ const russianDocumentEditorStrings = <String, String>{
   'documentEditor.qualifications': 'Опыт и образование',
   'documentEditor.projects': 'Навыки и проекты',
   'documentEditor.appearance': 'Порядок и оформление',
-  'documentEditor.preview': 'Предпросмотр',
+  'documentEditor.preview': 'Просмотр',
   'documentEditor.title': 'Название документа',
   'documentEditor.name': 'Полное имя',
   'documentEditor.role': 'Роль',

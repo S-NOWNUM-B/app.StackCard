@@ -196,23 +196,30 @@ void main() {
     expect(find.textContaining('suggestions.'), findsNothing);
   });
 
-  testWidgets('English source advice points to the existing Preview', (
-    tester,
-  ) async {
-    await _openGitHub(
-      tester,
-      await _local(PortfolioContent()),
-      _repository(),
-      language: AppLanguage.en,
-    );
-    await _visible(tester, find.byKey(const ValueKey('github_suggestions_42')));
-    expect(
-      find.textContaining('has not been added to your portfolio'),
-      findsOneWidget,
-    );
-    expect(find.text('Open Preview to check the source.'), findsOneWidget);
-    expect(find.byKey(const ValueKey('github_preview_42')), findsOneWidget);
-  });
+  testWidgets(
+    'Legacy English choice shows Russian source advice and existing Preview',
+    (tester) async {
+      await _openGitHub(
+        tester,
+        await _local(PortfolioContent()),
+        _repository(),
+        language: AppLanguage.en,
+      );
+      await _visible(
+        tester,
+        find.byKey(const ValueKey('github_suggestions_42')),
+      );
+      expect(
+        find.textContaining('ещё не добавлен в портфолио'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Открой «Предпросмотр», чтобы проверить источник.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('github_preview_42')), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'Demo content and an empty curated portfolio have no advice panel',

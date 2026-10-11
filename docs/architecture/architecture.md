@@ -67,7 +67,7 @@ content и известным GitHub snapshots; UI предлагает явны
 Приёмка и фактические результаты проверок ведутся в
 [product spec](../product/product-spec.md#phase-10--portfolio-suggestions).
 Home, Resumes, Projects и Portfolios используют stateful app shell и Material 3
-light/dark; Settings, Sign In и редакторы открываются отдельно. Home/document
+light-only; Settings, Sign In и редакторы открываются отдельно. Home/document
 libraries читают actual draft через Riverpod и сохраняют пустую базу пустой.
 Legacy preview/read models остаются отдельными демонстрационными сценариями. Данные сохраняются
 через Repository contracts. Firebase Auth работает через отдельный account API;
@@ -121,11 +121,12 @@ Sign In, GitHub Import и notes открываются отдельно. Соз�
 GitHub Import и auth forms публичны. `from` возвращает к разрешённому локальному
 пути после входа. `DemoSession` остаётся preview-механизмом и не авторизует аккаунт.
 
-Dark — режим по умолчанию. Выбор dark/light/system принадлежит
-[`AppearanceController`](../../apps/mobile/lib/core/state/appearance_controller.dart),
-созданному `ChangeNotifierProvider`. `Selector` подключает его к `MaterialApp`,
-Settings читает выбранный mode через `select` и меняет его через `read`.
-Router не передаёт theme callbacks и сохраняет экземпляр при смене темы.
+После одобрения светлого web 2026-10-11 `MaterialApp` всегда использует light/ru.
+[`AppearanceController`](../../apps/mobile/lib/core/state/appearance_controller.dart)
+через `ChangeNotifierProvider` сохраняет совместимый settings snapshot и управляет
+source descriptions/reduced motion с failure/retry. Legacy dark/system/en
+читаются без автоматического Save; переключатели темы и языка удалены.
+Router сохраняет stateful roots независимо от preferences.
 
 [`project_filters.dart`](../../apps/mobile/lib/features/projects/presentation/project_filters.dart)
 владеет query/filter state через Riverpod `Notifier`; чистый
@@ -299,8 +300,9 @@ Dart и TypeScript реализуют их независимо в своих с
 
 Web visual target 2026-10-11 — [светлая композиция по Openship](../redesign/web-openship.md).
 Общие CSS/shared controls показывают только light. Mobile/cloud тема `dark | light`
-остаётся частью совместимой модели: web rendering не мигрирует сохранённые данные,
-новые документы web создаются с light. Flutter target этим переносом не меняется.
+остаётся частью совместимой модели: rendering обоих клиентов не мигрирует данные,
+новые документы обоих клиентов создаются с light. Пользователь одобрил web
+и поручил перенести white-only/ru target в Flutter через прежний core/theme.
 
 Защита маршрута помогает UX, но не заменяет ownership checks в Firebase Rules
 и на доверенной стороне. Владелец читает/изменяет свою базу/Library и независимые документы из обоих клиентов;
@@ -686,8 +688,8 @@ education, social links, plain text Resume, блоками и `PortfolioTheme`.
 определяет [ADR 0001](../decisions/0001-firestore-sync-and-publication.md).
 Десять уникальных блоков — Profile, About, Skills, Featured Projects, Experience,
 Education, GitHub, Links, Resume, Location — имеют порядок и видимость.
-Тема портфолио dark/light применяется существующей `StackCardTheme` к отображению
-content на Portfolio и в preview, не меняя ThemeMode приложения. Resume сохраняет переносы строк;
+Тема портфолио dark/light остаётся частью совместимых данных. Portfolio и preview
+всегда отображаются через светлую `StackCardTheme` без перезаписи content. Resume сохраняет переносы строк;
 Markdown, файловые вложения и обработка media в этой фазе не вводятся.
 
 [`PortfolioDraftController`](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_draft_controller.dart)

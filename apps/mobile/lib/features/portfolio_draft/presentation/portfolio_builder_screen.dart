@@ -90,11 +90,7 @@ class PortfolioBuilderScreen extends ConsumerWidget {
                             style: Theme.of(context).textTheme.headlineLarge
                                 ?.copyWith(color: context.colors.ink),
                           ),
-                          StackCardArtwork(
-                            color: context.colors.ink,
-                            variant: 1,
-                            height: 144,
-                          ),
+                          const SizedBox(height: StackCardSpacing.xl),
                           StackCardButton(
                             key: const ValueKey('builder_start'),
                             label: strings.tr('builder.start'),
@@ -145,7 +141,6 @@ class PortfolioBuilderScreen extends ConsumerWidget {
                     const SizedBox(height: StackCardSpacing.xl),
                     const PortfolioBuilderBlocks(),
                     const SizedBox(height: StackCardSpacing.xl),
-                    const PortfolioBuilderTheme(),
                   ],
                   const SizedBox(height: StackCardSpacing.xl),
                   StackCardButton(

@@ -29,7 +29,7 @@ void main() {
     'compact_phone': Size(320, 568),
     'compact_landscape': Size(568, 320),
   };
-  for (final theme in [ThemeMode.dark, ThemeMode.light]) {
+  for (final theme in [ThemeMode.light]) {
     for (final viewport in viewports.entries) {
       for (final scale in [1.0, 2.0]) {
         for (final route in [

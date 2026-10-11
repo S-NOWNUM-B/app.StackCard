@@ -138,29 +138,64 @@ class PortfolioDocumentCard extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      StackCardIcon(
-                        name: isResume ? 'file-text' : 'panels-top-left',
-                        size: 20,
-                        color: context.colors.accentText,
+                      Flexible(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: context.colors.surfaceElevated,
+                            border: Border.all(
+                              color: context.colors.borderSubtle,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              StackCardRadius.capsule,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: StackCardSpacing.md,
+                              vertical: StackCardSpacing.sm,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                StackCardIcon(
+                                  name: isResume
+                                      ? 'file-text'
+                                      : 'panels-top-left',
+                                  size: 16,
+                                  color: context.colors.textPrimary,
+                                ),
+                                const SizedBox(width: StackCardSpacing.sm),
+                                Flexible(
+                                  child: Text(
+                                    strings.tr(
+                                      isResume
+                                          ? 'workspace.resume'
+                                          : 'workspace.portfolio',
+                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: StackCardSpacing.sm),
-                      Text(
-                        strings
-                            .tr(
-                              isResume
-                                  ? 'workspace.resume'
-                                  : 'workspace.portfolio',
-                            )
-                            .toUpperCase(),
-                        style: Theme.of(context).textTheme.labelLarge
-                            ?.copyWith(color: context.colors.textSecondary),
+                      const Spacer(),
+                      ExcludeSemantics(
+                        child: Icon(
+                          Icons.north_east_rounded,
+                          size: 20,
+                          color: context.colors.textMeta,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: StackCardSpacing.md),
                   Text(
                     document.title,
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   if (document.content.profile.headline.isNotEmpty) ...[
                     const SizedBox(height: StackCardSpacing.md),
@@ -180,10 +215,16 @@ class PortfolioDocumentCard extends ConsumerWidget {
               ),
             ),
           ),
+          Divider(
+            height: 1,
+            indent: StackCardSpacing.cardPadding,
+            endIndent: StackCardSpacing.cardPadding,
+            color: context.colors.borderSubtle,
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
               StackCardSpacing.cardPadding,
-              0,
+              StackCardSpacing.md,
               StackCardSpacing.cardPadding,
               StackCardSpacing.md,
             ),

@@ -5,11 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('Mock profile exposes the existing read-only demo', () async {
     final profile = await MockProfileRepository().getProfile();
-    expect(profile.name, 'Alex Morgan');
-    expect(profile.firstName, 'Alex');
+    expect(profile.name, 'Алекс Морган');
+    expect(profile.firstName, 'Алекс');
     expect(profile.skills, hasLength(8));
     expect(profile.readiness.fraction, 0.8);
-    expect(profile.experience?.title, 'Frontend Developer');
+    expect(profile.experience?.title, 'Фронтенд-разработчик');
     expect(() => profile.skills.add('Other'), throwsUnsupportedError);
   });
 

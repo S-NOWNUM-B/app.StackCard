@@ -2,7 +2,7 @@ const russianSettingsManagementStrings = <String, String>{
   'settingsManagement.contacts': 'Контакты и ссылки',
   'settingsManagement.save': 'Сохранить',
   'settingsManagement.confirm': 'Подтвердить',
-  'settingsManagement.publicEmail': 'Email',
+  'settingsManagement.publicEmail': 'Электронная почта',
   'settingsManagement.publicEmailHint':
       'Для связи через документы. Почта входа — в аккаунте.',
   'settingsManagement.emailPermission': 'Разрешить выбор почты в документах',

@@ -252,7 +252,7 @@ void main() {
       await _tap(tester, 'account.submit');
       await tester.pumpAndSettle();
       expect(repository.requests, isEmpty);
-      expect(find.text('Укажите корректный email'), findsOneWidget);
+      expect(find.text('Укажите корректную электронную почту'), findsOneWidget);
       await _enter(tester, 'account.email', ' user@example.com ');
       await _enter(tester, 'account.password', ' secret ');
       await _tap(tester, 'account.submit');
@@ -626,7 +626,9 @@ void main() {
               );
               final loader = picture.bytesLoader as SvgAssetLoader;
               final family = compact ? 'mark' : 'wordmark';
-              final tone = theme.name == 'dark' ? 'paper' : 'ink';
+              final tone = theme.data.brightness == Brightness.dark
+                  ? 'paper'
+                  : 'ink';
               expect(
                 loader.assetName,
                 'assets/branding/design_v2/stackcard-v2-$family-$tone.svg',

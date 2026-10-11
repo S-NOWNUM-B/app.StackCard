@@ -7,7 +7,6 @@ import '../../../core/theme/stackcard_theme.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_states.dart';
-import '../domain/portfolio_content.dart';
 import '../domain/portfolio_draft_repository.dart';
 import 'portfolio_content_view.dart';
 import 'portfolio_draft_controller.dart';
@@ -20,9 +19,7 @@ class PortfolioPreviewScreen extends ConsumerWidget {
     final state = ref.watch(portfolioDraftControllerProvider);
     final content = state.content;
     return Theme(
-      data: content?.theme == PortfolioTheme.light
-          ? StackCardTheme.light
-          : StackCardTheme.dark,
+      data: StackCardTheme.light,
       child: Builder(
         builder: (context) => Scaffold(
           appBar: AppBar(

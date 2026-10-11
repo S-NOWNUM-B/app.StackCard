@@ -37,7 +37,10 @@
 новые `/features`, `/use-cases`, `/examples`, `/help`, `/about` и обновлённый
 `/download`. White-only охватывает Auth, кабинет, preview и public reader.
 Совместимая mobile/cloud тема старых документов сохраняется без миграции при
-чтении. Редизайн Flutter по этому референсу ждёт оценки web пользователем.
+чтении. Пользователь одобрил web и поручил перенести этот дизайн в Flutter:
+только светлая тема, русский интерфейс и собственный контент StackCard.
+Работа сохраняет совместимые legacy preferences/документы и ранее принятые
+изменения горизонтального аккаунта из параллельного чата.
 Это работа внутри существующего web scope; Phase15, deploy и выпуск не начаты.
 
 **2026-10-09: переход к Phase14 разрешён** прямым поручением «переходи к следующей
@@ -157,7 +160,21 @@ Functions/web ещё не подтверждены. Live FCM, QR/Developer Card,
 Desktop и phone screenshots сохранены как артефакты текущей задачи. Команды
 подтверждены tool output; отдельные log-файлы не создавались. Авторизованные
 live Save/Publish и обмен с mobile в этом пакете повторно не запускались;
-пользовательская оценка нового дизайна и Flutter перенос остаются открытыми.
+web одобрен пользователем. Flutter перенос разрешён отдельным последующим
+поручением; его проверки и мобильная оценка фиксируются отдельно.
+
+### Упрощение web-входа — 2026-10-11
+
+По прямому поручению пользователя Auth формы приведены к компактной стандартной
+композиции: центрированная карточка, основной submit перед Google, регистрация
+внизу. По последующему уточнению пользователя отдельная кнопка «На главную»
+убрана: возврат выполняется по логотипу в шапке. Убраны дополнительные пояснения,
+«Отмена» и ссылка проверки удаления с экрана входа. Сам recovery route сохранён;
+Firebase Auth и безопасный returnTo не изменены.
+
+Typecheck, формат, production build и **97/97 tests — PASS**. В браузере проверены
+desktop 1280×720 и phone 390×844, переходы регистрации/восстановления/главной и
+Tab из почты в пароль. Live sign-in/Google и отправка reset email не повторялись.
 
 ### Проверки base review и UID — 2026-10-09
 
@@ -625,7 +642,7 @@ MVP соответствует общей базе и нескольким до�
 | Website | Landing/download, защищённый кабинет с базой/Library/документами, anonymous Resume/Portfolio. |
 | Inbox / Notifications | ContactRequest по published документу и owner Inbox в обоих клиентах; FCM после подключения настоящего сервиса. |
 | Offline | Mobile local draft/cache/outbox; web online-first с настоящими saving/error/retry и conflict states. |
-| Settings / Sharing | Mobile theme light/dark/system и ru/en; web только light и русский. Reduced motion, account/privacy, native share и Card/QR по возможностям платформы. |
+| Settings / Sharing | Mobile и web только light и русский; legacy preferences/schema совместимы. Reduced motion, account/privacy, native share и Card/QR по возможностям платформы. |
 
 </div>
 

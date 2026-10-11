@@ -33,7 +33,8 @@ final class SharedPreferencesSettingsRepository implements SettingsRepository {
         theme: switch (value['theme']) {
           'light' => AppTheme.light,
           'system' => AppTheme.system,
-          _ => AppTheme.dark,
+          'dark' => AppTheme.dark,
+          _ => AppTheme.light,
         },
         language: value['language'] == 'en' ? AppLanguage.en : AppLanguage.ru,
         showSourceDescriptions: value['showSourceDescriptions'] is bool

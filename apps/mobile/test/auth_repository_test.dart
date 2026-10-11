@@ -3,6 +3,26 @@ import 'package:app_stackcard/features/auth/data/demo_auth_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('Auth user identity includes linked Google status', () {
+    const password = AuthUser(uid: 'owner', email: 'owner@example.dev');
+    final google = AuthUser(
+      uid: password.uid,
+      email: password.email,
+      hasGoogle: true,
+    );
+    final sameGoogle = AuthUser(
+      uid: password.uid,
+      email: password.email,
+      hasGoogle: true,
+    );
+
+    expect(password.hasGoogle, isFalse);
+    expect(google, isNot(password));
+    expect(google, sameGoogle);
+    expect(google.hashCode, sameGoogle.hashCode);
+    expect({password, google, sameGoogle}, hasLength(2));
+  });
+
   test('Demo email validation keeps the existing form rule', () {
     for (final email in [
       null,

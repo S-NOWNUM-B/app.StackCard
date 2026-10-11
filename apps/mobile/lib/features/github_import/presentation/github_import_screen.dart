@@ -69,7 +69,7 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: context.colors.background,
-        title: const Text('GitHub Import'),
+        title: Text(context.strings.tr('github.importTitle')),
         leading: IconButton(
           tooltip: context.strings.tr('github.back'),
           icon: const Icon(Icons.arrow_back_rounded),

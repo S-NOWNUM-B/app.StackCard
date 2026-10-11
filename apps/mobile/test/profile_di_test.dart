@@ -1,11 +1,15 @@
 import 'dart:async';
 
+import 'package:app_stackcard/core/localization/app_strings.dart';
+import 'package:app_stackcard/core/theme/stackcard_theme.dart';
+import 'package:app_stackcard/features/portfolio/portfolio.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/profile/profile.dart';
 import 'package:app_stackcard/features/projects/projects.dart';
 import 'package:app_stackcard/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -74,7 +78,7 @@ void main() {
   });
 
   testWidgets(
-    'Repository replacements reach Settings and Projects without filling private libraries',
+    'Settings isolates legacy profile reads while Projects honors its repository override',
     (tester) async {
       final profile = TestProfileRepository();
       final projects = TestProjectsRepository();
@@ -88,8 +92,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Sam Lee · sam'), findsOneWidget);
+      expect(find.text('Sam Lee · sam'), findsNothing);
       expect(find.text('Alex Morgan · alex-dev-demo'), findsNothing);
+      expect(profile.calls, 0);
       final container = ProviderScope.containerOf(
         tester.element(find.byType(MaterialApp)),
       );
@@ -99,7 +104,7 @@ void main() {
       expect(model.skills, ['Dart']);
       await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
-      expect(find.text('Здесь появятся твои работы'), findsOneWidget);
+      expect(find.text('Пока нет работ'), findsOneWidget);
       expect(find.text('Replacement Project'), findsNothing);
       await tester.tap(_destination('Портфолио'));
       await tester.pumpAndSettle();
@@ -167,40 +172,29 @@ void main() {
     },
   );
 
-  testWidgets('Pending profile shows loading then the repository result', (
-    tester,
-  ) async {
-    final pending = Completer<Profile>();
-    await tester.pumpWidget(
-      StackCardApp(
-        initialLocation: '/settings',
-        providerOverrides: [
-          profileRepositoryProvider.overrideWithValue(
-            TestProfileRepository(pending: pending.future),
-          ),
-        ],
-      ),
-    );
-    await tester.pump();
-    expect(find.text('Загрузка данных'), findsOneWidget);
-    pending.complete(sampleProfile());
-    await tester.pumpAndSettle();
-    expect(find.text('Sam Lee · sam'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-  });
+  testWidgets(
+    'Legacy Portfolio consumer shows pending profile then repository result',
+    (tester) async {
+      final pending = Completer<Profile>();
+      await _pumpPortfolio(
+        tester,
+        TestProfileRepository(pending: pending.future),
+        settle: false,
+      );
+      await tester.pump();
+      expect(find.text('Загрузка данных'), findsOneWidget);
+      pending.complete(sampleProfile());
+      await tester.pumpAndSettle();
+      expect(find.text('Sam Lee'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    },
+  );
 
   testWidgets(
-    'Failed profile has an explicit retry and does not expose internals',
+    'Legacy Portfolio consumer retries failed profile without exposing internals',
     (tester) async {
       final profile = TestProfileRepository(failFirst: true);
-      await tester.pumpWidget(
-        StackCardApp(
-          initialLocation: '/settings',
-          providerOverrides: [
-            profileRepositoryProvider.overrideWithValue(profile),
-          ],
-        ),
-      );
+      await _pumpPortfolio(tester, profile);
       await tester.pumpAndSettle();
       expect(find.text('Не удалось загрузить данные'), findsOneWidget);
       expect(find.textContaining('test failure'), findsNothing);
@@ -208,40 +202,34 @@ void main() {
       await tester.ensureVisible(find.text('Повторить'));
       await tester.tap(find.text('Повторить'));
       await tester.pumpAndSettle();
-      expect(find.text('Sam Lee · sam'), findsOneWidget);
+      expect(find.text('Sam Lee'), findsOneWidget);
       expect(profile.calls, 2);
     },
   );
 
-  testWidgets('Retry replaces the retained error with a pending state', (
-    tester,
-  ) async {
-    final pending = Completer<Profile>();
-    final repository = TestProfileRepository(
-      failFirst: true,
-      pending: pending.future,
-    );
-    await tester.pumpWidget(
-      StackCardApp(
-        initialLocation: '/settings',
-        providerOverrides: [
-          profileRepositoryProvider.overrideWithValue(repository),
-        ],
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Повторить'));
-    await tester.tap(find.text('Повторить'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
-    expect(find.text('Загрузка данных'), findsOneWidget);
-    expect(find.text('Повторить'), findsNothing);
-    expect(repository.calls, 2);
-    pending.complete(sampleProfile());
-    await tester.pumpAndSettle();
-    expect(find.text('Sam Lee · sam'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'Legacy Portfolio retry replaces error with pending profile state',
+    (tester) async {
+      final pending = Completer<Profile>();
+      final repository = TestProfileRepository(
+        failFirst: true,
+        pending: pending.future,
+      );
+      await _pumpPortfolio(tester, repository);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Повторить'));
+      await tester.tap(find.text('Повторить'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(find.text('Загрузка данных'), findsOneWidget);
+      expect(find.text('Повторить'), findsNothing);
+      expect(repository.calls, 2);
+      pending.complete(sampleProfile());
+      await tester.pumpAndSettle();
+      expect(find.text('Sam Lee'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('Home empty state does not consume a demo projects repository', (
     tester,
@@ -256,7 +244,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Здесь появятся твои работы'), findsOneWidget);
+    expect(find.text('Пока нет работ'), findsOneWidget);
     expect(find.text('Нет избранных проектов'), findsNothing);
     expect(repository.calls, 0);
     await tester.tap(_destination('Проекты'));
@@ -271,6 +259,34 @@ void main() {
     expect(repository.calls, 1);
     expect(tester.takeException(), isNull);
   });
+}
+
+Future<void> _pumpPortfolio(
+  WidgetTester tester,
+  ProfileRepository repository, {
+  bool settle = true,
+}) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        profileRepositoryProvider.overrideWithValue(repository),
+        projectsRepositoryProvider.overrideWithValue(TestProjectsRepository()),
+      ],
+      child: MaterialApp(
+        theme: StackCardTheme.light,
+        locale: const Locale('ru'),
+        supportedLocales: AppStrings.supportedLocales,
+        localizationsDelegates: const [
+          AppStrings.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const Scaffold(body: PortfolioScreen()),
+      ),
+    ),
+  );
+  if (settle) await tester.pumpAndSettle();
 }
 
 Finder _destination(String label) => find.descendant(

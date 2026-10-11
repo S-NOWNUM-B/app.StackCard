@@ -9,6 +9,11 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
+    final manrope = FontLoader('Manrope');
+    for (final weight in ['Regular', 'SemiBold', 'Bold', 'ExtraBold']) {
+      manrope.addFont(rootBundle.load('assets/fonts/Manrope-$weight.ttf'));
+    }
+    await manrope.load();
     for (final entry in [
       ('DM Sans', 'assets/fonts/DM_Sans.ttf'),
       ('Noto Sans', 'assets/fonts/Noto_Sans.ttf'),
@@ -31,8 +36,8 @@ void main() {
     'small_phone': Size(320, 640),
   };
 
-  for (final theme in [AppTheme.dark, AppTheme.light]) {
-    for (final language in AppLanguage.values) {
+  for (final theme in [AppTheme.light]) {
+    for (final language in [AppLanguage.ru]) {
       for (final viewport in viewports.entries) {
         for (final scale
             in viewport.key == 'small_phone' ? [2.0] : [1.0, 2.0]) {
@@ -79,7 +84,7 @@ void main() {
   }
 
   for (final theme in [AppTheme.dark, AppTheme.light]) {
-    for (final language in AppLanguage.values) {
+    for (final language in [AppLanguage.ru]) {
       testWidgets('Builder project and block controls accessible ${theme.name} '
           '${language.name}', (tester) async {
         _setViewport(tester, const Size(390, 844));
@@ -93,7 +98,6 @@ void main() {
           'builder_featured_stackcard',
           'builder_block_up_about',
           'builder_block_down_about',
-          'builder_theme_light',
         ]) {
           await tester.ensureVisible(find.byKey(ValueKey(key)));
           await tester.pumpAndSettle();
@@ -104,8 +108,8 @@ void main() {
     }
     for (final portfolioTheme in PortfolioTheme.values) {
       testWidgets(
-        'Preview uses ${portfolioTheme.name} portfolio theme independently '
-        'from ${theme.name} app',
+        'Preview stays white with legacy ${portfolioTheme.name} content '
+        'and ${theme.name} preference',
         (tester) async {
           _setViewport(tester, const Size(390, 844));
           await _open(
@@ -118,15 +122,10 @@ void main() {
           expect(profile, findsOneWidget);
           expect(
             Theme.of(tester.element(profile)).brightness,
-            portfolioTheme == PortfolioTheme.dark
-                ? Brightness.dark
-                : Brightness.light,
+            Brightness.light,
           );
           final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
-          expect(
-            app.themeMode,
-            theme == AppTheme.dark ? ThemeMode.dark : ThemeMode.light,
-          );
+          expect(app.themeMode, ThemeMode.light);
           await _checkAccessibility(tester);
           expect(tester.takeException(), isNull);
         },
@@ -188,7 +187,7 @@ PortfolioContent _content(PortfolioTheme theme) => PortfolioContent(
   profile: const PortfolioProfile(
     name: 'Станислав Мамаев',
     username: 'snownumb',
-    headline: 'Fullstack Developer · Flutter & TypeScript',
+    headline: 'Разработчик приложений · Flutter и TypeScript',
     bio:
         'Создаю понятные приложения и изучаю архитектуру. '
         'Люблю проекты, в которых детали помогают человеку.',
@@ -202,7 +201,7 @@ PortfolioContent _content(PortfolioTheme theme) => PortfolioContent(
   projects: [
     PortfolioProject(
       id: 'stackcard',
-      title: 'StackCard — Developer Portfolio',
+      title: 'StackCard — портфолио разработчика',
       description:
           'Редактор портфолио с локальным черновиком, '
           'явным сохранением и предпросмотром.',
@@ -227,7 +226,7 @@ PortfolioContent _content(PortfolioTheme theme) => PortfolioContent(
     Education(
       id: 'almau',
       institution: 'AlmaU',
-      qualification: 'Software Engineering',
+      qualification: 'Программная инженерия',
       period: '2024 — 2028',
       description: 'Разработка программного обеспечения.',
     ),
@@ -246,7 +245,7 @@ PortfolioContent _content(PortfolioTheme theme) => PortfolioContent(
       kind: SocialLinkKind.website,
     ),
   ],
-  resumeText: 'Fullstack Developer\nFlutter · TypeScript\nАлматы, Казахстан',
+  resumeText: 'Разработчик приложений\nFlutter · TypeScript\nАлматы, Казахстан',
 );
 
 void _setViewport(WidgetTester tester, Size size, {double scale = 1}) {

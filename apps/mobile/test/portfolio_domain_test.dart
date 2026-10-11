@@ -53,7 +53,7 @@ void main() {
       PortfolioBlockKind.values,
     );
     expect(content.blocks.every((block) => block.visible), isTrue);
-    expect(content.theme, PortfolioTheme.dark);
+    expect(content.theme, PortfolioTheme.light);
     expect(validatePortfolioContent(content), isEmpty);
   });
 

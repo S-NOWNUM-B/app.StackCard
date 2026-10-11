@@ -6,12 +6,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class _SdkUser extends Fake implements User {
+  _SdkUser({
+    this.providers = const ['password'],
+    this.email = 'owner@example.dev',
+  });
+
+  final List<String> providers;
   @override
   String get uid => 'real-firebase-uid';
   @override
-  String? get email => 'owner@example.dev';
+  final String? email;
   @override
   String? get displayName => 'Owner';
+  @override
+  List<UserInfo> get providerData =>
+      providers.map(_SdkProviderInfo.new).toList();
+}
+
+class _SdkProviderInfo extends Fake implements UserInfo {
+  _SdkProviderInfo(this.providerId);
+
+  @override
+  final String providerId;
 }
 
 class _SdkCredential extends Fake implements UserCredential {}
@@ -126,6 +142,29 @@ void main() {
     );
     await expectation;
   });
+
+  test(
+    'Session Google status comes from linked providers, not email',
+    () async {
+      final values = <AuthUser?>[];
+      final subscription = repository.watchSession().listen(values.add);
+      addTearDown(subscription.cancel);
+      sdk.sessions.add(
+        _SdkUser(email: 'owner@gmail.com', providers: const ['password']),
+      );
+      sdk.sessions.add(
+        _SdkUser(email: 'owner@company.dev', providers: const ['google.com']),
+      );
+      sdk.sessions.add(_SdkUser(providers: const ['password', 'google.com']));
+      sdk.sessions.add(_SdkUser(providers: const []));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(values.map((user) => user!.hasGoogle), [false, true, true, false]);
+      expect(values[0]!.email, 'owner@gmail.com');
+      expect(values[1]!.email, 'owner@company.dev');
+      expect(sdk.operations, isEmpty);
+    },
+  );
 
   test('Email operations trim addresses and preserve password bytes', () async {
     await repository.signInEmail(' owner@example.dev ', ' secret ');

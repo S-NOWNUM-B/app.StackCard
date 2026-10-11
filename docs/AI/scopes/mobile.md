@@ -55,7 +55,8 @@ headless проверки не закрывают native visual, public/web ил
   Перед новым widget искать существующий аналог и использовать `context.colors`.
   Фактический UI contract — [design guide](../../design/design-system.md#действующий-runtime-contract-r8).
   `core/theme` остаётся единственным механизмом: semantic `primary/onPrimary`
-  — Lime/ink в обеих темах, error/destructive отделён; `textMeta`, `accentText`,
+  — ink/white в единственной светлой теме после одобрения web 2026-10-11;
+  error/destructive отделён; `textMeta`, `accentText`,
   `successText`, `controlOutline`, `primaryOutline` задают читаемые пары по состоянию.
   Manrope и Noto fallback зарегистрированы в pubspec; не возвращать red/white CTA.
   `StackCardButton` сохраняет loading/disabled/focus/semantics и внешний target48,
@@ -87,7 +88,10 @@ headless проверки не закрывают native visual, public/web ил
   provider остаётся совместимым для других callers, не скрывает Projects records.
   GitHub Import имеет отдельный search/filter contract. Не дублировать state
   в widget state или router callbacks.
-  Provider ограничивается базовыми app settings. UI использует реальные ru/en
+  Provider ограничивается базовыми app settings. Native runtime всегда
+  `ThemeMode.light`/`Locale(ru)`; переключателей темы и языка нет. Legacy
+  dark/system/en preferences читаются без автоматической записи; persistence
+  contract сохраняется. UI использует русский каталог, совместимые ru/en
   переводы из [core/localization](../../../apps/mobile/lib/core/localization/);
   source content не переводится автоматически. Сравнение и учебные patches — в
   [state management guide](../../learning/state-management.md), вне runtime `lib`.
@@ -126,6 +130,9 @@ headless проверки не закрывают native visual, public/web ил
   [Firebase adapter](../../../apps/mobile/lib/features/auth/data/firebase_account_auth_repository.dart)
   выполняет email/password, registration, reset, Google credential exchange и
   sign out; Firebase session stream остаётся источником истины.
+  `AuthUser.hasGoogle` отражает подключённый `google.com` в SDK `providerData`,
+  а не домен email или предположение о последнем способе входа; UI читает только
+  этот pure Dart признак, SDK остаётся в adapter.
   [auth providers](../../../apps/mobile/lib/features/auth/auth_providers.dart)
   разделяют nullable account repository, session и явный `guestAccessProvider`.
   Password/token/credential не сохраняются приложением; SDK владеет persistence.
@@ -218,8 +225,9 @@ headless проверки не закрывают native visual, public/web ил
   меняют порядок и видимость; preview читает текущий рабочий content.
   Пустые блоки пропускаются; Featured Projects показывает visible/featured проекты,
   Builder/Projects — все ручные записи для редактирования.
-  `PortfolioTheme` dark/light использует существующую StackCardTheme при отображении
-  content на preview отдельно от app ThemeMode. Legacy `resumeText` — обычный
+  `PortfolioTheme` dark/light сохраняется как data contract без read-time migration;
+  оба значения отображаются через светлую StackCardTheme. Новые документы получают
+  light; theme controls удалены, порядок/видимость блоков остаются. Legacy `resumeText` — обычный
   текст с переносами строк, без Markdown/файлов. Private документы создаются/
   редактируются по `/resumes/new`, `/resumes/:id/edit`, `/portfolio/new`,
   `/portfolio/:id/edit`; Resume creation — пять шагов, существующий документ —
@@ -349,6 +357,8 @@ headless проверки не закрывают native visual, public/web ил
 - Account checks: `test/firebase_auth_repository_test.dart`,
   `test/firebase_auth_controller_test.dart`, `test/firebase_auth_google_test.dart`,
   `test/account_auth_ui_test.dart`, `test/account_navigation_test.dart`,
+  `test/settings_session_widget_test.dart` (identity/provider, горизонтальная
+  строка, restoring/retry, sign-out guard и переход к удалению без мутации),
   `test/account_draft_transfer_widget_test.dart` и `test/local_draft_accounts_test.dart`.
   Проверять session restore/error, typed auth failures, explicit guest access,
   guarded/named/nested routes, UID transition и in-flight save, real Hive reopen,

@@ -109,7 +109,7 @@ void main() {
         ],
       ),
       _base().copyWith(resumeText: 'Legacy presentation'),
-      _base().copyWith(theme: PortfolioTheme.light),
+      _base().copyWith(theme: PortfolioTheme.dark),
       _base().copyWith(
         blocks: PortfolioBlockKind.values
             .map((kind) => PortfolioBlock(kind: kind, visible: false))

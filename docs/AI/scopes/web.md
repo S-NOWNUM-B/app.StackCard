@@ -11,8 +11,8 @@
   Сохранять Brand A, локальный Manrope, исходные SVG/font bytes и лицензии в `public`.
   Screenshot не runtime asset. Web всегда light; переключателей dark нет.
   Shared `dark | light` schema сохраняется для mobile и старых данных: чтение
-  не меняет сохранённую тему, новые web документы получают light. Flutter redesign
-  ждёт оценки web пользователем.
+  не меняет сохранённую тему, новые документы получают light. Web одобрен
+  пользователем; последующее поручение переносит white-only/ru дизайн в Flutter.
 - `src/lib/model.ts` реализует тот же JSON aggregate mobile PortfolioContent:
   root base/Projects Library, independent document snapshots и attachments.
   Версии и команды берутся из `apps/web/package.json`, env — из `.env.example`.

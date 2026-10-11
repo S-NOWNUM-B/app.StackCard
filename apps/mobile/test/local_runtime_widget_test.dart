@@ -96,10 +96,10 @@ void main() {
         find.byKey(const ValueKey('github_username')),
         'octocat',
       );
-      await tester.tap(find.text('Load profile'));
+      await tester.tap(find.text('Загрузить профиль'));
       await tester.pumpAndSettle();
-      expect(find.text('Saved GitHub copy'), findsOneWidget);
-      expect(find.textContaining('Last checked:'), findsOneWidget);
+      expect(find.text('Сохранённая копия GitHub'), findsOneWidget);
+      expect(find.textContaining('Последняя проверка:'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('alpha'),
         200,
@@ -112,10 +112,10 @@ void main() {
       );
       expect(find.text('Source description'), findsNothing);
       source.fromCache = false;
-      await tester.ensureVisible(find.text('Refresh GitHub'));
-      await tester.tap(find.text('Refresh GitHub'));
+      await tester.ensureVisible(find.text('Обновить GitHub'));
+      await tester.tap(find.text('Обновить GitHub'));
       await tester.pumpAndSettle();
-      expect(find.text('Saved GitHub copy'), findsNothing);
+      expect(find.text('Сохранённая копия GitHub'), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );

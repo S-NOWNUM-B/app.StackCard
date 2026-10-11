@@ -104,7 +104,9 @@ class _PortfolioDocumentEditorScreenState
     _repository = ref.read(portfolioDraftRepositoryProvider);
     _initialOwner = _owner();
     _expected = document;
-    _content = document?.content ?? seedDocumentContent(workspace);
+    _content =
+        document?.content ??
+        seedDocumentContent(workspace).copyWith(theme: PortfolioTheme.light);
     _baseSnapshot = document == null
         ? developerProfileData(workspace)
         : document.baseSnapshot;
@@ -1530,26 +1532,6 @@ class _PortfolioDocumentEditorScreenState
   Widget _appearance() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      RadioGroup<PortfolioTheme>(
-        groupValue: _content!.theme,
-        onChanged: (value) {
-          if (value != null) {
-            _edit(() => _content = _content!.copyWith(theme: value));
-          }
-        },
-        child: Column(
-          children: [
-            RadioListTile<PortfolioTheme>(
-              value: PortfolioTheme.dark,
-              title: Text(_tr('dark')),
-            ),
-            RadioListTile<PortfolioTheme>(
-              value: PortfolioTheme.light,
-              title: Text(_tr('light')),
-            ),
-          ],
-        ),
-      ),
       for (var index = 0; index < _content!.blocks.length; index++) ...[
         CheckboxListTile(
           contentPadding: EdgeInsets.zero,
@@ -1768,9 +1750,7 @@ class _ResumePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Theme(
-    data: content.theme == PortfolioTheme.dark
-        ? StackCardTheme.dark
-        : StackCardTheme.light,
+    data: StackCardTheme.light,
     child: Builder(
       builder: (context) => ColoredBox(
         color: context.colors.background,

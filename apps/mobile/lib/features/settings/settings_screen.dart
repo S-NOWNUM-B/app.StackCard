@@ -4,18 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/localization/app_strings.dart';
-import '../../core/state/app_settings.dart';
 import '../../core/state/appearance_controller.dart';
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
-import '../../shared/widgets/stackcard_async_view.dart';
-import '../../shared/widgets/stackcard_button.dart';
-import '../../shared/widgets/stackcard_card.dart';
 import '../../shared/widgets/stackcard_states.dart';
-import '../auth/auth.dart';
 import '../portfolio_draft/portfolio_draft.dart';
-import '../profile/profile.dart';
 import 'account_settings_section.dart';
+import 'settings_editor_scaffold.dart';
 export 'settings_account_screen.dart';
 export 'settings_base_editor_screen.dart';
 export 'settings_providers.dart';
@@ -27,8 +22,6 @@ class SettingsScreen extends riverpod.ConsumerWidget {
   @override
   Widget build(BuildContext context, riverpod.WidgetRef ref) {
     final draft = ref.watch(portfolioDraftControllerProvider);
-    final hasAccountRepository =
-        ref.watch(accountAuthRepositoryProvider) != null;
     final strings = context.strings;
     return _SettingsPage(
       titleKey: 'nav.settings',
@@ -46,8 +39,7 @@ class SettingsScreen extends riverpod.ConsumerWidget {
           title: strings.tr('settings.contacts'),
           onPressed: () => context.push('/settings/contacts'),
         ),
-        // В demo режиме ошибка draft уже показана profile AsyncView ниже.
-        if (hasAccountRepository && !draft.loaded && draft.failure != null) ...[
+        if (!draft.loaded && draft.failure != null) ...[
           const SizedBox(height: StackCardSpacing.md),
           StackCardStateView(
             kind: StackCardViewState.error,
@@ -57,7 +49,6 @@ class SettingsScreen extends riverpod.ConsumerWidget {
                 ref.read(portfolioDraftControllerProvider.notifier).load(),
           ),
         ],
-        const SizedBox(height: StackCardSpacing.lg),
         _SettingsRow(
           key: const Key('settings.group.account'),
           icon: Icons.shield_outlined,
@@ -88,20 +79,8 @@ class SettingsScreen extends riverpod.ConsumerWidget {
           title: strings.tr('settings.notifications'),
           onPressed: () => context.push('/settings/notifications'),
         ),
-        const SizedBox(height: StackCardSpacing.xl),
-        _SettingsHeading(title: strings.tr('settings.session')),
-        const SizedBox(height: StackCardSpacing.md),
-        if (hasAccountRepository)
-          const AccountSettingsSection()
-        else
-          const _LocalAccountSection(),
-        const SizedBox(height: StackCardSpacing.xl),
-        StackCardButton(
-          key: const Key('settings.deleteAccount'),
-          label: strings.tr('settings.deleteAccount'),
-          role: StackCardButtonRole.danger,
-          onPressed: () => context.push('/settings/account'),
-        ),
+        const SizedBox(height: StackCardSpacing.lg),
+        const AccountSettingsSection(),
       ],
     );
   }
@@ -118,70 +97,6 @@ class SettingsAppearanceScreen extends StatelessWidget {
     return _SettingsPage(
       titleKey: 'settings.application',
       children: [
-        _SettingsHeading(title: strings.tr('settings.appearance')),
-        const SizedBox(height: StackCardSpacing.md),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final horizontal =
-                constraints.maxWidth >= 340 &&
-                MediaQuery.textScalerOf(context).scale(16) <= 20;
-            return Wrap(
-              spacing: StackCardSpacing.sm,
-              runSpacing: StackCardSpacing.sm,
-              children: [
-                for (final item in [
-                  (
-                    mode: ThemeMode.dark,
-                    title: strings.tr('settings.dark'),
-                    icon: Icons.dark_mode_outlined,
-                  ),
-                  (
-                    mode: ThemeMode.light,
-                    title: strings.tr('settings.light'),
-                    icon: Icons.light_mode_outlined,
-                  ),
-                  (
-                    mode: ThemeMode.system,
-                    title: strings.tr('settings.system'),
-                    icon: Icons.brightness_auto_outlined,
-                  ),
-                ])
-                  SizedBox(
-                    width: horizontal
-                        ? (constraints.maxWidth - StackCardSpacing.sm * 2) / 3
-                        : constraints.maxWidth,
-                    child: _SettingsChoice(
-                      key: Key('settings.theme.${item.mode.name}'),
-                      label: item.title,
-                      icon: item.icon,
-                      selected: appearance.themeMode == item.mode,
-                      onPressed: () => appearance.setThemeMode(item.mode),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: StackCardSpacing.xl),
-        _SettingsHeading(title: strings.tr('settings.language')),
-        const SizedBox(height: StackCardSpacing.md),
-        Wrap(
-          spacing: StackCardSpacing.md,
-          runSpacing: StackCardSpacing.sm,
-          children: [
-            for (final item in [
-              (language: AppLanguage.ru, label: 'Русский'),
-              (language: AppLanguage.en, label: 'English'),
-            ])
-              _SettingsChoice(
-                key: Key('settings.language.${item.language.name}'),
-                label: item.label,
-                selected: appearance.settings.language == item.language,
-                onPressed: () => appearance.setLanguage(item.language),
-              ),
-          ],
-        ),
-        const SizedBox(height: StackCardSpacing.xl),
         SwitchListTile.adaptive(
           key: const Key('settings.sourceDescriptions'),
           contentPadding: EdgeInsets.zero,
@@ -238,66 +153,18 @@ class _SettingsPage extends StatelessWidget {
   final String fallbackPath;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: StackCardSize.contentMaxWidth,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(StackCardSpacing.sm),
-                child: Row(
-                  children: [
-                    IconButton(
-                      tooltip: context.strings.tr('common.back'),
-                      constraints: const BoxConstraints(
-                        minWidth: StackCardSize.touchTarget,
-                        minHeight: StackCardSize.touchTarget,
-                      ),
-                      onPressed: () {
-                        if (context.canPop()) {
-                          context.pop();
-                        } else {
-                          context.go(fallbackPath);
-                        }
-                      },
-                      icon: const Icon(Icons.arrow_back_rounded),
-                    ),
-                    const SizedBox(width: StackCardSpacing.sm),
-                    Expanded(
-                      child: Semantics(
-                        header: true,
-                        child: Text(
-                          context.strings.tr(titleKey),
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    StackCardSpacing.cardPadding,
-                    StackCardSpacing.md,
-                    StackCardSpacing.cardPadding,
-                    StackCardSpacing.xl,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: children,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  Widget build(BuildContext context) => SettingsEditorScaffold(
+    title: context.strings.tr(titleKey),
+    onBack: () {
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(fallbackPath);
+      }
+    },
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
     ),
   );
 }
@@ -321,25 +188,30 @@ class _SettingsRow extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: colors.border)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.lg),
-        child: Row(
-          children: [
-            ExcludeSemantics(
-              child: Icon(icon, size: 24, color: colors.textSecondary),
-            ),
-            const SizedBox(width: StackCardSpacing.md),
-            Expanded(
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 64),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.md),
+          child: Row(
+            children: [
+              ExcludeSemantics(
+                child: Icon(icon, size: 24, color: colors.textSecondary),
               ),
-            ),
-            if (onPressed != null) ...[
-              const SizedBox(width: StackCardSpacing.sm),
-              const ExcludeSemantics(child: Icon(Icons.chevron_right_rounded)),
+              const SizedBox(width: StackCardSpacing.md),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              if (onPressed != null) ...[
+                const SizedBox(width: StackCardSpacing.sm),
+                const ExcludeSemantics(
+                  child: Icon(Icons.chevron_right_rounded, size: 20),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -366,133 +238,4 @@ class _SettingsRow extends StatelessWidget {
       child: content,
     );
   }
-}
-
-class _SettingsHeading extends StatelessWidget {
-  const _SettingsHeading({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    header: true,
-    child: Text(title, style: Theme.of(context).textTheme.titleLarge),
-  );
-}
-
-class _LocalAccountSection extends riverpod.ConsumerWidget {
-  const _LocalAccountSection();
-
-  @override
-  Widget build(BuildContext context, riverpod.WidgetRef ref) {
-    return StackCardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            context.strings.tr('account.guestTitle'),
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 12),
-          StackCardAsyncView(
-            state: ref.watch(profileProvider),
-            onRetry: () {
-              ref.read(portfolioDraftControllerProvider.notifier).load();
-              ref.invalidate(profileProvider);
-            },
-            data: (profile) => Text(
-              profile.name.isEmpty
-                  ? context.strings.tr('builderIntegration.emptyProfile')
-                  : [
-                      profile.name,
-                      profile.handle,
-                    ].where((value) => value.isNotEmpty).join(' · '),
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-          ),
-          const SizedBox(height: 20),
-          StackCardButton(
-            label: context.strings.tr('settings.signOut'),
-            icon: Icons.logout_rounded,
-            onPressed: () => context.go('/sign-in'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SettingsChoice extends StatelessWidget {
-  const _SettingsChoice({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onPressed,
-    this.icon,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onPressed;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    selected: selected,
-    child: DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: selected
-                ? context.colors.controlOutline
-                : context.colors.border,
-            width: selected ? 2 : 1,
-          ),
-        ),
-      ),
-      child: TextButton(
-        style:
-            TextButton.styleFrom(
-              foregroundColor: context.colors.textPrimary,
-              minimumSize: const Size(
-                StackCardSize.touchTarget,
-                StackCardSize.touchTarget,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-              shape: const RoundedRectangleBorder(),
-              backgroundColor: selected
-                  ? context.colors.surfaceElevated
-                  : Colors.transparent,
-            ).copyWith(
-              side: WidgetStateProperty.resolveWith(
-                (states) => BorderSide(
-                  color: states.contains(WidgetState.focused)
-                      ? context.colors.focus
-                      : Colors.transparent,
-                  width: 2,
-                ),
-              ),
-            ),
-        onPressed: onPressed,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 18),
-              const SizedBox(width: 8),
-            ],
-            Flexible(
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
 }

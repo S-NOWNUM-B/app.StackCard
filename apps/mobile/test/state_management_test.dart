@@ -19,7 +19,7 @@ void main() {
   });
 
   testWidgets(
-    'Theme keeps the router and query survives routes without exposing legacy filters',
+    'Motion preference keeps the router and query survives routes without exposing legacy filters',
     (tester) async {
       await tester.pumpWidget(const StackCardApp(initialLocation: '/home'));
       await tester.pumpAndSettle();
@@ -33,7 +33,10 @@ void main() {
       await tester.ensureVisible(appearance);
       await tester.tap(appearance);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Светлая'));
+      await tester.ensureVisible(
+        find.byKey(const Key('settings.reducedMotion')),
+      );
+      await tester.tap(find.byKey(const Key('settings.reducedMotion')));
       await tester.pumpAndSettle();
       expect(
         tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig,
@@ -79,7 +82,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byType(ProjectsScreen), findsNothing);
-      expect(find.text('Здесь появятся твои работы'), findsOneWidget);
+      await tester.ensureVisible(find.text('Пока нет работ'));
+      expect(find.text('Пока нет работ'), findsOneWidget);
       await tester.tap(
         find.descendant(
           of: find.byType(NavigationBar),
@@ -133,34 +137,35 @@ void main() {
     },
   );
 
-  testWidgets('System appearance responds to platform brightness changes', (
-    tester,
-  ) async {
-    tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
-    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-    await tester.pumpWidget(
-      const StackCardApp(
-        initialLocation: '/settings/appearance',
-        initialThemeMode: ThemeMode.system,
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(
-      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
-      ThemeMode.system,
-    );
-    expect(
-      Theme.of(tester.element(find.text('Внешний вид'))).brightness,
-      Brightness.light,
-    );
+  testWidgets(
+    'Legacy system preference keeps white UI on OS brightness changes',
+    (tester) async {
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+      await tester.pumpWidget(
+        const StackCardApp(
+          initialLocation: '/settings/appearance',
+          initialThemeMode: ThemeMode.system,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+        ThemeMode.light,
+      );
+      expect(
+        Theme.of(tester.element(find.text('Приложение'))).brightness,
+        Brightness.light,
+      );
 
-    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
-    await tester.pumpAndSettle();
-    expect(
-      Theme.of(tester.element(find.text('Внешний вид'))).brightness,
-      Brightness.dark,
-    );
-  });
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+      await tester.pumpAndSettle();
+      expect(
+        Theme.of(tester.element(find.text('Приложение'))).brightness,
+        Brightness.light,
+      );
+    },
+  );
 
   testWidgets('External Riverpod updates synchronize the search controller', (
     tester,
@@ -200,13 +205,16 @@ void main() {
   });
 
   testWidgets(
-    'Remounting the app resets appearance and product session state',
+    'Remounting the app resets motion preference and product session state',
     (tester) async {
       await tester.pumpWidget(
         const StackCardApp(initialLocation: '/settings/appearance'),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Светлая'));
+      await tester.ensureVisible(
+        find.byKey(const Key('settings.reducedMotion')),
+      );
+      await tester.tap(find.byKey(const Key('settings.reducedMotion')));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
@@ -243,7 +251,7 @@ void main() {
       );
       expect(
         Theme.of(tester.element(find.byType(TextFormField))).brightness,
-        Brightness.dark,
+        Brightness.light,
       );
     },
   );

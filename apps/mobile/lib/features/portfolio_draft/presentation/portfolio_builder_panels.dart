@@ -336,39 +336,6 @@ void _moveBlock(
   controller.updateContent(content.copyWith(blocks: blocks));
 }
 
-class PortfolioBuilderTheme extends ConsumerWidget {
-  const PortfolioBuilderTheme({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(portfolioDraftControllerProvider);
-    final controller = ref.read(portfolioDraftControllerProvider.notifier);
-    return RadioGroup<PortfolioTheme>(
-      groupValue: state.content!.theme,
-      onChanged: (value) {
-        final content = controller.workingContent;
-        if (state.canEdit && value != null && content != null) {
-          controller.updateContent(content.copyWith(theme: value));
-        }
-      },
-      child: _Panel(
-        index: '04',
-        title: context.strings.tr('builder.theme'),
-        children: [
-          for (final theme in PortfolioTheme.values)
-            RadioListTile<PortfolioTheme>(
-              key: ValueKey('builder_theme_${theme.name}'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(context.strings.tr('builder.theme.${theme.name}')),
-              value: theme,
-              enabled: state.canEdit,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 class _Panel extends StatelessWidget {
   const _Panel({
     required this.index,
