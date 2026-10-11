@@ -8,6 +8,7 @@ import 'package:app_stackcard/features/media/media.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -15,6 +16,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  setUpAll(() async {
+    final font = FontLoader('Manrope');
+    for (final weight in ['Regular', 'SemiBold', 'Bold', 'ExtraBold']) {
+      font.addFont(rootBundle.load('assets/fonts/Manrope-$weight.ttf'));
+    }
+    await font.load();
+  });
   setUp(() {
     final view =
         TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
@@ -52,6 +60,41 @@ void main() {
       expect(find.text('Ваша работа.'), findsNothing);
       expect(find.text('Навыки'), findsNothing);
       expect(find.byType(Image), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Home shows city after headline and left aligned saved description',
+    (tester) async {
+      final saved = _workspace(
+        'Aliar',
+        headline: 'DevOps',
+        locationText: 'Almaty',
+        bio:
+            'Описание профиля с несколькими строками.\nВторая строка описания.',
+      );
+      await _open(tester, saved: saved);
+      expect(
+        tester.getTopLeft(find.text('DevOps')).dy,
+        lessThan(tester.getTopLeft(find.text('Almaty')).dy),
+      );
+      final bio = find.byKey(const Key('main.portfolio.bio'));
+      expect(
+        tester.getTopLeft(find.text('Almaty')).dy,
+        lessThan(tester.getTopLeft(bio).dy),
+      );
+      expect(tester.widget<Text>(bio).textAlign, TextAlign.left);
+      expect(
+        tester.getRect(bio).left,
+        tester.getRect(find.byKey(const Key('main.portfolio.content'))).left,
+      );
+      if (const bool.fromEnvironment('UPDATE_SINGLE_PORTFOLIO_PREVIEWS')) {
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('/private/tmp/stackcard-home-profile-order.png'),
+        );
+      }
       expect(tester.takeException(), isNull);
     },
   );
@@ -476,6 +519,180 @@ void main() {
     expect(find.byKey(const ValueKey('main.project.project')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Home renders contact categories and opens custom labels', (
+    tester,
+  ) async {
+    final actions = _Links();
+    const contacts = [
+      SocialLink(
+        id: 'email',
+        label: 'mamayev.stas',
+        url: 'mailto:stas@example.com',
+        kind: SocialLinkKind.email,
+        publishAllowed: true,
+      ),
+      SocialLink(
+        id: 'github',
+        label: 'S-NOWNUM-B',
+        url: 'https://github.com/S-NOWNUM-B',
+        kind: SocialLinkKind.github,
+        publishAllowed: true,
+      ),
+      SocialLink(
+        id: 'linkedin',
+        label: 'Стас Мамаев',
+        url: 'https://www.linkedin.com/in/stanislav',
+        kind: SocialLinkKind.linkedin,
+        publishAllowed: true,
+      ),
+      SocialLink(
+        id: 'telegram',
+        label: 'snownumb',
+        url: 'https://t.me/snownumb',
+        kind: SocialLinkKind.telegram,
+        publishAllowed: true,
+      ),
+      SocialLink(
+        id: 'hidden',
+        label: 'Скрытый контакт',
+        url: 'https://example.com/hidden',
+        visible: false,
+        publishAllowed: true,
+      ),
+      SocialLink(
+        id: 'private',
+        label: 'Приватный контакт',
+        url: 'https://example.com/private',
+      ),
+    ];
+    await _open(
+      tester,
+      saved: _workspace('Стас', contacts: contacts),
+      links: actions,
+    );
+    final icons = tester
+        .widgetList<StackCardIcon>(find.byType(StackCardIcon))
+        .map((icon) => icon.name);
+    expect(icons, containsAll(['mail', 'github', 'linkedin', 'send']));
+    for (final category in ['Почта', 'GitHub', 'LinkedIn', 'Telegram']) {
+      expect(find.text(category), findsOneWidget);
+    }
+    final emailRect = tester.getRect(
+      find.byKey(const Key('main.contact.email')),
+    );
+    final githubRect = tester.getRect(
+      find.byKey(const Key('main.contact.github')),
+    );
+    expect(emailRect.top, githubRect.top);
+    expect(emailRect.right, lessThan(githubRect.left));
+    if (const bool.fromEnvironment('UPDATE_CONTACT_PREVIEWS')) {
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('/private/tmp/stackcard-home-contacts.png'),
+      );
+    }
+    for (final link in contacts.take(4)) {
+      expect(find.text(link.url), findsNothing);
+      expect(
+        tester.widget<Text>(find.text(link.label)).style?.decoration,
+        TextDecoration.underline,
+      );
+      await _tap(tester, 'main.contact.link.${link.id}');
+      expect(actions.opened.last, Uri.parse(link.url));
+      expect(
+        tester
+            .getSize(find.byKey(ValueKey('main.contact.link.${link.id}')))
+            .height,
+        greaterThanOrEqualTo(48),
+      );
+    }
+    expect(find.text('Скрытый контакт'), findsNothing);
+    expect(find.text('Приватный контакт'), findsNothing);
+    expect(actions.opened, hasLength(4));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Home never opens malformed typed contact targets', (
+    tester,
+  ) async {
+    final actions = _Links();
+    const contacts = [
+      SocialLink(
+        id: 'bad-email',
+        label: 'Некорректная почта',
+        url: 'https://example.com',
+        kind: SocialLinkKind.email,
+        publishAllowed: true,
+      ),
+      SocialLink(
+        id: 'bad-link',
+        label: 'Некорректная ссылка',
+        url: 'javascript:alert(1)',
+        kind: SocialLinkKind.website,
+        publishAllowed: true,
+      ),
+    ];
+    await _open(
+      tester,
+      saved: _workspace('Стас', contacts: contacts),
+      links: actions,
+    );
+    for (final link in contacts) {
+      await _tap(tester, 'main.contact.link.${link.id}');
+    }
+    expect(actions.opened, isEmpty);
+    expect(find.text('Не удалось открыть ссылку'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Home contact grid wraps within width320 at text2', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 680);
+    const contacts = [
+      SocialLink(
+        id: 'long',
+        label: 'Очень длинное пользовательское название контакта',
+        url: 'https://www.linkedin.com/in/stanislav',
+        kind: SocialLinkKind.linkedin,
+        publishAllowed: true,
+      ),
+      SocialLink(
+        id: 'telegram',
+        label: 'snownumb',
+        url: 'https://t.me/snownumb',
+        kind: SocialLinkKind.telegram,
+        publishAllowed: true,
+      ),
+    ];
+    final actions = _Links();
+    await _open(
+      tester,
+      saved: _workspace('Стас', contacts: contacts),
+      links: actions,
+      textScale: 2,
+    );
+    if (const bool.fromEnvironment('UPDATE_CONTACT_PREVIEWS')) {
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('/private/tmp/stackcard-home-contacts-narrow.png'),
+      );
+    }
+    for (final link in contacts) {
+      await _tap(tester, 'main.contact.link.${link.id}');
+      final rect = tester.getRect(
+        find.byKey(ValueKey('main.contact.${link.id}')),
+      );
+      expect(rect.left, greaterThanOrEqualTo(0));
+      expect(rect.right, lessThanOrEqualTo(320));
+      expect(tester.takeException(), isNull);
+    }
+    expect(
+      actions.opened,
+      contacts.map((contact) => Uri.parse(contact.url)).toList(),
+    );
+  });
 }
 
 final _publicUrl = Uri.parse('https://portfolio.example/d/public-id');
@@ -491,6 +708,10 @@ PortfolioContent _workspace(
   String avatarUrl = '',
   String avatarPath = '',
   bool hideProfile = false,
+  String headline = '',
+  String locationText = '',
+  String bio = '',
+  List<SocialLink> contacts = const [],
 }) {
   final projects = [
     if (project)
@@ -506,8 +727,12 @@ PortfolioContent _workspace(
       ),
   ];
   final content = PortfolioContent(
+    links: contacts,
     profile: PortfolioProfile(
       name: name,
+      headline: headline,
+      locationText: locationText,
+      bio: bio,
       avatarUrl: avatarUrl,
       avatarPath: avatarPath,
     ),
@@ -727,9 +952,13 @@ class _PdfFiles implements PortfolioPdfFileActions {
 
 class _Links implements DocumentLinkActions {
   final shared = <Uri>[];
+  final opened = <Uri>[];
   bool fail = false;
   @override
-  Future<void> open(Uri url) async {}
+  Future<void> open(Uri url) async {
+    opened.add(url);
+  }
+
   @override
   Future<void> share(Uri url) async {
     if (fail) throw StateError('unavailable');

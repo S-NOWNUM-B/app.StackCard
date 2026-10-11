@@ -112,12 +112,20 @@ flutter:
     - assets/icons/lucide/pencil.svg
     - assets/icons/lucide/plus.svg
     - assets/icons/lucide/search.svg
+    - assets/icons/lucide/github.svg
+    - assets/icons/lucide/linkedin.svg
+    - assets/icons/lucide/mail.svg
+    - assets/icons/lucide/phone.svg
+    - assets/icons/lucide/send.svg
+    - assets/icons/lucide/globe.svg
+    - assets/icons/lucide/link.svg
     - assets/icons/technology/react.svg
     - assets/icons/technology/typescript.svg
     - assets/icons/technology/flutter.svg
     - assets/icons/technology/flutter.render.svg
     - assets/icons/technology/dart.svg
     - assets/icons/LICENSE-LUCIDE.txt
+    - assets/icons/LICENSE-FEATHER.txt
     - assets/icons/LICENSE-SIMPLE-ICONS.txt
     - assets/icons/TECHNOLOGY-NOTICES.md
     - assets/design_v2/source-manifest.json

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
@@ -396,13 +397,9 @@ class PortfolioDocumentCard extends ConsumerWidget {
                           title: Text(strings.tr('workspace.deleteTitle')),
                           content: Text(strings.tr('workspace.deleteHint')),
                           actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(strings.tr('builder.cancel')),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: Text(strings.tr('workspace.delete')),
+                            StackCardDialogActions(
+                              onCancel: () => Navigator.pop(context, false),
+                              onConfirm: () => Navigator.pop(context, true),
                             ),
                           ],
                         ),

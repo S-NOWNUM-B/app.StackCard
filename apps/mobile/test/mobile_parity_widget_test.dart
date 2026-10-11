@@ -1,6 +1,8 @@
 import 'package:app_stackcard/core/localization/app_strings.dart';
 import 'package:app_stackcard/core/localization/mobile_parity_strings.dart';
+import 'package:app_stackcard/core/theme/stackcard_colors.dart';
 import 'package:app_stackcard/core/theme/stackcard_theme.dart';
+import 'package:app_stackcard/core/theme/stackcard_tokens.dart';
 import 'package:app_stackcard/features/media/media.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/projects/projects.dart';
@@ -66,8 +68,36 @@ void main() {
         openKey: const ValueKey('project.open'),
       ),
     );
+    final remove = find.byTooltip('Удалить проект');
+    final edit = find.byType(StackCardButton);
+    final cardRect = tester.getRect(find.byType(ProjectLibraryCard));
+    expect(
+      tester.getRect(remove).right,
+      closeTo(cardRect.right - StackCardSpacing.md, 1),
+    );
+    expect(
+      tester.getRect(remove).top,
+      closeTo(cardRect.top + StackCardSpacing.md, 1),
+    );
+    expect(
+      tester.getRect(edit).right,
+      closeTo(cardRect.right - StackCardSpacing.md, 1),
+    );
+    expect(
+      tester.getRect(edit).top,
+      greaterThan(tester.getRect(remove).bottom),
+    );
+    final button = tester.widget<FilledButton>(find.byType(FilledButton));
+    final colors = tester.element(edit).colors;
+    expect(button.style!.side!.resolve({})!.color, colors.primaryOutline);
+    expect(button.style!.backgroundColor!.resolve({}), colors.surface);
+    expect(
+      tester.widget<IconButton>(find.byType(IconButton)).color,
+      colors.error,
+    );
+    expect(find.text('Удалить'), findsNothing);
     await tester.tap(find.text('Редактировать'));
-    await tester.tap(find.text('Удалить'));
+    await tester.tap(find.byTooltip('Удалить проект'));
     expect(edited, 1);
     expect(deleted, 1);
     expect(opened, 0);
@@ -139,6 +169,10 @@ void main() {
           greaterThanOrEqualTo(48),
         );
       }
+      expect(
+        tester.getSize(find.byTooltip('Удалить проект')),
+        const Size(48, 48),
+      );
       expect(tester.takeException(), isNull);
     });
   }

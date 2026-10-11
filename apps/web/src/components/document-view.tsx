@@ -33,6 +33,7 @@ export function DocumentView({
   publicId,
   version,
   profilePhoto,
+  modernPortfolio = false,
 }: {
   content: PublicDocumentContent;
   kind: PublicDocumentKind;
@@ -41,6 +42,7 @@ export function DocumentView({
   publicId?: string;
   version?: number;
   profilePhoto?: ReactNode;
+  modernPortfolio?: boolean;
 }) {
   const profile = content.profile;
   const avatar =
@@ -76,12 +78,13 @@ export function DocumentView({
       aria-label={kind === 'resume' ? 'Резюме' : 'Портфолио'}
     >
       {(hasProfile || bio || location) && (
-        <header className="identity document-profile">
+        <header className={`identity document-profile${modernPortfolio ? ' modern-profile' : ''}`}>
           {visible.has('profile') && photo}
           {visible.has('profile') && profile.name.trim() && <h1>{profile.name}</h1>}
           {visible.has('profile') && profile.headline.trim() && <h3>{profile.headline}</h3>}
-          {bio && <p>{bio}</p>}
-          {location && <p className="muted">{location}</p>}
+          {modernPortfolio && location && <p className="muted">{location}</p>}
+          {bio && <p className={modernPortfolio ? 'profile-bio' : undefined}>{bio}</p>}
+          {!modernPortfolio && location && <p className="muted">{location}</p>}
         </header>
       )}
       {content.blocks

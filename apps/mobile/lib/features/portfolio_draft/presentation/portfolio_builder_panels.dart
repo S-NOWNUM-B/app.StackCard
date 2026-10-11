@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../domain/portfolio_content.dart';
@@ -186,13 +187,9 @@ Future<void> _deleteProject(
       title: Text(context.strings.tr('builder.deleteTitle')),
       content: Text(context.strings.tr('builder.deleteMessage')),
       actions: [
-        StackCardButton(
-          label: context.strings.tr('builder.cancel'),
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        StackCardButton(
-          label: context.strings.tr('builder.delete'),
-          onPressed: () => Navigator.of(context).pop(true),
+        StackCardDialogActions(
+          onCancel: () => Navigator.of(context).pop(false),
+          onConfirm: () => Navigator.of(context).pop(true),
         ),
       ],
     ),

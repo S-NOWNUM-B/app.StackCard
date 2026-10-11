@@ -143,14 +143,14 @@ def validate(repo, require_brand=True):
     canonical = [x for x in entries if x['kind'] != 'brand-svg']
     brands = [x for x in entries if x['kind'] == 'brand-svg']
     derivatives = manifest.get('renderDerivatives', [])
-    check(len(canonical) == 31, 'Expected31 shared asset/license/notice records')
+    check(len(canonical) == 39, 'Expected39 shared asset/license/notice records')
     check(len(brands) == 9 if require_brand else len(brands) in (0, 9), 'Expected9 Brand A records')
     check(len({x['assetPath'] for x in entries}) == len(entries), 'Duplicate asset paths')
     check(sum(x['kind'] == 'font' for x in entries) == manifest['fontCount'] == 4, 'Expected4 fonts')
-    check(sum(x['kind'] == 'svg' for x in entries) == manifest['svgCount'] == 23, 'Expected23 canonical SVGs')
-    check(sum(x['kind'] in ('license', 'notice') for x in entries) == manifest['licenseAndNoticeCount'] == 4, 'Expected4 license/notice files')
+    check(sum(x['kind'] == 'svg' for x in entries) == manifest['svgCount'] == 30, 'Expected30 canonical SVGs')
+    check(sum(x['kind'] in ('license', 'notice') for x in entries) == manifest['licenseAndNoticeCount'] == 5, 'Expected5 license/notice files')
     check(len(derivatives) == manifest.get('renderDerivativeSvgCount') == 1, 'Expected1 Flutter render derivative')
-    check(manifest.get('totalSvgCount') == 23 + len(brands) + len(derivatives), 'Total SVG count drift')
+    check(manifest.get('totalSvgCount') == 30 + len(brands) + len(derivatives), 'Total SVG count drift')
     check({x['weight'] for x in entries if x['kind'] == 'font'} == {400, 600, 700, 800}, 'Font weight records drift')
     expected_mains = {
         '100:10': ('110:282', 'mark', 'Accent'),
@@ -170,6 +170,42 @@ def validate(repo, require_brand=True):
 
     def registered(path):
         return path in declarations or str(Path(path).parent).rstrip('/') + '/' in declarations
+
+    # Дополнительные contact icons имеют upstream provenance, не Figma IDs.
+    contact_sources = {
+        'github': 'c36005fa0c9acc686418569a4a23c7a4d34ba753267a39dcdf953c63937783db',
+        'linkedin': '4e75a2063b007b8021c1739c27f69cf93e563dfc590a41be38a3889e4cceb5c1',
+        'mail': '3236a51d5b8ce9b0528cf2e6ad07e527bd636dded6f5a9d656072052b99caea8',
+        'phone': 'bd59dd10667cbe410a69e2fbbf4d9645d08abe862c8d89082bd4f533957859a8',
+        'send': 'a489257f447b808ab6b258ae888fa49686885bbc30a7a2774d97a01f11f9cd5e',
+        'globe': '82c6b8fa0b8e8d775ec9becd86f74a4e50bff7bee4c81f7362de45348504f14d',
+        'link': '4f3237183dcaabfac92f4e94c776a9a9e45c3c5e77a921061a6b34b61eb5413f',
+    }
+    contacts = [x for x in entries if x.get('sourceGroup') == 'portfolio-contact-icons']
+    check(len(contacts) == 7 and {x.get('name') for x in contacts} == set(contact_sources),
+          'Expected7 approved contact SVGs')
+    for entry in contacts:
+        name = entry.get('name')
+        feather = name in ('github', 'linkedin')
+        source_repo = 'feathericons/feather' if feather else 'lucide-icons/lucide'
+        source_commit = ('1b002399e8758fb2bccea4d07312dc9e0f43dcb8' if feather
+                         else '500620a2e8123f8d1db191538886dc0c223f69a9')
+        check(entry.get('kind') == 'svg'
+              and entry.get('assetPath') == f'assets/icons/lucide/{name}.svg'
+              and entry.get('sha256') == contact_sources.get(name)
+              and entry.get('sourceRepository') == source_repo
+              and entry.get('sourceCommit') == source_commit
+              and entry.get('sourceUrl') == f'https://raw.githubusercontent.com/{source_repo}/{source_commit}/icons/{name}.svg'
+              and entry.get('license') == ('MIT' if feather else 'ISC')
+              and entry.get('canonicalSourcePreserved') is True
+              and 'figmaMainId' not in entry,
+              'Contact SVG source/license drift: ' + str(name))
+    feather_licenses = [x for x in entries if x.get('assetPath') == 'assets/icons/LICENSE-FEATHER.txt']
+    check(len(feather_licenses) == 1 and feather_licenses[0].get('kind') == 'license'
+          and feather_licenses[0].get('license') == 'MIT'
+          and feather_licenses[0].get('sourceCommit') == '1b002399e8758fb2bccea4d07312dc9e0f43dcb8'
+          and feather_licenses[0].get('sourceUrl') == 'https://raw.githubusercontent.com/feathericons/feather/1b002399e8758fb2bccea4d07312dc9e0f43dcb8/LICENSE',
+          'Feather license provenance drift')
 
     for entry in entries:
         path = entry['assetPath']
@@ -242,9 +278,12 @@ def validate(repo, require_brand=True):
 
     ofl = (mobile / 'assets/fonts/Manrope_OFL.txt').read_text()
     lucide = (mobile / 'assets/icons/LICENSE-LUCIDE.txt').read_text()
+    feather = (mobile / 'assets/icons/LICENSE-FEATHER.txt').read_text()
     simple = (mobile / 'assets/icons/LICENSE-SIMPLE-ICONS.txt').read_text()
     check('Copyright 2018 The Manrope Project Authors' in ofl and 'SIL OPEN FONT LICENSE Version 1.1' in ofl, 'Manrope copyright/OFL missing')
     check('ISC License' in lucide and 'The MIT License (MIT)' in lucide and 'Copyright (c) 2013-present Cole Bemis' in lucide, 'ISC/MIT notices missing')
+    check('The MIT License (MIT)' in feather and 'Copyright (c) 2013-2023 Cole Bemis' in feather,
+          'Feather MIT notice missing')
     check('CC0 1.0 Universal' in simple or 'Creative Commons' in simple, 'CC0 notice missing')
     check(manifest['brandA']['nativeAppIconPackagingVerified'] is False and manifest['nativeFontRenderingVerified'] is False, 'Unverified native claims')
 
@@ -339,9 +378,9 @@ def validate(repo, require_brand=True):
         regex = r'\b' + name + r'\s*=\s*' + (r'Duration\(milliseconds:\s*(\d+)\)' if row['unit'] == 'milliseconds' else r'([\d.]+)')
         actual = re.search(regex, block[1] if block else '')
         check(actual is not None and float(actual[1]) == variables[row['sourceId']]['values']['Value'], 'Numeric mismatch: ' + row['runtimeSymbol'])
-    return {'status': 'FAIL' if errors else 'PASS', 'fonts': 4, 'canonicalSvgs': 23,
+    return {'status': 'FAIL' if errors else 'PASS', 'fonts': 4, 'canonicalSvgs': 30,
             'brandASvgs': len(brands), 'renderDerivativeSvgs': len(derivatives),
-            'totalSvgs': 23 + len(brands) + len(derivatives), 'licenseNoticeFiles': 4,
+            'totalSvgs': 30 + len(brands) + len(derivatives), 'licenseNoticeFiles': 5,
             'sourceVariables': len(variables), 'sourceTextStyles': len(styles),
             'mappedColors': 30, 'mappedStyles': 10, 'mappedNumeric': 19,
             'fileChecks': files, 'errors': errors, 'pending': [], 'repositoryMutated': False,

@@ -2602,6 +2602,62 @@ h2.section-heading,
   justify-content: flex-end;
   gap: var(--sm);
 }
+.record-editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sm);
+}
+.record-editor-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.record-editor-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  border-bottom: 1px solid var(--border);
+}
+.record-editor-summary {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sm);
+  border-radius: var(--radius);
+  text-align: left;
+}
+.record-editor-summary > .icon,
+.record-editor-action {
+  flex-shrink: 0;
+}
+.record-editor-action {
+  min-width: 48px;
+  padding: var(--sm);
+}
+.record-editor-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--xs);
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.record-editor-dialog {
+  margin: auto;
+  color: var(--text);
+}
+.record-editor-dialog::backdrop {
+  background: #000a;
+}
+.record-editor-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sm);
+}
+.record-editor-dialog-actions .button[type='submit'] {
+  margin-left: auto;
+}
 .repository-choice input,
 .project-row input[type='radio'] {
   width: 24px;
@@ -2632,6 +2688,12 @@ h2.section-heading,
 }
 .document-profile .headline {
   font-size: 18px;
+}
+.document-profile.modern-profile .profile-bio {
+  align-self: stretch;
+  width: 100%;
+  text-align: left;
+  white-space: pre-wrap;
 }
 .document-project-list {
   display: flex;

@@ -7,6 +7,7 @@ import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_avatar.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_input.dart';
+import '../../../shared/widgets/stackcard_icon.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../../auth/auth.dart';
 import '../../media/media.dart';
@@ -18,6 +19,7 @@ import '../portfolio_draft_providers.dart';
 import 'builder_editor_widgets.dart';
 import 'builder_tag_editor.dart';
 import 'portfolio_draft_controller.dart';
+import 'portfolio_contact_visual.dart';
 
 /// Shell спрашивает редактор перед сменой вкладки, включая Save его local buffer.
 final mainPortfolioEditorNavigationProvider =
@@ -822,28 +824,27 @@ class _MainPortfolioEditorScreenState
               _field('headline', 'Должность', 160),
               _field('locationText', 'Город / Страна', 200),
               _field('bio', 'О себе', 4000, multiline: true),
-              _title('Контакты и ссылки'),
-              for (final link in _buffer!.links)
-                _record(
-                  link.id,
-                  link.label,
-                  link.url,
-                  onEdit: () => _editLink(link),
-                  onRemove: () {
-                    setState(
-                      () => _buffer = _buffer!.copyWith(
-                        links: _buffer!.links
-                            .where((item) => item.id != link.id)
-                            .toList(),
-                      ),
-                    );
-                    _changed();
-                  },
-                ),
-              _addButton(
-                'main.editor.addLink',
-                'Добавить контакт или ссылку',
-                _editLink,
+              BuilderTagsEditor(
+                key: const Key('main.editor.contacts'),
+                title: 'Контакты и ссылки',
+                items: _buffer!.links.map((link) => link.label).toList(),
+                keyPrefix: 'main.editor.contact',
+                addKey: const Key('main.editor.addLink'),
+                addLabel: 'Добавить контакт или ссылку',
+                removeLabel: (name) => 'Удалить контакт $name',
+                enabled: !_busy,
+                onAdd: _editLink,
+                onEdit: (index) => _editLink(_buffer!.links[index]),
+                iconName: (index) =>
+                    portfolioContactIconName(_buffer!.links[index].kind),
+                onRemove: (index) {
+                  setState(
+                    () => _buffer = _buffer!.copyWith(
+                      links: [..._buffer!.links]..removeAt(index),
+                    ),
+                  );
+                  _changed();
+                },
               ),
               const SizedBox(height: StackCardSpacing.xl),
               BuilderTagsEditor(
@@ -873,12 +874,21 @@ class _MainPortfolioEditorScreenState
                 'Добавить проект',
                 _addProjects,
               ),
-              _title('Опыт работы'),
+              _title(
+                'Опыт работы',
+                action: IconButton(
+                  key: const Key('main.editor.addExperience'),
+                  tooltip: 'Добавить опыт',
+                  onPressed: _busy ? null : _editExperience,
+                  icon: const StackCardIcon(name: 'plus'),
+                ),
+              ),
               for (final entry in _buffer!.experience)
                 _record(
                   entry.id,
                   entry.role,
                   entry.organization,
+                  iconActions: true,
                   onEdit: () => _editExperience(entry),
                   onRemove: () {
                     setState(
@@ -891,17 +901,21 @@ class _MainPortfolioEditorScreenState
                     _changed();
                   },
                 ),
-              _addButton(
-                'main.editor.addExperience',
-                'Добавить опыт',
-                _editExperience,
+              _title(
+                'Образование',
+                action: IconButton(
+                  key: const Key('main.editor.addEducation'),
+                  tooltip: 'Добавить образование',
+                  onPressed: _busy ? null : _editEducation,
+                  icon: const StackCardIcon(name: 'plus'),
+                ),
               ),
-              _title('Образование'),
               for (final entry in _buffer!.education)
                 _record(
                   entry.id,
                   entry.institution,
                   entry.qualification,
+                  iconActions: true,
                   onEdit: () => _editEducation(entry),
                   onRemove: () {
                     setState(
@@ -914,11 +928,6 @@ class _MainPortfolioEditorScreenState
                     _changed();
                   },
                 ),
-              _addButton(
-                'main.editor.addEducation',
-                'Добавить образование',
-                _editEducation,
-              ),
               if (_buffer!.resumeText.isNotEmpty) ...[
                 _title('Дополнительно'),
                 _field(
@@ -996,12 +1005,19 @@ class _MainPortfolioEditorScreenState
     ),
   );
 
-  Widget _title(String value) => Padding(
+  Widget _title(String value, {Widget? action}) => Padding(
     padding: const EdgeInsets.only(
       top: StackCardSpacing.xl,
       bottom: StackCardSpacing.lg,
     ),
-    child: Text(value, style: Theme.of(context).textTheme.titleLarge),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(value, style: Theme.of(context).textTheme.titleLarge),
+        ),
+        ?action,
+      ],
+    ),
   );
 
   Widget _field(
@@ -1049,29 +1065,57 @@ class _MainPortfolioEditorScreenState
     String summary, {
     required VoidCallback onEdit,
     required VoidCallback onRemove,
+    bool iconActions = false,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: StackCardSpacing.md),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-        if (summary.isNotEmpty)
-          Text(summary, maxLines: 3, overflow: TextOverflow.ellipsis),
-        Wrap(
-          spacing: StackCardSpacing.sm,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextButton(
-              key: ValueKey('main.record.edit.$id'),
-              onPressed: _busy ? null : onEdit,
-              child: const Text('Редактировать'),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
+                  if (summary.isNotEmpty)
+                    Text(summary, maxLines: 3, overflow: TextOverflow.ellipsis),
+                ],
+              ),
             ),
-            TextButton(
-              key: ValueKey('main.record.remove.$id'),
-              onPressed: _busy ? null : onRemove,
-              child: const Text('Удалить'),
-            ),
+            if (iconActions) ...[
+              IconButton(
+                key: ValueKey('main.record.edit.$id'),
+                tooltip: 'Редактировать $title',
+                onPressed: _busy ? null : onEdit,
+                icon: const Icon(Icons.edit_outlined, size: 20),
+              ),
+              IconButton(
+                key: ValueKey('main.record.remove.$id'),
+                tooltip: 'Удалить $title',
+                onPressed: _busy ? null : onRemove,
+                icon: const Icon(Icons.close_rounded, size: 20),
+              ),
+            ],
           ],
         ),
+        if (!iconActions)
+          Wrap(
+            spacing: StackCardSpacing.sm,
+            children: [
+              TextButton(
+                key: ValueKey('main.record.edit.$id'),
+                onPressed: _busy ? null : onEdit,
+                child: const Text('Редактировать'),
+              ),
+              TextButton(
+                key: ValueKey('main.record.remove.$id'),
+                onPressed: _busy ? null : onRemove,
+                child: const Text('Удалить'),
+              ),
+            ],
+          ),
         Divider(color: context.colors.border),
       ],
     ),
@@ -1315,88 +1359,68 @@ class _MainContactDialogState extends ConsumerState<_MainContactDialog> {
       });
       return const SizedBox.shrink();
     }
-    return Dialog(
-      insetPadding: const EdgeInsets.all(StackCardSpacing.lg),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: StackCardSize.contentMaxWidth,
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(StackCardSpacing.lg),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Контакт или ссылка',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: StackCardSpacing.lg),
-                BuilderFields(
-                  controllers: _controllers,
-                  fields: [
-                    const BuilderFieldSpec(
-                      name: 'label',
-                      labelKey: 'builderForm.linkLabel',
-                      maxLength: 80,
-                      required: true,
-                    ),
-                    const BuilderFieldSpec(
-                      name: 'kind',
-                      labelKey: 'builderForm.linkKind',
-                      choices: {
-                        'website': 'builderForm.kindWebsite',
-                        'github': 'builderForm.kindGitHub',
-                        'linkedin': 'builderForm.kindLinkedIn',
-                        'other': 'builderForm.kindOther',
-                        'email': 'settingsManagement.kind.email',
-                        'phone': 'settingsManagement.kind.phone',
-                        'telegram': 'settingsManagement.kind.telegram',
-                      },
-                    ),
-                    BuilderFieldSpec(
-                      name: 'url',
-                      labelKey: 'builderForm.linkUrl',
-                      maxLength: 2048,
-                      required: true,
-                      validate: (context, value) => builderValidationMessage(
-                        context,
-                        validatePortfolioContactUrl(
-                          _url(value),
-                          SocialLinkKind.values.byName(
-                            _controllers['kind']!.text,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  onSubmit: _apply,
-                  autofocus: true,
-                ),
-                const SizedBox(height: StackCardSpacing.lg),
-                Wrap(
-                  spacing: StackCardSpacing.sm,
-                  runSpacing: StackCardSpacing.sm,
-                  children: [
-                    StackCardButton(
-                      key: const Key('main.contact.apply'),
-                      label: 'Добавить или обновить',
-                      primary: true,
-                      onPressed: _apply,
-                    ),
-                    StackCardButton(
-                      label: 'Отмена',
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ],
+    return AlertDialog(
+      scrollable: true,
+      title: Text(
+        widget.item == null
+            ? 'Добавить контакт или ссылку'
+            : 'Редактировать контакт',
+      ),
+      content: Form(
+        key: _formKey,
+        child: BuilderFields(
+          controllers: _controllers,
+          fields: [
+            const BuilderFieldSpec(
+              name: 'label',
+              labelKey: 'builderForm.linkLabel',
+              maxLength: 80,
+              required: true,
             ),
-          ),
+            const BuilderFieldSpec(
+              name: 'kind',
+              labelKey: 'builderForm.linkKind',
+              choices: {
+                'website': 'builderForm.kindWebsite',
+                'github': 'builderForm.kindGitHub',
+                'linkedin': 'builderForm.kindLinkedIn',
+                'other': 'builderForm.kindOther',
+                'email': 'settingsManagement.kind.email',
+                'phone': 'settingsManagement.kind.phone',
+                'telegram': 'settingsManagement.kind.telegram',
+              },
+            ),
+            BuilderFieldSpec(
+              name: 'url',
+              labelKey: 'builderForm.linkUrl',
+              maxLength: 2048,
+              required: true,
+              validate: (context, value) => builderValidationMessage(
+                context,
+                validatePortfolioContactUrl(
+                  _url(value),
+                  SocialLinkKind.values.byName(_controllers['kind']!.text),
+                ),
+              ),
+            ),
+          ],
+          onSubmit: _apply,
+          autofocus: true,
         ),
       ),
+      actions: [
+        StackCardButton(
+          key: const Key('main.contact.cancel'),
+          label: 'Отмена',
+          onPressed: () => Navigator.pop(context),
+        ),
+        StackCardButton(
+          key: const Key('main.contact.apply'),
+          label: widget.item == null ? 'Добавить' : 'Сохранить',
+          primary: true,
+          onPressed: _apply,
+        ),
+      ],
     );
   }
 }

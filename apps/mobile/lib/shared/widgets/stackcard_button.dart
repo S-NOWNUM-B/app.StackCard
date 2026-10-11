@@ -4,7 +4,14 @@ import '../../core/localization/app_strings.dart';
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
 
-enum StackCardButtonRole { primary, secondary, quiet, danger, dangerQuiet }
+enum StackCardButtonRole {
+  primary,
+  secondary,
+  outlined,
+  quiet,
+  danger,
+  dangerQuiet,
+}
 
 class StackCardButton extends StatefulWidget {
   const StackCardButton({
@@ -66,6 +73,7 @@ class _StackCardButtonState extends State<StackCardButton> {
             StackCardButtonRole.danger ||
             StackCardButtonRole.dangerQuiet => colors.error,
             StackCardButtonRole.secondary ||
+            StackCardButtonRole.outlined ||
             StackCardButtonRole.quiet => colors.textPrimary,
           };
     final faceOutline = role == StackCardButtonRole.dangerQuiet
@@ -74,6 +82,7 @@ class _StackCardButtonState extends State<StackCardButton> {
         ? colors.controlOutline
         : switch (role) {
             StackCardButtonRole.primary => colors.primaryOutline,
+            StackCardButtonRole.outlined => colors.primaryOutline,
             StackCardButtonRole.secondary => colors.controlOutline,
             StackCardButtonRole.quiet => Colors.transparent,
             StackCardButtonRole.danger => colors.error,
@@ -136,6 +145,8 @@ class _StackCardButtonState extends State<StackCardButton> {
                       return switch (role) {
                         StackCardButtonRole.primary =>
                           active ? colors.accentHover : colors.primary,
+                        StackCardButtonRole.outlined =>
+                          active ? colors.surfaceHover : colors.surface,
                         StackCardButtonRole.quiet ||
                         StackCardButtonRole.dangerQuiet =>
                           active ? colors.surfaceHover : Colors.transparent,

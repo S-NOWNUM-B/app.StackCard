@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/stackcard_tokens.dart';
+import '../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../shared/widgets/stackcard_button.dart';
 import '../../shared/widgets/stackcard_card.dart';
 import '../../shared/widgets/stackcard_icon.dart';
@@ -198,13 +199,9 @@ class _SettingsBaseEditorScreenState
           title: Text(_tr('discardTitle')),
           content: Text(_tr('discardHint')),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(context.strings.tr('account.cancel')),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(_tr('discard')),
+            StackCardDialogActions(
+              onCancel: () => Navigator.pop(context, false),
+              onConfirm: () => Navigator.pop(context, true),
             ),
           ],
         ),
@@ -264,13 +261,9 @@ class _SettingsBaseEditorScreenState
           title: Text(_tr('discardTitle')),
           content: Text(_tr('discardHint')),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(context.strings.tr('account.cancel')),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(_tr('reload')),
+            StackCardDialogActions(
+              onCancel: () => Navigator.pop(context, false),
+              onConfirm: () => Navigator.pop(context, true),
             ),
           ],
         ),
@@ -318,13 +311,9 @@ class _SettingsBaseEditorScreenState
         title: Text(_tr('removeLink')),
         content: Text(_tr('removeHint')),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.strings.tr('account.cancel')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.strings.tr('builderForm.delete')),
+          StackCardDialogActions(
+            onCancel: () => Navigator.pop(context, false),
+            onConfirm: () => Navigator.pop(context, true),
           ),
         ],
       ),
@@ -780,27 +769,15 @@ class _ContactDialogState extends State<_ContactDialog> {
       ),
     ),
     actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: Text(context.strings.tr('account.cancel')),
-      ),
-      TextButton(
-        onPressed: () {
+      StackCardDialogActions(
+        confirmLabel: context.strings.tr('common.save'),
+        onCancel: () => Navigator.pop(context),
+        onConfirm: () {
           if (_form.currentState!.validate()) {
             Navigator.pop(
               context,
               SocialLink(
                 id: widget.id,
-                label: _label.text.trim(),
-                url: _url(),
-                kind: _kind,
-                publishAllowed: _allowed,
-                visible: widget.link?.visible ?? true,
-              ),
-            );
-          }
-        },
-        child: Text(context.strings.tr('settingsManagement.save')),
       ),
     ],
   );
@@ -932,12 +909,11 @@ class _QualificationEditor extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.strings.tr('account.cancel')),
-          ),
-          TextButton(
-            onPressed: () {
+          StackCardDialogActions(
+            confirmKey: field.value.text.trim(),
+            confirmLabel: context.strings.tr('common.save'),
+            onCancel: () => Navigator.pop(context),
+            onConfirm: () {
               if (form.currentState!.validate()) {
                 Navigator.pop(context, {
                   for (final field in controllers.entries)
@@ -945,7 +921,6 @@ class _QualificationEditor extends StatelessWidget {
                 });
               }
             },
-            child: Text(context.strings.tr('settingsManagement.save')),
           ),
         ],
       ),

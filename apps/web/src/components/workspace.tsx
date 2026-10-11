@@ -1093,6 +1093,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                         <DocumentView
                           content={documentPreview(savedWorkspace, savedMain)}
                           kind="portfolio"
+                          modernPortfolio
                           profilePhoto={
                             savedMain.content.profile.avatarPath ? (
                               <PrivateImage

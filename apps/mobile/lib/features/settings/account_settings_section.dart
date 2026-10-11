@@ -1,3 +1,4 @@
+import '../../shared/widgets/stackcard_dialog_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,13 +19,9 @@ class AccountSettingsSection extends ConsumerWidget {
             title: Text(context.strings.tr('account.unsavedTitle')),
             content: Text(context.strings.tr('account.unsavedHint')),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(context.strings.tr('account.cancel')),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(context.strings.tr('account.discard')),
+              StackCardDialogActions(
+                onCancel: () => Navigator.pop(context, false),
+                onConfirm: () => Navigator.pop(context, true),
               ),
             ],
           ),

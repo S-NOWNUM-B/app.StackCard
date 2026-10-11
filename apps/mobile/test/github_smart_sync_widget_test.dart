@@ -312,9 +312,17 @@ void main() {
       );
       final local = await _local(content.copyWith(documents: [document]));
       await _open(tester, local);
-      await _tap(tester, find.text('Удалить'));
+      await _tap(tester, find.byTooltip('Удалить проект'));
       expect(find.textContaining('публичную версию'), findsOneWidget);
       expect((await local.read())!.content!.projects, hasLength(1));
+      expect(find.text('Подтвердить'), findsOneWidget);
+      await _tap(tester, find.text('Отмена'));
+      expect((await local.read())!.content!.projects, hasLength(1));
+      expect(
+        (await local.read())!.content!.documents.single.projects,
+        hasLength(1),
+      );
+      await _tap(tester, find.byTooltip('Удалить проект'));
       await _tap(tester, find.byKey(const ValueKey('project.delete.confirm')));
       final saved = (await local.read())!.content!;
       expect(saved.projects, isEmpty);
@@ -330,7 +338,7 @@ void main() {
       final first = await _local(_importedContent());
       final second = await _local(_importedContent());
       final container = await _open(tester, first);
-      await _tap(tester, find.text('Удалить'));
+      await _tap(tester, find.byTooltip('Удалить проект'));
       container.updateOverrides([
         portfolioDraftRepositoryProvider.overrideWithValue(second),
       ]);
