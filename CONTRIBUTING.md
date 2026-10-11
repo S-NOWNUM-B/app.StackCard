@@ -30,7 +30,8 @@
 
 Phase 0–6 завершены; отдельно разрешённая Phase 8 — Firestore sync — завершена.
 Account session/actions, auth guards и UID isolation введены на Phase 7;
-Google flow, полный password reset и iOS приёмка остаются открытыми.
+Android Google flow и восстановление сессии приняты 2026-10-11;
+полный password reset и iOS приёмка остаются открытыми.
 Phase 8 добавила local-first sync и подготовила atomic publication repository;
 Phase 9 завершена: явный GitHub import/review/ignore сохраняет ручные overrides;
 Phase 10 завершена: детерминированные подсказки объясняют причины и явные действия;
@@ -246,6 +247,26 @@ Google provider включён в dev project; владелец подтверд
 signing certificate получи fingerprint и добавь его к соответствующему Firebase
 app; Google provider должен быть включён, а config после этого обновлён.
 Требования — в [Google authentication guide](https://firebase.google.com/docs/auth/flutter/federated-auth#google).
+
+Клиентские Firebase API keys в generated Android/iOS configuration публичны;
+это не service-account credentials и не OAuth client secrets. В Google Cloud
+для dev Android key заданы package name и зарегистрированный signing SHA-1,
+для iOS key — bundle ID из native configuration. Оба ключа ограничены 11 API:
+Cloud Datastore, Cloud Firestore, Cloud Logging, Cloud Storage for Firebase,
+FCM Registration, Firebase App Check, Firebase Installations, Firebase Management,
+Firebase Rules, Identity Toolkit и Token Service. AI Logic, Gemini и сторонние
+API этим ключам не разрешать. Для другого signing certificate сначала обновить
+Firebase app/OAuth client и Android key restriction; перенос ключей в `.env`
+не заменяет ограничения или Security Rules. Правила — в
+[Firebase API keys guide](https://firebase.google.com/docs/projects/api-keys).
+
+iOS Google OAuth client ID хранится в generated `GoogleService-Info.plist` и
+`FirebaseOptions.iosClientId`; LocalRuntime передаёт его в существующий Google
+adapter. `Info.plist` содержит callback URL scheme из `REVERSED_CLIENT_ID`.
+После обновления generated configuration сверять все три значения по
+[iOS integration guide](https://pub.dev/packages/google_sign_in_ios#ios-integration).
+Наличие configuration не заменяет настоящий iOS запуск.
+
 macOS — zsh/bash, из `apps/mobile`:
 
 ```sh

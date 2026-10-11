@@ -11,6 +11,12 @@ Scope и фактическая приёмка остаются в [product spec
   и Emulator Suite configuration; [package.json](../../../firebase/package.json)
   и lockfile — отдельными Rules tests. Mobile SDK dependencies находятся в
   `apps/mobile/pubspec.yaml`, generated app config — в `apps/mobile`.
+- Публичные mobile Firebase API keys ограничивать по Android package/signing
+  SHA-1 или iOS bundle ID и используемым Firebase API. Не разрешать этим ключам
+  AI Logic/Gemini или сторонние API; не привязывать их к service account.
+  Configuration/Google callback и порядок проверки — в
+  [CONTRIBUTING](../../../CONTRIBUTING.md#firebase-configuration-и-окружение).
+  API key restrictions не заменяют Auth, Security Rules или native acceptance.
 - [firestore.rules](../../../firebase/firestore.rules) ограничивает private
   account/draft по UID, anonymous exact get public snapshots, запрет public list/
   client write, lifecycle account lock и deleted document tombstones.

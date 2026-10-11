@@ -1459,7 +1459,8 @@ mobile/web/publication scope
   dev environment и необязательный Auth Emulator в CONTRIBUTING.
 - [ ] Завершить email/password и Google sign-in, регистрацию, восстановление пароля,
   auth state и sign out: реализация готова; Android Google provider/OAuth
-  configuration завершена 2026-10-10, native Google приёмка остаётся открытой.
+  configuration завершена 2026-10-10, Android native Google приёмка прошла
+  2026-10-11; iOS и полный password reset остаются открытыми.
 - [x] Добавить именованные routes, параметры, вложенную навигацию и auth redirects
   в GoRouter; unit/widget проверки transitions и session restore проходят.
 - [x] Привязать local draft к Firebase UID; реализовать явный guest transfer
@@ -1469,11 +1470,36 @@ mobile/web/publication scope
 
 - [ ] Все обязательные auth сценарии проверены на native targets. Android live
   registration/email sign-in/sign out и reset API acceptance подтверждены;
-  Google flow, фактическое письмо/reset пароля и iOS ещё не приняты.
+  Android Google flow и restart session restoration приняты 2026-10-11;
+  фактическое письмо/reset пароля и iOS ещё не приняты.
 - [x] Auth redirects, именованные routes, параметры и вложенная навигация
   проверены для owner/guest/restoring/error/signedOut в Flutter tests.
 - [x] Гостевой draft переносится явно только в пустой target; sign out, UID switch,
   late save, сбой transfer/reopen и private form state проверены без чужих данных.
+
+**Google Auth и публичные API keys — 11 октября 2026**
+
+- В Google Cloud Android/iOS keys ограничены 11 Firebase API, без AI Logic,
+  Gemini, Cloud SQL и других неиспользуемых сервисов. Android restriction —
+  package и зарегистрированный SHA-1, iOS — native bundle ID; service-account
+  binding отсутствует. API keys остаются публичной клиентской configuration.
+- Live REST проверки для обоих keys: Identity Toolkit и Token Service с правильными
+  app headers достигают token validation (`INVALID_CUSTOM_TOKEN`/`INVALID_REFRESH_TOKEN`),
+  Identity Toolkit без app headers возвращает `403` с Android/iOS app-blocked reason.
+  Эти проверки не создают пользователей и не меняют рабочие данные.
+- Android `google_auth_runtime_test.dart`: `seed` и `check` — **2/2 PASS** на
+  `emulator-5554` после настройки restrictions. Подтверждены Firebase
+  `google.com` provider, принудительное обновление ID token, защищённый AppShell,
+  server-only owner Firestore read, восстановление того же UID в новом процессе
+  и sign out named session. `defaultSessionPreserved=true`; owner draft отсутствует,
+  поэтому это не повторная приёмка sync. Пароли и токены в evidence не сохранялись.
+- iOS config обновлён по актуальному Firebase SDK config: OAuth client IDs,
+  `FirebaseOptions.iosClientId` и callback URL scheme в `Info.plist` согласованы.
+  Plist/source consistency и `flutter analyze` — PASS; настоящий iOS flow
+  остаётся открытым, configuration не считается native acceptance.
+- GitHub Secret scanning alerts #1/#2 закрыты как `False positive` после проверки
+  restrictions: это публичные Firebase client keys, не server credentials.
+  Репозиторий остаётся публичным; billing/visibility/deploy не менялись.
 
 **Реализовано и проверено в Phase 7 — 4 октября 2026**
 
