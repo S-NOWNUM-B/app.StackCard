@@ -27,7 +27,12 @@ import {
 } from '../src/lib/model';
 import { documentPreview } from '../src/lib/preview';
 import { ContentEditor } from '../src/components/content-editor';
-import { ProjectForm, AttachmentsEditor, emptyProject } from '../src/components/project-editor';
+import {
+  ProjectForm,
+  AttachmentsEditor,
+  emptyProject,
+  appendProjectTechnology,
+} from '../src/components/project-editor';
 import { loadGitHubPage, readGitHubCache, writeGitHubCache } from '../src/lib/github-repositories';
 const fixture = JSON.parse(
   readFileSync(new URL('../../../fixtures/workspace/schema6.json', import.meta.url), 'utf8'),
@@ -224,6 +229,45 @@ test('icon stable IDs reject SVG/URL input and survive GitHub edits and durable 
   const malformed = clone(repeated);
   malformed.projects[0].iconId = 'https://evil.example/icon.svg' as never;
   assert.throws(() => validateWorkspace(malformed, 'owner'));
+});
+test('individual technology additions preserve raw entries and enforce model limits without CSV parsing', () => {
+  const existing = [' Dart ', 'legacy, technology'];
+  const added = appendProjectTechnology(existing, '  TypeScript  ');
+  assert.deepEqual(added, [' Dart ', 'legacy, technology', 'TypeScript']);
+  assert.deepEqual(existing, [' Dart ', 'legacy, technology']);
+  assert.deepEqual(appendProjectTechnology([], 'React'), ['React']);
+  for (const value of ['', '   ', '\n\t'])
+    assert.throws(() => appendProjectTechnology([], value), /Введите название/);
+  assert.throws(() => appendProjectTechnology([], 'React, TypeScript'), /по одной/);
+  for (const value of ['DART', '  dart  '])
+    assert.throws(() => appendProjectTechnology(existing, value), /уже добавлена/);
+  assert.equal(appendProjectTechnology([], 'x'.repeat(60))[0].length, 60);
+  assert.equal(appendProjectTechnology([], '🛠'.repeat(30))[0].length, 60);
+  for (const value of ['x'.repeat(61), '🛠'.repeat(31)])
+    assert.throws(() => appendProjectTechnology([], value), /60 символов/);
+  const nineteen = Array.from({ length: 19 }, (_, i) => `Technology ${i}`);
+  assert.equal(appendProjectTechnology(nineteen, 'Last').length, 20);
+  assert.throws(() => appendProjectTechnology([...nineteen, 'Last'], 'Extra'), /20 технологий/);
+});
+test('technology editor renders accessible individual removal controls and an optional empty list', () => {
+  const project = {
+    ...emptyProject(),
+    technologies: ['React', 'legacy, technology', 'x'.repeat(60)],
+  };
+  const html = renderToStaticMarkup(createElement(ProjectForm, { project, onChange: () => {} }));
+  assert.ok(!html.includes('Технологии через запятую'));
+  assert.ok(html.includes('aria-label="Технологии проекта"'));
+  assert.equal((html.match(/aria-label="Удалить технологию /g) ?? []).length, 3);
+  assert.ok(html.includes('legacy, technology'));
+  assert.ok(html.includes('x'.repeat(60)));
+  assert.ok(html.includes('technology/react.svg'));
+  assert.ok(html.includes('<dialog'));
+  assert.ok(html.includes('aria-label="Добавить технологию"'));
+  const empty = renderToStaticMarkup(
+    createElement(ProjectForm, { project: emptyProject(), onChange: () => {} }),
+  );
+  assert.ok(!empty.includes('aria-label="Удалить технологию '));
+  assert.ok(!empty.includes('Технологии проекта'));
 });
 test('scoped import keeps adjacent unsaved portfolio input and existing project manual overrides', () => {
   const previous = migrateMainPortfolio(emptyContent(), null),

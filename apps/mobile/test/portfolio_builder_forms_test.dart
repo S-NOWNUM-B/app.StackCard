@@ -190,14 +190,14 @@ void main() {
       await _enter(tester, 'title', 'My project');
       await _enter(tester, 'description', 'Local case\nSecond line');
       await _enter(tester, 'contribution', 'Built the accessible interface');
-      await _enter(
-        tester,
-        'technologies',
-        List.generate(21, (index) => 'Tech$index').join(', '),
-      );
-      await _tap(tester, const ValueKey('builder_form_apply'));
-      expect(find.text('Не более 20 технологий.'), findsOneWidget);
-      await _enter(tester, 'technologies', 'Flutter, Dart,  ');
+      for (final technology in ['Flutter', 'Dart']) {
+        await _tap(tester, const ValueKey('project.technology.add'));
+        await tester.enterText(
+          find.byKey(const ValueKey('project.technology.name')),
+          technology,
+        );
+        await _tap(tester, const ValueKey('project.technology.confirm'));
+      }
       await _enter(tester, 'repositoryUrl', '/relative');
       await _tap(tester, const ValueKey('builder_form_apply'));
       expect(
@@ -777,9 +777,6 @@ TextEditingController _textController(WidgetTester tester, String field) =>
 
 Future<void> _enter(WidgetTester tester, String field, String value) async {
   final target = find.byKey(ValueKey('builder_form_$field'));
-  if (field == 'technologies' && target.evaluate().isEmpty) {
-    await _tap(tester, const ValueKey('project.technologies.edit'));
-  }
   await tester.ensureVisible(target);
   await tester.enterText(target, value);
   await tester.pump();

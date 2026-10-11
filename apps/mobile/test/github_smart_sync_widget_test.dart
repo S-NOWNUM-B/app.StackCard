@@ -13,7 +13,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
-  testWidgets('Compact Library and project editor previews', (tester) async {
+  testWidgets('Compact Library and centered project icon editor', (
+    tester,
+  ) async {
     final local = await _local(_importedContent());
     await _open(tester, local);
     expect(find.byType(PortfolioMediaImage), findsNothing);
@@ -26,10 +28,33 @@ void main() {
       );
     }
     await _tap(tester, find.text('Редактировать'));
+    expect(find.byKey(const ValueKey('project.editor.preview')), findsNothing);
+    final icon = tester.getRect(
+      find.byKey(const ValueKey('project.icon.editor')),
+    );
+    expect(icon.size, const Size(128, 128));
+    expect(icon.center.dx, tester.getCenter(find.byType(MaterialApp)).dx);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('project.icon.select'))).height,
+      greaterThanOrEqualTo(48),
+    );
     if (const bool.fromEnvironment('UPDATE_SINGLE_PORTFOLIO_PREVIEWS')) {
       await expectLater(
         find.byType(MaterialApp),
         matchesGoldenFile('/private/tmp/stackcard-redesign-project-editor.png'),
+      );
+      await Scrollable.ensureVisible(
+        tester.element(
+          find.byKey(const ValueKey('project.technologies.editor')),
+        ),
+        alignment: 0.5,
+      );
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile(
+          '/private/tmp/stackcard-redesign-project-technologies.png',
+        ),
       );
     }
     expect(tester.takeException(), isNull);
@@ -53,6 +78,13 @@ void main() {
         find.byKey(const ValueKey('builder_form_title')),
         'Название проекта с длинным текстом',
       );
+      await tester.pumpAndSettle();
+      await _addTechnology(tester, 'Technology with a longer display name');
+      await _tap(
+        tester,
+        find.byKey(const ValueKey('project.technology.remove.1')),
+      );
+      expect(tester.takeException(), isNull);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(
@@ -79,6 +111,9 @@ void main() {
       loader.addFont(rootBundle.load('assets/fonts/$font'));
     }
     await loader.load();
+    final icons = FontLoader('MaterialIcons')
+      ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+    await icons.load();
   });
 
   testWidgets(
@@ -134,6 +169,100 @@ void main() {
     expect(local.writes, 0);
     expect(container.read(portfolioDraftControllerProvider).content, changed);
   });
+
+  testWidgets(
+    'Technology add and remove stay local until Save and preserve GitHub overrides',
+    (tester) async {
+      final local = await _local(_importedContent());
+      await _open(tester, local, editor: true);
+      expect(
+        find.byKey(const ValueKey('project.technologies.edit')),
+        findsNothing,
+      );
+      await _tap(
+        tester,
+        find.byKey(const ValueKey('project.technology.remove.0')),
+      );
+      await _addTechnology(tester, 'React', keyboard: true);
+      await _addTechnology(tester, ' TypeScript ');
+      await _tap(tester, find.byKey(const ValueKey('project.technology.add')));
+      await tester.enterText(
+        find.byKey(const ValueKey('project.technology.name')),
+        'Cancelled',
+      );
+      await _tap(
+        tester,
+        find.byKey(const ValueKey('project.technology.cancel')),
+      );
+      expect(find.text('Cancelled'), findsNothing);
+      expect(local.writes, 0);
+      expect((await local.read())!.content!.projects.single.technologies, [
+        'Dart',
+      ]);
+      await _tap(tester, find.byKey(const ValueKey('builder_form_apply')));
+      final saved = (await local.read())!.content!.projects.single;
+      expect(saved.technologies, ['React', 'TypeScript']);
+      expect(
+        saved.githubMetadata!.overrideFields,
+        contains(PortfolioGitHubField.technologies),
+      );
+      expect(saved.githubMetadata!.acceptedSource.language, 'Dart');
+      expect(local.writes, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Technology validation retains raw entries and allows replacing at the limit',
+    (tester) async {
+      final content = _importedContent();
+      final original = [
+        'Dart',
+        'Team, tools',
+        for (var i = 0; i < 18; i++) 'Tech$i',
+      ];
+      final local = await _local(
+        content.copyWith(
+          projects: [content.projects.single.copyWith(technologies: original)],
+        ),
+      );
+      await _open(tester, local, editor: true);
+      await _tap(tester, find.byKey(const ValueKey('project.technology.add')));
+      for (final invalid in [
+        '',
+        ' dart ',
+        'React, Flutter',
+        List.filled(61, 'x').join(),
+        'Go',
+      ]) {
+        await tester.enterText(
+          find.byKey(const ValueKey('project.technology.name')),
+          invalid,
+        );
+        await _tap(
+          tester,
+          find.byKey(const ValueKey('project.technology.confirm')),
+        );
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(local.writes, 0);
+      }
+      await _tap(
+        tester,
+        find.byKey(const ValueKey('project.technology.cancel')),
+      );
+      await _tap(
+        tester,
+        find.byKey(const ValueKey('project.technology.remove.19')),
+      );
+      await _addTechnology(tester, 'Go');
+      await _tap(tester, find.byKey(const ValueKey('builder_form_apply')));
+      expect((await local.read())!.content!.projects.single.technologies, [
+        ...original.take(19),
+        'Go',
+      ]);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('Failed project Save keeps form and icon available for retry', (
     tester,
@@ -232,6 +361,27 @@ void main() {
     expect(_text(tester, find.byKey(const ValueKey('project_search'))), '');
     expect(find.text('My curated title'), findsOneWidget);
   });
+}
+
+Future<void> _addTechnology(
+  WidgetTester tester,
+  String name, {
+  bool keyboard = false,
+}) async {
+  await _tap(tester, find.byKey(const ValueKey('project.technology.add')));
+  await tester.enterText(
+    find.byKey(const ValueKey('project.technology.name')),
+    name,
+  );
+  if (keyboard) {
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+  } else {
+    await _tap(
+      tester,
+      find.byKey(const ValueKey('project.technology.confirm')),
+    );
+  }
 }
 
 const legacyImage = 'accounts/owner/media/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg';

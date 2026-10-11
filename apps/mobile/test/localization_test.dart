@@ -129,7 +129,7 @@ void main() {
 
   for (final item in [
     (route: '/home', heading: 'Портфолио пока пустое'),
-    (route: '/editor', heading: 'Профиль'),
+    (route: '/editor', heading: 'Имя'),
     (route: '/projects', heading: 'Проекты: 4'),
     (route: '/settings', heading: 'Настройки'),
     (route: '/settings/appearance', heading: 'Приложение'),
