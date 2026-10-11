@@ -1,7 +1,7 @@
 import { createPublicationService } from './publication.mjs';
 import { PublicationError, publicOrigin } from './projection.mjs';
 
-export function createPublicationHttpHandler({ database, bucket, auth, origin, emulator = false }) {
+export function createPublicationHttpHandler({ database, bucket, auth, origin, emulator = false, firestoreMediaOnlyAccountsSince = null }) {
   return async (request, response) => {
     response.set('Cache-Control', 'no-store');
     response.set('X-Content-Type-Options', 'nosniff');
@@ -19,7 +19,7 @@ export function createPublicationHttpHandler({ database, bucket, auth, origin, e
     if (request.method !== 'POST') { response.status(405).json({ error: { code: 'method-not-allowed', message: 'POST required' } }); return; }
     try {
       if (!request.is('application/json') || (request.rawBody?.length ?? 0) > 8192) throw new PublicationError('invalid-data');
-      const service = createPublicationService({ database, bucket, auth, origin, emulator });
+      const service = createPublicationService({ database, bucket, auth, origin, emulator, firestoreMediaOnlyAccountsSince });
       if (request.body?.action === 'deletionStatus') {
         response.status(200).json(await service.execute(null, request.body));
         return;

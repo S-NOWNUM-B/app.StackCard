@@ -18,6 +18,7 @@
 
 ## Содержание
 
+- [Одно основное портфолио](#одно-основное-портфолио)
 - [Текущее состояние — mobile capabilities](#текущее-состояние--mobile-capabilities)
 - [Схема системы](#схема-системы)
 - [Зоны ответственности](#зоны-ответственности)
@@ -41,7 +42,59 @@
 
 ---
 
+## Одно основное портфолио
+
+Действующий контракт — [ADR 0005](../decisions/0005-single-main-portfolio.md).
+Существующий `PortfolioContent` остаётся одним UID-bound aggregate: root
+`projects` — Library, `mainPortfolioId` выбирает существующий document.
+`githubUsername` отделён от slug, `personalization` хранит явные status/step,
+`legacyMainSnapshot` — точную восстановимую копию выбранной основы. Nested
+snapshots не содержат этих root metadata. Предельные 20 старых документов
+допускают один дополнительный основной документ из базы (21 в новой schema).
+Чтение не выполняет migration write; выбор/backup/Save атомарны с CAS/revision.
+
+Mobile Home использует durable `draft.content`, web Home — confirmed basis;
+редактор хранит working buffer с явным Save и guard выхода. Scoped Library
+import/delete и GitHub identity Save не сохраняют соседний несохранённый ввод.
+Main Editor проверяет captured GitHub baseline при CAS; нетронутое поле принимает
+новую durable identity, конфликт собственного ввода блокирует запись без потери текста.
+Удаление Library удаляет все attachments, сохраняя старую архивную копию и
+GitHub repository. Проекты не добавляются в основное портфолио автоматически.
+Каталог `iconId` из семи pinned Lucide IDs одинаков для Library/main/public/PDF;
+старые project image paths сохраняются приватно, но не рендерятся.
+
+Writers Hive8/cloud7, readers1–8/1–7; public writer2/readers1|2. Trusted projection
+основного документа создаёт kind `portfolio`, исключает archive/onboarding,
+source metadata/private notes/project images/raw resume и attached Resume.
+Ручной город появляется после явного ввода; прежние запрещённые контакты и
+location не раскрываются переносом. Immutable Firestore avatar document
+`accounts/UID/media/32hex.jpg` содержит exact schema1/jpeg/base64, JPEG≤256KiB,
+≤512px после reencode/EXIF cleanup. Trusted service повторно обрабатывает avatar
+в bounded inline JPEG; общий public JSON ограничен 900KiB до journal/write.
+Owner exact get/create/delete, no list/overwrite; public collection writes server-only.
+Storage create закрыт; legacy reads/delete остаются совместимыми. Blaze не нужен.
+
+PDF генерируется из saved resolved content с оригинальными Manrope TTF,
+Cyrillic, pagination, typed clickable links, avatar и catalog icons. Android
+SAF/iOS exporting document picker пишут настоящие bytes, web получает Blob.
+Для URL-only legacy avatar media reader загружает client-side stream≤2MiB за
+10s, запрещает credentials/redirects/local hosts и проверяет MIME/dimensions
+до JPEG512 reencode. Private path приоритетен, ошибка path не скрывается URL
+fallback. Web требует CORS от внешнего сервера; failure не меняет прежнее фото.
+Cancel/error не означают успех. Share использует подтверждённый public URL,
+предлагает Publish или Update/Existing и сохраняет прежний idempotent request
+при неизвестном результате. Save/sync никогда не вызывают publication.
+
+Настройки содержат Account/Security, GitHub, App (reduced motion/безопасная
+очистка только GitHub cache), Inbox/Notifications и Help/About; account/красный
+plain logout расположены под разделителем. Location SDK/features удалены,
+`PortfolioProfile.locationText` остаётся необязательным ручным полем.
+Контракты D048, Builder, Phase11/12 ниже описывают историю/совместимость;
+при конфликте современный ADR 0005 имеет приоритет.
+
 ## Текущее состояние — mobile capabilities
+
+Исторический обзор прежних capabilities; актуальный UI и schema — выше.
 
 С 2026-10-07 последовательная очередь фаз на паузе по поручению пользователя.
 Mobile развивается по capabilities общей базы и независимых Resume/Portfolio;
@@ -103,7 +156,7 @@ apps/mobile/
 │       ├── github_import/    # public GitHub source, DTO, Dio, Hive response cache
 │       ├── portfolio/        # public API и presentation read model
 │       ├── portfolio_draft/  # Builder, Hive/Firestore sync, publication и controller
-│       ├── media/            # picker/preprocessing, private Storage, UID-scoped DI
+│       ├── media/            # avatar picker, Firestore media и legacy Storage reads
 │       ├── location/         # ручной город/страна, optional native geolocation
 │       ├── home/             # mixed document/project library
 │       └── settings/         # настройки, SharedPreferences adapter и preview состояний
@@ -374,8 +427,8 @@ features/<feature>/
 | [github_import](../../apps/mobile/lib/features/github_import/github_import.dart) | Public source models и `GitHubImportRepository`; Dio/DTO/cache в data, отдельный Riverpod controller и экран. Не меняет profile/projects/portfolio repositories |
 | [portfolio](../../apps/mobile/lib/features/portfolio/portfolio.dart) | `PortfolioOverview` объединяет публичные profile/projects states для Home и demo Portfolio; это presentation read model |
 | [portfolio_draft](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart) | Pure Dart portfolio content, validation/completion/suggestions, draft/sync/publication contracts; working controller, Builder/preview, Hive cache/outbox и UID-bound Firestore adapters |
-| [media](../../apps/mobile/lib/features/media/media.dart) | Pure picker/repository contracts, MIME/resize preprocessing, UID-bound Storage adapter; editor/image widgets используют публичный API |
-| [location](../../apps/mobile/lib/features/location/location.dart) | Pure `PortfolioPlace` и repository; geolocator/native geocoding в data, picker подтверждает только город/страну, без карты |
+| [media](../../apps/mobile/lib/features/media/media.dart) | Pure picker/repository contracts, MIME/resize preprocessing, UID-bound Firestore avatar и чтение legacy Storage; widgets используют публичный API |
+| Location (история Phase12) | Pure `PortfolioPlace` и repository; geolocator/native geocoding в data, picker подтверждает только город/страну, без карты |
 | Home и Settings | Рендерят данные публичных feature APIs; Home использует overview, Settings — profile state и AppSettings через Provider |
 
 </div>
@@ -865,6 +918,11 @@ Telegram — https t.me. Login email/provider inventory принадлежит A
 
 ## Приватные изображения — Phase 11
 
+Исторический контракт Phase 11: новые avatar uploads заменены бесплатным
+Firestore по [ADR 0005](../decisions/0005-single-main-portfolio.md), новые изображения
+проектов исключены из интерфейса и outputs. Описание ниже сохраняет прежние
+ограничения и объясняет совместимое чтение старых объектов.
+
 [Media API](../../apps/mobile/lib/features/media/media.dart) разделяет picker,
 preprocessing, Repository и Riverpod session state. Profile/project forms
 сохраняют upload result в локальной форме до Apply; Save остаётся прежним явным
@@ -939,7 +997,8 @@ revision другого клиента не определяют победит�
 
 ### Private/public schema и явная публикация
 
-D048 отделяет private cloud6 workspace от trusted document snapshot schema1.
+Исторический D048 отделял private cloud6 от snapshot schema1; современный
+основной документ использует cloud7/public2 по ADR 0005.
 `Save` и sync не выполняют Publish. Mobile публикует только saved+server-ACK
 mutation; web — подтверждённую server read после online transaction. Handler
 повторно читает authoritative workspace и проверяет точную mutation, version
@@ -1047,10 +1106,9 @@ Suggestions остаются pure deterministic rules в [Portfolio Suggestions]
    разрешает локальный редактор без аккаунта. Восстановление/ошибка session
    блокируют private routes. Legacy `AuthRepository.openDemo` относится только
    к preview/tests без native account configuration.
-4. Stateful Shell открывает Home/Resumes/Projects/Portfolios. Home читает общую
-   Library и документы; три фильтра меняют только Home. Documents libraries
-   читают свою kind; query Projects не меняет полный список других экранов.
-   Пустой workspace не копирует demo автоматически.
+4. Stateful Shell открывает Главную/Проекты/Редактор. Главная показывает saved
+   main portfolio и два действия PDF/Share; Editor — working buffer. Library
+   сохраняет собственный query, пустой workspace не копирует demo.
 5. Settings меняет AppearanceController и сохраняет цельный snapshot preferences,
    читает profile provider и держит preview loading/empty/error в session.
    Account controls выполняют sign out и явный guest transfer; смена владельца
@@ -1153,6 +1211,10 @@ Firestore/FCM и те же shared handlers; Cloud Functions и App Hosting не 
 ---
 
 ## Выбор города и страны — Phase 12
+
+**Современный контракт:** только необязательное ручное `locationText`.
+`features/location`, geolocator/geocoding и native permissions удалены.
+Описание ниже — история Phase12; GPS сценарии больше не запускаются.
 
 Пользователь вручную вводит город и страну в Profile Location Picker или
 нажимает «Определить мой город». Открытие picker не запрашивает разрешения.

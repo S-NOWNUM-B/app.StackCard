@@ -34,6 +34,14 @@ class GitHubImportController extends Notifier<GitHubImportState> {
     return GitHubImportState();
   }
 
+  /// Смена владельца/источника очищает выбор и видимые ответы, не rate deadline.
+  void clear() {
+    _beginOperation();
+    _queryTimer?.cancel();
+    _repository.cancelRequests();
+    state = GitHubImportState();
+  }
+
   Future<void> load(String value) async {
     if (!_canRequest()) return;
     final username = normalizeGitHubUsername(value);

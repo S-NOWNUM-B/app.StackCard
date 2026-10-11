@@ -79,7 +79,7 @@ function webEnvelope(): DraftEnvelope {
   ];
   return {
     ...basis,
-    schemaVersion: 6,
+    schemaVersion: 7,
     mutationId: 'web-cross-client',
     localRevision: basis.localRevision + 1,
     notes: '  Private web notes\nЛичные заметки — не содержимое документа\n',
@@ -142,7 +142,7 @@ if (mode === '--write-web-envelope') {
   const expected = clone(original.content!);
   expected.documents[0].content.profile.headline = 'Frontend role edited on mobile';
   const mobile = readEnvelope(path);
-  assert.equal(mobile.schemaVersion, 6);
+  assert.equal(mobile.schemaVersion, 7);
   assert.equal(mobile.mutationId, 'mobile-cross-client');
   assert.equal(mobile.localRevision, original.localRevision + 1);
   assert.equal(mobile.notes, original.notes);
@@ -157,7 +157,7 @@ if (mode === '--write-web-envelope') {
     'Backend implementation',
   );
 } else {
-  test('web helpers produce independent cloud6 documents with selective base review and shared Library relations', () => {
+  test('web helpers produce independent cloud7 documents with selective base review and shared Library relations', () => {
     assertWebEdits(webEnvelope());
   });
 }

@@ -13,6 +13,7 @@ final class Project {
     required this.details,
     this.id,
     this.visible = true,
+    this.iconId = 'folder',
     List<String> imagePaths = const [],
   }) : technologies = List.unmodifiable(technologies),
        imagePaths = List.unmodifiable(imagePaths);
@@ -27,6 +28,7 @@ final class Project {
   final String details;
   final String? id;
   final bool visible;
+  final String iconId;
   final List<String> imagePaths;
 
   bool get isFromGitHub => source == ProjectSource.github;

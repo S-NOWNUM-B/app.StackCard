@@ -3,6 +3,11 @@
 Начало: [общие правила](AGENTS.md). Общие правила хранятся в репозитории;
 отдельные копии для разных AI-клиентов не требуются.
 
+Действующее поручение 2026-10-12 — [одно основное портфолио](../decisions/0005-single-main-portfolio.md):
+3 roots, durable Home/PDF/Share, Library+Editor, optional4step onboarding,
+Firestore avatar и ручной город. Оно заменяет D048 UI и Phase12 GPS, сохраняя
+старые данные/URL. Исторические scopes ниже не возвращают старый интерфейс.
+
 Перед любой задачей по разработке продукта обязательно прочитай
 [план разработки](../product/product-spec.md#план-разработки),
 [текущий статус](../product/product-spec.md#статус-и-границы-текущей-работы)
@@ -36,7 +41,7 @@ deploy/billing/Git сохраняют отдельные ограничения.
 | Smart GitHub import/review, overrides и Ignore | [Smart Sync contract](../architecture/architecture.md#smart-github-sync-и-ручные-overrides), [ADR 0002](../decisions/0002-github-import-and-review.md), [Mobile rules](scopes/mobile.md) | [pure sync rules](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_github_sync.dart), [bridge](../../apps/mobile/lib/features/github_import/github_portfolio_providers.dart), public draft controller/codec; сохранение остаётся через прежний repository |
 | Portfolio Suggestions, пороги и объяснения | [Suggestions contract](../architecture/architecture.md#portfolio-suggestions), [Mobile rules](scopes/mobile.md) | [pure rules](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_suggestions.dart), public draft providers и общий suggestions UI; явно заданное время, без отдельного storage/HTTP |
 | Avatar/project images, camera/gallery и Storage | [Media contract](../architecture/architecture.md#приватные-изображения--phase-11), [ADR 0003](../decisions/0003-private-portfolio-media.md), [mobile](scopes/mobile.md), [Firebase](scopes/firebase.md) | `features/media`, private media paths в draft, `firebase/storage.rules`; setup/проверки в CONTRIBUTING |
-| Profile Location, город/страна и permission states | [Location contract](../architecture/architecture.md#выбор-города-и-страны--phase-12), [mobile](scopes/mobile.md), [Phase 12](../product/product-spec.md#phase-12--location) | `features/location`, Profile form controller и существующее `locationText`; native permissions в AndroidManifest/Info.plist; без Google Maps |
+| Основное портфолио, migration/onboarding/PDF/avatar/manual city | [ADR 0005](../decisions/0005-single-main-portfolio.md), [современная architecture](../architecture/architecture.md#одно-основное-портфолио), mobile/web/firebase scopes | Existing workspace/main helpers/codecs/controllers, main editor/Home/PDF; `features/media` Firestore adapter; `locationText` без GPS |
 | Bootstrap, local storage и portfolio Builder | [Local persistence contract](../architecture/architecture.md#локальные-настройки-и-draft-на-phase-5), [Builder contract](../architecture/architecture.md#portfolio-domain-и-локальный-builder), [Mobile rules](scopes/mobile.md), [решения Phase 6](../decisions/README.md#принято-для-phase-6) | [LocalRuntime](../../apps/mobile/lib/app/local_runtime.dart), [LocalStorage](../../apps/mobile/lib/core/storage/local_storage.dart) и public [portfolio_draft.dart](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart) |
 | AppSettings compatibility, light-only/ru runtime | [Mobile rules](scopes/mobile.md), [Local persistence contract](../architecture/architecture.md#локальные-настройки-и-draft-на-phase-5), [Design system](../design/design-system.md) | [core/state](../../apps/mobile/lib/core/state/), [core/localization](../../apps/mobile/lib/core/localization/) и [SharedPreferences adapter](../../apps/mobile/lib/features/settings/data/shared_preferences_settings_repository.dart) |
 | UI и branding | [Design system](../design/design-system.md#монохромный-бренд) | `assets/branding/stackcard-v2-brand-kit.json`, pinned original Design v2 SVG и source manifest; существующие widgets. Link/Accent — история |

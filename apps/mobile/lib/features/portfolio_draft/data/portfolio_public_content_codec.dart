@@ -3,6 +3,9 @@ import 'portfolio_content_codec.dart';
 
 /// Hidden blocks are removed from the stored payload, not only from rendering.
 PortfolioContent projectPublicPortfolioContent(PortfolioContent content) {
+  if (content.mainPortfolioId != null) {
+    return resolvedMainPortfolioContent(content) ?? PortfolioContent();
+  }
   final visible = content.blocks
       .where((block) => block.visible)
       .map((block) => block.kind)
@@ -17,7 +20,8 @@ PortfolioContent projectPublicPortfolioContent(PortfolioContent content) {
       headline: profileVisible ? profile.headline : '',
       avatarUrl: profileVisible ? profile.avatarUrl : '',
       bio: includes(PortfolioBlockKind.about) ? profile.bio : '',
-      locationText: includes(PortfolioBlockKind.location) && profile.publishLocation
+      locationText:
+          includes(PortfolioBlockKind.location) && profile.publishLocation
           ? profile.locationText
           : '',
       publishLocation: profile.publishLocation,
@@ -37,6 +41,7 @@ PortfolioContent projectPublicPortfolioContent(PortfolioContent content) {
                   liveUrl: project.liveUrl,
                   featured: project.featured,
                   visible: project.visible,
+                  iconId: project.iconId,
                 ),
               )
               .toList()
@@ -58,6 +63,10 @@ PortfolioContent projectPublicPortfolioContent(PortfolioContent content) {
     resumeText: includes(PortfolioBlockKind.resume) ? content.resumeText : '',
     ignoredGitHubRepositories: const [],
     documents: const [],
+    clearMainPortfolioId: true,
+    githubUsername: '',
+    personalization: const PortfolioPersonalization(),
+    clearLegacyMainSnapshot: true,
   );
 }
 
@@ -77,11 +86,13 @@ Map<String, Object?> encodePublicPortfolioContent(PortfolioContent content) {
     'id',
     'title',
     'description',
+    'contribution',
     'technologies',
     'repositoryUrl',
     'liveUrl',
     'featured',
     'visible',
+    'iconId',
   };
   for (final project in encoded['projects']! as List) {
     (project as Map).removeWhere((key, _) => !projectFields.contains(key));

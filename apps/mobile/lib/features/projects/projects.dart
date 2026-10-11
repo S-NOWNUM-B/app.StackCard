@@ -9,11 +9,13 @@ export 'presentation/project_filters.dart'
         ProjectFiltersNotifier,
         projectFiltersProvider;
 export 'presentation/projects_screen.dart' show ProjectsScreen;
-export 'presentation/project_library_card.dart'
-    show ProjectLibraryCard, ProjectLibraryCover;
+export 'presentation/project_library_card.dart' show ProjectLibraryCard;
 export 'projects_providers.dart'
     show
         projectsRepositoryProvider,
         projectsProvider,
         visibleProjectsProvider,
         featuredProjectsProvider;
+
+export 'presentation/project_stock_icon.dart'
+    show ProjectStockIcon, showProjectIconPicker;

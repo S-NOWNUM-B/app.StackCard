@@ -9,3 +9,5 @@ export 'github_portfolio_providers.dart';
 export 'presentation/github_import_controller.dart';
 export 'presentation/github_import_screen.dart';
 export 'presentation/github_import_state.dart';
+
+export 'data/github_response_cache.dart' show ClearableGitHubResponseCache;

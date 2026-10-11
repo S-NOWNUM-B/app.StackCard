@@ -120,7 +120,7 @@ void main() {
     },
   );
   testWidgets(
-    'Settings opens standalone Inbox and Back retains four root destinations',
+    'Settings opens standalone Inbox and Back retains three root destinations',
     (tester) async {
       final inbox = TestInbox('a');
       await _open(
@@ -130,7 +130,18 @@ void main() {
       );
       expect(
         tester.widget<NavigationBar>(find.byType(NavigationBar)).destinations,
-        hasLength(4),
+        hasLength(3),
+      );
+      expect(
+        tester
+            .widgetList<Text>(
+              find.descendant(
+                of: find.byType(NavigationBar),
+                matching: find.byType(Text),
+              ),
+            )
+            .map((label) => label.data),
+        ['Главная', 'Проекты', 'Редактор'],
       );
       await _tap(tester, find.byKey(const Key('app.settings')));
       await _tap(tester, find.byKey(const Key('settings.group.inbox')));
@@ -152,7 +163,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester.widget<NavigationBar>(find.byType(NavigationBar)).destinations,
-        hasLength(4),
+        hasLength(3),
       );
       expect(_router(tester).routeInformationProvider.value.uri.path, '/home');
       expect(tester.takeException(), isNull);
@@ -320,31 +331,62 @@ void main() {
       });
       final draft = MemoryPortfolioDraftRepository();
       await draft.save(
-        PortfolioContent(profile: const PortfolioProfile(name: 'Owner')),
+        PortfolioContent(
+          mainPortfolioId: 'main',
+          documents: [
+            PortfolioDocument(
+              id: 'main',
+              title: 'Основное портфолио',
+              kind: PortfolioDocumentKind.portfolio,
+              createdAt: DateTime.utc(2026, 10, 11),
+              updatedAt: DateTime.utc(2026, 10, 11),
+              content: PortfolioContent(
+                profile: const PortfolioProfile(name: 'Owner'),
+              ),
+            ),
+          ],
+        ),
         expectedRevision: 0,
         notes: 'private notes',
       );
       await _open(
         tester,
         auth,
-        location: '/portfolio/builder/profile',
+        location: '/editor',
         inboxes: {'a': TestInbox('a')},
         notifications: controller,
         draft: draft,
       );
-      final input = find.byKey(const ValueKey('builder_form_name'));
+      final input = find.descendant(
+        of: find.byKey(const ValueKey('main.editor.name')),
+        matching: find.byType(TextFormField),
+      );
+      await tester.ensureVisible(input);
       await tester.enterText(input, 'Unsaved author');
       messaging.opens.add(pushMessage('b'));
       await tester.pumpAndSettle();
-      expect(find.byType(PortfolioProfileEditorScreen), findsOneWidget);
+      expect(find.byType(MainPortfolioEditorScreen), findsOneWidget);
+      expect(
+        mainPortfolioDocument((await draft.read())!.content!)!
+            .content
+            .profile
+            .name,
+        'Owner',
+      );
       messaging.opens.add(pushMessage('a'));
       await tester.pumpAndSettle();
       expect(find.byType(InboxRequestScreen), findsOneWidget);
       expect(controller.state.pendingRequestId, isNull);
       _router(tester).pop();
       await tester.pumpAndSettle();
-      expect(find.byType(PortfolioProfileEditorScreen), findsOneWidget);
+      expect(find.byType(MainPortfolioEditorScreen), findsOneWidget);
       expect(find.text('Unsaved author'), findsOneWidget);
+      expect(
+        mainPortfolioDocument(
+          _scope(tester).read(portfolioDraftControllerProvider).content!,
+        )!.content.profile.name,
+        'Unsaved author',
+      );
       auth.emit(null);
       await tester.pumpAndSettle();
       messaging.opens.add(pushMessage('a'));

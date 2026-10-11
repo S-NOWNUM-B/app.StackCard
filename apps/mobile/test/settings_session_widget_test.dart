@@ -302,7 +302,7 @@ void main() {
       await _openSettings(tester, _SessionAuth(fixture.user));
       final account = tester.getRect(find.byType(AccountCard));
       final lastSetting = tester.getRect(
-        find.byKey(const Key('settings.group.notifications')),
+        find.byKey(const Key('settings.group.about')),
       );
       expect(account.top, greaterThanOrEqualTo(0));
       expect(lastSetting.bottom, lessThan(account.top));
@@ -451,7 +451,7 @@ void main() {
             await _openSettings(tester, _SessionAuth(fixture.user));
             final account = tester.getRect(find.byType(AccountCard));
             final lastSetting = tester.getRect(
-              find.byKey(const Key('settings.group.notifications')),
+              find.byKey(const Key('settings.group.about')),
             );
             expect(account.top, greaterThanOrEqualTo(0));
             expect(lastSetting.bottom, lessThan(account.top));
@@ -493,14 +493,16 @@ void main() {
     _setViewport(tester, 390, 1);
     await _openSettings(tester, _SessionAuth(const AuthUser(uid: 'owner')));
     final heights = <double>[];
+    for (final removed in ['profile', 'contacts', 'privacy']) {
+      expect(find.byKey(Key('settings.group.$removed')), findsNothing);
+    }
     for (final group in [
-      'profile',
-      'contacts',
       'account',
-      'privacy',
+      'github',
       'appearance',
       'inbox',
       'notifications',
+      'about',
     ]) {
       final row = find.byKey(Key('settings.group.$group'));
       await tester.ensureVisible(row);

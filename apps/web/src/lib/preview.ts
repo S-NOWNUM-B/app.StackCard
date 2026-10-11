@@ -8,6 +8,7 @@ export function documentPreview(
   const content = resolveDocument(workspace, document);
   const visible = (kind: string) => content.blocks.some((b) => b.kind === kind && b.visible);
   const profile = content.profile;
+  const modern = workspace.mainPortfolioId === document.id;
   return {
     profile: {
       name: visible('profile') ? profile.name : '',
@@ -15,7 +16,8 @@ export function documentPreview(
       headline: visible('profile') ? profile.headline : '',
       bio: visible('about') ? profile.bio : '',
       locationText:
-        visible('location') && workspace.profile.publishLocation && profile.publishLocation
+        visible('location') &&
+        (modern || (workspace.profile.publishLocation && profile.publishLocation))
           ? profile.locationText
           : '',
       avatarUrl: visible('profile') ? profile.avatarUrl : '',
@@ -23,7 +25,10 @@ export function documentPreview(
     skills: visible('skills') ? clone(content.skills) : [],
     projects: visible('featuredProjects')
       ? content.projects
-          .filter((p) => p.visible && workspace.projects.find((base) => base.id === p.id)?.visible)
+          .filter(
+            (p) =>
+              p.visible && (modern || workspace.projects.find((base) => base.id === p.id)?.visible),
+          )
           .map((p) => ({
             id: p.id,
             title: p.title,
@@ -35,6 +40,7 @@ export function documentPreview(
             featured: p.featured,
             visible: true,
             imageUrls: [],
+            iconId: p.iconId ?? 'folder',
           }))
       : [],
     experience: visible('experience') ? clone(content.experience) : [],
@@ -44,12 +50,12 @@ export function documentPreview(
         (l) =>
           l.visible &&
           l.publishAllowed &&
-          workspace.links.find((c) => c.id === l.id && c.visible)?.publishAllowed &&
+          (modern || workspace.links.find((c) => c.id === l.id && c.visible)?.publishAllowed) &&
           visible(l.kind === 'github' ? 'github' : 'links'),
       )
       .map(({ id, label, url, kind }) => ({ id, label, url, kind })),
     blocks: content.blocks.filter((b) => b.visible).map((b) => ({ kind: b.kind, visible: true })),
-    resumeText: visible('resume') ? content.resumeText : '',
+    resumeText: modern ? '' : visible('resume') ? content.resumeText : '',
     theme: content.theme,
   };
 }

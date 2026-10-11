@@ -25,9 +25,8 @@ service cloud.firestore {
           ? ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl',
             'avatarPath']
           : ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl'])
-        && profile.name is string && profile.username is string
-        && profile.headline is string && profile.bio is string
-        && profile.locationText is string && profile.avatarUrl is string
+        && (profile.name + profile.username + profile.headline + profile.bio
+          + profile.locationText + profile.avatarUrl) is string
         && (version < 3 || validMediaPath(profile.get('avatarPath', ''), uid))
         && (version < 6 || profile.get('publishLocation', false) is bool);
     }
@@ -49,10 +48,14 @@ service cloud.firestore {
         ]);
     }
 
-    function validPrivateContent(content, version, uid) {
+    function validPrivateContent(content, version, uid, deleted) {
       return version == 1 ? validPublicContent(content)
         : validContentFields(content, uid, version)
-          && content.keys().hasOnly(version >= 4 ? [
+          && content.keys().hasOnly(version >= 7 ? [
+            'profile', 'skills', 'projects', 'experience', 'education', 'links',
+            'blocks', 'resumeText', 'theme', 'ignoredGitHubRepositories', 'documents',
+            'mainPortfolioId', 'githubUsername', 'personalization', 'legacyMainSnapshot'
+          ] : version >= 4 ? [
             'profile', 'skills', 'projects', 'experience', 'education', 'links',
             'blocks', 'resumeText', 'theme', 'ignoredGitHubRepositories', 'documents'
           ] : [
@@ -60,17 +63,43 @@ service cloud.firestore {
             'blocks', 'resumeText', 'theme', 'ignoredGitHubRepositories'
           ])
           && content.get('ignoredGitHubRepositories', []) is list
-          && (version < 4 || validReviewedDocuments(content.get('documents', []), uid));
+          && (version < 4 || validDocumentPrivacy(content.get('documents', []), uid, version, content.get('mainPortfolioId', null), content.get('legacyMainSnapshot', null), deleted))
+          && (version < 7 || validMainMetadata(content));
     }
 
-    function validReviewedDocuments(documents, uid) {
-      // Padding убирает 20 условных ветвей и сохраняет бюджет Rules <= 1000.
-      // Фиксированные 40 разделителей отклоняют null, non-string и injected ';'.
-      let empty = {'id': null, 'content': {'profile': {'avatarPath': ''}}};
-      let padded = documents.concat([empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty]);
+    function validMainMetadata(content) {
+      let mainId = content.get('mainPortfolioId', null);
+      let github = content.get('githubUsername', '');
+      let progress = content.get('personalization', {'status': 'notRequired', 'step': 0});
+      return (mainId == null || mainId.matches('^[^/]{1,200}$'))
+        && github.size() <= 39
+        && (github == '' || github.matches('^[a-z0-9]+(-[a-z0-9]+)*$'))
+        && progress.keys().hasOnly(['status', 'step'])
+        && progress.status in ['notRequired', 'inProgress', 'completed']
+        && progress.step is int && progress.step >= 0 && progress.step <= 3
+        && content.get('legacyMainSnapshot', {}) is map;
+    }
+
+    function validDocumentPrivacy(documents, uid, version, mainId, legacySnapshot, deleted) {
+      // Для пустого списка нет indexed paths/tombstones: остаётся только архив.
+      return documents is list && (documents.size() == 0
+        ? mainId == null && (legacySnapshot == null
+          || (validMediaPath(legacySnapshot.content.profile.avatarPath, uid)
+            && (!legacySnapshot.keys().hasAny(['baseSnapshot'])
+              || validMediaPath(legacySnapshot.baseSnapshot.profile.avatarPath, uid))))
+        : validReviewedDocuments(documents, uid, version, mainId, legacySnapshot, deleted));
+    }
+
+    function validReviewedDocuments(documents, uid, version, mainId, legacySnapshot, deleted) {
+      // Padding использует ссылки первого record;
+      // все исходные records остаются среди первых21 и не меняются.
+      // Фиксированные 44 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let empty = documents[0];
+      let padded = documents.size() == 21 ? documents : documents.concat([empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty]);
+      let archive = legacySnapshot == null ? empty : legacySnapshot;
       let escapedUid = uid.replace('\\\\E', '\\\\E\\\\\\\\E\\\\Q');
       let media = 'accounts/\\Q' + escapedUid + '\\E/media/[0-9a-f]{32}[.]jpg';
-      let deleted = exists(accountPath(uid)) ? get(accountPath(uid)).data.get('deletedDocumentIds', []) : [];
       let ids = [padded[0].id,
         padded[1].id,
         padded[2].id,
@@ -90,30 +119,57 @@ service cloud.firestore {
         padded[16].id,
         padded[17].id,
         padded[18].id,
-        padded[19].id];
-      let paths = [padded[0].content.profile.avatarPath, padded[0].get('baseSnapshot', padded[0].content).profile.avatarPath,
-        padded[1].content.profile.avatarPath, padded[1].get('baseSnapshot', padded[1].content).profile.avatarPath,
-        padded[2].content.profile.avatarPath, padded[2].get('baseSnapshot', padded[2].content).profile.avatarPath,
-        padded[3].content.profile.avatarPath, padded[3].get('baseSnapshot', padded[3].content).profile.avatarPath,
-        padded[4].content.profile.avatarPath, padded[4].get('baseSnapshot', padded[4].content).profile.avatarPath,
-        padded[5].content.profile.avatarPath, padded[5].get('baseSnapshot', padded[5].content).profile.avatarPath,
-        padded[6].content.profile.avatarPath, padded[6].get('baseSnapshot', padded[6].content).profile.avatarPath,
-        padded[7].content.profile.avatarPath, padded[7].get('baseSnapshot', padded[7].content).profile.avatarPath,
-        padded[8].content.profile.avatarPath, padded[8].get('baseSnapshot', padded[8].content).profile.avatarPath,
-        padded[9].content.profile.avatarPath, padded[9].get('baseSnapshot', padded[9].content).profile.avatarPath,
-        padded[10].content.profile.avatarPath, padded[10].get('baseSnapshot', padded[10].content).profile.avatarPath,
-        padded[11].content.profile.avatarPath, padded[11].get('baseSnapshot', padded[11].content).profile.avatarPath,
-        padded[12].content.profile.avatarPath, padded[12].get('baseSnapshot', padded[12].content).profile.avatarPath,
-        padded[13].content.profile.avatarPath, padded[13].get('baseSnapshot', padded[13].content).profile.avatarPath,
-        padded[14].content.profile.avatarPath, padded[14].get('baseSnapshot', padded[14].content).profile.avatarPath,
-        padded[15].content.profile.avatarPath, padded[15].get('baseSnapshot', padded[15].content).profile.avatarPath,
-        padded[16].content.profile.avatarPath, padded[16].get('baseSnapshot', padded[16].content).profile.avatarPath,
-        padded[17].content.profile.avatarPath, padded[17].get('baseSnapshot', padded[17].content).profile.avatarPath,
-        padded[18].content.profile.avatarPath, padded[18].get('baseSnapshot', padded[18].content).profile.avatarPath,
-        padded[19].content.profile.avatarPath, padded[19].get('baseSnapshot', padded[19].content).profile.avatarPath,
+        padded[19].id,
+        padded[20].id];
+      let paths = [padded[0].content.profile.avatarPath, padded[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[1].content.profile.avatarPath, padded[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[2].content.profile.avatarPath, padded[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[3].content.profile.avatarPath, padded[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[4].content.profile.avatarPath, padded[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[5].content.profile.avatarPath, padded[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[6].content.profile.avatarPath, padded[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[7].content.profile.avatarPath, padded[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[8].content.profile.avatarPath, padded[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[9].content.profile.avatarPath, padded[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[10].content.profile.avatarPath, padded[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[11].content.profile.avatarPath, padded[11].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[12].content.profile.avatarPath, padded[12].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[13].content.profile.avatarPath, padded[13].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[14].content.profile.avatarPath, padded[14].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[15].content.profile.avatarPath, padded[15].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[16].content.profile.avatarPath, padded[16].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[17].content.profile.avatarPath, padded[17].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[18].content.profile.avatarPath, padded[18].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[19].content.profile.avatarPath, padded[19].get('baseSnapshot', emptyContent).profile.avatarPath,
+        padded[20].content.profile.avatarPath, padded[20].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
         ''].join(';');
-      return documents is list && documents.size() <= 20 && !ids.hasAny(deleted)
-        && paths.matches('^((' + media + ')?;){40}$');
+      return documents is list && documents.size() <= (version >= 7 ? 21 : 20) && !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){44}$');
+    }
+
+    function validDraftWrite(uid) {
+      let draft = request.resource.data;
+      let account = exists(accountPath(uid)) ? get(accountPath(uid)).data : {};
+      // Обязательные 7 полей ниже читаются и проверяются по типу; extra запрещены.
+      return account.get('lifecycleState', 'active') == 'active'
+        && draft.keys().hasOnly([
+          'schemaVersion', 'ownerUid', 'mutationId', 'localRevision',
+          'notes', 'content', 'updatedAt'
+          ])
+        && draft.schemaVersion is int
+        && draft.schemaVersion in [1, 2, 3, 4, 5, 6, 7]
+        && draft.ownerUid == uid
+        && draft.mutationId is string
+        && draft.mutationId.size() > 0
+        && draft.localRevision is int
+        && draft.localRevision >= 1
+        && draft.notes is string
+        && (draft.content == null
+          || validPrivateContent(draft.content,
+            draft.schemaVersion, uid, account.get('deletedDocumentIds', [])))
+        && draft.updatedAt == request.time;
     }
 
     function activeAccount(uid) {
@@ -151,29 +207,27 @@ service cloud.firestore {
           && activeAccount(uid) && legacyAccount(uid);
         allow list: if false;
         allow create, update: if draftId == 'current' && owner(uid)
-          && activeAccount(uid)
           && (!exists(/databases/$(database)/documents/accounts/$(uid)/drafts/$(draftId))
             || (resource.data.schemaVersion is int
-              && resource.data.schemaVersion in [1, 2, 3, 4, 5, 6]
+              && resource.data.schemaVersion in [1, 2, 3, 4, 5, 6, 7]
               && resource.data.ownerUid == uid
               && resource.data.schemaVersion <= request.resource.data.schemaVersion))
-          // Обязательные 7 полей ниже читаются и проверяются по типу; extra запрещены.
-          && request.resource.data.keys().hasOnly([
-            'schemaVersion', 'ownerUid', 'mutationId', 'localRevision',
-            'notes', 'content', 'updatedAt'
-          ])
-          && request.resource.data.schemaVersion is int
-          && request.resource.data.schemaVersion in [1, 2, 3, 4, 5, 6]
-          && request.resource.data.ownerUid == uid
-          && request.resource.data.mutationId is string
-          && request.resource.data.mutationId.size() > 0
-          && request.resource.data.localRevision is int
-          && request.resource.data.localRevision >= 1
-          && request.resource.data.notes is string
-          && (request.resource.data.content == null
-            || validPrivateContent(request.resource.data.content,
-              request.resource.data.schemaVersion, uid))
-          && request.resource.data.updatedAt == request.time;
+          && validDraftWrite(uid);
+      }
+
+      match /media/{mediaId} {
+        // Spark avatar store; ID immutable, никогда не публикуется чтением владельца.
+        allow get, delete: if owner(uid) && activeAccount(uid)
+          && mediaId.matches('^[0-9a-f]{32}[.]jpg$');
+        allow list, update: if false;
+        allow create: if owner(uid) && activeAccount(uid)
+          && mediaId.matches('^[0-9a-f]{32}[.]jpg$')
+          && request.resource.data.keys().hasOnly(['schemaVersion', 'contentType', 'base64'])
+          && request.resource.data.schemaVersion == 1
+          && request.resource.data.contentType == 'image/jpeg'
+          && request.resource.data.base64 is string
+          && request.resource.data.base64.size() > 0 && request.resource.data.base64.size() <= 349528
+          && request.resource.data.base64.matches('^/9j/[A-Za-z0-9+/]*={0,2}$');
       }
 
       match /publications/{documentId} {

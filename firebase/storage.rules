@@ -17,10 +17,8 @@ service firebase.storage {
     match /accounts/{uid}/media/{imageId} {
       allow get: if owner(uid) && validImageName(imageId) && activeAccount(uid);
       allow delete: if owner(uid) && validImageName(imageId) && activeAccount(uid);
-      allow create: if owner(uid) && validImageName(imageId) && activeAccount(uid) && resource == null
-        && request.resource.size > 0
-        && request.resource.size <= 2 * 1024 * 1024
-        && request.resource.contentType == 'image/jpeg';
+      // Все новые фото используют Firestore. Старые bytes сохраняются для чтения.
+      allow create: if false;
       // Замена получает новый путь; metadata и содержимое существующего файла неизменяемы.
       allow list, update: if false;
     }

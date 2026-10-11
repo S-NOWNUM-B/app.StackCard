@@ -36,8 +36,7 @@ void main() {
         for (final route in [
           'sign-in',
           'home',
-          'resumes',
-          'portfolio',
+          'editor',
           'projects',
           'settings',
         ]) {
@@ -95,7 +94,7 @@ void _checkNavigationLabels(WidgetTester tester) {
   final navigation = find.byType(NavigationBar);
   if (navigation.evaluate().isEmpty) return;
   final labels = find.descendant(of: navigation, matching: find.byType(Text));
-  expect(labels, findsNWidgets(4));
+  expect(labels, findsNWidgets(3));
   for (final label in labels.evaluate()) {
     final paragraph = tester.renderObject<RenderParagraph>(
       find.byWidget(label.widget),
@@ -137,4 +136,4 @@ Finder _verticalScroll() => find
       (widget) =>
           widget is Scrollable && widget.axisDirection == AxisDirection.down,
     )
-    .last;
+    .first;

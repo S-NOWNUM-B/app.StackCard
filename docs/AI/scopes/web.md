@@ -2,7 +2,11 @@
 
 Читайте [общие правила](../AGENTS.md), [router](../README.md),
 [архитектуру](../../architecture/architecture.md) и [Web README](../../../apps/web/README.md).
-Последнее поручение пользователя разрешает web и явную публикацию; deploy отдельный.
+Последнее поручение — [ADR 0005](../../decisions/0005-single-main-portfolio.md):
+один main portfolio, Home/Projects/Editor, cloud7 и public2, optional onboarding,
+Firestore avatar, catalog icons и настоящий PDF. Home использует saved basis,
+scoped Library imports/deletes не записывают unsaved Editor. Legacy documents
+архивируются без удаления/автопубликации. Deploy отдельный.
 
 - Runtime — `apps/web/src/app`, shared controls — `src/components/ui.tsx`, tokens —
   `src/app/globals.css`. Поручение 2026-10-11 заменяет web target R6 светлой
@@ -16,7 +20,7 @@
   не меняет сохранённую тему, новые документы получают light. Web одобрен
   пользователем; последующее поручение переносит white-only/ru дизайн в Flutter.
 - `src/lib/model.ts` реализует тот же JSON aggregate mobile PortfolioContent:
-  root base/Projects Library, independent document snapshots и attachments.
+  root Projects Library, mainPortfolioId, GitHub identity/onboarding и legacy backup.
   Версии и команды берутся из `apps/web/package.json`, env — из `.env.example`.
 - `src/lib/firebase.ts` и `draft-repository.ts` — UID-bound client SDK. Web
   online-first: server read, CAS transaction по captured basis, ошибки сохраняют
@@ -25,10 +29,15 @@
   Save фиксирует basis/content/notes/mutation ID до transaction; unknown retry
   сначала подтверждает ту же операцию. Новые правки во время Save/после ошибки
   остаются в buffer и требуют отдельного Save; ACK не заменяет поздний ввод.
-  Document base review захватывает UID, сохранённую basis base, saved document и
+  Совместимый legacy document base review захватывает UID, сохранённую basis base, saved document и
   buffer. Apply проверяет их неизменность, фото URL/path переносит одной парой;
   dialog показывает captured строки и блокирует фоновые Save/Cancel/exit.
   Поздний media ACK сохраняет ввод, но делает прежний review устаревшим.
+- [Media repository](../../../apps/web/src/lib/portfolio-media-repository.ts) хранит
+  новый avatar в owner-only Firestore. PDF читает private path первым; legacy URL
+  без path загружается только браузером с CORS, bounded stream≤2MiB/10s, без
+  credentials/redirects/local hosts и с MIME/dimensions/JPEG512 preprocessing.
+  Не добавлять server proxy и не скрывать ошибку private path URL fallback.
 - `src/lib/publication.ts` вызывает trusted Node HTTP API с ID token;
   operation ID, inventory version/generation и saved mutation защищают retry/races.
   UID-scoped metadata receipts сохраняются в `localStorage` с readback и защитой

@@ -118,7 +118,7 @@ Map<String, dynamic> encodeCloudPortfolioDraft(CloudPortfolioDraft draft) {
   }
   _validateMediaOwner(draft.content, draft.ownerUid);
   return {
-    'schemaVersion': 6,
+    'schemaVersion': 7,
     'ownerUid': draft.ownerUid,
     'mutationId': draft.mutationId,
     'localRevision': draft.localRevision,
@@ -156,7 +156,8 @@ CloudPortfolioDraft decodeCloudPortfolioDraft(
           schemaVersion != 3 &&
           schemaVersion != 4 &&
           schemaVersion != 5 &&
-          schemaVersion != 6) ||
+          schemaVersion != 6 &&
+          schemaVersion != 7) ||
       ownerUid.isEmpty ||
       ownerUid.contains('/') ||
       data['ownerUid'] != ownerUid ||
@@ -179,6 +180,7 @@ CloudPortfolioDraft decodeCloudPortfolioDraft(
             allowDocuments: schemaVersion >= 4,
             allowBaseSnapshot: schemaVersion >= 5,
             allowPresentationPrivacy: schemaVersion >= 6,
+            allowMainPortfolio: schemaVersion >= 7,
           );
     _validateMediaOwner(content, ownerUid);
     return CloudPortfolioDraft(
@@ -198,7 +200,13 @@ void _validateMediaOwner(PortfolioContent? content, String ownerUid) {
   if (content == null) return;
   final prefix = 'accounts/$ownerUid/media/';
   final avatarPath = content.profile.avatarPath;
+  final archive = content.legacyMainSnapshot;
+  final archivedAvatarPath = archive?.content.profile.avatarPath ?? '';
+  final archivedBasePath = archive?.baseSnapshot?.profile.avatarPath ?? '';
   if ((avatarPath.isNotEmpty && !avatarPath.startsWith(prefix)) ||
+      (archivedAvatarPath.isNotEmpty &&
+          !archivedAvatarPath.startsWith(prefix)) ||
+      (archivedBasePath.isNotEmpty && !archivedBasePath.startsWith(prefix)) ||
       content.projects.any(
         (project) => project.imagePaths.any((path) => !path.startsWith(prefix)),
       ) ||

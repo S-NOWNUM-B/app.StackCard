@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'web edits survive mobile cloud6 decode, scoped edit and web readback',
+    'web edits survive mobile cloud7 decode, scoped edit and web readback',
     () async {
       final directory = await Directory.systemTemp.createTemp(
         'stackcard-web-contract-',
@@ -82,7 +82,7 @@ void main() {
       unchanged['updatedAt'] = timestamp.toIso8601String();
       expect(unchanged, raw);
 
-      // Затем mobile меняет только роль одного документа и отдаёт новый cloud6 в web.
+      // Затем mobile меняет только роль одного документа и отдаёт новый cloud7 в web.
       final edited = workspace.copyWith(
         documents: [
           frontend.copyWith(

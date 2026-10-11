@@ -10,7 +10,7 @@ import {
   publicDocumentMetadata,
   readPublicDocument,
   PublicDocumentUnavailable,
-  safePublicMedia,
+  safePublicSocialMedia,
 } from '@/lib/public-document';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +31,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       };
     const metadata = publicDocumentMetadata(document);
     const image = document.content.blocks.some((block) => block.kind === 'profile' && block.visible)
-      ? safePublicMedia(document.content.profile.avatarUrl, document.publicId, document.version)
+      ? safePublicSocialMedia(
+          document.content.profile.avatarUrl,
+          document.publicId,
+          document.version,
+        )
       : null;
     let canonical: string | undefined;
     try {
@@ -97,7 +101,7 @@ export default async function PublicDocumentPage({ params }: Props) {
   }
   if (!document) notFound();
   let attachedResumeUrl: string | undefined;
-  if (document.attachedResumePublicId) {
+  if (document.schemaVersion === 1 && document.attachedResumePublicId) {
     try {
       const resume = await readDocument(document.attachedResumePublicId);
       if (resume?.kind === 'resume') attachedResumeUrl = `/d/${resume.publicId}`;

@@ -49,7 +49,19 @@ beforeEach(async () => {
       for (const child of prefixes) await clearPrefix(child);
     }
     await clearPrefix(context.storage().ref());
+    await setDoc(doc(context.firestore(), 'accounts/alice/drafts/current'), { schemaVersion: 6 });
   });
+});
+
+test('modern schema7 and absent drafts cannot create Storage images while legacy reads remain', async () => {
+  const alice = storage();
+  await seedPrivateImage();
+  await environment.withSecurityRulesDisabled((context) => setDoc(doc(context.firestore(), 'accounts/alice/drafts/current'), { schemaVersion: 7 }));
+  await assertFails(upload(alice, `accounts/alice/media/${'3'.repeat(32)}.jpg`));
+  await assertSucceeds(getBytes(ref(alice, path)));
+  await environment.withSecurityRulesDisabled((context) => deleteDoc(doc(context.firestore(), 'accounts/alice/drafts/current')));
+  await assertFails(upload(alice, `accounts/alice/media/${'3'.repeat(32)}.jpg`));
+  await assertSucceeds(getBytes(ref(alice, path)));
 });
 after(async () => environment?.cleanup());
 
@@ -61,6 +73,10 @@ function storage(uid = 'alice') {
 
 function upload(client, objectPath = path, bytes = jpeg, metadata = jpegMetadata) {
   return uploadBytes(ref(client, objectPath), bytes, metadata);
+}
+
+async function seedPrivateImage(objectPath = path, bytes = jpeg) {
+  await environment.withSecurityRulesDisabled((context) => upload(context.storage(), objectPath, bytes));
 }
 
 test('public media requires the exact current publication version and closes on withdrawal', async () => {
@@ -91,7 +107,7 @@ test('public media requires the exact current publication version and closes on 
 
 test('account deletion lock denies all owner private media writes', async () => {
   const alice = storage();
-  await upload(alice);
+  await seedPrivateImage();
   for (const lifecycleState of ['deleting', 'deleted']) {
     await environment.withSecurityRulesDisabled(async (context) => {
       await setDoc(doc(context.firestore(), 'accounts/alice'), { ownerUid: 'alice', lifecycleState, lifecycleGeneration: 2 });
@@ -102,9 +118,10 @@ test('account deletion lock denies all owner private media writes', async () => 
   }
 });
 
-test('owner creates, reads bytes and metadata, and deletes a private JPEG', async () => {
+test('owner reads and deletes preserved private JPEG but all new Storage uploads are closed', async () => {
   const alice = storage();
-  await assertSucceeds(upload(alice));
+  await assertFails(upload(alice));
+  await seedPrivateImage();
   const object = ref(alice, path);
   const bytes = await assertSucceeds(getBytes(object));
   assert.deepEqual(new Uint8Array(bytes), jpeg);
@@ -115,7 +132,7 @@ test('owner creates, reads bytes and metadata, and deletes a private JPEG', asyn
 });
 
 test('foreign UID and anonymous clients cannot create, read or delete private files', async () => {
-  await upload(storage());
+  await seedPrivateImage();
   for (const uid of ['bob', null]) {
     const client = storage(uid);
     const object = ref(client, path);
@@ -127,7 +144,7 @@ test('foreign UID and anonymous clients cannot create, read or delete private fi
 });
 
 test('private enumeration is denied even to the owner', async () => {
-  await upload(storage());
+  await seedPrivateImage();
   for (const uid of ['alice', 'bob', null]) {
     const client = storage(uid);
     for (const prefix of ['', 'accounts', 'accounts/alice', 'accounts/alice/media']) {
@@ -138,7 +155,7 @@ test('private enumeration is denied even to the owner', async () => {
 
 test('existing files cannot be overwritten or have metadata changed', async () => {
   const alice = storage();
-  await upload(alice);
+  await seedPrivateImage();
   await assertFails(upload(alice, path, new Uint8Array([1, 2, 3])));
   await assertFails(updateMetadata(ref(alice, path), { contentType: 'image/png' }));
   await assertFails(updateMetadata(ref(alice, path), {
@@ -147,16 +164,17 @@ test('existing files cannot be overwritten or have metadata changed', async () =
   assert.deepEqual(new Uint8Array(await getBytes(ref(alice, path))), jpeg);
 });
 
-test('replacement creates a distinct immutable file and owner may delete the old one', async () => {
+test('owner may read and delete existing files but cannot create replacements', async () => {
   const alice = storage();
-  await upload(alice);
+  await seedPrivateImage();
   const replacement = `accounts/alice/media/${'2'.repeat(32)}.jpg`;
-  await assertSucceeds(upload(alice, replacement));
+  await assertFails(upload(alice, replacement));
+  await seedPrivateImage(replacement);
   await assertSucceeds(deleteObject(ref(alice, path)));
   await assertSucceeds(getBytes(ref(alice, replacement)));
 });
 
-test('only non-empty JPEG uploads at or below 2 MiB are accepted', async () => {
+test('every Storage upload is denied including JPEG before and after avatar cutover', async () => {
   const alice = storage();
   for (const contentType of ['image/png', 'image/webp', 'image/gif', 'application/pdf', 'application/octet-stream']) {
     await assertFails(upload(alice, path, jpeg, { contentType }));
@@ -164,7 +182,7 @@ test('only non-empty JPEG uploads at or below 2 MiB are accepted', async () => {
   await assertFails(upload(alice, path, jpeg, {}));
   await assertFails(upload(alice, path, new Uint8Array()));
   await assertFails(upload(alice, path, new Uint8Array(2 * 1024 * 1024 + 1)));
-  await assertSucceeds(upload(alice, path, new Uint8Array(2 * 1024 * 1024)));
+  await assertFails(upload(alice, path, new Uint8Array(2 * 1024 * 1024)));
 });
 
 test('private object names require exactly 32 lowercase hex characters and jpg extension', async () => {

@@ -232,6 +232,11 @@ class _RoutedStackCardAppState
     final configured = ref.read(accountAuthRepositoryProvider) != null;
     final session = ref.read(accountSessionProvider);
     final guest = ref.read(guestAccessProvider);
+    final authBusy = ref.read(accountAuthControllerProvider).isLoading;
+    final pendingPersonalizationUid = ref.read(
+      pendingPersonalizationUidProvider,
+    );
+    final saved = ref.read(portfolioDraftControllerProvider).draft?.content;
     final user = !session.hasError && !session.isLoading ? session.value : null;
     _identity = !configured
         ? 'local'
@@ -249,6 +254,12 @@ class _RoutedStackCardAppState
       restoring: session.isLoading || session.hasError,
       authenticated: user != null,
       guest: guest,
+      authBusy: authBusy,
+      personalizationRequired:
+          user != null &&
+          (pendingPersonalizationUid == user.uid ||
+              saved?.personalization.status ==
+                  PortfolioPersonalizationStatus.inProgress),
       pendingAccountDeletion:
           ref.read(accountPendingDeletionOwnerProvider) != null,
     );
@@ -289,6 +300,9 @@ class _RoutedStackCardAppState
   Widget build(BuildContext context) {
     ref.listen(accountSessionProvider, (_, _) => _sessionChanged());
     ref.listen(guestAccessProvider, (_, _) => _sessionChanged());
+    ref.listen(accountAuthControllerProvider, (_, _) => _updateAccess());
+    ref.listen(pendingPersonalizationUidProvider, (_, _) => _updateAccess());
+    ref.listen(portfolioDraftControllerProvider, (_, _) => _updateAccess());
     ref.listen(
       accountPendingDeletionOwnerProvider,
       (_, _) => _sessionChanged(),

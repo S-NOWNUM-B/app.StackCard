@@ -1,4 +1,4 @@
-// Совместимый aggregate мобильного PortfolioContent. Private cloud writer — schema 6.
+// Совместимый aggregate мобильного PortfolioContent. Private cloud writer — schema 7.
 export const blockKinds = [
   'profile',
   'about',
@@ -67,7 +67,27 @@ export type GitHubSource = {
   archived: boolean;
   updatedAt: string;
 };
+export const projectIconIds = [
+  'folder',
+  'file-text',
+  'panels-top-left',
+  'home',
+  'image',
+  'camera',
+  'user-round',
+] as const;
+export type ProjectIconId = (typeof projectIconIds)[number];
+export const projectIconLabels: Record<ProjectIconId, string> = {
+  folder: 'Папка',
+  'file-text': 'Документ',
+  'panels-top-left': 'Приложение',
+  home: 'Дом',
+  image: 'Изображение',
+  camera: 'Камера',
+  'user-round': 'Пользователь',
+};
 export type Project = {
+  iconId?: ProjectIconId;
   id: string;
   title: string;
   description: string;
@@ -121,6 +141,10 @@ export type PortfolioDocument = {
 };
 export type WorkspaceContent = DocumentContent & {
   documents: PortfolioDocument[];
+  mainPortfolioId: string | null;
+  githubUsername: string;
+  personalization: { status: 'notRequired' | 'inProgress' | 'completed'; step: number };
+  legacyMainSnapshot?: PortfolioDocument;
 };
 export type DraftEnvelope = {
   schemaVersion: number;
@@ -138,7 +162,24 @@ export class ContractError extends Error {
 }
 export const clone = <T>(value: T): T => structuredClone(value);
 export const uid = () => crypto.randomUUID().replaceAll('-', '');
-export const equal = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+export function equal(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a == null || b == null || typeof a !== 'object' || typeof b !== 'object') return false;
+  if (Array.isArray(a) || Array.isArray(b))
+    return (
+      Array.isArray(a) &&
+      Array.isArray(b) &&
+      a.length === b.length &&
+      a.every((v, i) => equal(v, b[i]))
+    );
+  const left = a as Record<string, unknown>,
+    right = b as Record<string, unknown>,
+    fields = Object.keys(left);
+  return (
+    fields.length === Object.keys(right).length &&
+    fields.every((field) => Object.hasOwn(right, field) && equal(left[field], right[field]))
+  );
+}
 export function emptyContent(): WorkspaceContent {
   return {
     profile: {
@@ -161,6 +202,9 @@ export function emptyContent(): WorkspaceContent {
     theme: 'light',
     ignoredGitHubRepositories: [],
     documents: [],
+    mainPortfolioId: null,
+    githubUsername: '',
+    personalization: { status: 'notRequired', step: 0 },
   };
 }
 export function baseData(content: BaseData): BaseData {
@@ -173,7 +217,14 @@ export function baseData(content: BaseData): BaseData {
   });
 }
 export function seedDocument(content: WorkspaceContent): DocumentContent {
-  const { documents: _, ...rest } = clone(content);
+  const {
+    documents: _,
+    mainPortfolioId: _main,
+    githubUsername: _github,
+    personalization: _personalization,
+    legacyMainSnapshot: _legacy,
+    ...rest
+  } = clone(content);
   return { ...rest, projects: [], ignoredGitHubRepositories: [] };
 }
 export function createDocument(
@@ -266,7 +317,7 @@ export function withProjectEdits(project: Project, patch: Partial<Project>): Pro
 export function safeReturnPath(path: string | null): string {
   return path &&
     path === path.trim() &&
-    /^\/workspace(?:\/[A-Za-z0-9_-]+)*(?:\?[A-Za-z0-9_=&%-]*)?(?:#(?:home|base|resumes|projects|portfolios|settings|inbox(?:\/[a-f0-9]{32})?|document\/[A-Za-z0-9_-]+))?$/.test(
+    /^\/workspace(?:\/[A-Za-z0-9_-]+)*(?:\?[A-Za-z0-9_=&%-]*)?(?:#(?:home|editor|github-import|base|resumes|projects|portfolios|settings|inbox(?:\/[a-f0-9]{32})?|project\/[A-Za-z0-9_-]+|document\/[A-Za-z0-9_-]+))?$/.test(
       path,
     )
     ? path
@@ -468,6 +519,7 @@ function decodeProject(raw: unknown, version: number, owner: string): Project {
     'githubMetadata',
     ...(version >= 3 ? ['imagePaths'] : []),
     ...(version >= 6 ? ['contribution'] : []),
+    ...(version >= 7 ? ['iconId'] : []),
   ]);
   const repositoryUrl = str(p.repositoryUrl, 2048),
     liveUrl = str(p.liveUrl, 2048);
@@ -542,6 +594,7 @@ function decodeProject(raw: unknown, version: number, owner: string): Project {
     featured: bool(p.featured),
     visible: bool(p.visible),
     imagePaths,
+    iconId: decodeIconId(p.iconId),
     ...(p.updatedAt == null ? {} : { updatedAt: date(p.updatedAt) }),
     source: source as Project['source'],
     githubMetadata,
@@ -566,6 +619,9 @@ function decodeContent(
     'theme',
     'ignoredGitHubRepositories',
     ...(documents && version >= 4 ? ['documents'] : []),
+    ...(documents && version >= 7
+      ? ['mainPortfolioId', 'githubUsername', 'personalization', 'legacyMainSnapshot']
+      : []),
   ]);
   const projects = ids(list(x.projects).map((p) => decodeProject(p, version, owner)));
   const gh = projects.flatMap((p) =>
@@ -607,10 +663,13 @@ function decodeContent(
     theme: x.theme as 'dark' | 'light',
     ignoredGitHubRepositories,
     documents: [],
+    mainPortfolioId: null,
+    githubUsername: '',
+    personalization: { status: 'notRequired', step: 0 },
   };
   if (documents)
     result.documents = ids(
-      list(x.documents ?? [], 20).map((raw) => {
+      list(x.documents ?? [], version >= 7 ? 21 : 20).map((raw) => {
         const d = map(raw);
         keys(d, [
           'id',
@@ -624,7 +683,14 @@ function decodeContent(
           ...(version >= 5 ? ['baseSnapshot'] : []),
         ]);
         if (!['resume', 'portfolio'].includes(d.kind as string)) throw new ContractError();
-        const { documents: _, ...content } = decodeContent(d.content, version, owner, false);
+        const {
+          documents: _,
+          mainPortfolioId: _main,
+          githubUsername: _github,
+          personalization: _personalization,
+          legacyMainSnapshot: _legacy,
+          ...content
+        } = decodeContent(d.content, version, owner, false);
         if (content.projects.length || content.ignoredGitHubRepositories.length)
           throw new ContractError();
         const createdAt = date(d.createdAt),
@@ -681,6 +747,66 @@ function decodeContent(
     )
   )
     throw new ContractError('Неверная связь с резюме.');
+  if (documents && version >= 7) {
+    if (!('mainPortfolioId' in x) || !('githubUsername' in x) || !('personalization' in x))
+      throw new ContractError();
+    result.mainPortfolioId = nullable(x.mainPortfolioId, 200, true);
+    if (result.mainPortfolioId && !result.documents.some((d) => d.id === result.mainPortfolioId))
+      throw new ContractError('Основное портфолио отсутствует.');
+    result.githubUsername = str(x.githubUsername ?? '', 39);
+    if (
+      result.githubUsername &&
+      normalizeGitHubUsername(result.githubUsername) !== result.githubUsername
+    )
+      throw new ContractError('Некорректный GitHub-профиль.');
+    const personalization = map(x.personalization ?? { status: 'notRequired', step: 0 });
+    keys(personalization, ['status', 'step']);
+    if (
+      !['notRequired', 'inProgress', 'completed'].includes(personalization.status as string) ||
+      !Number.isInteger(personalization.step) ||
+      (personalization.step as number) < 0 ||
+      (personalization.step as number) > 3
+    )
+      throw new ContractError('Некорректный прогресс персонализации.');
+    result.personalization = {
+      status: personalization.status as WorkspaceContent['personalization']['status'],
+      step: personalization.step as number,
+    };
+    if (x.legacyMainSnapshot != null) {
+      const backup = map(x.legacyMainSnapshot);
+      const placeholders = list(backup.projects).map((raw) => ({
+        id: str(map(raw).projectId, 200, true),
+        title: 'Legacy',
+        description: '',
+        contribution: '',
+        technologies: [],
+        repositoryUrl: '',
+        liveUrl: '',
+        featured: false,
+        visible: true,
+        imagePaths: [],
+        iconId: 'folder',
+        source: 'manual',
+        githubMetadata: null,
+      }));
+      const restored = decodeContent(
+        {
+          ...x,
+          mainPortfolioId: null,
+          legacyMainSnapshot: null,
+          projects: placeholders,
+          documents: [{ ...backup, attachedResumeId: null }],
+        },
+        version,
+        owner,
+        true,
+      );
+      result.legacyMainSnapshot = {
+        ...restored.documents[0],
+        attachedResumeId: nullable(backup.attachedResumeId, 200, true),
+      };
+    }
+  }
   return result;
 }
 export function decodeDraft(raw: unknown, owner: string): DraftEnvelope {
@@ -703,7 +829,7 @@ export function decodeDraft(raw: unknown, owner: string): DraftEnvelope {
     x.ownerUid !== owner ||
     !Number.isSafeInteger(x.schemaVersion) ||
     (x.schemaVersion as number) < 1 ||
-    (x.schemaVersion as number) > 6 ||
+    (x.schemaVersion as number) > 7 ||
     !Number.isSafeInteger(x.localRevision) ||
     (x.localRevision as number) < 1 ||
     !timestamp ||
@@ -726,7 +852,7 @@ export function decodeDraft(raw: unknown, owner: string): DraftEnvelope {
   };
 }
 export function validateWorkspace(content: WorkspaceContent, owner: string): WorkspaceContent {
-  return decodeContent(content, 6, owner, true);
+  return decodeContent(content, 7, owner, true);
 }
 export function assertWriteBasis(current: DraftEnvelope | null, basis: DraftEnvelope | null): void {
   if (
@@ -905,4 +1031,209 @@ export function applyDocumentBaseReview(
       'Аккаунт, сохранённая база или документ изменились. Откройте сравнение заново.',
     );
   return acceptBaseChanges(review.base, review.document, selected);
+}
+
+function decodeIconId(value: unknown): ProjectIconId {
+  if (value == null) return 'folder';
+  if (!projectIconIds.includes(value as ProjectIconId))
+    throw new ContractError('Выберите встроенную иконку проекта.');
+  return value as ProjectIconId;
+}
+export function normalizeGitHubUsername(value: string): string {
+  let name = value.trim();
+  const url = /^https:\/\/(?:www\.)?github\.com\/([^/?#]+)\/?$/i.exec(name);
+  if (url) name = url[1];
+  if (!name) return '';
+  if (!/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/.test(name) || name.includes('--'))
+    throw new ContractError('Введите username или ссылку https://github.com/username.');
+  return name.toLowerCase();
+}
+export function mainDocument(workspace: WorkspaceContent): PortfolioDocument | undefined {
+  return workspace.documents.find((d) => d.id === workspace.mainPortfolioId);
+}
+export function migrateMainPortfolio(
+  workspace: WorkspaceContent,
+  selectedId: string | null,
+  now = new Date(),
+): WorkspaceContent {
+  if (workspace.mainPortfolioId) throw new ContractError('Основное портфолио уже выбрано.');
+  const source = selectedId ? workspace.documents.find((d) => d.id === selectedId) : undefined;
+  if (selectedId && !source) throw new ContractError('Документ для переноса отсутствует.');
+  const original =
+    source ?? createDocument({ ...workspace, documents: [] }, 'portfolio', 'Портфолио', now);
+  const candidate = clone(original);
+  const input = source?.content ?? seedDocument(workspace);
+  const visible = (kind: BlockKind) => input.blocks.some((b) => b.kind === kind && b.visible);
+  const profile = clone(input.profile);
+  if (!visible('profile')) {
+    profile.name = '';
+    profile.headline = '';
+    profile.avatarUrl = '';
+    profile.avatarPath = '';
+  }
+  if (!visible('about')) profile.bio = '';
+  if (!(visible('location') && workspace.profile.publishLocation && profile.publishLocation))
+    profile.locationText = '';
+  profile.publishLocation = true;
+  const selectedContacts = input.links.filter(
+    (l) =>
+      l.visible &&
+      l.publishAllowed &&
+      visible(l.kind === 'github' ? 'github' : 'links') &&
+      workspace.links.some((b) => b.id === l.id && b.visible && b.publishAllowed),
+  );
+  candidate.content = {
+    ...clone(input),
+    profile,
+    skills: visible('skills') ? clone(input.skills) : [],
+    experience: visible('experience') ? clone(input.experience) : [],
+    education: visible('education') ? clone(input.education) : [],
+    links: clone(selectedContacts),
+    blocks: (
+      [
+        'profile',
+        'about',
+        'location',
+        'featuredProjects',
+        'skills',
+        'experience',
+        'education',
+        'links',
+        'github',
+        'resume',
+      ] as BlockKind[]
+    ).map((kind) => ({ kind, visible: kind !== 'resume' })),
+    projects: [],
+    ignoredGitHubRepositories: [],
+  };
+  candidate.projects = visible('featuredProjects')
+    ? clone(
+        source?.projects.filter(
+          (a) => a.visible && workspace.projects.some((p) => p.id === a.projectId && p.visible),
+        ) ?? workspace.projects.filter((p) => p.visible).map((p) => attachment(p.id)),
+      )
+    : [];
+  candidate.updatedAt = now.toISOString();
+  candidate.attachedResumeId = null;
+  return {
+    ...clone(workspace),
+    mainPortfolioId: candidate.id,
+    ...(source
+      ? { legacyMainSnapshot: clone(source) }
+      : workspace.documents.length ||
+          workspace.projects.length ||
+          workspace.profile.name ||
+          workspace.profile.bio ||
+          workspace.links.length ||
+          workspace.skills.length ||
+          workspace.experience.length ||
+          workspace.education.length
+        ? {
+            legacyMainSnapshot: {
+              ...clone(original),
+              id: 'legacy-base',
+              title: 'Прежняя общая база',
+              content: seedDocument(workspace),
+              projects: workspace.projects.map((p) => attachment(p.id)),
+            },
+          }
+        : {}),
+    documents: source
+      ? workspace.documents.map((d) => (d.id === source.id ? candidate : clone(d)))
+      : [...clone(workspace.documents), candidate],
+  };
+}
+export function deleteLibraryProject(
+  workspace: WorkspaceContent,
+  projectId: string,
+): WorkspaceContent {
+  return {
+    ...workspace,
+    projects: workspace.projects.filter((p) => p.id !== projectId),
+    documents: workspace.documents.map((d) => ({
+      ...d,
+      projects: d.projects.filter((a) => a.projectId !== projectId),
+    })),
+  };
+}
+export function importGitHubProjects(
+  workspace: WorkspaceContent,
+  sources: GitHubSource[],
+): WorkspaceContent {
+  const existing = new Set(
+    workspace.projects.flatMap((p) =>
+      p.githubMetadata ? [p.githubMetadata.acceptedSource.repositoryId] : [],
+    ),
+  );
+  const imported: Project[] = [];
+  for (const source of sources) {
+    if (existing.has(source.repositoryId)) continue;
+    existing.add(source.repositoryId);
+    imported.push({
+      id: uid(),
+      iconId: 'folder',
+      title: source.name,
+      description: source.description ?? '',
+      contribution: '',
+      technologies: source.language ? [source.language] : [],
+      repositoryUrl: source.htmlUrl,
+      liveUrl: '',
+      featured: false,
+      visible: true,
+      imagePaths: [],
+      source: 'github',
+      githubMetadata: {
+        acceptedSource: clone(source),
+        lastGitHubSyncAt: new Date().toISOString(),
+        overrideFields: [],
+      },
+    });
+  }
+  return { ...workspace, projects: [...workspace.projects, ...imported] };
+}
+export function rebaseLibraryChange(
+  saved: WorkspaceContent,
+  previous: WorkspaceContent,
+  working: WorkspaceContent,
+): WorkspaceContent {
+  // Scoped операция сохраняет Library, оставляя соседний несохранённый ввод.
+  const removed = new Set(
+    previous.projects
+      .filter((p) => !saved.projects.some((next) => next.id === p.id))
+      .map((p) => p.id),
+  );
+  return {
+    ...working,
+    githubUsername:
+      working.githubUsername === previous.githubUsername
+        ? saved.githubUsername
+        : working.githubUsername,
+    projects: [
+      ...working.projects.filter((p) => !removed.has(p.id)),
+      ...saved.projects.filter(
+        (p) =>
+          !previous.projects.some((old) => old.id === p.id) &&
+          !working.projects.some((current) => current.id === p.id),
+      ),
+    ],
+    documents: working.documents.map((d) => ({
+      ...d,
+      projects: d.projects.filter((a) => !removed.has(a.projectId)),
+    })),
+  };
+}
+
+export function advancePersonalization(
+  workspace: WorkspaceContent,
+  action: 'next' | 'skip' | 'back',
+): WorkspaceContent {
+  if (workspace.personalization.status !== 'inProgress') return clone(workspace);
+  const current = workspace.personalization.step;
+  return {
+    ...workspace,
+    personalization: {
+      status: current === 3 && action !== 'back' ? 'completed' : 'inProgress',
+      step: action === 'back' ? Math.max(0, current - 1) : Math.min(3, current + 1),
+    },
+  };
 }

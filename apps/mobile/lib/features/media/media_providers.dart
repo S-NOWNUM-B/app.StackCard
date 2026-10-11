@@ -1,14 +1,23 @@
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth.dart';
+import 'data/dio_portfolio_legacy_avatar_reader.dart';
 import 'data/native_portfolio_image_picker.dart';
 import 'domain/portfolio_media.dart';
 
 final portfolioImagePickerProvider = Provider<PortfolioImagePicker>(
   (ref) => NativePortfolioImagePicker(),
 );
+
+final portfolioLegacyAvatarReaderProvider =
+    Provider<PortfolioLegacyAvatarReader>((ref) {
+      final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 10)));
+      ref.onDispose(() => dio.close(force: true));
+      return DioPortfolioLegacyAvatarReader(dio);
+    });
 
 final portfolioMediaRepositoryFactoryProvider =
     Provider<PortfolioMediaRepository? Function(String uid)>(

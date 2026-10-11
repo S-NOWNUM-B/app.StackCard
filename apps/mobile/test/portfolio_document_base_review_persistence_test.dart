@@ -302,7 +302,7 @@ void main() {
         content: workspace,
       ),
     );
-    expect(encoded['schemaVersion'], 6);
+    expect(encoded['schemaVersion'], 7);
     final stored = {...encoded, 'updatedAt': Timestamp.fromDate(now)};
     expect(
       decodeCloudPortfolioDraft(stored, ownerUid: 'owner').content,
@@ -321,7 +321,7 @@ void main() {
       isNull,
     );
     expect(old['schemaVersion'], 4);
-    for (final version in [1, 2, 3, 4, 5, 7]) {
+    for (final version in [1, 2, 3, 4, 5, 6, 8]) {
       expect(
         () => decodeCloudPortfolioDraft({
           ...stored,

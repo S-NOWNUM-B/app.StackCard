@@ -42,7 +42,7 @@ export async function saveDraft(
     assertWriteBasis(current, basis);
     ownerRef(user);
     transaction.set(ref, {
-      schemaVersion: 6,
+      schemaVersion: 7,
       ownerUid: user.uid,
       mutationId,
       localRevision: (basis?.localRevision ?? 0) + 1,

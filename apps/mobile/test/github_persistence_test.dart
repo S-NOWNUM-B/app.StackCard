@@ -40,6 +40,28 @@ void main() {
   });
 
   test(
+    'Public cache cleanup persists without modifying the separate draft box',
+    () async {
+      final draftBox = await hive.openBox<dynamic>('portfolio_draft_accounts');
+      await draftBox.put('saved-owner', 'portfolio-projects-and-notes');
+      await cache.write(
+        'entry',
+        CachedGitHubResponse(body: '{}', validatedAt: now),
+      );
+      await cache.clear();
+      await hive.close();
+      hive = Hive..init(directory.path);
+      box = await hive.openBox<dynamic>('github_http_v1');
+      cache = HiveGitHubResponseCache(box, clock: () => now);
+      final retainedDraft = await hive.openBox<dynamic>(
+        'portfolio_draft_accounts',
+      );
+      expect(await cache.read('entry'), isNull);
+      expect(retainedDraft.get('saved-owner'), 'portfolio-projects-and-notes');
+    },
+  );
+
+  test(
     'Hive reopen restores body, ETag, Link and original validation date',
     () async {
       final checked = now;

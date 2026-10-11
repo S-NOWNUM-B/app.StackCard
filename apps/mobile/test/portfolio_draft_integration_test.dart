@@ -167,11 +167,10 @@ void main() {
 
   for (final route in [
     '/home',
-    '/resumes',
-    '/portfolio',
+    '/editor',
     '/projects',
     '/settings',
-    '/settings/profile',
+    '/settings/github',
   ]) {
     testWidgets(
       'Draft read failure on $route is visible and retry reads the draft',
@@ -187,9 +186,11 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.text('Alex Morgan'), findsNothing);
-        final failureTitle = route == '/projects' || route == '/settings'
-            ? 'Не удалось загрузить данные'
-            : 'Не удалось открыть черновик';
+        final failureTitle = switch (route) {
+          '/projects' || '/settings' => 'Не удалось загрузить данные',
+          '/editor' => 'Не удалось открыть портфолио',
+          _ => 'Не удалось открыть черновик',
+        };
         expect(find.text(failureTitle), findsOneWidget);
         repository.failRead = false;
         await tester.ensureVisible(find.text('Повторить'));
@@ -260,11 +261,10 @@ void main() {
 
   for (final route in [
     '/home',
-    '/resumes',
-    '/portfolio',
+    '/editor',
     '/projects',
     '/settings',
-    '/settings/profile',
+    '/settings/github',
   ]) {
     for (final language in AppLanguage.values) {
       testWidgets(
@@ -300,7 +300,7 @@ void main() {
                       widget is Scrollable &&
                       widget.axisDirection == AxisDirection.down,
                 )
-                .last,
+                .first,
             const Offset(0, -2500),
           );
           await tester.pumpAndSettle();

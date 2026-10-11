@@ -1,5 +1,6 @@
 /// Fixtures прошлых schemas не должны случайно получать новые writer keys.
 void removePresentationPrivacyFields(Map<String, Object?> content) {
+  removeMainPortfolioFields(content);
   (content['profile'] as Map?)?.remove('publishLocation');
   for (final project in content['projects'] as List? ?? []) {
     (project as Map).remove('contribution');
@@ -21,5 +22,19 @@ void removePresentationPrivacyFields(Map<String, Object?> content) {
     if (item['baseSnapshot'] case final Map base) {
       removePresentationPrivacyFields(Map<String, Object?>.from(base));
     }
+  }
+}
+
+void removeMainPortfolioFields(Map<String, Object?> content) {
+  for (final key in [
+    'mainPortfolioId',
+    'githubUsername',
+    'personalization',
+    'legacyMainSnapshot',
+  ]) {
+    content.remove(key);
+  }
+  for (final project in content['projects'] as List? ?? []) {
+    (project as Map).remove('iconId');
   }
 }

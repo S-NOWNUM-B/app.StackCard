@@ -5,7 +5,8 @@ import 'package:hive/hive.dart';
 import 'github_response_cache.dart';
 
 /// Только воспроизводимый GitHub cache; box draft сюда не передаётся.
-final class HiveGitHubResponseCache implements EvictableGitHubResponseCache {
+final class HiveGitHubResponseCache
+    implements EvictableGitHubResponseCache, ClearableGitHubResponseCache {
   HiveGitHubResponseCache(
     this._box, {
     this.maxAge = githubCacheMaxAge,
@@ -74,6 +75,12 @@ final class HiveGitHubResponseCache implements EvictableGitHubResponseCache {
           .millisecondsSinceEpoch,
     }),
   );
+
+  @override
+  Future<void> clear() async {
+    await _box.clear();
+    await _box.flush();
+  }
 
   @override
   Future<void> remove(String key) => _box.delete(key);

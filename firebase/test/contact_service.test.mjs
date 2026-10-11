@@ -46,6 +46,15 @@ test('submit writes exactly ten private Inbox fields after trusted owner resolut
   assert.ok(inbox.createdAt instanceof Timestamp); assert.equal(inbox.readAt, null);
   assert.equal((await database.collection('contactRateLimits').get()).size, 3);
 });
+test('new public schema2 accepts Contact while future snapshots remain unavailable', async () => {
+  await published();
+  await database.doc(`publicDocuments/${publicId}`).update({ schemaVersion: 2 });
+  assert.deepEqual(await service().execute(null, submit()), { status: 'accepted', requestId });
+  assert.equal((await database.doc(`accounts/owner/contactRequests/${requestId}`).get()).data().documentId, 'selected');
+  await database.doc(`publicDocuments/${publicId}`).update({ schemaVersion: 3 });
+  await assert.rejects(service().execute(null, submit({ requestId: 'c'.repeat(32) })), rejected('document-unavailable'));
+  assert.equal((await database.collection('accounts/owner/contactRequests').get()).size, 1);
+});
 test('post-commit notification captures only authoritative private owner and never leaks it in accepted response', async () => {
   await published();
   const notified = [];

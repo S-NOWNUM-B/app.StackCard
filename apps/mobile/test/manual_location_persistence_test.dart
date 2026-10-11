@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:app_stackcard/features/location/domain/portfolio_location.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/hive_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/portfolio_content_codec.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/portfolio_public_content_codec.dart';
@@ -11,7 +10,7 @@ import 'package:hive/hive.dart';
 
 void main() {
   test(
-    'Confirmed city/country survives Hive reopen without GPS or address fields',
+    'Manual city survives Hive reopen without GPS or address fields',
     () async {
       final directory = await Directory.systemTemp.createTemp(
         'stackcard-location-',
@@ -19,12 +18,11 @@ void main() {
       Box<dynamic>? box;
       try {
         box = await Hive.openBox<dynamic>('location', path: directory.path);
-        final place = PortfolioPlace(
-          city: '  Алматы  ',
-          country: ' Казахстан ',
-        );
         final content = PortfolioContent(
-          profile: PortfolioProfile(locationText: place.displayText, publishLocation: true),
+          profile: const PortfolioProfile(
+            locationText: 'Алматы, Казахстан',
+            publishLocation: true,
+          ),
         );
         await HivePortfolioDraftRepository(box)
             .save(content, expectedRevision: 0, notes: 'private notes');
@@ -69,7 +67,10 @@ void main() {
 
   test('Hidden Location is physically removed from the public payload', () {
     final content = PortfolioContent(
-      profile: const PortfolioProfile(locationText: 'Алматы, Казахстан'),
+      profile: const PortfolioProfile(
+        locationText: 'Алматы, Казахстан',
+        publishLocation: true,
+      ),
       blocks: PortfolioBlockKind.values
           .map(
             (kind) => PortfolioBlock(
@@ -93,17 +94,5 @@ void main() {
       profile: const PortfolioProfile(locationText: 'Remote / Алматы'),
     );
     expect(decodePortfolioContent(encodePortfolioContent(content)), content);
-  });
-
-  test('City/country confirmation trims input and fits the existing 200 character field', () {
-    expect(PortfolioPlace(city: ' ', country: 'Казахстан').isValid, isFalse);
-    expect(PortfolioPlace(city: 'Алматы', country: '').isValid, isFalse);
-    final place = PortfolioPlace(city: 'a' * 100, country: 'b' * 96);
-    expect(place.isValid, isTrue);
-    expect(place.displayText.length, lessThanOrEqualTo(200));
-    expect(
-      PortfolioPlace(city: 'a' * 101, country: 'Казахстан').isValid,
-      isFalse,
-    );
   });
 }

@@ -213,7 +213,7 @@ void main() {
     expect(firestore.transactions, 0);
   });
 
-  test('Publication keeps private media in the draft and excludes it from schema one', () async {
+  test('Publication keeps private media in the draft and excludes it from schema two', () async {
     const avatar = 'accounts/owner/media/0123456789abcdef0123456789abcdef.jpg';
     const image = 'accounts/owner/media/abcdef0123456789abcdef0123456789.jpg';
     final original = _content();
@@ -234,7 +234,7 @@ void main() {
     await _repository(firestore)
         .publish(username: 'public-name', content: content);
     final snapshot = firestore.documents['publicPortfolios/public-name']!;
-    expect(snapshot['schemaVersion'], 1);
+    expect(snapshot['schemaVersion'], 2);
     final public = decodePortfolioContent(snapshot['content']);
     expect(public.profile.avatarPath, isEmpty);
     expect(public.projects.single.imagePaths, isEmpty);
@@ -311,7 +311,7 @@ PortfolioContent _content() => PortfolioContent(
 );
 
 Map<String, dynamic> _draft(PortfolioContent content) => {
-  'schemaVersion': 6,
+  'schemaVersion': 7,
   'ownerUid': 'owner',
   'mutationId': 'saved-mutation',
   'localRevision': 4,

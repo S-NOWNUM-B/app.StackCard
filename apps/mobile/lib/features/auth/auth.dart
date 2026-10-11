@@ -7,7 +7,11 @@ export 'auth_providers.dart'
         GuestAccessController;
 export 'data/firebase_account_auth_repository.dart'
     show FirebaseAccountAuthRepository;
-export 'domain/account_auth_repository.dart' show AccountAuthRepository;
+export 'domain/account_auth_repository.dart'
+    show
+        AccountAuthRepository,
+        AccountAuthCreationRepository,
+        AccountAuthResult;
 export 'domain/account_management_repository.dart';
 export 'auth_providers.dart' show accountManagementRepositoryProvider;
 export 'domain/auth_failure.dart' show AuthFailure, AuthFailureKind;
@@ -23,5 +27,8 @@ export 'presentation/auth_controller.dart'
         AuthController,
         authControllerProvider,
         AccountAuthController,
-        accountAuthControllerProvider;
+        accountAuthControllerProvider,
+        pendingPersonalizationUidProvider,
+        PendingPersonalizationController;
 export 'presentation/sign_in_screen.dart' show SignInScreen;
+export 'presentation/personalization_screen.dart' show PersonalizationScreen;

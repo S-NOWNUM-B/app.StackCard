@@ -268,7 +268,7 @@ void main() {
       content: workspace,
     );
     final encoded = encodeCloudPortfolioDraft(draft);
-    expect(encoded['schemaVersion'], 6);
+    expect(encoded['schemaVersion'], 7);
     final stored = {...encoded, 'updatedAt': Timestamp.fromDate(now)};
     expect(
       decodeCloudPortfolioDraft(stored, ownerUid: 'owner').content,
@@ -286,7 +286,7 @@ void main() {
     expect(
       () => decodeCloudPortfolioDraft({
         ...stored,
-        'schemaVersion': 7,
+        'schemaVersion': 8,
       }, ownerUid: 'owner'),
       throwsA(_syncFailure),
     );

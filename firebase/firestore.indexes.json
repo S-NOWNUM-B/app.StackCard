@@ -1,6 +1,9 @@
 {
   "indexes": [],
   "fieldOverrides": [
+    { "collectionGroup": "media", "fieldPath": "base64", "indexes": [] },
+    { "collectionGroup": "publicDocuments", "fieldPath": "content", "indexes": [] },
+    { "collectionGroup": "publicationOperations", "fieldPath": "publicDocument", "indexes": [] },
     {
       "collectionGroup": "publications",
       "fieldPath": "publicId",

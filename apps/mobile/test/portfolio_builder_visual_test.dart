@@ -1,10 +1,17 @@
+import 'package:app_stackcard/core/localization/app_strings.dart';
 import 'package:app_stackcard/core/state/app_settings.dart';
+import 'package:app_stackcard/core/state/appearance_controller.dart';
+import 'package:app_stackcard/core/theme/stackcard_theme.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
-import 'package:app_stackcard/main.dart';
+import 'package:app_stackcard/features/projects/projects.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart' as legacy_provider;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -275,13 +282,56 @@ Future<void> _open(
     expectedRevision: 0,
     notes: _privateNote,
   );
+  // Архивные формы проверяются реальными widgets без production redirects.
+  final router = GoRouter(
+    initialLocation: route,
+    routes: [
+      GoRoute(
+        path: '/portfolio/builder',
+        builder: (_, _) => const PortfolioBuilderScreen(),
+      ),
+      GoRoute(
+        path: '/portfolio/builder/profile',
+        builder: (_, _) => const PortfolioProfileEditorScreen(),
+      ),
+      GoRoute(
+        path: '/projects/new',
+        builder: (_, _) => const PortfolioProjectEditorScreen(),
+      ),
+      GoRoute(
+        path: '/projects',
+        builder: (_, _) => const Scaffold(body: ProjectsScreen()),
+      ),
+      GoRoute(
+        path: '/portfolio/preview',
+        builder: (_, _) => const PortfolioPreviewScreen(),
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
   await tester.pumpWidget(
-    StackCardApp(
-      initialLocation: route,
-      initialSettings: AppSettings(theme: theme, language: language),
-      providerOverrides: [
+    ProviderScope(
+      overrides: [
         portfolioDraftRepositoryProvider.overrideWithValue(repository),
       ],
+      child: legacy_provider.ChangeNotifierProvider(
+        create: (_) => AppearanceController(
+          initialSettings: AppSettings(theme: theme, language: language),
+        ),
+        child: MaterialApp.router(
+          routerConfig: router,
+          theme: StackCardTheme.light,
+          themeMode: ThemeMode.light,
+          locale: const Locale('ru'),
+          supportedLocales: AppStrings.supportedLocales,
+          localizationsDelegates: const [
+            AppStrings.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+        ),
+      ),
     ),
   );
   await tester.pumpAndSettle();

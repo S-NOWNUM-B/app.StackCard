@@ -362,7 +362,7 @@ void main() {
       final media = _Media();
       await _open(tester, repository, media: media, picker: _Picker());
       await _enter(tester, 'title', 'Resume with a photo');
-      await _tap(tester, 'media_gallery');
+      await _pickAvatar(tester, 'media_gallery');
       final mediaState = tester.state(find.byType(PortfolioMediaEditor));
       final path = media.uploaded.single;
       await _tap(tester, 'document.next');
@@ -372,7 +372,10 @@ void main() {
       );
       expect(media.deleted, isEmpty);
       await _tap(tester, 'document.previous');
+      await _tap(tester, 'media_avatar_edit');
       expect(find.byKey(ValueKey('media_remove_$path')), findsOneWidget);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
       for (var step = 0; step < 4; step++) {
         await _tap(tester, 'document.next');
       }
@@ -400,7 +403,7 @@ void main() {
       final media = _Media();
       await _open(tester, repository, media: media, picker: _Picker());
       await _enter(tester, 'title', 'Unsaved photo');
-      await _tap(tester, 'media_camera');
+      await _pickAvatar(tester, 'media_camera');
       await _tap(tester, 'document.back');
       await _tap(tester, 'document.leave.discard');
       expect(media.deleted, media.uploaded);
@@ -423,21 +426,19 @@ void main() {
       picker: _Picker(),
     );
     await _tap(tester, 'document.section.profile');
-    await _tap(tester, 'media_gallery');
+    await _pickAvatar(tester, 'media_gallery');
     final savedPath = media.uploaded.single;
     await _enter(tester, 'headline', 'Captured photo version');
     await tester.tap(find.byKey(const Key('document.save')));
     await tester.pump();
     expect(
-      tester
-          .widget<StackCardButton>(find.byKey(const Key('media_gallery')))
-          .onPressed,
+      tester.widget<InkWell>(find.byKey(const Key('media_avatar_edit'))).onTap,
       isNull,
     );
     await _enter(tester, 'headline', 'Working newer version');
     repository.pending.complete();
     await tester.pumpAndSettle();
-    await _tap(tester, 'media_gallery');
+    await _pickAvatar(tester, 'media_gallery');
     final unsavedPath = media.uploaded.last;
     expect(unsavedPath, isNot(savedPath));
     expect(media.deleted, isEmpty);
@@ -1073,6 +1074,11 @@ Future<void> _enter(WidgetTester tester, String name, String value) async {
 
 Future<void> _tap(WidgetTester tester, String key) async {
   await _tapFinder(tester, find.byKey(ValueKey(key)));
+}
+
+Future<void> _pickAvatar(WidgetTester tester, String sourceKey) async {
+  await _tap(tester, 'media_avatar_edit');
+  await _tap(tester, sourceKey);
 }
 
 Future<void> _tapFinder(WidgetTester tester, Finder finder) async {

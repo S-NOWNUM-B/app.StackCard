@@ -6,6 +6,102 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('automatic and explicit loads share one inventory and refresh after mutation', () async {
+    final repository = _Repository();
+    final delayed = Completer<DocumentPublicationInventory>();
+    repository.readInventory = () => delayed.future;
+    final fixture = await _Fixture.create(repository);
+    expect(repository.inventoryCalls, 1);
+    final first = fixture.controller.load();
+    final second = fixture.controller.load();
+    expect(second, same(first));
+    await _flush(fixture.container);
+    expect(repository.inventoryCalls, 1);
+    expect(fixture.state.loading, isTrue);
+    delayed.complete(
+      DocumentPublicationInventory(
+        publications: [repository.publication],
+        lifecycleGeneration: 3,
+      ),
+    );
+    await Future.wait([first, second]);
+    expect(fixture.state.loading, isFalse);
+    repository.readInventory = null;
+    expect(
+      await fixture.controller.perform(
+        action: DocumentPublicationAction.unpublish,
+        documentId: 'document',
+      ),
+      isTrue,
+    );
+    expect(repository.inventoryCalls, 2);
+    expect(fixture.state.forDocument('document')!.shareableUrl, isNull);
+    await fixture.controller.load();
+    expect(repository.inventoryCalls, 3);
+    expect(
+      fixture.state.forDocument('document')!.visibility,
+      DocumentPublicationVisibility.unpublished,
+    );
+  });
+
+  for (final replyWhileBusy in [true, false]) {
+    test(
+      'late inventory preserves recovery when busy=$replyWhileBusy',
+      () async {
+        final repository = _Repository();
+        final fixture = await _Fixture.create(
+          repository,
+          store: _Store()..pending = _pending,
+        );
+        final delayed = Completer<DocumentPublicationInventory>();
+        final stale = DocumentPublicationInventory(
+          publications: [repository.publication],
+          lifecycleGeneration: 3,
+        );
+        repository.readInventory = () => delayed.future;
+        final loading = fixture.controller.load();
+        await _flush(fixture.container);
+        final status = Completer<DocumentPublicationOperation>();
+        repository.readStatus = (_) => status.future;
+        final checking = fixture.controller.checkOperation();
+        await _flush(fixture.container);
+        if (replyWhileBusy) {
+          delayed.complete(stale);
+          await loading;
+          expect(fixture.state.busy, isTrue);
+          expect(fixture.state.pending, same(_pending));
+        }
+        repository.readInventory = null;
+        repository.publication = _publication(
+          DocumentPublicationVisibility.unpublished,
+        );
+        status.complete(
+          DocumentPublicationOperation(
+            outcome: DocumentPublicationOutcome.completed,
+            operationId: _pending.operationId,
+            action: _pending.action.name,
+            publication: repository.publication,
+          ),
+        );
+        expect(await checking, isTrue);
+        expect(fixture.state.busy, isFalse);
+        expect(fixture.state.pending, isNull);
+        expect(fixture.store.pending, isNull);
+        expect(
+          fixture.state.forDocument('document')!.visibility,
+          DocumentPublicationVisibility.unpublished,
+        );
+        await fixture.controller.load();
+        if (!replyWhileBusy) {
+          delayed.complete(stale);
+          await loading;
+        }
+        expect(fixture.state.pending, isNull);
+        expect(fixture.state.forDocument('document')!.shareableUrl, isNull);
+      },
+    );
+  }
+
   test(
     'Publish requires exact ACK; withdrawal works with unsaved local changes',
     () async {
@@ -393,9 +489,14 @@ class _Repository implements DocumentPublicationRepository {
   DocumentPublicationOperation? statusResult;
   DocumentPublicationFailure? statusFailure;
   DocumentPublicationFailure? inventoryFailure;
+  int inventoryCalls = 0;
+  Future<DocumentPublicationInventory> Function()? readInventory;
+  Future<DocumentPublicationOperation> Function(String operationId)? readStatus;
   @override
   Future<DocumentPublicationInventory> inventory() async {
+    inventoryCalls++;
     if (inventoryFailure case final failure?) throw failure;
+    if (readInventory case final read?) return read();
     return DocumentPublicationInventory(
       publications: [publication],
       lifecycleGeneration: 3,
@@ -433,6 +534,7 @@ class _Repository implements DocumentPublicationRepository {
   @override
   Future<DocumentPublicationOperation> status(String operationId) async {
     if (statusFailure case final failure?) throw failure;
+    if (readStatus case final read?) return read(operationId);
     return statusResult ??
         DocumentPublicationOperation(
           outcome: DocumentPublicationOutcome.unknown,

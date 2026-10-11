@@ -43,5 +43,6 @@ export const documentPublication = onRequest({
   await createPublicationHttpHandler({
     database: getFirestore(), bucket: app.options.storageBucket ? getStorage(app).bucket() : null, auth: getAuth(),
     origin: process.env.PUBLIC_WEB_ORIGIN, emulator: process.env.FUNCTIONS_EMULATOR === 'true',
+    firestoreMediaOnlyAccountsSince: process.env.FIRESTORE_MEDIA_ONLY_ACCOUNTS_SINCE,
   })(request, response);
 });

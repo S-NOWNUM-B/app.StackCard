@@ -1,12 +1,17 @@
 import 'dart:async';
 
+import 'package:app_stackcard/core/localization/app_strings.dart';
+import 'package:app_stackcard/core/state/appearance_controller.dart';
+import 'package:app_stackcard/core/theme/stackcard_theme.dart';
 import 'package:app_stackcard/features/auth/auth.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
-import 'package:app_stackcard/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart' as legacy_provider;
 
 void main() {
   for (final status in [
@@ -272,21 +277,15 @@ void main() {
     final repository = _PlainRepository();
     final auth = _AccountAuth()..user = null;
     addTearDown(auth.close);
-    await tester.pumpWidget(
-      StackCardApp(
-        initialLocation: '/portfolio-draft',
-        providerOverrides: [
-          accountAuthRepositoryProvider.overrideWithValue(auth),
-          accountSessionProvider.overrideWith((ref) => Stream.value(null)),
-          guestAccessProvider.overrideWith(() => _GuestAccess()),
-          portfolioDraftRepositoryProvider.overrideWithValue(repository),
-        ],
-      ),
+    await _open(
+      tester,
+      repository,
+      providerOverrides: [
+        accountAuthRepositoryProvider.overrideWithValue(auth),
+        accountSessionProvider.overrideWith((ref) => Stream.value(null)),
+        guestAccessProvider.overrideWith(() => _GuestAccess()),
+      ],
     );
-    await tester.pumpAndSettle();
-    GoRouter.of(tester.element(find.byType(Scaffold).first))
-        .go('/portfolio-draft');
-    await tester.pumpAndSettle();
     expect(find.text('Только на этом устройстве'), findsOneWidget);
     expect(find.byKey(_syncRetry), findsNothing);
   });
@@ -304,16 +303,17 @@ void main() {
           addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
           final repository = _SyncRepository(_draft('Stored'));
           repository.setSync(PortfolioSyncStatus.error);
-          await tester.pumpWidget(
-            StackCardApp(
-              initialThemeMode: theme,
-              initialLocation: '/portfolio-draft',
-              providerOverrides: [
-                portfolioDraftRepositoryProvider.overrideWithValue(repository),
-              ],
-            ),
+          await _open(tester, repository, theme: theme);
+          final context = tester.element(find.byType(PortfolioDraftScreen));
+          expect(Theme.of(context).brightness, Brightness.light);
+          expect(Localizations.localeOf(context), const Locale('ru'));
+          expect(
+            legacy_provider.Provider.of<AppearanceController>(
+              context,
+              listen: false,
+            ).themeMode,
+            theme,
           );
-          await tester.pumpAndSettle();
           await tester.enterText(_notesField, 'Newer unsaved input');
           repository.receive(_draft('Other device', revision: 2));
           await tester.pumpAndSettle();
@@ -341,14 +341,44 @@ String _notes(WidgetTester tester) =>
 
 Future<void> _open(
   WidgetTester tester,
-  PortfolioDraftRepository repository,
-) async {
+  PortfolioDraftRepository repository, {
+  ThemeMode theme = ThemeMode.light,
+  List<Override> providerOverrides = const [],
+}) async {
+  // Sync/CAS заметок проверяются независимо от современного production Editor.
+  final router = GoRouter(
+    initialLocation: '/portfolio-draft',
+    routes: [
+      GoRoute(
+        path: '/portfolio-draft',
+        builder: (_, _) => const PortfolioDraftScreen(),
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
   await tester.pumpWidget(
-    StackCardApp(
-      initialLocation: '/portfolio-draft',
-      providerOverrides: [
+    ProviderScope(
+      overrides: [
         portfolioDraftRepositoryProvider.overrideWithValue(repository),
+        ...providerOverrides,
       ],
+      child: legacy_provider.ChangeNotifierProvider(
+        create: (_) => AppearanceController(themeMode: theme),
+        child: MaterialApp.router(
+          routerConfig: router,
+          debugShowCheckedModeBanner: false,
+          theme: StackCardTheme.light,
+          themeMode: ThemeMode.light,
+          locale: const Locale('ru'),
+          supportedLocales: AppStrings.supportedLocales,
+          localizationsDelegates: const [
+            AppStrings.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+        ),
+      ),
     ),
   );
   await tester.pumpAndSettle();

@@ -8,3 +8,20 @@ abstract interface class AccountAuthRepository {
   Future<void> signInGoogle();
   Future<void> signOut();
 }
+
+/// Явный результат SDK; пустой профиль не означает новый аккаунт.
+final class AccountAuthResult {
+  const AccountAuthResult({required this.uid, required this.isNewUser});
+
+  final String uid;
+  final bool isNewUser;
+}
+
+/// Дополнительная capability сохраняет совместимость preview repositories.
+abstract interface class AccountAuthCreationRepository {
+  Future<AccountAuthResult> registerEmailWithResult(
+    String email,
+    String password,
+  );
+  Future<AccountAuthResult> signInGoogleWithResult();
+}

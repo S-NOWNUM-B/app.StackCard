@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { PublicationError, permanentPublicId, projectPublicDocument, publicOrigin, validateRequest, validateWorkspace } from '../src/projection.mjs';
+import { PublicationError, permanentPublicId, projectPublicDocument, publicOrigin, validateRequest, validateWorkspace, validatePublicDocumentSize, publicDocumentMaxBytes } from '../src/projection.mjs';
 
 const fixture = JSON.parse(await readFile(new URL('../../../fixtures/workspace/schema6.json', import.meta.url), 'utf8'));
 const workspace = () => structuredClone(fixture.content);
@@ -79,12 +79,22 @@ test('hidden sections and globally or locally hidden projects never enter public
   assert.deepEqual(projection(value).publicDocument.content.projects, []);
 });
 
-test('hidden Resume block removes the attached relation from the trusted publication plan', () => {
+test('explicit modern attachment can include an archived hidden library project', () => {
+  const value = workspace();
+  value.projects[0].visible = false;
+  assert.deepEqual(projection(value).publicDocument.content.projects, []);
+  value.mainPortfolioId = 'first';
+  assert.equal(projection(value).publicDocument.content.projects.length, 1);
+  value.documents[0].projects[0].visible = false;
+  assert.deepEqual(projection(value).publicDocument.content.projects, []);
+});
+
+test('new public writer omits all legacy attached resumes regardless of the old block', () => {
   const value = workspace();
   const portfolio = value.documents[1];
   portfolio.attachedResumeId = value.documents[0].id;
   portfolio.content.blocks.find((block) => block.kind === 'resume').visible = true;
-  assert.equal(projection(value, portfolio.id).attachedResumeId, value.documents[0].id);
+  assert.equal(projection(value, portfolio.id).attachedResumeId, null);
   portfolio.content.blocks.find((block) => block.kind === 'resume').visible = false;
   const hidden = projection(value, portfolio.id);
   assert.equal(hidden.attachedResumeId, null);
@@ -93,6 +103,78 @@ test('hidden Resume block removes the attached relation from the trusted publica
   assert.equal(portfolio.attachedResumeId, value.documents[0].id);
   portfolio.content.blocks = portfolio.content.blocks.filter((block) => block.kind !== 'resume');
   assert.equal(projection(value, portfolio.id).attachedResumeId, null);
+});
+
+test('main schema7 preserves private resume identity but publishes one portfolio without project images', () => {
+  const value = workspace();
+  value.mainPortfolioId = 'first';
+  value.githubUsername = 'snow-numb';
+  value.personalization = { status: 'completed', step: 3 };
+  value.legacyMainSnapshot = structuredClone(value.documents[0]);
+  value.projects[0].iconId = 'camera';
+  value.projects[0].imagePaths = ['accounts/owner/media/' + 'b'.repeat(32) + '.jpg'];
+  value.documents[0].content.profile.avatarPath = '';
+  value.profile.publishLocation = false;
+  value.documents[0].content.profile.publishLocation = false;
+  value.documents[0].content.links[0].publishAllowed = true;
+  value.documents[0].content.links[0].visible = true;
+  value.links[0].publishAllowed = false;
+  const result = projection(value);
+  assert.equal(result.publicDocument.schemaVersion, 2);
+  assert.equal(result.publicDocument.kind, 'portfolio');
+  assert.equal(value.documents[0].kind, 'resume');
+  assert.equal(result.publicDocument.content.profile.locationText, 'Almaty');
+  assert.equal(result.publicDocument.content.links.length, 1);
+  assert.equal(result.publicDocument.content.projects[0].iconId, 'camera');
+  assert.equal(Object.hasOwn(result.publicDocument.content.projects[0], 'imageUrls'), false);
+  assert.deepEqual(result.media, []);
+  for (const secret of ['mainPortfolioId', 'githubUsername', 'personalization', 'legacyMainSnapshot']) {
+    assert.equal(JSON.stringify(result.publicDocument).includes(secret), false);
+  }
+});
+
+test('modern metadata and stock icons reject unknown IDs, foreign backup media and nested metadata', () => {
+  for (const mutate of [
+    (w) => { w.mainPortfolioId = 'missing'; },
+    (w) => { w.githubUsername = 'https://github.com/owner'; },
+    (w) => { w.githubUsername = 'owner--test'; },
+    (w) => { w.personalization = { status: 'completed', step: 4 }; },
+    (w) => { w.projects[0].iconId = '<svg>'; },
+    (w) => { w.documents[0].content.mainPortfolioId = null; },
+    (w) => { w.legacyMainSnapshot = structuredClone(w.documents[0]); w.legacyMainSnapshot.content.profile.avatarPath = 'accounts/other/media/' + 'b'.repeat(32) + '.jpg'; },
+  ]) {
+    const value = workspace(); mutate(value);
+    assert.throws(() => validateWorkspace(value, 'owner'), PublicationError);
+  }
+});
+
+test('schema7 supports twenty legacy documents and a main while archive links remain recoverable', () => {
+  const value = workspace();
+  value.documents = Array.from({ length: 21 }, (_, index) => ({ ...structuredClone(value.documents[0]), id: `document-${index}` }));
+  assert.throws(() => validateWorkspace(value, 'owner'), PublicationError);
+  value.mainPortfolioId = 'document-20';
+  value.legacyMainSnapshot = structuredClone(value.documents[0]);
+  value.legacyMainSnapshot.projects[0].projectId = 'deleted-library-project';
+  assert.equal(validateWorkspace(value, 'owner'), value);
+  value.documents.push({ ...structuredClone(value.documents[0]), id: 'overflow' });
+  assert.throws(() => validateWorkspace(value, 'owner'), PublicationError);
+});
+
+test('public payload byte budget rejects oversized Unicode data before Firestore writes', () => {
+  assert.doesNotThrow(() => validatePublicDocumentSize({ text: 'x'.repeat(publicDocumentMaxBytes - 20) }));
+  assert.throws(() => validatePublicDocumentSize({ text: 'я'.repeat(publicDocumentMaxBytes / 2) }),
+    (error) => error.code === 'resource-exhausted' && error.httpStatus === 413);
+});
+
+test('empty main portfolio publishes no empty section descriptors or artificial profile values', () => {
+  const value = workspace(); value.mainPortfolioId = 'first';
+  const snapshot = value.documents[0]; snapshot.projects = [];
+  for (const key of ['name', 'username', 'headline', 'bio', 'locationText', 'avatarUrl', 'avatarPath']) snapshot.content.profile[key] = '';
+  for (const key of ['skills', 'experience', 'education', 'links']) snapshot.content[key] = [];
+  const result = projection(value).publicDocument.content;
+  assert.deepEqual(result.blocks, []);
+  assert.deepEqual(result.projects, []);
+  assert.equal(result.profile.name, '');
 });
 
 test('public media plan never includes private paths in public payload', () => {

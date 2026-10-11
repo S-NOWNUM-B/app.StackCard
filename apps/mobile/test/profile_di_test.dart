@@ -104,11 +104,17 @@ void main() {
       expect(model.skills, ['Dart']);
       await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
-      expect(find.text('Пока нет работ'), findsOneWidget);
+      expect(find.text('Портфолио пока пустое'), findsOneWidget);
       expect(find.text('Replacement Project'), findsNothing);
-      await tester.tap(_destination('Портфолио'));
-      await tester.pumpAndSettle();
-      expect(find.text('Пока нет портфолио'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.byType(TextButton),
+        ),
+        findsNWidgets(3),
+      );
+      expect(find.text('Резюме'), findsNothing);
+      expect(find.text('Портфолио'), findsNothing);
       expect(find.text('Sam Lee'), findsNothing);
       await tester.tap(_destination('Проекты'));
       await tester.pumpAndSettle();
@@ -131,7 +137,7 @@ void main() {
   );
 
   testWidgets(
-    'Developer Profile uses the overridden draft and never reads a demo profile',
+    'Legacy profile route guides migration and reads the draft without demo fallback',
     (tester) async {
       final repository = MemoryPortfolioDraftRepository();
       final demo = TestProfileRepository();
@@ -156,7 +162,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Private owner'), findsOneWidget);
+      expect(
+        find.text('Выберите содержимое основного портфолио'),
+        findsOneWidget,
+      );
+      expect(find.text('Private owner'), findsNothing);
       expect(find.text('Sam Lee'), findsNothing);
       final container = ProviderScope.containerOf(
         tester.element(find.byType(MaterialApp)),
@@ -244,7 +254,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Пока нет работ'), findsOneWidget);
+    expect(find.text('Портфолио пока пустое'), findsOneWidget);
     expect(find.text('Нет избранных проектов'), findsNothing);
     expect(repository.calls, 0);
     await tester.tap(_destination('Проекты'));

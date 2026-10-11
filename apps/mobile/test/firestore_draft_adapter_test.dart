@@ -63,11 +63,11 @@ void main() {
   });
 
   test(
-    'Legacy cloud schema remains readable and next write upgrades to version 6',
+    'Legacy cloud schema remains readable and next write upgrades to version 7',
     () {
       final legacy = decodeCloudPortfolioDraft(_data(), ownerUid: 'owner');
       final upgraded = encodeCloudPortfolioDraft(legacy);
-      expect(upgraded['schemaVersion'], 6);
+      expect(upgraded['schemaVersion'], 7);
       expect(upgraded['notes'], legacy.notes);
       expect(upgraded['mutationId'], legacy.mutationId);
       expect(upgraded['localRevision'], legacy.localRevision);
@@ -102,7 +102,7 @@ void main() {
       content: content,
     );
     final encoded = encodeCloudPortfolioDraft(draft);
-    expect(encoded['schemaVersion'], 6);
+    expect(encoded['schemaVersion'], 7);
     final restored = decodeCloudPortfolioDraft({
       ...encoded,
       'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 10, 7)),
@@ -153,7 +153,7 @@ void main() {
   });
 
   test('Cloud legacy versions reject media fields and future schemas', () {
-    for (final version in [1, 2, 7]) {
+    for (final version in [1, 2, 8]) {
       expect(
         () => decodeCloudPortfolioDraft({
           ..._data(),

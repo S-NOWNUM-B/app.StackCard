@@ -10,7 +10,6 @@ import '../../shared/widgets/stackcard_icon.dart';
 import '../../shared/widgets/stackcard_states.dart';
 import '../auth/auth.dart';
 import '../media/media.dart';
-import '../location/location.dart';
 import '../portfolio_draft/portfolio_draft.dart';
 import 'settings_editor_scaffold.dart';
 
@@ -291,20 +290,6 @@ class _SettingsBaseEditorScreenState
     });
   }
 
-  Future<void> _location() async {
-    if (!_sameOwner || _saving) return;
-    final result = await Navigator.of(context).push<PortfolioPlace>(
-      MaterialPageRoute(
-        builder: (_) => PortfolioLocationPicker(
-          currentLocation: _fields!['locationText']!.text,
-          isActive: () => mounted && _sameOwner && !_saving,
-        ),
-      ),
-    );
-    if (!mounted || !_sameOwner || result == null || !result.isValid) return;
-    _fields!['locationText']!.text = result.displayText;
-  }
-
   Future<void> _link([SocialLink? existing]) async {
     if (!_sameOwner || _saving) return;
     final id =
@@ -502,11 +487,6 @@ class _SettingsBaseEditorScreenState
       ),
       const SizedBox(height: StackCardSpacing.lg),
     ],
-    StackCardButton(
-      label: context.strings.tr('location.pick'),
-      onPressed: _location,
-    ),
-    const SizedBox(height: StackCardSpacing.lg),
     Text(
       context.strings.tr('documentEditor.qualifications'),
       style: Theme.of(context).textTheme.titleLarge,

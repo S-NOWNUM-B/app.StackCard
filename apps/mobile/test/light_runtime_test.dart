@@ -23,7 +23,7 @@ void main() {
     view.resetDevicePixelRatio();
   });
 
-  for (final route in ['/home', '/resumes', '/projects', '/portfolio']) {
+  for (final route in ['/home', '/projects', '/editor']) {
     testWidgets('Legacy dark English settings render light Russian $route', (
       tester,
     ) async {
@@ -47,9 +47,16 @@ void main() {
       expect(Theme.of(context).brightness, Brightness.light);
       expect(Theme.of(context).scaffoldBackgroundColor, Colors.white);
       expect(AppStrings.of(context).locale, const Locale('ru'));
-      expect(find.text('Резюме'), findsWidgets);
-      expect(find.text('Проекты'), findsWidgets);
-      expect(find.text('Портфолио'), findsWidgets);
+      final navigation = find.byType(NavigationBar);
+      expect(navigation, findsOneWidget);
+      for (final label in ['Главная', 'Проекты', 'Редактор']) {
+        expect(
+          find.descendant(of: navigation, matching: find.text(label)),
+          findsOneWidget,
+        );
+      }
+      expect(find.text('Резюме'), findsNothing);
+      expect(MediaQuery.disableAnimationsOf(context), isTrue);
       expect(repository.writes, isEmpty);
       expect(
         repository.stored,

@@ -39,6 +39,12 @@ void main() {
       await tester.tap(find.byKey(const Key('settings.reducedMotion')));
       await tester.pumpAndSettle();
       expect(
+        MediaQuery.disableAnimationsOf(
+          tester.element(find.byKey(const Key('settings.reducedMotion'))),
+        ),
+        isTrue,
+      );
+      expect(
         tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig,
         same(router),
       );
@@ -55,6 +61,12 @@ void main() {
       await tester.pumpAndSettle();
       final container = ProviderScope.containerOf(
         tester.element(find.byType(ProjectsScreen)),
+      );
+      expect(
+        MediaQuery.disableAnimationsOf(
+          tester.element(find.byType(ProjectsScreen)),
+        ),
+        isTrue,
       );
       container
           .read(projectFiltersProvider.notifier)
@@ -82,8 +94,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byType(ProjectsScreen), findsNothing);
-      await tester.ensureVisible(find.text('Пока нет работ'));
-      expect(find.text('Пока нет работ'), findsOneWidget);
+      await tester.ensureVisible(find.text('Портфолио пока пустое'));
+      expect(find.text('Портфолио пока пустое'), findsOneWidget);
       await tester.tap(
         find.descendant(
           of: find.byType(NavigationBar),
@@ -216,6 +228,12 @@ void main() {
       );
       await tester.tap(find.byKey(const Key('settings.reducedMotion')));
       await tester.pumpAndSettle();
+      expect(
+        MediaQuery.disableAnimationsOf(
+          tester.element(find.byKey(const Key('settings.reducedMotion'))),
+        ),
+        isTrue,
+      );
       await tester.tap(find.byTooltip('Назад'));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Назад'));
@@ -248,6 +266,12 @@ void main() {
               widget is Semantics && widget.properties.label == 'Проекты: 4',
         ),
         findsOneWidget,
+      );
+      expect(
+        MediaQuery.disableAnimationsOf(
+          tester.element(find.byType(ProjectsScreen)),
+        ),
+        isFalse,
       );
       expect(
         Theme.of(tester.element(find.byType(TextFormField))).brightness,

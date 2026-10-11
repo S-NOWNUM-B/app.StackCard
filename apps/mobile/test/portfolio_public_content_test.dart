@@ -164,11 +164,13 @@ void main() {
       'id',
       'title',
       'description',
+      'contribution',
       'technologies',
       'repositoryUrl',
       'liveUrl',
       'featured',
       'visible',
+      'iconId',
     });
     final encoded = jsonEncode(payload);
     for (final privatePart in [
@@ -184,16 +186,13 @@ void main() {
       expect(encoded, isNot(contains(privatePart)), reason: privatePart);
     }
     final decoded = decodePortfolioContent(payload);
-    // Старый public schema не содержит private consent и contribution.
+    // Public schema не содержит private consent.
     expect(
       decoded,
       projected.copyWith(
         profile: projected.profile.copyWith(publishLocation: false),
         links: projected.links
             .map((link) => link.copyWith(publishAllowed: false))
-            .toList(),
-        projects: projected.projects
-            .map((project) => project.copyWith(contribution: ''))
             .toList(),
       ),
     );

@@ -1,15 +1,17 @@
 'use client';
 import { signOut, type User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from './auth-session';
 import { Button, Field, Header, Icon, LinkButton, Notice } from './ui';
 import { ContentEditor } from './content-editor';
-import { AttachmentsEditor, emptyProject, GitHubImporter, ProjectForm } from './project-editor';
+import { AttachmentsEditor, emptyProject, ProjectForm } from './project-editor';
+import { GitHubImporter } from './github-importer';
 import { DocumentView } from './document-view';
-import { AccountSettings } from './account-settings';
+import { AccountSettings, ApplicationPreferences } from './account-settings';
 import { Inbox } from './inbox';
-import { MediaUpload, PrivateImage } from './media-upload';
+import { AvatarEditor, PrivateImage } from './media-upload';
+import { readAvatarBytes, readLegacyAvatarBytes } from '@/lib/portfolio-media-repository';
 import { firebaseServices } from '@/lib/firebase';
 import { loadDraft, saveDraft } from '@/lib/draft-repository';
 import {
@@ -28,11 +30,8 @@ import {
   writePublicationReceipt,
 } from '@/lib/publication-contract';
 import {
-  applyDocumentBaseReview,
-  createDocumentBaseReview,
   clone,
-  createDocument,
-  duplicateDocument,
+  advancePersonalization,
   emptyContent,
   equal,
   resolveDocument,
@@ -40,66 +39,51 @@ import {
   safeReturnPath,
   uid,
   validateWorkspace,
+  mainDocument,
+  migrateMainPortfolio,
+  normalizeGitHubUsername,
+  deleteLibraryProject,
+  importGitHubProjects,
+  rebaseLibraryChange,
   type DraftEnvelope,
-  type PortfolioDocument,
   type WorkspaceContent,
-  type DocumentContent,
-  type DocumentBaseReview,
+  type PortfolioDocument,
+  type GitHubSource,
+  type Project,
 } from '@/lib/model';
 type View =
   | 'home'
-  | 'resumes'
   | 'projects'
-  | 'portfolios'
-  | 'base'
+  | 'editor'
+  | 'github-import'
   | 'settings'
   | 'inbox'
   | `inbox/${string}`
-  | `document/${string}`;
+  | `project/${string}`;
 type PendingOperation = PublicationMutation;
-function errorMessage(e: unknown) {
-  return e instanceof Error ? e.message : 'Действие не завершено. Повторите попытку.';
-}
-function reviewText(value: unknown): string {
-  if (value == null) return 'Нет значения';
-  if (typeof value === 'boolean') return value ? 'Да' : 'Нет';
-  if (typeof value === 'string') return value || 'Пустой текст';
-  const labels: Record<string, string> = {
-    name: 'Название',
-    role: 'Роль',
-    organization: 'Организация',
-    period: 'Период',
-    description: 'Описание',
-    institution: 'Учебное заведение',
-    qualification: 'Квалификация',
-    label: 'Название',
-    url: 'Ссылка',
-    kind: 'Тип контакта',
-    publishAllowed: 'Разрешено публиковать',
-    visible: 'Показывать',
-    avatarUrl: 'Ссылка на фото',
-    avatarPath: 'Приватное фото',
-  };
-  const kinds: Record<string, string> = {
-    email: 'Почта',
-    phone: 'Телефон',
-    telegram: 'Telegram',
-    github: 'GitHub',
-    website: 'Сайт',
-    linkedin: 'LinkedIn',
-    other: 'Другая ссылка',
-  };
-  return Object.entries(value as Record<string, unknown>)
-    .filter(([key]) => key !== 'id')
-    .map(
-      ([key, v]) =>
-        `${labels[key] ?? key}: ${key === 'kind' ? (kinds[String(v)] ?? v) : reviewText(v)}`,
+const canonicalGitHub = (value: string) => {
+  try {
+    return normalizeGitHubUsername(value);
+  } catch {
+    return null;
+  }
+};
+const errorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : 'Действие не завершено. Повторите попытку.';
+export function ownerView(value: string): View {
+  if (
+    /^(home|projects|editor|github-import|settings|inbox|inbox\/[a-f0-9]{32}|project\/[A-Za-z0-9_-]+)$/.test(
+      value,
     )
-    .join('\n');
+  )
+    return value as View;
+  if (['base', 'resumes', 'portfolios'].includes(value) || value.startsWith('document/'))
+    return 'editor';
+  return 'home';
 }
 export function Workspace({ initialView = 'home' }: { initialView?: string }) {
-  const session = useSession();
-  const router = useRouter();
+  const session = useSession(),
+    router = useRouter();
   useEffect(() => {
     if (!session.loading && !session.error && !session.user) {
       const destination = safeReturnPath(
@@ -140,38 +124,63 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     [saving, setSaving] = useState(false),
     [error, setError] = useState(''),
     [message, setMessage] = useState(''),
-    [view, setView] = useState<View>(initialView as View),
-    [mode, setMode] = useState<'edit' | 'preview'>('edit'),
+    [view, setView] = useState<View>(ownerView(initialView)),
     [publications, setPublications] = useState<Inventory | null>(null),
     [publicationError, setPublicationError] = useState(''),
     [pending, setPending] = useState<PendingOperation | null>(null),
     [receiptError, setReceiptError] = useState(''),
     [search, setSearch] = useState(''),
-    [review, setReview] = useState<DocumentBaseReview | null>(null),
-    [selected, setSelected] = useState<Set<string>>(new Set());
-  const reviewDialog = useRef<HTMLElement | null>(null);
+    [migrationChoice, setMigrationChoice] = useState<string | null>(null),
+    [migrationPreview, setMigrationPreview] = useState(false),
+    [shareChoice, setShareChoice] = useState(false),
+    [manualShareUrl, setManualShareUrl] = useState(''),
+    [githubInput, setGitHubInput] = useState(''),
+    [avatarBusy, setAvatarBusy] = useState(false);
+  const shareDialog = useRef<HTMLElement | null>(null);
+  const initializationAttempt = useRef<{
+    mutationId: string;
+    content: WorkspaceContent;
+  } | null>(null);
+  const reloadVersion = useRef(0);
   const saveAttempt = useRef<{
     mutationId: string;
     basis: DraftEnvelope | null;
     content: WorkspaceContent;
     notes: string;
+    previousContent?: WorkspaceContent;
+    githubInput?: string;
   } | null>(null);
-  const input = useRef({ content, notes });
-  input.current = { content, notes };
-  const activeUid = useRef(user.uid);
-  const dirty = !equal(content, basis?.content ?? emptyContent()) || notes !== (basis?.notes ?? '');
+  const scopedAttempt = useRef<{
+    mutationId: string;
+    basis: DraftEnvelope | null;
+    previous: WorkspaceContent;
+    content: WorkspaceContent;
+    notes: string;
+  } | null>(null);
+  const input = useRef({ content, notes, githubInput });
+  input.current = { content, notes, githubInput };
+  const activeUid = useRef(user.uid),
+    shareAfter = useRef(false);
+  const dirty =
+    !equal(content, basis?.content ?? emptyContent()) ||
+    notes !== (basis?.notes ?? '') ||
+    canonicalGitHub(githubInput) !== (basis?.content?.githubUsername ?? '');
   const dirtyRef = useRef(dirty);
   dirtyRef.current = dirty;
   const operationKey = `stackcard.publication.${user.uid}`;
+  const savedWorkspace = basis?.content ?? emptyContent(),
+    savedMain = mainDocument(savedWorkspace),
+    workingMain = mainDocument(content);
+  const activeDocument = savedMain,
+    activePublication = savedMain
+      ? publications?.publications.find((p) => p.documentId === savedMain.id)
+      : undefined;
   const inboxView = view === 'inbox' || view.startsWith('inbox/');
-  const activeDocument = view.startsWith('document/')
-    ? content.documents.find((d) => d.id === view.slice(9))
+  const project = view.startsWith('project/')
+    ? content.projects.find((p) => p.id === view.slice(8))
     : undefined;
-  const activePublication = activeDocument
-    ? publications?.publications.find((p) => p.documentId === activeDocument.id)
-    : undefined;
-  const publishReady =
-    !dirty && !!basis && !!publications && !pending && !receiptError && !!activeDocument;
+  const onboarding = content.personalization.status === 'inProgress';
+  const migrationNeeded = !loading && !blocked && !workingMain;
   const owned = () =>
     activeUid.current === user.uid && firebaseServices().auth.currentUser?.uid === user.uid;
   async function refreshInventory() {
@@ -187,23 +196,47 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   }
   async function reload() {
     if (!owned()) return;
+    const version = ++reloadVersion.current;
+    const currentRead = () => owned() && version === reloadVersion.current;
     setLoading(true);
     setError('');
     setBlocked(false);
     try {
-      const saved = await loadDraft(user);
-      if (!owned()) return;
+      let saved = await loadDraft(user);
+      if (!currentRead()) return;
+      if (!saved?.content) {
+        if (!initializationAttempt.current) {
+          const first = migrateMainPortfolio(emptyContent(), null);
+          first.personalization = { status: 'inProgress', step: 0 };
+          initializationAttempt.current = {
+            mutationId: `web-initialize-${uid()}`,
+            content: first,
+          };
+        }
+        const attempt = initializationAttempt.current;
+        saved = await saveDraft(
+          user,
+          saved,
+          attempt.content,
+          saved?.notes ?? '',
+          attempt.mutationId,
+        );
+        if (!currentRead()) return;
+      }
+      initializationAttempt.current = null;
       setBasis(saved);
-      setContent(saved?.content ?? emptyContent());
-      setNotes(saved?.notes ?? '');
+      setContent(saved.content ?? emptyContent());
+      setGitHubInput(saved.content?.githubUsername ?? '');
+      setNotes(saved.notes);
       saveAttempt.current = null;
+      scopedAttempt.current = null;
     } catch (e) {
-      if (owned()) {
+      if (currentRead()) {
         setError(errorMessage(e));
         setBlocked(true);
       }
     } finally {
-      if (owned()) setLoading(false);
+      if (currentRead()) setLoading(false);
     }
   }
   useEffect(() => {
@@ -213,18 +246,13 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     try {
       setPending(readPublicationReceipt(localStorage, operationKey));
       const hash = decodeURIComponent(window.location.hash.slice(1));
-      if (
-        hash &&
-        /^(home|resumes|projects|portfolios|base|settings|inbox|inbox\/[a-f0-9]{32}|document\/[A-Za-z0-9_-]+)$/.test(
-          hash,
-        )
-      )
-        setView(hash as View);
+      if (hash) setView(ownerView(hash));
     } catch (e) {
       setReceiptError(errorMessage(e));
     }
     return () => {
       activeUid.current = '';
+      reloadVersion.current++;
     };
   }, [user.uid]);
   useEffect(() => {
@@ -241,43 +269,62 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     return () => window.removeEventListener('storage', changed);
   }, [operationKey]);
   useEffect(() => {
-    function beforeUnload(event: BeforeUnloadEvent) {
+    function leaving(event: BeforeUnloadEvent) {
       if (dirtyRef.current) {
         event.preventDefault();
         event.returnValue = '';
       }
     }
-    window.addEventListener('beforeunload', beforeUnload);
-    return () => window.removeEventListener('beforeunload', beforeUnload);
+    window.addEventListener('beforeunload', leaving);
+    return () => window.removeEventListener('beforeunload', leaving);
   }, []);
   useEffect(() => {
-    if (!review) return;
+    function history() {
+      const next = ownerView(decodeURIComponent(window.location.hash.slice(1)));
+      if (busy || avatarBusy) {
+        window.history.replaceState(null, '', `/workspace#${view}`);
+        return;
+      }
+      if (
+        dirtyRef.current &&
+        !window.confirm('Есть несохранённые изменения. Отбросить их и перейти?')
+      ) {
+        window.history.replaceState(null, '', `/workspace#${view}`);
+        return;
+      }
+      if (dirtyRef.current) {
+        setContent(clone(basis?.content ?? emptyContent()));
+        setGitHubInput(basis?.content?.githubUsername ?? '');
+        setNotes(basis?.notes ?? '');
+        saveAttempt.current = null;
+      }
+      setView(next);
+    }
+    window.addEventListener('popstate', history);
+    return () => window.removeEventListener('popstate', history);
+  }, [view, busy, avatarBusy, basis]);
+  useEffect(() => {
+    if (!shareChoice) return;
     const previous = document.activeElement as HTMLElement | null;
-    const dialog = reviewDialog.current;
-    if (!dialog) return;
-    const focusable = () =>
-      Array.from(
-        dialog.querySelectorAll<HTMLElement>(
-          'button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]',
-        ),
-      );
-    focusable()[0]?.focus();
+    const dialog = shareDialog.current;
+    const buttons = () =>
+      Array.from(dialog?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []);
+    buttons()[0]?.focus();
     function key(event: KeyboardEvent) {
       if (event.key === 'Escape') {
+        setShareChoice(false);
         event.preventDefault();
-        setReview(null);
       }
-      if (event.key === 'Tab') {
-        const nodes = focusable(),
-          first = nodes[0],
-          last = nodes.at(-1);
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last?.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first?.focus();
-        }
+      if (event.key !== 'Tab') return;
+      const items = buttons(),
+        first = items[0],
+        last = items.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
       }
     }
     document.addEventListener('keydown', key);
@@ -285,9 +332,9 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       document.removeEventListener('keydown', key);
       previous?.focus();
     };
-  }, [review]);
+  }, [shareChoice]);
   function navigate(next: View, preserve = false) {
-    if (busy || review) return;
+    if (busy || avatarBusy) return;
     if (
       !preserve &&
       dirty &&
@@ -296,62 +343,74 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       return;
     if (!preserve && dirty) {
       setContent(clone(basis?.content ?? emptyContent()));
+      setGitHubInput(basis?.content?.githubUsername ?? '');
       setNotes(basis?.notes ?? '');
       saveAttempt.current = null;
     }
     setView(next);
-    setMode('edit');
-    setReview(null);
-    window.history.replaceState(null, '', `/workspace#${encodeURIComponent(next)}`);
+    setSearch('');
+    window.history.pushState(null, '', `/workspace#${next}`);
   }
   function update(next: WorkspaceContent) {
     setContent(next);
     setMessage('');
   }
   function updateDocument(document: PortfolioDocument) {
-    update({
-      ...content,
-      documents: content.documents.map((d) =>
+    setContent((current) => ({
+      ...current,
+      documents: current.documents.map((d) =>
         d.id === document.id ? { ...document, updatedAt: new Date().toISOString() } : d,
       ),
-    });
+    }));
+    setMessage('');
   }
-  function openBaseReview() {
-    if (busy || loading || blocked || !owned() || !activeDocument) return;
-    if (!basis?.content) {
-      setError('Сначала сохраните общую базу, затем откройте обновление документа.');
-      return;
-    }
-    const captured = createDocumentBaseReview(user.uid, basis.content, activeDocument);
-    setSelected(new Set(captured.changes.filter((c) => !c.localOverride).map((c) => c.id)));
-    setReview(captured);
-  }
-  function applyBaseReview() {
-    if (!review || !owned()) return;
+  async function commitScoped(next: WorkspaceContent) {
+    if (busy || avatarBusy || !owned() || blocked)
+      throw new Error('Дождитесь завершения предыдущего действия.');
+    setBusy(true);
+    setError('');
     try {
-      if (!basis?.content || !activeDocument)
-        throw new Error('Данные изменились. Откройте обновление из базы заново.');
-      updateDocument(
-        applyDocumentBaseReview(review, user.uid, basis.content, activeDocument, selected),
+      let attempt = scopedAttempt.current;
+      if (attempt && !equal(next, attempt.content))
+        throw new Error('Сначала подтвердите незавершённое изменение библиотеки кнопкой выше.');
+      if (!attempt) {
+        const previous = clone(basis?.content ?? emptyContent());
+        attempt = {
+          mutationId: `web-scoped-${uid()}`,
+          basis,
+          previous,
+          content: clone(validateWorkspace(next, user.uid)),
+          notes: basis?.notes ?? '',
+        };
+        scopedAttempt.current = attempt;
+      }
+      const saved = await saveDraft(
+        user,
+        attempt.basis,
+        attempt.content,
+        attempt.notes,
+        attempt.mutationId,
       );
-    } catch (e) {
-      setError(errorMessage(e));
+      if (!owned()) return;
+      setBasis(saved);
+      setContent((working) => rebaseLibraryChange(saved.content!, attempt.previous, working));
+      setGitHubInput((current) =>
+        canonicalGitHub(current) === attempt.previous.githubUsername
+          ? saved.content!.githubUsername
+          : current,
+      );
+      scopedAttempt.current = null;
+      setMessage('Изменения библиотеки сохранены. Публичная версия не изменилась.');
+    } finally {
+      if (owned()) setBusy(false);
     }
-    setReview(null);
-  }
-  function reviewValue(id: string, value: unknown) {
-    const path =
-      id === 'profile.avatarPath' && value && typeof value === 'object'
-        ? (value as { avatarPath?: unknown }).avatarPath
-        : null;
-    return typeof path === 'string' && path ? (
-      <PrivateImage user={user} path={path} />
-    ) : (
-      <pre>{reviewText(value)}</pre>
-    );
   }
   async function save() {
-    if (blocked || busy || review || !owned()) return;
+    if (blocked || busy || avatarBusy || !owned()) return;
+    if (scopedAttempt.current) {
+      setError('Сначала подтвердите незавершённое изменение библиотеки кнопкой выше.');
+      return;
+    }
     setBusy(true);
     setSaving(true);
     setError('');
@@ -364,7 +423,12 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         attempt = {
           mutationId: `web-${uid()}`,
           basis,
-          content: clone(validateWorkspace(content, user.uid)),
+          content: clone(
+            validateWorkspace(
+              { ...content, githubUsername: normalizeGitHubUsername(githubInput) },
+              user.uid,
+            ),
+          ),
           notes,
         };
         saveAttempt.current = attempt;
@@ -378,10 +442,20 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       );
       if (!owned()) return;
       const hasNewerInput =
-        !equal(input.current.content, attempt.content) || input.current.notes !== attempt.notes;
+        !equal(
+          { ...input.current.content, githubUsername: canonicalGitHub(input.current.githubInput) },
+          attempt.content,
+        ) ||
+        input.current.notes !== attempt.notes ||
+        canonicalGitHub(input.current.githubInput) !== attempt.content.githubUsername;
       setBasis(saved);
       setContent((current) =>
-        equal(current, attempt.content) ? (saved.content ?? emptyContent()) : current,
+        equal(
+          { ...current, githubUsername: canonicalGitHub(input.current.githubInput) },
+          attempt.content,
+        )
+          ? (saved.content ?? emptyContent())
+          : current,
       );
       setNotes((current) => (current === attempt.notes ? saved.notes : current));
       saveAttempt.current = null;
@@ -434,24 +508,12 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     setMessage('Сервер подтвердил операцию.');
     await refreshInventory();
     if (!owned()) return;
-    if (operation.action === 'deleteDocument') {
-      if (dirtyRef.current) {
-        setContent((current) => ({
-          ...current,
-          documents: current.documents
-            .filter((d) => d.id !== operation.documentId)
-            .map((d) => ({
-              ...d,
-              attachedResumeId:
-                d.attachedResumeId === operation.documentId ? null : d.attachedResumeId,
-            })),
-        }));
-        setMessage(
-          'Документ удалён. Более поздние правки других данных сохранены в форме. Перед Save сверьте серверную версию.',
-        );
-      } else await reload();
+    if (shareAfter.current && result.publication?.state === 'published') {
+      shareAfter.current = false;
+      await sharePublication(result.publication);
     }
   }
+
   async function perform(operation: PendingOperation, recovery = false) {
     if (busy || !owned()) return;
     setBusy(true);
@@ -493,25 +555,22 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       if (owned()) setBusy(false);
     }
   }
-  function beginPublication(action: PendingOperation['action']) {
-    if (
-      !activeDocument ||
-      !basis ||
-      !publications ||
-      (action !== 'unpublish' && dirty) ||
-      pending ||
-      receiptError ||
-      busy
-    )
+  function beginPublication(action: PendingOperation['action'], confirmed = false) {
+    if (!activeDocument || !basis || !publications || pending || receiptError || busy) {
+      shareAfter.current = false;
       return;
+    }
     const p = activePublication;
     if (
       action === 'publish' &&
+      !confirmed &&
       !window.confirm(
-        'Опубликовать текущую сохранённую версию? Выбранные контакты и изображения станут доступны по постоянной ссылке.',
+        'Опубликовать текущую сохранённую версию? Введённые контакты и фотография станут доступны по постоянной ссылке.',
       )
-    )
+    ) {
+      shareAfter.current = false;
       return;
+    }
     if (
       action === 'unpublish' &&
       !window.confirm(
@@ -535,32 +594,8 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       expectedGeneration: publications.lifecycleGeneration,
     });
   }
-  function create(kind: PortfolioDocument['kind']) {
-    if (busy) return;
-    try {
-      const document = createDocument(
-        content,
-        kind,
-        kind === 'resume' ? 'Новое резюме' : 'Новое портфолио',
-      );
-      update({ ...content, documents: [...content.documents, document] });
-      navigate(`document/${document.id}`, true);
-    } catch (e) {
-      setError(errorMessage(e));
-    }
-  }
-  function duplicate(document: PortfolioDocument) {
-    if (busy) return;
-    if (content.documents.length >= 20) {
-      setError('Можно сохранить не больше 20 документов.');
-      return;
-    }
-    const copy = duplicateDocument(document);
-    update({ ...content, documents: [...content.documents, copy] });
-    navigate(`document/${copy.id}`, true);
-  }
   async function exit() {
-    if (busy || review || !owned()) return;
+    if (busy || avatarBusy || !owned()) return;
     if (dirty && !window.confirm('Отбросить несохранённые изменения и выйти?')) return;
     try {
       await signOut(firebaseServices().auth);
@@ -568,29 +603,237 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       setError(errorMessage(e));
     }
   }
-  async function copy(publication: Publication) {
+  async function sharePublication(publication: Publication) {
     if (publication.state !== 'published' || !publication.url || !safeHttpUrl(publication.url))
-      return;
+      throw new Error('Нет подтверждённой публичной ссылки.');
+    if (!owned()) return;
     try {
-      await navigator.clipboard.writeText(publication.url);
-      setMessage('Постоянная ссылка скопирована.');
-    } catch {
-      setError('Не удалось скопировать ссылку. Выделите её и скопируйте вручную.');
+      if (navigator.share) {
+        await navigator.share({ title: 'Портфолио', url: publication.url });
+        if (owned()) setMessage('Ссылка отправлена.');
+      } else {
+        await navigator.clipboard.writeText(publication.url);
+        if (owned()) setMessage('Ссылка скопирована.');
+      }
+    } catch (e) {
+      if (e instanceof Error && e.name === 'AbortError') return;
+      if (owned()) {
+        setManualShareUrl(publication.url);
+        setMessage('Скопируйте постоянную ссылку ниже.');
+      }
     }
   }
-  const shownDocuments = content.documents
-    .filter(
-      (d) =>
-        (view === 'resumes'
-          ? d.kind === 'resume'
-          : view === 'portfolios'
-            ? d.kind === 'portfolio'
-            : true) &&
-        `${d.title} ${d.content.profile.name}`.toLowerCase().includes(search.toLowerCase()),
+  function share() {
+    shareAfter.current = false;
+    setError('');
+    if (!basis || !savedMain) {
+      setError('Сначала сохраните портфолио.');
+      return;
+    }
+    if (!publications) {
+      setError(publicationError || 'Не удалось проверить публичную версию. Повторите проверку.');
+      void refreshInventory();
+      return;
+    }
+    if (pending || receiptError) {
+      setError('Сначала восстановите незавершённую операцию публикации.');
+      return;
+    }
+    if (activePublication?.state === 'published') {
+      if (activePublication.sourceMutationId !== basis.mutationId) {
+        setShareChoice(true);
+        return;
+      }
+      void sharePublication(activePublication).catch((e) => setError(errorMessage(e)));
+      return;
+    }
+    shareAfter.current = true;
+    beginPublication('publish');
+  }
+  async function download() {
+    if (busy || !savedMain || !owned()) return;
+    setBusy(true);
+    setError('');
+    try {
+      const captured = resolveDocument(savedWorkspace, savedMain),
+        owner = user.uid;
+      const avatarBytes = captured.profile.avatarPath
+        ? await readAvatarBytes(user, captured.profile.avatarPath)
+        : captured.profile.avatarUrl
+          ? await readLegacyAvatarBytes(user, captured.profile.avatarUrl)
+          : undefined;
+      if (!owned() || owner !== user.uid) return;
+      const { generatePortfolioPdf } = await import('@/lib/portfolio-pdf');
+      const blob = await generatePortfolioPdf(captured, { avatarBytes });
+      if (!owned()) return;
+      const url = URL.createObjectURL(blob),
+        link = document.createElement('a');
+      link.href = url;
+      link.download = 'StackCard-portfolio.pdf';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      setMessage('PDF подготовлен для скачивания.');
+    } catch (e) {
+      if (owned()) setError(errorMessage(e));
+    } finally {
+      if (owned()) setBusy(false);
+    }
+  }
+  async function migrate() {
+    if (busy || !owned()) return;
+    setBusy(true);
+    setError('');
+    try {
+      const migrated = migrateMainPortfolio(content, migrationChoice);
+      const saved = await saveDraft(user, basis, migrated, notes, `web-migrate-${uid()}`);
+      if (!owned()) return;
+      setBasis(saved);
+      setContent(saved.content!);
+      setMigrationPreview(false);
+      setMessage(
+        'Основное портфолио сохранено. Прежние данные сохранены для восстановления; публикация не изменилась.',
+      );
+    } catch (e) {
+      if (owned()) setError(errorMessage(e));
+    } finally {
+      if (owned()) setBusy(false);
+    }
+  }
+  async function personalize(action: 'next' | 'skip' | 'back') {
+    if (!workingMain || busy || avatarBusy || !owned()) return;
+    setBusy(true);
+    setError('');
+    try {
+      let attempt = saveAttempt.current;
+      if (!attempt) {
+        const next = advancePersonalization(
+          {
+            ...content,
+            githubUsername:
+              action === 'skip' || action === 'back'
+                ? content.githubUsername
+                : normalizeGitHubUsername(githubInput),
+          },
+          action,
+        );
+        attempt = {
+          mutationId: `web-personalize-${uid()}`,
+          basis,
+          content: clone(validateWorkspace(next, user.uid)),
+          notes,
+          previousContent: clone(content),
+          githubInput,
+        };
+        saveAttempt.current = attempt;
+      }
+      const saved = await saveDraft(
+        user,
+        attempt.basis,
+        attempt.content,
+        attempt.notes,
+        attempt.mutationId,
+      );
+      if (!owned()) return;
+      setBasis(saved);
+      setContent((current) =>
+        equal(current, attempt.previousContent)
+          ? saved.content!
+          : { ...current, personalization: saved.content!.personalization },
+      );
+      setGitHubInput((current) =>
+        current === attempt.githubInput ? saved.content!.githubUsername : current,
+      );
+      saveAttempt.current = null;
+      if (saved.content!.personalization.status === 'completed') {
+        setView('home');
+        window.history.replaceState(null, '', '/workspace#home');
+      }
+    } catch (e) {
+      if (owned())
+        setError(
+          errorMessage(e) +
+            (saveAttempt.current ? ' Повторное действие подтвердит предыдущий шаг.' : ''),
+        );
+    } finally {
+      if (owned()) setBusy(false);
+    }
+  }
+  async function saveGitHub(value: string) {
+    const previous = basis?.content ?? emptyContent();
+    const next = { ...previous, githubUsername: normalizeGitHubUsername(value) };
+    await commitScoped(next);
+  }
+  async function importProjects(sources: GitHubSource[]) {
+    await commitScoped(importGitHubProjects(basis?.content ?? emptyContent(), sources));
+  }
+  async function removeProject(id: string) {
+    if (
+      !window.confirm(
+        'Удалить проект из StackCard и убрать из портфолио? Репозиторий GitHub сохранится. Если проект опубликован, обновите публичную версию отдельно.',
+      )
     )
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+      return;
+    if (!savedWorkspace.projects.some((p) => p.id === id)) {
+      update(deleteLibraryProject(content, id));
+      return;
+    }
+    try {
+      await commitScoped(deleteLibraryProject(savedWorkspace, id));
+    } catch (e) {
+      if (owned()) setError(errorMessage(e));
+    }
+  }
+  const photo = workingMain ? (
+    <AvatarEditor
+      user={user}
+      path={workingMain.content.profile.avatarPath}
+      externalUrl={workingMain.content.profile.avatarUrl}
+      disabled={busy}
+      onBusyChanged={setAvatarBusy}
+      onChange={(path) =>
+        setContent((current) => ({
+          ...current,
+          documents: current.documents.map((d) =>
+            d.id === current.mainPortfolioId
+              ? {
+                  ...d,
+                  updatedAt: new Date().toISOString(),
+                  content: {
+                    ...d.content,
+                    profile: { ...d.content.profile, avatarPath: path, avatarUrl: '' },
+                  },
+                }
+              : d,
+          ),
+        }))
+      }
+    />
+  ) : null;
+  const githubField = (
+    <Field
+      label="GitHub-профиль"
+      placeholder="https://github.com/username"
+      value={githubInput}
+      maxLength={120}
+      onChange={(e) => {
+        setGitHubInput(e.target.value);
+        try {
+          update({ ...content, githubUsername: normalizeGitHubUsername(e.target.value) });
+        } catch {
+          /* Не завершённый URL не заменяет сохранённый источник. */
+        }
+      }}
+    />
+  );
+  const previewCandidate =
+    migrationNeeded && migrationPreview ? migrateMainPortfolio(content, migrationChoice) : null;
+  const showSave =
+    !onboarding &&
+    !migrationNeeded &&
+    !inboxView &&
+    (view === 'editor' || view === 'projects' || view.startsWith('project/'));
   return (
-    <div className="workspace">
+    <div className="workspace single-portfolio-workspace">
       <Header
         context="workspace"
         actions={
@@ -599,33 +842,32 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
             variant="quiet"
             aria-label="Настройки"
             aria-current={view === 'settings' ? 'page' : undefined}
-            disabled={busy || !!review}
+            disabled={busy || avatarBusy}
             onClick={() => navigate('settings')}
           >
             <Icon name="settings" />
           </Button>
         }
       />
-      <div className="workspace-body" inert={!!review}>
+      <div className="workspace-body" inert={shareChoice}>
         <nav className="workspace-nav" aria-label="Рабочая область">
           {(
             [
               { key: 'home', label: 'Главная', icon: 'home' },
-              { key: 'resumes', label: 'Резюме', icon: 'file-text' },
               { key: 'projects', label: 'Проекты', icon: 'folder' },
-              {
-                key: 'portfolios',
-                label: 'Портфолио',
-                icon: 'panels-top-left',
-              },
-              { key: 'settings', label: 'Настройки', icon: 'settings' },
+              { key: 'editor', label: 'Редактор', icon: 'file-text' },
             ] as const
           ).map((n) => (
             <Button
               key={n.key}
-              disabled={busy}
               variant="quiet"
-              className={`${view === n.key ? 'active' : ''} ${n.key === 'settings' ? 'settings-entry' : ''}`}
+              disabled={busy || avatarBusy || onboarding || migrationNeeded}
+              className={
+                view === n.key ||
+                (n.key === 'projects' && (view === 'github-import' || view.startsWith('project/')))
+                  ? 'active'
+                  : ''
+              }
               aria-current={view === n.key ? 'page' : undefined}
               onClick={() => navigate(n.key)}
             >
@@ -634,662 +876,516 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
             </Button>
           ))}
         </nav>
-        <main
-          id="main"
-          className="workspace-main stack"
-          aria-busy={(!inboxView && loading) || busy}
-        >
-          {inboxView ? (
+        <main id="main" className="workspace-main stack" aria-busy={loading || busy}>
+          {error && <Notice error>{error}</Notice>}
+          {message && <Notice>{message}</Notice>}
+          {loading ? (
+            <Notice>Загружаем сохранённую версию…</Notice>
+          ) : blocked ? (
             <>
-              <h1>Входящие</h1>
-              <Inbox
-                key={`${user.uid}:${view}`}
-                user={user}
-                requestId={view.startsWith('inbox/') ? view.slice(6) : undefined}
-                onOpen={(id) => navigate(`inbox/${id}`, true)}
-                onBack={() => navigate(view === 'inbox' ? 'settings' : 'inbox', true)}
-              />
+              <p>Не удалось прочитать совместимые данные. Введённые данные не заменены.</p>
+              <Button onClick={() => void reload()}>Повторить чтение</Button>
             </>
-          ) : loading ? (
-            <Notice>Загружаем серверную версию…</Notice>
           ) : (
             <>
-              <h1>
-                {view === 'home'
-                  ? 'Рабочая область'
-                  : view === 'base'
-                    ? 'Общая профессиональная база'
-                    : view === 'projects'
-                      ? 'Библиотека проектов'
-                      : view === 'resumes'
-                        ? 'Резюме'
-                        : view === 'portfolios'
-                          ? 'Портфолио'
-                          : view === 'settings'
-                            ? 'Настройки'
-                            : activeDocument
-                              ? `${mode === 'preview' ? 'Просмотр' : 'Редактор'} ${activeDocument.kind === 'resume' ? 'резюме' : 'портфолио'}`
-                              : 'Документ не найден'}
-              </h1>
-              {view === 'settings' && (
-                <section className="section stack">
-                  <h2>Обращения</h2>
-                  <p>Сообщения из опубликованных документов доступны во входящих.</p>
-                  <Button variant="secondary" onClick={() => navigate('inbox')}>
-                    Открыть входящие
+              {scopedAttempt.current && (
+                <section className="stack">
+                  <Notice>Нужно подтвердить результат предыдущего изменения библиотеки.</Notice>
+                  <Button
+                    disabled={busy || avatarBusy}
+                    onClick={() => {
+                      const attempt = scopedAttempt.current;
+                      if (attempt)
+                        void commitScoped(attempt.content).catch((e) => {
+                          if (owned()) setError(errorMessage(e));
+                        });
+                    }}
+                  >
+                    Подтвердить изменение библиотеки
                   </Button>
                 </section>
               )}
-              {error && <Notice error>{error}</Notice>}
-              {message && <Notice>{message}</Notice>}
-              {blocked && (
-                <>
-                  <p>Сохранение заблокировано до успешного чтения совместимых данных.</p>
-                  <Button onClick={() => void reload()}>Повторить чтение</Button>
-                </>
+              {pending && (
+                <section className="section stack">
+                  <h2>Незавершённая публикация</h2>
+                  <Button disabled={busy} onClick={() => void perform(pending, true)}>
+                    Проверить и восстановить результат
+                  </Button>
+                </section>
               )}
-              {!blocked && (
-                <>
-                  {receiptError && (
-                    <Notice error>
-                      {receiptError} Сначала проверьте публикации. Повреждённую квитанцию нельзя
-                      автоматически принять за успешную операцию.
-                    </Notice>
+              {receiptError && <Notice error>{receiptError}</Notice>}
+              {migrationNeeded ? (
+                <section className="stack">
+                  <h1>Выберите основу портфолио</h1>
+                  <p className="muted">
+                    Перенесём один источник без смешивания текстов. Прежние данные и постоянные
+                    ссылки сохранятся.
+                  </p>
+                  <label className="project-row">
+                    <input
+                      type="radio"
+                      name="migration"
+                      checked={migrationChoice === null}
+                      onChange={() => {
+                        setMigrationChoice(null);
+                        setMigrationPreview(false);
+                      }}
+                    />
+                    <span>Прежняя общая база</span>
+                  </label>
+                  {content.documents.map((d) => (
+                    <label className="project-row" key={d.id}>
+                      <input
+                        type="radio"
+                        name="migration"
+                        checked={migrationChoice === d.id}
+                        onChange={() => {
+                          setMigrationChoice(d.id);
+                          setMigrationPreview(false);
+                        }}
+                      />
+                      <span className="project-copy">
+                        <strong>{d.title}</strong>
+                        {d.content.profile.name && <small>{d.content.profile.name}</small>}
+                      </span>
+                    </label>
+                  ))}
+                  <Button variant="secondary" onClick={() => setMigrationPreview(true)}>
+                    Посмотреть перенос
+                  </Button>
+                  {previewCandidate && (
+                    <DocumentView
+                      content={documentPreview(previewCandidate, mainDocument(previewCandidate)!)}
+                      kind="portfolio"
+                      preview
+                    />
                   )}
-                  {pending && (
-                    <section className="section stack">
-                      <h2>Незавершённая операция</h2>
-                      <p>
-                        Проверка результата сохраняет тот же ID операции и защищает от повторной
-                        публикации или удаления.
-                      </p>
-                      <Button disabled={busy} onClick={() => void perform(pending, true)}>
-                        Проверить и восстановить результат
-                      </Button>
+                  <Button disabled={busy || !migrationPreview} onClick={() => void migrate()}>
+                    Использовать выбранную основу
+                  </Button>
+                </section>
+              ) : onboarding && workingMain ? (
+                <section className="stack personalization">
+                  <p className="muted">Шаг {content.personalization.step + 1} из 4</p>
+                  <h1>
+                    {
+                      ['GitHub', 'Имя и должность', 'О себе', 'Фотография'][
+                        content.personalization.step
+                      ]
+                    }
+                  </h1>
+                  {content.personalization.step === 0 ? (
+                    githubField
+                  ) : content.personalization.step === 1 ? (
+                    <>
+                      <Field
+                        label="Имя"
+                        value={workingMain.content.profile.name}
+                        maxLength={100}
+                        onChange={(e) =>
+                          updateDocument({
+                            ...workingMain,
+                            content: {
+                              ...workingMain.content,
+                              profile: { ...workingMain.content.profile, name: e.target.value },
+                            },
+                          })
+                        }
+                      />
+                      <Field
+                        label="Должность"
+                        value={workingMain.content.profile.headline}
+                        maxLength={160}
+                        onChange={(e) =>
+                          updateDocument({
+                            ...workingMain,
+                            content: {
+                              ...workingMain.content,
+                              profile: { ...workingMain.content.profile, headline: e.target.value },
+                            },
+                          })
+                        }
+                      />
+                    </>
+                  ) : content.personalization.step === 2 ? (
+                    <>
+                      <Field
+                        label="Краткое описание"
+                        textarea
+                        value={workingMain.content.profile.bio}
+                        maxLength={4000}
+                        onChange={(e) =>
+                          updateDocument({
+                            ...workingMain,
+                            content: {
+                              ...workingMain.content,
+                              profile: { ...workingMain.content.profile, bio: e.target.value },
+                            },
+                          })
+                        }
+                      />
+                      <Field
+                        label="Город / страна"
+                        value={workingMain.content.profile.locationText}
+                        maxLength={200}
+                        onChange={(e) =>
+                          updateDocument({
+                            ...workingMain,
+                            content: {
+                              ...workingMain.content,
+                              profile: {
+                                ...workingMain.content.profile,
+                                locationText: e.target.value,
+                                publishLocation: true,
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </>
+                  ) : (
+                    photo
+                  )}
+                  <Button disabled={busy || avatarBusy} onClick={() => void personalize('next')}>
+                    {content.personalization.step === 3 ? 'Готово' : 'Далее'}
+                  </Button>
+                  <Button
+                    variant="quiet"
+                    disabled={busy || avatarBusy}
+                    onClick={() => void personalize('skip')}
+                  >
+                    Пропустить
+                  </Button>
+                  {content.personalization.step > 0 && (
+                    <Button
+                      variant="quiet"
+                      disabled={busy || avatarBusy}
+                      onClick={() => void personalize('back')}
+                    >
+                      Назад
+                    </Button>
+                  )}
+                </section>
+              ) : (
+                <fieldset className="workspace-fieldset" disabled={busy && !saving}>
+                  {view === 'home' && (
+                    <section className="stack portfolio-home">
+                      <div className="portfolio-actions">
+                        <Button disabled={busy || !savedMain} onClick={() => void download()}>
+                          Скачать портфолио
+                        </Button>
+                        <Button variant="secondary" disabled={busy || !savedMain} onClick={share}>
+                          Поделиться
+                        </Button>
+                      </div>
+                      {manualShareUrl && (
+                        <a
+                          className="public-contact"
+                          href={manualShareUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {manualShareUrl}
+                        </a>
+                      )}
+                      {publicationError && <Notice error>{publicationError}</Notice>}
+                      {savedMain && (
+                        <DocumentView
+                          content={documentPreview(savedWorkspace, savedMain)}
+                          kind="portfolio"
+                          profilePhoto={
+                            savedMain.content.profile.avatarPath ? (
+                              <PrivateImage
+                                user={user}
+                                path={savedMain.content.profile.avatarPath}
+                              />
+                            ) : undefined
+                          }
+                          preview
+                        />
+                      )}
+                      {savedMain && !portfolioHasContent(savedWorkspace, savedMain) && (
+                        <div className="empty-portfolio">
+                          <p>Портфолио пока пустое</p>
+                          <p className="muted">Откройте вкладку «Редактор», чтобы заполнить его.</p>
+                        </div>
+                      )}
                     </section>
                   )}
-                  {publicationError && (
-                    <div className="stack">
-                      <Notice error>{publicationError}</Notice>
-                      <Button variant="secondary" onClick={() => void refreshInventory()}>
-                        Повторить проверку публикаций
-                      </Button>
-                    </div>
-                  )}
-                  <fieldset disabled={busy && !saving} className="workspace-fieldset">
-                    {view === 'home' && (
-                      <section className="stack">
-                        <h2>Общая профессиональная база</h2>
-                        <div className="list-row">
-                          <span className="stack">
-                            <strong>{content.profile.name || 'Профиль пока пуст'}</strong>
-                            <small className="muted">
-                              {content.profile.headline || 'Добавьте роль, опыт и контакты'}
-                            </small>
-                          </span>
-                          <Button variant="quiet" onClick={() => navigate('base')}>
-                            Открыть профиль
-                          </Button>
-                        </div>
-                        <div className="row">
-                          <Button variant="secondary" onClick={() => navigate('base')}>
-                            Контакты и профиль
-                          </Button>
-                          <Button variant="secondary" onClick={() => navigate('projects')}>
-                            Библиотека проектов
-                          </Button>
-                        </div>
-                      </section>
-                    )}
-                    {['home', 'resumes', 'portfolios'].includes(view) && (
-                      <section className="stack">
-                        <h2>Документы</h2>
-                        <div className="row">
-                          {view !== 'portfolios' && (
-                            <Button onClick={() => create('resume')}>Создать резюме</Button>
-                          )}
-                          {view !== 'resumes' && (
-                            <Button
-                              variant={view === 'portfolios' ? 'primary' : 'secondary'}
-                              onClick={() => create('portfolio')}
-                            >
-                              Создать портфолио
-                            </Button>
-                          )}
-                        </div>
-                        <div className="search-field">
-                          <Icon name="search" />
-                          <Field
-                            label="Поиск документов"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                          />
-                        </div>
-                        {!shownDocuments.length && (
-                          <p className="muted">
-                            {search.trim()
-                              ? 'Ничего не найдено. Попробуйте другое название или имя.'
-                              : 'Документов пока нет. Создайте первый из общей базы или начните с пустого профиля.'}
-                          </p>
-                        )}
-                        {shownDocuments.map((d) => {
-                          const p = publications?.publications.find((p) => p.documentId === d.id);
-                          return (
-                            <article key={d.id} className="section document-card">
-                              <p className="document-type">
-                                <Icon
-                                  name={d.kind === 'resume' ? 'file-text' : 'panels-top-left'}
-                                />
-                                {d.kind === 'resume' ? 'РЕЗЮМЕ' : 'ПОРТФОЛИО'}
-                              </p>
-                              <h3>{d.title}</h3>
-                              <p className="muted">
-                                {d.content.profile.name} · {d.content.profile.headline}
-                              </p>
-                              <p
-                                className={p?.state === 'published' ? 'publication-state' : 'muted'}
-                              >
-                                {p?.state === 'published' ? 'Опубликовано' : 'Черновик'}
-                              </p>
-                              <div className="row">
-                                <Button
-                                  variant="secondary"
-                                  onClick={() => navigate(`document/${d.id}`)}
-                                >
-                                  Редактировать
-                                </Button>
-                                <Button
-                                  variant="quiet"
-                                  disabled={busy}
-                                  onClick={() => duplicate(d)}
-                                >
-                                  Создать копию
-                                </Button>
-                                {p?.state === 'published' && p.url && (
-                                  <Button variant="secondary" onClick={() => void copy(p)}>
-                                    Копировать ссылку
-                                  </Button>
-                                )}
-                              </div>
-                            </article>
-                          );
-                        })}
-                      </section>
-                    )}
-                    {view === 'base' && (
-                      <div className="stack">
-                        <p className="muted">
-                          Изменения базы не переписывают документы. Выборочное обновление доступно в
-                          их редакторах.
-                        </p>
-                        <ContentEditor
-                          content={content}
-                          isBase
-                          onChange={(c) =>
-                            update({
-                              ...content,
-                              ...c,
-                              documents: content.documents,
-                            })
-                          }
-                        />
-                        <MediaUpload
-                          user={user}
-                          onUploaded={(path) =>
-                            setContent((current) => ({
-                              ...current,
-                              profile: { ...current.profile, avatarPath: path },
-                            }))
-                          }
-                        />
-                        <PrivateImage user={user} path={content.profile.avatarPath} />
-                        {content.profile.avatarPath && (
-                          <Button
-                            variant="quiet"
-                            onClick={() =>
+                  {view === 'editor' && workingMain && (
+                    <>
+                      <h1>Редактор</h1>
+                      <ContentEditor
+                        content={workingMain.content}
+                        onChange={(next) => updateDocument({ ...workingMain, content: next })}
+                        photo={photo}
+                        projects={
+                          <AttachmentsEditor
+                            workspace={content}
+                            document={workingMain}
+                            onChange={updateDocument}
+                            onIconChange={(id, iconId) =>
                               update({
                                 ...content,
-                                profile: { ...content.profile, avatarPath: '' },
+                                projects: content.projects.map((p) =>
+                                  p.id === id ? { ...p, iconId } : p,
+                                ),
                               })
                             }
-                          >
-                            Убрать фото из базы
-                          </Button>
-                        )}
-                        <Field
-                          label="Приватные заметки"
-                          textarea
-                          value={notes}
-                          onChange={(e) => setNotes(e.target.value)}
-                          helper="Заметки никогда не публикуются."
-                        />
-                      </div>
-                    )}
-                    {view === 'projects' && (
-                      <section className="stack">
+                            onProjects={() => navigate('projects')}
+                          />
+                        }
+                        github={githubField}
+                      />
+                    </>
+                  )}
+                  {view === 'projects' && (
+                    <section className="stack">
+                      <h1>Проекты</h1>
+                      <div className="row">
+                        <Button variant="secondary" onClick={() => navigate('github-import', true)}>
+                          Импортировать из GitHub
+                        </Button>
                         <Button
-                          onClick={() =>
-                            update({
-                              ...content,
-                              projects: [...content.projects, emptyProject()],
-                            })
-                          }
+                          onClick={() => {
+                            const p = emptyProject();
+                            update({ ...content, projects: [...content.projects, p] });
+                            navigate(`project/${p.id}`, true);
+                          }}
                         >
                           Создать проект
                         </Button>
-                        <GitHubImporter
-                          workspace={content}
-                          onAdd={(p) =>
-                            update({
-                              ...content,
-                              projects: [...content.projects, p],
-                            })
-                          }
-                        />
-                        <div className="search-field">
-                          <Icon name="search" />
-                          <Field
-                            label="Поиск проектов"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                          />
-                        </div>
-                        {content.projects
-                          .filter((p) =>
-                            `${p.title} ${p.description} ${p.technologies.join(' ')}`
-                              .toLowerCase()
-                              .includes(search.toLowerCase()),
-                          )
-                          .map((p) => (
-                            <div key={p.id} className="stack">
-                              <ProjectForm
-                                project={p}
-                                onChange={(next) =>
-                                  update({
-                                    ...content,
-                                    projects: content.projects.map((v) =>
-                                      v.id === p.id ? next : v,
-                                    ),
-                                  })
-                                }
-                                onDelete={() => {
-                                  const refs = content.documents.filter((d) =>
-                                    d.projects.some((a) => a.projectId === p.id),
-                                  );
-                                  if (
-                                    !window.confirm(
-                                      `Удалить проект из Library${refs.length ? ` и открепить от ${refs.length} документов` : ''}? Опубликованные версии не изменятся до отдельного Publish.`,
-                                    )
-                                  )
-                                    return;
-                                  update({
-                                    ...content,
-                                    projects: content.projects.filter((v) => v.id !== p.id),
-                                    documents: content.documents.map((d) => ({
-                                      ...d,
-                                      projects: d.projects.filter((a) => a.projectId !== p.id),
-                                    })),
-                                  });
-                                }}
-                              />
-                              <MediaUpload
-                                user={user}
-                                onUploaded={(path) =>
-                                  setContent((current) => ({
-                                    ...current,
-                                    projects: current.projects.map((v) =>
-                                      v.id === p.id && v.imagePaths.length < 6
-                                        ? {
-                                            ...v,
-                                            imagePaths: [...v.imagePaths, path],
-                                          }
-                                        : v,
-                                    ),
-                                  }))
-                                }
-                              />
-                              {p.imagePaths.map((path) => (
-                                <div className="row" key={path}>
-                                  <PrivateImage user={user} path={path} alt="Изображение проекта" />
-                                  <Button
-                                    variant="quiet"
-                                    onClick={() =>
-                                      update({
-                                        ...content,
-                                        projects: content.projects.map((v) =>
-                                          v.id === p.id
-                                            ? {
-                                                ...v,
-                                                imagePaths: v.imagePaths.filter((x) => x !== path),
-                                              }
-                                            : v,
-                                        ),
-                                      })
-                                    }
-                                  >
-                                    Убрать из проекта
-                                  </Button>
-                                </div>
-                              ))}
+                      </div>
+                      <Field
+                        label="Поиск по библиотеке"
+                        type="search"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                      />
+                      {content.projects
+                        .filter((p) =>
+                          `${p.title} ${p.description}`
+                            .toLowerCase()
+                            .includes(search.toLowerCase()),
+                        )
+                        .map((p) => (
+                          <article className="project-row library-project" key={p.id}>
+                            <Icon name={p.iconId ?? 'folder'} />
+                            <div className="project-copy">
+                              <strong>{p.title}</strong>
+                              {p.description && <p>{p.description}</p>}
                             </div>
-                          ))}
-                        {!content.projects.length && (
-                          <p className="muted">
-                            Библиотека пока пуста. Создайте проект или явно добавьте публичный
-                            репозиторий из GitHub.
-                          </p>
-                        )}
-                      </section>
-                    )}
-                    {activeDocument && (
-                      <>
-                        <div className="row mode-switch">
-                          <Button
-                            variant={mode === 'edit' ? 'primary' : 'secondary'}
-                            onClick={() => setMode('edit')}
-                          >
-                            Редактирование
-                          </Button>
-                          <Button
-                            variant={mode === 'preview' ? 'primary' : 'secondary'}
-                            onClick={() => setMode('preview')}
-                          >
-                            Просмотр
-                          </Button>
-                        </div>
-                        <div className={`workspace-panes mode-${mode}`}>
-                          <div className="workspace-editor stack">
-                            <Field
-                              label="Название документа"
-                              maxLength={120}
-                              required
-                              value={activeDocument.title}
-                              onChange={(e) =>
-                                updateDocument({
-                                  ...activeDocument,
-                                  title: e.target.value,
-                                })
-                              }
-                              helper="Название не меняет постоянный адрес."
-                            />
-                            {mode === 'edit' ? (
-                              <>
-                                <ContentEditor
-                                  content={activeDocument.content}
-                                  contacts={content.links}
-                                  onChange={(c) =>
-                                    updateDocument({
-                                      ...activeDocument,
-                                      content: c,
-                                    })
-                                  }
-                                />
-                                <MediaUpload
-                                  key={activeDocument.id}
-                                  user={user}
-                                  onUploaded={(path) =>
-                                    setContent((current) => ({
-                                      ...current,
-                                      documents: current.documents.map((d) =>
-                                        d.id === activeDocument.id
-                                          ? {
-                                              ...d,
-                                              updatedAt: new Date().toISOString(),
-                                              content: {
-                                                ...d.content,
-                                                profile: {
-                                                  ...d.content.profile,
-                                                  avatarPath: path,
-                                                },
-                                              },
-                                            }
-                                          : d,
-                                      ),
-                                    }))
-                                  }
-                                />
-                                {activeDocument.content.profile.avatarPath && (
-                                  <Button
-                                    variant="quiet"
-                                    onClick={() =>
-                                      updateDocument({
-                                        ...activeDocument,
-                                        content: {
-                                          ...activeDocument.content,
-                                          profile: {
-                                            ...activeDocument.content.profile,
-                                            avatarPath: '',
-                                            avatarUrl: '',
-                                          },
-                                        },
-                                      })
-                                    }
-                                  >
-                                    Без фотографии
-                                  </Button>
-                                )}
-                                <AttachmentsEditor
-                                  workspace={content}
-                                  document={activeDocument}
-                                  onChange={updateDocument}
-                                />
-                                <Button
-                                  variant="secondary"
-                                  disabled={busy}
-                                  onClick={openBaseReview}
-                                >
-                                  Обновить из базы
-                                </Button>
-                                <Button variant="secondary" onClick={() => setMode('preview')}>
-                                  Просмотр
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <p className="muted">
-                                  {dirty
-                                    ? 'Есть несохранённые изменения.'
-                                    : basis
-                                      ? 'Текущая версия сохранена и подтверждена сервером.'
-                                      : 'Документ нужно сохранить.'}
-                                </p>
-                                <Button variant="secondary" onClick={() => setMode('edit')}>
-                                  Редактировать
-                                </Button>
-                                <p className="muted">Save и Publish — отдельные действия.</p>
-                              </>
-                            )}
-                            <section className="section stack">
-                              <h3>Публикация</h3>
-                              <p>
-                                {activePublication?.state === 'published'
-                                  ? 'Опубликовано'
-                                  : activePublication?.state === 'deleted'
-                                    ? 'Документ удалён'
-                                    : 'Не опубликовано'}
-                              </p>
-                              {activePublication?.state === 'published' &&
-                                activePublication.url && (
-                                  <>
-                                    <a
-                                      href={activePublication.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      {activePublication.url}
-                                    </a>
-                                    <Button
-                                      variant="secondary"
-                                      onClick={() => void copy(activePublication)}
-                                    >
-                                      Копировать ссылку
-                                    </Button>
-                                    <Button
-                                      variant="danger"
-                                      disabled={
-                                        !publications || !!pending || !!receiptError || busy
-                                      }
-                                      onClick={() => beginPublication('unpublish')}
-                                    >
-                                      Снять с публикации
-                                    </Button>
-                                  </>
-                                )}
-                              <Button
-                                disabled={!publishReady}
-                                onClick={() => beginPublication('publish')}
-                              >
-                                {activePublication?.state === 'published'
-                                  ? 'Опубликовать обновления'
-                                  : 'Опубликовать документ'}
-                              </Button>
-                              {!publishReady && (
-                                <small className="muted">
-                                  Сохраните документ и дождитесь подтверждённой версии и inventory
-                                  публикаций.
-                                </small>
-                              )}
+                            <div className="project-actions">
                               <Button
                                 variant="quiet"
-                                disabled={busy}
-                                onClick={() => duplicate(activeDocument)}
+                                onClick={() => navigate(`project/${p.id}`, true)}
                               >
-                                Создать копию
+                                Редактировать
                               </Button>
                               <Button
-                                variant="danger"
-                                disabled={!publishReady}
-                                onClick={() => beginPublication('deleteDocument')}
+                                variant="quiet"
+                                className="text-danger"
+                                onClick={() => void removeProject(p.id)}
                               >
-                                Удалить документ
+                                Удалить
                               </Button>
-                            </section>
-                          </div>
-                          <div className="workspace-preview">
-                            <p className="muted">Предпросмотр документа</p>
-                            <DocumentView
-                              content={documentPreview(content, activeDocument)}
-                              kind={activeDocument.kind}
-                              profilePhoto={
-                                activeDocument.content.profile.avatarPath ? (
-                                  <PrivateImage
-                                    user={user}
-                                    path={activeDocument.content.profile.avatarPath}
-                                  />
-                                ) : undefined
-                              }
-                              attachedResumeUrl={
-                                publications?.publications.find(
-                                  (p) =>
-                                    p.documentId === activeDocument.attachedResumeId &&
-                                    p.state === 'published',
-                                )?.url ?? undefined
-                              }
-                              preview
-                            />
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    {view === 'settings' && <AccountSettings user={user} />}
-                    {view.startsWith('document/') && !activeDocument && (
-                      <>
-                        <p>Документ отсутствует в вашей базе.</p>
-                        <Button onClick={() => navigate('home')}>К документам</Button>
-                      </>
-                    )}
-                  </fieldset>
-                </>
+                            </div>
+                          </article>
+                        ))}
+                      {content.projects.length === 0 && <p>Проектов пока нет</p>}
+                      {content.projects.length > 0 &&
+                        !content.projects.some((p) =>
+                          `${p.title} ${p.description}`
+                            .toLowerCase()
+                            .includes(search.toLowerCase()),
+                        ) && <p>Ничего не найдено</p>}
+                    </section>
+                  )}
+                  {view === 'github-import' && (
+                    <GitHubImporter
+                      ownerUid={user.uid}
+                      username={content.githubUsername}
+                      projects={content.projects}
+                      onUsername={saveGitHub}
+                      onImport={importProjects}
+                      onBack={() => navigate('projects', true)}
+                    />
+                  )}
+                  {view.startsWith('project/') && project && (
+                    <section className="stack">
+                      <Button variant="quiet" onClick={() => navigate('projects')}>
+                        Назад к проектам
+                      </Button>
+                      <h1>Редактор проекта</h1>
+                      <ProjectForm
+                        project={project}
+                        onChange={(next) =>
+                          update({
+                            ...content,
+                            projects: content.projects.map((p) => (p.id === next.id ? next : p)),
+                          })
+                        }
+                      />
+                    </section>
+                  )}
+                  {view === 'settings' && (
+                    <section className="stack">
+                      <h1>Настройки</h1>
+                      <AccountSettings user={user} />
+                      <section className="editor-group stack">
+                        <h2>GitHub</h2>
+                        {githubField}
+                        <Button
+                          variant="secondary"
+                          disabled={busy}
+                          onClick={() =>
+                            void saveGitHub(githubInput).catch((e) => setError(errorMessage(e)))
+                          }
+                        >
+                          Сохранить GitHub-профиль
+                        </Button>
+                      </section>
+                      <ApplicationPreferences>
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            try {
+                              const prefix = `stackcard.github-repositories.${encodeURIComponent(user.uid)}.`;
+                              const keys = Array.from({ length: localStorage.length }, (_, i) =>
+                                localStorage.key(i),
+                              ).filter((key): key is string => !!key?.startsWith(prefix));
+                              keys.forEach((key) => localStorage.removeItem(key));
+                              setMessage('Кэш GitHub очищен. Проекты и портфолио сохранены.');
+                            } catch {
+                              setError('Не удалось очистить кэш браузера.');
+                            }
+                          }}
+                        >
+                          Очистить кэш GitHub
+                        </Button>
+                      </ApplicationPreferences>
+                      <section className="editor-group stack">
+                        <h2>Обращения и уведомления</h2>
+                        <Button variant="secondary" onClick={() => navigate('inbox')}>
+                          Входящие
+                        </Button>
+                        <p className="muted">
+                          Push-уведомления в web не подключены. Входящие работают независимо от них.
+                        </p>
+                      </section>
+                      <section className="editor-group stack">
+                        <h2>Помощь и о приложении</h2>
+                        <LinkButton href="/help">Помощь</LinkButton>
+                        <LinkButton href="/about">О StackCard</LinkButton>
+                      </section>
+                      <hr className="account-divider" />
+                      <div className="account-bottom">
+                        <span>{user.displayName || user.email}</span>
+                        <Button
+                          variant="quiet"
+                          className="text-danger"
+                          disabled={busy}
+                          onClick={() => void exit()}
+                        >
+                          Выйти
+                        </Button>
+                      </div>
+                    </section>
+                  )}
+                  {inboxView && (
+                    <section className="stack">
+                      <h1>Входящие</h1>
+                      <Inbox
+                        key={`${user.uid}:${view}`}
+                        user={user}
+                        requestId={view.startsWith('inbox/') ? view.slice(6) : undefined}
+                        onOpen={(id) => navigate(`inbox/${id}`, true)}
+                        onBack={() => navigate(view === 'inbox' ? 'settings' : 'inbox', true)}
+                      />
+                    </section>
+                  )}
+                </fieldset>
               )}
             </>
           )}
         </main>
       </div>
-      {!inboxView && (
-        <footer className="workspace-footer" inert={!!review}>
-          <small className="muted">
-            {dirty
-              ? 'Есть несохранённые изменения'
-              : busy
-                ? 'Выполняем действие…'
-                : basis
-                  ? 'Серверная версия загружена; публикация обновляется отдельно'
-                  : 'Новая база'}
-          </small>
+      {showSave && (
+        <footer className="workspace-footer" inert={shareChoice}>
+          <small className="muted">{dirty ? 'Есть несохранённые изменения' : 'Сохранено'}</small>
           <div className="row">
             <Button
               variant="secondary"
-              disabled={busy || loading || !!review}
+              disabled={busy || avatarBusy}
               onClick={() => {
-                if (dirty && !window.confirm('Отбросить изменения и загрузить серверную версию?'))
-                  return;
+                if (dirty && !window.confirm('Отбросить несохранённые изменения?')) return;
                 void reload();
               }}
             >
-              Отмена / перезагрузить
+              Отмена
             </Button>
-            <Button
-              disabled={busy || loading || blocked || !!review || (!dirty && !saveAttempt.current)}
-              onClick={() => void save()}
-            >
+            <Button disabled={busy || avatarBusy || loading || blocked} onClick={() => void save()}>
               {saving ? 'Сохраняем…' : 'Сохранить'}
-            </Button>
-            <Button variant="quiet" disabled={busy || !!review} onClick={() => void exit()}>
-              Выйти
             </Button>
           </div>
         </footer>
       )}
-      {review && (
+      {shareChoice && (
         <div className="dialog-backdrop">
           <section
-            ref={reviewDialog}
             className="dialog stack"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="review-title"
+            aria-labelledby="share-title"
+            ref={shareDialog}
           >
-            <h2 id="review-title">Обновление из общей базы</h2>
+            <h2 id="share-title">Обновить публичное портфолио?</h2>
             <p>
-              Выберите изменения сохранённой базы. После применения сохраните документ отдельно.
+              Сохранённая версия изменилась. Можно обновить её или отправить существующую ссылку.
             </p>
-            {review.changes.map((c) => (
-              <div key={c.id} className="section stack">
-                <label className="checkbox">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(c.id)}
-                    onChange={(e) => {
-                      const next = new Set(selected);
-                      e.target.checked ? next.add(c.id) : next.delete(c.id);
-                      setSelected(next);
-                    }}
-                  />
-                  {c.label}
-                  {c.localOverride ? ' · своё значение' : ''}
-                </label>
-                <div className="review-comparison">
-                  <div>
-                    <small className="muted">В документе</small>
-                    {reviewValue(c.id, c.current)}
-                  </div>
-                  <div>
-                    <small className="muted">В общей базе</small>
-                    {reviewValue(c.id, c.incoming)}
-                  </div>
-                </div>
-              </div>
-            ))}
-            {!review.changes.length && <p>Новых изменений базы нет.</p>}
-            <div className="row">
-              <Button variant="secondary" onClick={() => setReview(null)}>
-                Отмена
-              </Button>
-              <Button onClick={applyBaseReview}>Применить выбранное</Button>
-            </div>
+            <Button
+              onClick={() => {
+                setShareChoice(false);
+                shareAfter.current = true;
+                beginPublication('publish', true);
+              }}
+            >
+              Обновить и поделиться
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShareChoice(false);
+                if (activePublication) void sharePublication(activePublication);
+              }}
+            >
+              Отправить существующую
+            </Button>
+            <Button variant="quiet" onClick={() => setShareChoice(false)}>
+              Отмена
+            </Button>
           </section>
         </div>
       )}
     </div>
+  );
+}
+export function portfolioHasContent(
+  workspace: WorkspaceContent,
+  document: PortfolioDocument,
+): boolean {
+  const p = documentPreview(workspace, document);
+  return Boolean(
+    p.profile.name ||
+    p.profile.headline ||
+    p.profile.bio ||
+    p.profile.locationText ||
+    p.profile.avatarUrl ||
+    document.content.profile.avatarPath ||
+    p.skills.length ||
+    p.projects.length ||
+    p.experience.length ||
+    p.education.length ||
+    p.links.length,
   );
 }

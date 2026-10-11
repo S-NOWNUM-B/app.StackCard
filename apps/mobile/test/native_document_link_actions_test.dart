@@ -59,7 +59,6 @@ void main() {
     '',
     '/d/public-document',
     'file:///tmp/document',
-    'mailto:person@example.test',
     'javascript:alert(1)',
     'https://',
     'https://person:password@example.test/d/public-document',
@@ -80,6 +79,40 @@ void main() {
         );
       }
       expect(invoked, isFalse);
+    });
+  }
+
+  for (final contact in ['mailto:person@example.test', 'tel:+77015550000']) {
+    test(
+      'opens validated contact $contact but never shares it as a public portfolio URL',
+      () async {
+        MethodCall? captured;
+        messenger.setMockMethodCallHandler(channel, (call) async {
+          captured = call;
+          return true;
+        });
+        await actions.open(Uri.parse(contact));
+        expect(captured?.method, 'open');
+        expect(captured?.arguments, {'url': contact});
+        await expectLater(
+          actions.share(Uri.parse(contact)),
+          throwsA(failure(DocumentPublicationFailureKind.invalidData)),
+        );
+      },
+    );
+  }
+
+  for (final contact in [
+    'mailto:x',
+    'mailto:person@example.test?body=secret',
+    'tel:123',
+    'tel:+7701;ext=3',
+  ]) {
+    test('rejects malformed contact $contact before native IO', () async {
+      await expectLater(
+        actions.open(Uri.parse(contact)),
+        throwsA(failure(DocumentPublicationFailureKind.invalidData)),
+      );
     });
   }
 

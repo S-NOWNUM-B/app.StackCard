@@ -131,18 +131,27 @@ final class LocalRuntime {
       SharedPreferencesAccountDeletionJournal(_publicationPreferences, uid);
 
   PortfolioMediaRepository? mediaRepositoryForUser(String uid) {
+    final database = firestore;
     final images = mediaStorage;
     final auth = accountAuth;
-    if (images == null || auth == null || auth.currentUser?.uid != uid) {
+    if (database == null || auth == null || auth.currentUser?.uid != uid) {
       return null;
     }
-    return FirebasePortfolioMediaRepository(
-      storage: images,
+    bool active() =>
+        storage.portfolioDraft.isOpen &&
+        !_deletedAccountUids.contains(uid) &&
+        auth.currentUser?.uid == uid;
+    return FirestorePortfolioMediaRepository(
+      firestore: database,
       ownerUid: uid,
-      isActive: () =>
-          storage.portfolioDraft.isOpen &&
-          !_deletedAccountUids.contains(uid) &&
-          auth.currentUser?.uid == uid,
+      isActive: active,
+      legacyRepository: images == null
+          ? null
+          : FirebasePortfolioMediaRepository(
+              storage: images,
+              ownerUid: uid,
+              isActive: active,
+            ),
     );
   }
 

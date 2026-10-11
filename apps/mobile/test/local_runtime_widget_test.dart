@@ -2,12 +2,14 @@ import 'dart:io';
 
 import 'package:app_stackcard/app/local_runtime.dart';
 import 'package:app_stackcard/core/state/app_settings.dart';
+import 'package:app_stackcard/core/state/appearance_controller.dart';
 import 'package:app_stackcard/core/state/settings_repository.dart';
 import 'package:app_stackcard/features/github_import/github_import.dart';
 import 'package:app_stackcard/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:provider/provider.dart' as legacy_provider;
 
 void main() {
   setUp(() {
@@ -76,7 +78,7 @@ void main() {
   });
 
   testWidgets(
-    'saved source notice, translations and description preference reflect current snapshot',
+    'saved source notice and compact descriptions preserve legacy preferences',
     (tester) async {
       final source = _CachedSource();
       await tester.pumpWidget(
@@ -96,8 +98,9 @@ void main() {
         find.byKey(const ValueKey('github_username')),
         'octocat',
       );
-      await tester.tap(find.text('Загрузить профиль'));
+      await tester.tap(find.byKey(const ValueKey('github_source_save')));
       await tester.pumpAndSettle();
+      expect(find.text('@octocat'), findsOneWidget);
       expect(find.text('Сохранённая копия GitHub'), findsOneWidget);
       expect(find.textContaining('Последняя проверка:'), findsOneWidget);
       await tester.scrollUntilVisible(
@@ -110,7 +113,20 @@ void main() {
             )
             .first,
       );
-      expect(find.text('Source description'), findsNothing);
+      // Новый GitHub список показывает описание; legacy preference только
+      // сохраняется совместимо и не переписывается при отображении списка.
+      final description = find.text('Source description');
+      expect(description, findsOneWidget);
+      final descriptionText = tester.widget<Text>(description);
+      expect(descriptionText.maxLines, 2);
+      expect(descriptionText.overflow, TextOverflow.ellipsis);
+      expect(
+        legacy_provider.Provider.of<AppearanceController>(
+          tester.element(description),
+          listen: false,
+        ).settings.showSourceDescriptions,
+        isFalse,
+      );
       source.fromCache = false;
       await tester.ensureVisible(find.text('Обновить GitHub'));
       await tester.tap(find.text('Обновить GitHub'));

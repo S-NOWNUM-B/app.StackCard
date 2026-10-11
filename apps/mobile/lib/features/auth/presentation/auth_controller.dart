@@ -30,6 +30,23 @@ final accountAuthControllerProvider =
       AccountAuthController.new,
     );
 
+final pendingPersonalizationUidProvider =
+    NotifierProvider<PendingPersonalizationController, String?>(
+      PendingPersonalizationController.new,
+    );
+
+class PendingPersonalizationController extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void request(String uid) => state = uid;
+
+  /// Старая операция не снимает запрос персонализации другого владельца.
+  void complete(String uid) {
+    if (state == uid) state = null;
+  }
+}
+
 class AccountAuthController extends AsyncNotifier<void> {
   int _operation = 0;
 
@@ -44,16 +61,27 @@ class AccountAuthController extends AsyncNotifier<void> {
     leaveGuest: true,
   );
 
-  Future<bool> registerEmail(String email, String password) => _run(
-    (repository) => repository.registerEmail(email.trim(), password),
-    leaveGuest: true,
-  );
+  Future<bool> registerEmail(String email, String password) =>
+      _runWithCreation((repository) async {
+        if (repository is AccountAuthCreationRepository) {
+          return (repository as AccountAuthCreationRepository)
+              .registerEmailWithResult(email.trim(), password);
+        }
+        await repository.registerEmail(email.trim(), password);
+        return null;
+      }, leaveGuest: true);
 
   Future<bool> sendPasswordReset(String email) =>
       _run((repository) => repository.sendPasswordReset(email.trim()));
 
-  Future<bool> signInGoogle() =>
-      _run((repository) => repository.signInGoogle(), leaveGuest: true);
+  Future<bool> signInGoogle() => _runWithCreation((repository) async {
+    if (repository is AccountAuthCreationRepository) {
+      return (repository as AccountAuthCreationRepository)
+          .signInGoogleWithResult();
+    }
+    await repository.signInGoogle();
+    return null;
+  }, leaveGuest: true);
 
   Future<bool> signOut() {
     if (state.isLoading) return Future.value(false);
@@ -67,6 +95,15 @@ class AccountAuthController extends AsyncNotifier<void> {
 
   Future<bool> _run(
     Future<void> Function(AccountAuthRepository repository) action, {
+    bool leaveGuest = false,
+  }) => _runWithCreation((repository) async {
+    await action(repository);
+    return null;
+  }, leaveGuest: leaveGuest);
+
+  Future<bool> _runWithCreation(
+    Future<AccountAuthResult?> Function(AccountAuthRepository repository)
+    action, {
     bool leaveGuest = false,
   }) async {
     if (state.isLoading) return false;
@@ -82,8 +119,13 @@ class AccountAuthController extends AsyncNotifier<void> {
     final operation = ++_operation;
     state = const AsyncLoading();
     try {
-      await action(repository);
+      final result = await action(repository);
       if (!actionRef.mounted || operation != _operation) return false;
+      if (result?.isNewUser == true) {
+        actionRef
+            .read(pendingPersonalizationUidProvider.notifier)
+            .request(result!.uid);
+      }
       if (leaveGuest) actionRef.read(guestAccessProvider.notifier).leave();
       state = const AsyncData(null);
       return true;

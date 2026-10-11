@@ -15,12 +15,14 @@ test('Node server requires explicit live protection and never enables remote Sto
   const live = readServerConfiguration(configuration());
   assert.equal(live.emulator, false); assert.equal(live.storageBucket, null);
   const invalid = [
+    { FIRESTORE_MEDIA_ONLY_ACCOUNTS_SINCE: '2026-01-01' },
     { CONTACT_RATE_HMAC_KEY: '' }, { CONTACT_APP_CHECK_APP_ID: '' }, { PUBLIC_WEB_ORIGIN: 'http://localhost:3000' },
     { PUBLIC_STORAGE_BUCKET: 'production-project.appspot.com' }, { GCLOUD_PROJECT: 'demo-stackcard-test' },
     { FUNCTIONS_EMULATOR: 'true' }, { BACKEND_PORT: '0' }, { BACKEND_PORT: '65536' }, { BACKEND_PORT: '' },
     { FIRESTORE_EMULATOR_HOST: '127.0.0.1:8085' }, { FIREBASE_AUTH_EMULATOR_HOST: 'localhost:9099' },
   ];
   for (const override of invalid) assert.throws(() => readServerConfiguration({ ...configuration(), ...override }));
+  assert.equal(readServerConfiguration({ ...configuration(), FIRESTORE_MEDIA_ONLY_ACCOUNTS_SINCE: '2026-01-01T00:00:00.000Z' }).firestoreMediaOnlyAccountsSince, '2026-01-01T00:00:00.000Z');
 });
 
 test('demo bypass requires both actual loopback Auth/Firestore hosts, optional Storage also stays loopback', () => {
