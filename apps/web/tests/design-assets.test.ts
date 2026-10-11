@@ -15,10 +15,7 @@ test('Brand A/font/icon runtime files preserve the imported original source byte
     assert.equal(hash(readFileSync(new URL(entry.path, publicRoot))), entry.sha256, entry.path);
     assert.equal(hash(readFileSync(new URL(entry.source, root))), entry.sha256, entry.source);
   }
-  const svg = readFileSync(
-    new URL('branding/stackcard-v2-wordmark-accent.svg', publicRoot),
-    'utf8',
-  );
+  const svg = readFileSync(new URL('branding/stackcard-v2-wordmark-ink.svg', publicRoot), 'utf8');
   assert.match(svg, /viewBox="0 0 350 48"/);
   assert.equal(
     hash(readFileSync(new URL(manifest.demoPortrait.path, publicRoot))),
