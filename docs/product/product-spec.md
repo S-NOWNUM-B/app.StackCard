@@ -31,7 +31,7 @@
 
 ## Статус и границы текущей работы
 
-**2026-10-11: светлый web redesign** по прямому поручению адаптировать
+**2026-10-11: светлый web и mobile redesign** по прямому поручению адаптировать
 [Openship](https://openship.io/) под StackCard, удалить dark и добавить страницы.
 [Web brief](../redesign/web-openship.md) фиксирует композицию, русские тексты,
 новые `/features`, `/use-cases`, `/examples`, `/help`, `/about` и обновлённый
@@ -41,7 +41,7 @@
 только светлая тема, русский интерфейс и собственный контент StackCard.
 Работа сохраняет совместимые legacy preferences/документы и ранее принятые
 изменения горизонтального аккаунта из параллельного чата.
-Это работа внутри существующего web scope; Phase15, deploy и выпуск не начаты.
+Это работа внутри существующего mobile/web UI scope; Phase15, deploy и выпуск не начаты.
 
 **2026-10-09: переход к Phase14 разрешён** прямым поручением «переходи к следующей
 фазе разработки». Активная разработка — ContactRequest/Contact me, private Inbox
@@ -162,6 +162,32 @@ Desktop и phone screenshots сохранены как артефакты тек
 live Save/Publish и обмен с mobile в этом пакете повторно не запускались;
 web одобрен пользователем. Flutter перенос разрешён отдельным последующим
 поручением; его проверки и мобильная оценка фиксируются отдельно.
+
+### Проверки светлого Flutter — 2026-10-11
+
+Перенос одобренного web выполнен в существующих theme/shared widgets/shell и
+редакторах. Runtime всегда light/ru; theme/language selectors удалены. Старые
+preferences и document theme читаются без миграции, новые документы получают
+light. Горизонтальная строка аккаунта и provider metadata из параллельного чата
+сохранены; разделение файлов согласовано с разрешения пользователя.
+
+| Проверка | Результат |
+| --- | --- |
+| Полный Flutter suite | **1242/1242 PASS**, последний прогон после исправления навигации и итоговой APK. Legacy dark/en + OS dark показывают white/ru без записи preferences; schema/UID/Save/Publish regression tests сохранены. |
+| Анализ / формат | `flutter analyze --no-pub` — no issues. Formatter 65 затронутых Dart файлов — 0 changes; `git diff --check` — PASS. |
+| Адаптивность / доступность | Responsive + Builder preview suite **114/114 PASS**: 7 phone/tablet viewports, text scale 1/2, scroll/overflow, contrast и tap targets. При scale 1 все четыре nav labels остаются одной строкой, включая ширину 320. |
+| Визуальная сверка | 32 light PNG обновлены: 24 основных в четырёх phone/tablet ориентациях и 8 Builder. Все просмотрены; последний перенос «Портфолио» исправлен и перепроверен. Manrope/Brand A, белые поверхности, чёрные CTA и русские подписи сохранены. |
+| Источники | `check_imports.py --require-imported --require-brand` — PASS: 30/10/19 mappings, исходные SVG/TTF/SHA/licenses. Семь контрольных повреждений временной копии корректно дали FAIL. |
+| Android | Итоговый `flutter build apk --debug --no-pub` — PASS; APK установлена через replace на emulator-5554 с сохранением данных. Во время переноса нативно просмотрены Auth, гостевая Home, библиотека резюме и первый шаг нового несохранённого документа. Native Home PNG сохранён в артефактах чата. |
+
+Полная format-проверка дерева выявила четыре прежних отклонения в
+`local_draft_accounts.dart`, `portfolio_public_content_codec.dart`,
+`location/portfolio_location_persistence_test.dart` и `workspace_controller_test.dart`;
+эти файлы совпадают с исходным 511625f и не изменялись в этом UI scope.
+Логи локальных проверок — `/private/tmp/stackcard-mobile-light-final-full.log`,
+`stackcard-mobile-light-nav-previews.log` и `stackcard-mobile-light-build-final.log`.
+iOS runtime, live Auth/Save/Publish/FCM и мобильная пользовательская оценка
+остаются отдельными проверками; этот пакет их не закрывает.
 
 ### Упрощение web-входа — 2026-10-11
 

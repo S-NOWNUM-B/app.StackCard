@@ -1,5 +1,6 @@
 import 'package:app_stackcard/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -61,6 +62,7 @@ void main() {
               reason: 'Первый экран без overflow',
             );
             if (scale == 1) {
+              _checkNavigationLabels(tester);
               await _checkAccessibility(tester);
             }
             if (const bool.fromEnvironment('UPDATE_UI_PREVIEWS') &&
@@ -86,6 +88,27 @@ void main() {
         }
       }
     }
+  }
+}
+
+void _checkNavigationLabels(WidgetTester tester) {
+  final navigation = find.byType(NavigationBar);
+  if (navigation.evaluate().isEmpty) return;
+  final labels = find.descendant(of: navigation, matching: find.byType(Text));
+  expect(labels, findsNWidgets(4));
+  for (final label in labels.evaluate()) {
+    final paragraph = tester.renderObject<RenderParagraph>(
+      find.byWidget(label.widget),
+    );
+    final text = paragraph.text.toPlainText();
+    expect(
+      paragraph.getBoxesForSelection(
+        TextSelection(baseOffset: 0, extentOffset: text.length),
+      ),
+      hasLength(1),
+      reason:
+          'Подпись вкладки «$text» помещается в одну строку при text scale 1',
+    );
   }
 }
 

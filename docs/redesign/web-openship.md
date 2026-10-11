@@ -3,7 +3,7 @@
 Прямое поручение: адаптировать дизайн [Openship](https://openship.io/) под
 StackCard, удалить тёмную тему web и расширить страницы. Пользователь одобрил
 web и 2026-10-11 поручил перенести этот дизайн в Flutter: только light,
-русский интерфейс и контент StackCard. Это реализация текущего web scope Phase 13,
+русский интерфейс и контент StackCard. Это реализация текущего mobile/web UI scope Phase 13,
 не переход к следующей продуктовой фазе.
 
 Референс просмотрен в браузере на desktop 1280×720 и phone 390×844.
@@ -67,3 +67,8 @@ SettingsScreen, rows и account actions.
 `apps/mobile/assets/design_v2/source-manifest.json`. `check_imports.py` проверяет
 этот принятый runtime вместе с прежними 30 color roles, 10 text styles,
 19 numeric mappings и SHA/font/SVG/license checks; dark обязан alias light.
+
+[Flutter проверки](../product/product-spec.md#проверки-светлого-flutter--2026-10-11):
+1242/1242 tests, analyze, итоговая Android debug build/install и 114 responsive/
+Builder cases — PASS. 32 текущих light PNG просмотрены; iOS runtime и мобильная
+оценка пользователем остаются отдельными результатами.

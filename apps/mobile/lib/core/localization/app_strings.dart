@@ -199,7 +199,7 @@ const russianAppStrings = <String, String>{
   "auth.skills": "Навыки",
   "auth.story": "Ваша история",
   'auth.title': 'StackCard',
-  'auth.email': 'Электронная почта',
+  'auth.email': 'Почта',
   'auth.open': 'Продолжить',
   "auth.invalidEmail": "Укажите корректную электронную почту",
   'auth.error': 'Не удалось продолжить. Попробуйте ещё раз.',
