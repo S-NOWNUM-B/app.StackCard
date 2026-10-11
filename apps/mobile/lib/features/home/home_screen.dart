@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
+import '../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../shared/widgets/stackcard_button.dart';
 import '../auth/auth.dart';
 import '../media/media.dart';
@@ -103,15 +104,10 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
       title: Text(title),
       content: Text(message),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Отмена'),
+        StackCardDialogActions(
+          onCancel: () => Navigator.pop(context),
+          onConfirm: () => Navigator.pop(context, choice.value),
         ),
-        for (final choice in choices)
-          TextButton(
-            onPressed: () => Navigator.pop(context, choice.value),
-            child: Text(choice.label),
-          ),
       ],
     ),
   );
@@ -263,6 +259,7 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
       final share = StackCardButton(
         key: const Key('home.share'),
         label: 'Поделиться',
+        primary: true,
         loading: _sharing,
         onPressed: nonempty && !busy && document != null
             ? () => _share(document.id)

@@ -24,9 +24,17 @@ import {
   safeReturnPath,
   type WorkspaceContent,
   type GitHubSource,
+  type Experience,
+  type Education,
 } from '../src/lib/model';
 import { documentPreview } from '../src/lib/preview';
-import { ContentEditor, appendPortfolioSkill } from '../src/components/content-editor';
+import {
+  ContentEditor,
+  appendPortfolioSkill,
+  experienceFields,
+  educationFields,
+} from '../src/components/content-editor';
+import { saveEditorRecord, type RecordField } from '../src/components/record-editor';
 import {
   ProjectForm,
   AttachmentsEditor,
@@ -335,6 +343,141 @@ test('owner skill tags share the technology dialog and editor sections follow th
   assert.ok(!html.includes('Навык 1'));
   assert.ok(!html.includes('value="React"'));
   assert.deepEqual(content.skills[1], { id: 'raw', name: 'Планирование, коммуникация' });
+});
+test('record modal saves preserve IDs, raw copy, metadata and neighboring records without mutating the captured draft', () => {
+  const original = {
+    id: 'work',
+    role: ' Developer ',
+    organization: ' Studio ',
+    period: '',
+    description: '',
+    source: { provider: 'legacy', reference: 42 },
+  };
+  const neighbor = { ...original, id: 'neighbor', role: 'Other role' };
+  const items = [original, neighbor];
+  const draft = { ...original, id: 'replacement', description: 'New description' };
+  const before = clone(items);
+  const result = saveEditorRecord<Experience>(items, { ...original }, draft, experienceFields);
+  assert.deepEqual(items, before);
+  assert.equal(result[0].id, original.id);
+  assert.equal(result[0].role, ' Developer ');
+  assert.equal(result[0].organization, ' Studio ');
+  assert.deepEqual(result[0], { ...original, description: 'New description' });
+  assert.equal(result[1], neighbor);
+  assert.equal(draft.id, 'replacement');
+  assert.throws(
+    () => saveEditorRecord([neighbor], original, draft, experienceFields),
+    /Запись изменилась/,
+  );
+  assert.throws(
+    () =>
+      saveEditorRecord(
+        [{ ...original, period: 'Newer edit' }, neighbor],
+        original,
+        draft,
+        experienceFields,
+      ),
+    /Запись изменилась/,
+  );
+  const added = saveEditorRecord<Experience>(
+    items,
+    null,
+    { ...draft, id: 'new' },
+    experienceFields,
+  );
+  assert.equal(added.length, 3);
+  assert.equal(added[0], original);
+  assert.equal(added[1], neighbor);
+  assert.equal(added[2].id, 'new');
+});
+test('record modal validation retains optional empty fields and matches the actual experience and education limits', () => {
+  const experience: Experience = {
+    id: 'work',
+    role: 'Developer',
+    organization: 'Studio',
+    period: '',
+    description: '',
+  };
+  const education: Education = {
+    id: 'edu',
+    institution: 'University',
+    qualification: 'Engineering',
+    period: '',
+    description: '',
+  };
+  function checkFields<T extends { id: string }>(record: T, fields: RecordField<T>[]) {
+    assert.doesNotThrow(() => saveEditorRecord([], null, record, fields));
+    for (const field of fields) {
+      assert.doesNotThrow(() =>
+        saveEditorRecord([], null, { ...record, [field.key]: 'x'.repeat(field.maxLength) }, fields),
+      );
+      for (const value of ['x'.repeat(field.maxLength + 1), '🛠'.repeat(field.maxLength / 2 + 1)])
+        assert.throws(
+          () => saveEditorRecord([], null, { ...record, [field.key]: value }, fields),
+          /максимум/,
+        );
+      if (field.required)
+        for (const value of ['', ' \n\t '])
+          assert.throws(
+            () => saveEditorRecord([], null, { ...record, [field.key]: value }, fields),
+            /Заполните/,
+          );
+    }
+  }
+  checkFields(experience, experienceFields);
+  checkFields(education, educationFields);
+  const workspace = migrateMainPortfolio(emptyContent(), null);
+  const content = mainDocument(workspace)!.content;
+  content.experience = saveEditorRecord([], null, experience, experienceFields);
+  content.education = saveEditorRecord([], null, education, educationFields);
+  assert.deepEqual(reload(workspace).documents[0].content.experience, [experience]);
+  assert.deepEqual(reload(workspace).documents[0].content.education, [education]);
+});
+test('experience and education render compact editable summaries, removal controls and local dialogs', () => {
+  const content = mainDocument(migrateMainPortfolio(emptyContent(), null))!.content;
+  content.experience = [
+    {
+      id: 'work',
+      role: 'Unique role',
+      organization: 'Unique studio',
+      period: '2024–2026',
+      description: 'Private work description',
+    },
+  ];
+  content.education = [
+    {
+      id: 'edu',
+      institution: 'Unique university',
+      qualification: 'Unique degree',
+      period: '',
+      description: 'Private education description',
+    },
+  ];
+  const html = renderToStaticMarkup(
+    createElement(ContentEditor, {
+      content,
+      onChange: () => {
+        throw new Error('Rendering must not patch content');
+      },
+    }),
+  );
+  for (const label of [
+    'Добавить опыт',
+    'Редактировать опыт Unique role',
+    'Удалить опыт Unique role',
+    'Добавить образование',
+    'Редактировать образование Unique degree',
+    'Удалить образование Unique degree',
+  ])
+    assert.ok(html.includes(`aria-label="${label}"`), label);
+  assert.equal((html.match(/dialog record-editor-dialog/g) ?? []).length, 2);
+  assert.ok(html.includes('Unique studio · 2024–2026'));
+  assert.ok(html.includes('Unique university'));
+  assert.ok(!html.includes('value="Unique role"'));
+  assert.ok(!html.includes('value="Unique degree"'));
+  assert.ok(!html.includes('Private work description'));
+  assert.ok(!html.includes('Private education description'));
+  assert.ok(html.indexOf('Город / страна') < html.indexOf('Описание'));
 });
 test('scoped import keeps adjacent unsaved portfolio input and existing project manual overrides', () => {
   const previous = migrateMainPortfolio(emptyContent(), null),

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
@@ -94,15 +95,10 @@ class _PortfolioDocumentPublicationScreenState
         title: Text(_tr(deleting ? 'deleteTitle' : 'unpublishTitle')),
         content: Text(_tr(deleting ? 'deleteHint' : 'unpublishHint')),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.strings.tr('builder.cancel')),
-          ),
-          TextButton(
-            key: const ValueKey('publication.confirm'),
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: context.colors.error),
-            child: Text(_tr(deleting ? 'delete' : 'unpublish')),
+          StackCardDialogActions(
+            confirmKey: const ValueKey('publication.confirm'),
+            onCancel: () => Navigator.pop(context, false),
+            onConfirm: () => Navigator.pop(context, true),
           ),
         ],
       ),

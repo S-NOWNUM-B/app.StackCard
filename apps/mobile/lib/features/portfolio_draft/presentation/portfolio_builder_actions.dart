@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/localization/app_strings.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import 'portfolio_draft_controller.dart';
 
@@ -14,13 +15,9 @@ Future<void> confirmDraftReload(
       title: Text(context.strings.tr('builder.reloadTitle')),
       content: Text(context.strings.tr('builder.reloadMessage')),
       actions: [
-        StackCardButton(
-          label: context.strings.tr('builder.cancel'),
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        StackCardButton(
-          label: context.strings.tr('builder.reloadConfirm'),
-          onPressed: () => Navigator.of(context).pop(true),
+        StackCardDialogActions(
+          onCancel: () => Navigator.of(context).pop(false),
+          onConfirm: () => Navigator.of(context).pop(true),
         ),
       ],
     ),

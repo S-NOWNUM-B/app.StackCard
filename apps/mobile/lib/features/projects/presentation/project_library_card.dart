@@ -33,19 +33,19 @@ class ProjectLibraryCard extends StatelessWidget {
   Widget build(BuildContext context) => StackCardCard(
     outlined: true,
     padding: const EdgeInsets.all(StackCardSpacing.md),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: StackCardSpacing.xs),
-          child: ProjectStockIcon(iconId: iconId),
-        ),
-        const SizedBox(width: StackCardSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              InkWell(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: StackCardSpacing.xs),
+              child: ProjectStockIcon(iconId: iconId),
+            ),
+            const SizedBox(width: StackCardSpacing.md),
+            Expanded(
+              child: InkWell(
                 key: openKey,
                 onTap: onOpen,
                 borderRadius: BorderRadius.circular(StackCardRadius.small),
@@ -77,30 +77,33 @@ class ProjectLibraryCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (showActions && (onEdit != null || onDelete != null)) ...[
-                const SizedBox(height: StackCardSpacing.sm),
-                Wrap(
-                  spacing: StackCardSpacing.sm,
-                  runSpacing: StackCardSpacing.xs,
-                  children: [
-                    if (onEdit != null)
-                      StackCardButton(
-                        label: context.strings.tr('builderForm.edit'),
-                        role: StackCardButtonRole.quiet,
-                        onPressed: onEdit,
-                      ),
-                    if (onDelete != null)
-                      StackCardButton(
-                        label: context.strings.tr('workspace.delete'),
-                        role: StackCardButtonRole.dangerQuiet,
-                        onPressed: onDelete,
-                      ),
-                  ],
+            ),
+            if (showActions && onDelete != null) ...[
+              const SizedBox(width: StackCardSpacing.xs),
+              IconButton(
+                tooltip: 'Удалить проект',
+                onPressed: onDelete,
+                constraints: const BoxConstraints(
+                  minWidth: StackCardSize.touchTarget,
+                  minHeight: StackCardSize.touchTarget,
                 ),
-              ],
+                color: context.colors.error,
+                icon: const Icon(Icons.remove_rounded),
+              ),
             ],
-          ),
+          ],
         ),
+        if (showActions && onEdit != null) ...[
+          const SizedBox(height: StackCardSpacing.sm),
+          Align(
+            alignment: Alignment.centerRight,
+            child: StackCardButton(
+              label: context.strings.tr('builderForm.edit'),
+              role: StackCardButtonRole.outlined,
+              onPressed: onEdit,
+            ),
+          ),
+        ],
       ],
     ),
   );

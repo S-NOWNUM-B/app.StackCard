@@ -291,6 +291,52 @@ test('project rows use one safe existing link and retain icon and text without g
   assert.ok(safe.includes('/icons/lucide/folder.svg'));
   assert.ok(!safe.includes('../unsafe'));
 });
+test('modern Home opts into city before biography while existing public and legacy headers keep their order', () => {
+  const document = parsePublicDocument(modernFixture());
+  assert.ok(document);
+  const home = renderToStaticMarkup(
+    createElement(DocumentView, {
+      content: document.content,
+      kind: document.kind,
+      modernPortfolio: true,
+      preview: true,
+    }),
+  );
+  const positions = ['<h1>Alex</h1>', '<h3>Developer</h3>', 'Алматы', 'Public biography'].map(
+    (text) => home.indexOf(text),
+  );
+  assert.ok(
+    positions.every(
+      (position, index) => position >= 0 && (!index || position > positions[index - 1]),
+    ),
+  );
+  assert.ok(home.includes('document-profile modern-profile'));
+  assert.ok(home.includes('class="profile-bio"'));
+  for (const data of [fixture(), modernFixture()]) {
+    const existing = parsePublicDocument(data);
+    assert.ok(existing);
+    const html = renderToStaticMarkup(
+      createElement(DocumentView, { content: existing.content, kind: existing.kind }),
+    );
+    assert.ok(html.indexOf('Public biography') < html.indexOf('Алматы'));
+    assert.ok(!html.includes('modern-profile'));
+    assert.ok(!html.includes('profile-bio'));
+  }
+  document.content.blocks = document.content.blocks.filter(
+    (block) => block.kind !== 'location' && block.kind !== 'about',
+  );
+  const hidden = renderToStaticMarkup(
+    createElement(DocumentView, {
+      content: document.content,
+      kind: document.kind,
+      modernPortfolio: true,
+      preview: true,
+    }),
+  );
+  assert.ok(!hidden.includes('Алматы'));
+  assert.ok(!hidden.includes('Public biography'));
+  assert.ok(hidden.includes('<h1>Alex</h1>'));
+});
 test('private fields at envelope, content, profile and project boundaries are rejected', () => {
   for (const key of ['uid', 'notes', 'draft', 'ownerId', 'documentId'])
     assert.equal(parsePublicDocument({ ...fixture(), [key]: 'private' }), null);

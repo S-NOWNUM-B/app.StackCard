@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react';
 import { Button, Field } from './ui';
 import { TagEditor } from './tag-editor';
+import { RecordEditor, type RecordField } from './record-editor';
 import {
   uid,
   linkKinds,
@@ -9,6 +10,8 @@ import {
   type Profile,
   type Contact,
   type Skill,
+  type Experience,
+  type Education,
 } from '@/lib/model';
 const contactLabels: Record<Contact['kind'], string> = {
   other: 'Другая ссылка',
@@ -27,6 +30,18 @@ export function appendPortfolioSkill(items: Skill[], input: string): Skill[] {
     throw new Error('Навык уже добавлен.');
   return [...items, { id: uid(), name }];
 }
+export const experienceFields: RecordField<Experience>[] = [
+  { key: 'role', label: 'Должность', maxLength: 120, required: true },
+  { key: 'organization', label: 'Организация', maxLength: 160, required: true },
+  { key: 'period', label: 'Период', maxLength: 120 },
+  { key: 'description', label: 'Описание', maxLength: 4000, textarea: true },
+];
+export const educationFields: RecordField<Education>[] = [
+  { key: 'institution', label: 'Учебное заведение', maxLength: 160, required: true },
+  { key: 'qualification', label: 'Квалификация', maxLength: 160, required: true },
+  { key: 'period', label: 'Период', maxLength: 120 },
+  { key: 'description', label: 'Описание', maxLength: 4000, textarea: true },
+];
 export function ContentEditor({
   content,
   onChange,
@@ -59,17 +74,17 @@ export function ContentEditor({
           onChange={(e) => profile({ headline: e.target.value })}
         />
         <Field
+          label="Город / страна"
+          value={content.profile.locationText}
+          maxLength={200}
+          onChange={(e) => profile({ locationText: e.target.value, publishLocation: true })}
+        />
+        <Field
           label="Описание"
           textarea
           value={content.profile.bio}
           maxLength={4000}
           onChange={(e) => profile({ bio: e.target.value })}
-        />
-        <Field
-          label="Город / страна"
-          value={content.profile.locationText}
-          maxLength={200}
-          onChange={(e) => profile({ locationText: e.target.value, publishLocation: true })}
         />
       </section>
       <section className="editor-group stack">
@@ -173,108 +188,42 @@ export function ContentEditor({
         </section>
       )}
       <section className="editor-group stack">
-        <h2>Опыт работы</h2>
-        {content.experience.map((x, i) => (
-          <div key={x.id} className="entry-editor stack">
-            <h3>Опыт {i + 1}</h3>
-            {(['role', 'organization', 'period', 'description'] as const).map((k) => (
-              <Field
-                key={k}
-                label={
-                  {
-                    role: 'Должность',
-                    organization: 'Организация',
-                    period: 'Период',
-                    description: 'Описание',
-                  }[k]
-                }
-                value={x[k]}
-                required={k === 'role' || k === 'organization'}
-                textarea={k === 'description'}
-                maxLength={k === 'description' ? 4000 : k === 'organization' ? 160 : 120}
-                onChange={(e) =>
-                  patch({
-                    experience: content.experience.map((v) =>
-                      v.id === x.id ? { ...v, [k]: e.target.value } : v,
-                    ),
-                  })
-                }
-              />
-            ))}
-            <Button
-              variant="quiet"
-              className="text-danger"
-              onClick={() => patch({ experience: content.experience.filter((v) => v.id !== x.id) })}
-            >
-              Удалить опыт
-            </Button>
-          </div>
-        ))}
-        <Button
-          variant="secondary"
-          onClick={() =>
-            patch({
-              experience: [
-                ...content.experience,
-                { id: uid(), role: '', organization: '', period: '', description: '' },
-              ],
-            })
-          }
-        >
-          Добавить опыт
-        </Button>
+        <RecordEditor
+          title="Опыт работы"
+          addLabel="Добавить опыт"
+          editLabel="Редактировать опыт"
+          removeLabel="Удалить опыт"
+          items={content.experience}
+          fields={experienceFields}
+          create={() => ({ id: uid(), role: '', organization: '', period: '', description: '' })}
+          summary={(item) => ({
+            title: item.role,
+            detail: [item.organization, item.period].filter(Boolean).join(' · '),
+          })}
+          onChange={(experience) => patch({ experience })}
+        />
       </section>
       <section className="editor-group stack">
-        <h2>Образование</h2>
-        {content.education.map((x, i) => (
-          <div key={x.id} className="entry-editor stack">
-            <h3>Образование {i + 1}</h3>
-            {(['institution', 'qualification', 'period', 'description'] as const).map((k) => (
-              <Field
-                key={k}
-                label={
-                  {
-                    institution: 'Учебное заведение',
-                    qualification: 'Квалификация',
-                    period: 'Период',
-                    description: 'Описание',
-                  }[k]
-                }
-                value={x[k]}
-                required={k === 'institution' || k === 'qualification'}
-                textarea={k === 'description'}
-                maxLength={k === 'description' ? 4000 : k === 'period' ? 120 : 160}
-                onChange={(e) =>
-                  patch({
-                    education: content.education.map((v) =>
-                      v.id === x.id ? { ...v, [k]: e.target.value } : v,
-                    ),
-                  })
-                }
-              />
-            ))}
-            <Button
-              variant="quiet"
-              className="text-danger"
-              onClick={() => patch({ education: content.education.filter((v) => v.id !== x.id) })}
-            >
-              Удалить образование
-            </Button>
-          </div>
-        ))}
-        <Button
-          variant="secondary"
-          onClick={() =>
-            patch({
-              education: [
-                ...content.education,
-                { id: uid(), institution: '', qualification: '', period: '', description: '' },
-              ],
-            })
-          }
-        >
-          Добавить образование
-        </Button>
+        <RecordEditor
+          title="Образование"
+          addLabel="Добавить образование"
+          editLabel="Редактировать образование"
+          removeLabel="Удалить образование"
+          items={content.education}
+          fields={educationFields}
+          create={() => ({
+            id: uid(),
+            institution: '',
+            qualification: '',
+            period: '',
+            description: '',
+          })}
+          summary={(item) => ({
+            title: item.qualification,
+            detail: [item.institution, item.period].filter(Boolean).join(' · '),
+          })}
+          onChange={(education) => patch({ education })}
+        />
       </section>
       {github && (
         <section className="editor-group stack">

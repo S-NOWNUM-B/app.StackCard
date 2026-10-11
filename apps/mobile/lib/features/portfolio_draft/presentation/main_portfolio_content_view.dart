@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_avatar.dart';
+import '../../../shared/widgets/stackcard_icon.dart';
 import '../../../shared/widgets/stackcard_technology_badge.dart';
 import '../../media/media.dart';
 import '../../projects/projects.dart';
 import '../document_publication_providers.dart';
 import '../domain/portfolio_content.dart';
+import '../domain/portfolio_validation.dart';
+import 'portfolio_contact_visual.dart';
 
 /// Готовое основное портфолио: только непустое содержимое, без controls редактора.
 class MainPortfolioContentView extends ConsumerWidget {
@@ -44,12 +47,21 @@ class MainPortfolioContentView extends ConsumerWidget {
     for (final (value, style) in [
       (profile.name, text.headlineSmall),
       (profile.headline, text.titleMedium),
-      (profile.bio, text.bodyLarge),
       (profile.locationText, text.bodyMedium),
     ]) {
       if (value.trim().isNotEmpty) {
         sections.add(Text(value, textAlign: TextAlign.center, style: style));
       }
+    }
+    if (profile.bio.trim().isNotEmpty) {
+      sections.add(
+        Text(
+          profile.bio,
+          key: const Key('main.portfolio.bio'),
+          textAlign: TextAlign.left,
+          style: text.bodyLarge,
+        ),
+      );
     }
     if (projects.isNotEmpty) {
       sections.add(
@@ -99,18 +111,29 @@ class MainPortfolioContentView extends ConsumerWidget {
     if (links.isNotEmpty) {
       sections.add(
         _section(context, 'Контакты и ссылки', [
-          for (final link in links)
-            Padding(
-              padding: const EdgeInsets.only(bottom: StackCardSpacing.sm),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns =
+                  (constraints.maxWidth /
+                          (160 * MediaQuery.textScalerOf(context).scale(1)))
+                      .floor()
+                      .clamp(1, 4);
+              final width =
+                  (constraints.maxWidth - StackCardSpacing.lg * (columns - 1)) /
+                  columns;
+              return Wrap(
+                spacing: StackCardSpacing.lg,
+                runSpacing: StackCardSpacing.md,
                 children: [
-                  Text(link.label, style: text.labelLarge),
-                  const SizedBox(height: StackCardSpacing.xs),
-                  _MainLink(url: link.url),
+                  for (final link in links)
+                    SizedBox(
+                      width: width,
+                      child: _MainContact(link: link),
+                    ),
                 ],
-              ),
-            ),
+              );
+            },
+          ),
         ], key: 'links'),
       );
     }
@@ -256,35 +279,67 @@ class _MainProjectRow extends ConsumerWidget {
   }
 }
 
-class _MainLink extends ConsumerWidget {
-  const _MainLink({required this.url});
-  final String url;
+class _MainContact extends ConsumerWidget {
+  const _MainContact({required this.link});
+  final SocialLink link;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => ConstrainedBox(
-    constraints: const BoxConstraints(minHeight: StackCardSize.touchTarget),
-    child: InkWell(
-      onTap: () => _openLink(context, ref, url),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.sm),
-        child: Text(
-          url,
-          style: Theme.of(context).textTheme.bodyMedium
-              ?.copyWith(decoration: TextDecoration.underline),
+  Widget build(BuildContext context, WidgetRef ref) => Column(
+    key: ValueKey('main.contact.${link.id}'),
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StackCardIcon(name: portfolioContactIconName(link.kind)),
+          const SizedBox(width: StackCardSpacing.sm),
+          Expanded(
+            child: Text(
+              portfolioContactCategoryLabel(link.kind),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+        ],
+      ),
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: ValueKey('main.contact.link.${link.id}'),
+          onTap: () => _openLink(context, ref, link.url, kind: link.kind),
+          borderRadius: BorderRadius.circular(StackCardRadius.small),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: StackCardSize.touchTarget,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: StackCardSpacing.sm,
+              ),
+              child: Text(
+                link.label,
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(decoration: TextDecoration.underline),
+              ),
+            ),
+          ),
         ),
       ),
-    ),
+    ],
   );
 }
 
 Future<void> _openLink(
   BuildContext context,
   WidgetRef ref,
-  String value,
-) async {
+  String value, {
+  SocialLinkKind? kind,
+}) async {
   final uri = Uri.tryParse(value);
   final actions = ref.read(documentLinkActionsProvider);
   try {
+    if (kind != null && validatePortfolioContactUrl(value, kind) != null) {
+      throw StateError('invalid contact');
+    }
     if (uri == null || actions == null) throw StateError('unavailable');
     await actions.open(uri);
   } on Object {

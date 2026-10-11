@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
@@ -24,6 +25,8 @@ class BuilderTagsEditor extends StatelessWidget {
     required this.onRemove,
     this.enabled = true,
     this.addKey,
+    this.onEdit,
+    this.iconName,
   });
 
   final String title;
@@ -35,6 +38,45 @@ class BuilderTagsEditor extends StatelessWidget {
   final ValueChanged<int> onRemove;
   final bool enabled;
   final Key? addKey;
+  final ValueChanged<int>? onEdit;
+  final String Function(int)? iconName;
+
+  Widget _label(BuildContext context, int index) {
+    if (onEdit == null) return StackCardTechnologyBadge(label: items[index]);
+    return Tooltip(
+      message: 'Редактировать ${items[index]}',
+      child: InkWell(
+        key: ValueKey('$keyPrefix.edit.$index'),
+        onTap: enabled ? () => onEdit!(index) : null,
+        borderRadius: BorderRadius.circular(StackCardRadius.small),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minHeight: StackCardSize.touchTarget,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: StackCardSpacing.sm,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (iconName != null) ...[
+                  StackCardIcon(name: iconName!(index), size: 20),
+                  const SizedBox(width: StackCardSpacing.sm),
+                ],
+                Flexible(
+                  child: Text(
+                    items[index],
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => StackCardCard(
@@ -73,9 +115,7 @@ class BuilderTagsEditor extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(
-                          child: StackCardTechnologyBadge(label: items[index]),
-                        ),
+                        Flexible(child: _label(context, index)),
                         const SizedBox(width: StackCardSpacing.xs),
                         IconButton(
                           key: ValueKey('$keyPrefix.remove.$index'),
@@ -170,16 +210,12 @@ class _BuilderTagDialogState extends ConsumerState<BuilderTagDialog> {
         ),
       ),
       actions: [
-        StackCardButton(
-          key: ValueKey('${widget.keyPrefix}.cancel'),
-          label: context.strings.tr('builderForm.cancel'),
-          onPressed: () => Navigator.pop(context),
-        ),
-        StackCardButton(
-          key: ValueKey('${widget.keyPrefix}.confirm'),
-          label: context.strings.tr('mobileParity.save'),
-          primary: true,
-          onPressed: _submit,
+        StackCardDialogActions(
+          confirmKey: ValueKey('${widget.keyPrefix}.confirm'),
+          cancelKey: ValueKey('${widget.keyPrefix}.cancel'),
+          confirmLabel: context.strings.tr('common.save'),
+          onCancel: () => Navigator.pop(context),
+          onConfirm: _submit,
         ),
       ],
     );

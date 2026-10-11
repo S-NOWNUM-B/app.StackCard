@@ -53,6 +53,72 @@ void main() {
   });
 
   testWidgets(
+    'experience and education modal changes persist only with main Save',
+    (tester) async {
+      final repository = await _repository();
+      final before = (await repository.read())!;
+      final container = await _open(tester, repository);
+      await _tap(tester, 'main.editor.addExperience');
+      final cancel = find.byKey(const Key('builder_record_cancel'));
+      final apply = find.byKey(const Key('builder_record_apply'));
+      expect(tester.getCenter(cancel).dx, lessThan(tester.getCenter(apply).dx));
+      expect(tester.widget<StackCardButton>(apply).label, 'Сохранить');
+      await _tap(tester, 'builder_record_apply');
+      expect(find.byKey(const Key('builder_form_role')), findsOneWidget);
+      await _enterForm(tester, 'role', 'Developer');
+      await _enterForm(tester, 'organization', 'Studio');
+      await _tap(tester, 'builder_record_apply');
+      final experience = mainPortfolioDocument(
+        container.read(portfolioDraftControllerProvider).content!,
+      )!.content.experience.single;
+      await _tap(tester, 'main.record.edit.${experience.id}');
+      await _enterForm(tester, 'role', 'Senior developer');
+      await _tap(tester, 'builder_record_cancel');
+      expect(find.text('Senior developer'), findsNothing);
+      await _tap(tester, 'main.editor.addEducation');
+      await _enterForm(tester, 'institution', 'University');
+      await _tap(tester, 'builder_record_cancel');
+      expect(find.text('University'), findsNothing);
+      await _tap(tester, 'main.editor.addEducation');
+      await _enterForm(tester, 'institution', 'University');
+      await _enterForm(tester, 'qualification', 'Software engineering');
+      await _tap(tester, 'builder_record_apply');
+      final education = mainPortfolioDocument(
+        container.read(portfolioDraftControllerProvider).content!,
+      )!.content.education.single;
+      expect((await repository.read())!.revision, before.revision);
+      await _tap(tester, 'main.editor.save');
+      var saved = mainPortfolioDocument((await repository.read())!.content!)!
+          .content;
+      expect(saved.experience.single.id, experience.id);
+      expect(saved.experience.single.role, 'Developer');
+      expect(saved.education.single.id, education.id);
+      await _tap(tester, 'main.record.edit.${experience.id}');
+      await _enterForm(tester, 'role', 'Lead developer');
+      await _tap(tester, 'builder_record_apply');
+      await _tap(tester, 'main.editor.save');
+      saved = mainPortfolioDocument((await repository.read())!.content!)!
+          .content;
+      expect(saved.experience.single.id, experience.id);
+      expect(saved.experience.single.role, 'Lead developer');
+      await _tap(tester, 'main.record.remove.${experience.id}');
+      await _tap(tester, 'main.record.remove.${education.id}');
+      expect(
+        mainPortfolioDocument((await repository.read())!.content!)!
+            .content
+            .experience,
+        hasLength(1),
+      );
+      await _tap(tester, 'main.editor.save');
+      saved = mainPortfolioDocument((await repository.read())!.content!)!
+          .content;
+      expect(saved.experience, isEmpty);
+      expect(saved.education, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'skill tags validate, cancel and remove locally before explicit Save at 320px text2',
     (tester) async {
       tester.view.physicalSize = const Size(320, 680);
@@ -444,6 +510,10 @@ void main() {
     final repository = await _repository();
     await _open(tester, repository);
     await _tap(tester, 'main.editor.addLink');
+    final cancel = find.byKey(const Key('main.contact.cancel'));
+    final apply = find.byKey(const Key('main.contact.apply'));
+    expect(tester.getCenter(cancel).dx, lessThan(tester.getCenter(apply).dx));
+    expect(tester.widget<StackCardButton>(apply).label, 'Добавить');
     await _enterForm(tester, 'label', 'Сайт');
     await _enterForm(tester, 'url', 'javascript:alert(1)');
     await _tap(tester, 'main.contact.apply');
@@ -461,6 +531,69 @@ void main() {
     expect(link.visible, isTrue);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'contact tags add, edit, cancel and remove locally at 320px text2',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 680);
+      final repository = await _repository();
+      await _open(tester, repository, textScale: 2);
+      await _tap(tester, 'main.editor.addLink');
+      await _enterForm(tester, 'label', 'Мой Telegram');
+      await tester.tap(find.byKey(const Key('builder_form_kind')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Telegram').last);
+      await tester.pumpAndSettle();
+      await _enterForm(tester, 'url', '@snownumb');
+      await _tap(tester, 'main.contact.apply');
+      expect(find.text('Мой Telegram'), findsOneWidget);
+      expect(find.text('https://t.me/snownumb'), findsNothing);
+      expect(
+        mainPortfolioDocument((await repository.read())!.content!)!
+            .content
+            .links,
+        isEmpty,
+      );
+
+      await _tap(tester, 'main.editor.contact.edit.0');
+      expect(_value(tester, 'builder_form_url'), 'https://t.me/snownumb');
+      await _enterForm(tester, 'label', 'Отменённое название');
+      await _tap(tester, 'main.contact.cancel');
+      expect(find.text('Мой Telegram'), findsOneWidget);
+      expect(find.text('Отменённое название'), findsNothing);
+
+      await _tap(tester, 'main.editor.contact.edit.0');
+      await _enterForm(tester, 'label', 'SNOWNUMB');
+      await _tap(tester, 'main.contact.apply');
+      await _tap(tester, 'main.editor.save');
+      final saved = mainPortfolioDocument((await repository.read())!.content!)!
+          .content
+          .links
+          .single;
+      expect(saved.label, 'SNOWNUMB');
+      expect(saved.kind, SocialLinkKind.telegram);
+      expect(saved.url, 'https://t.me/snownumb');
+
+      await _tap(tester, 'main.editor.contact.remove.0');
+      expect(find.text('SNOWNUMB'), findsNothing);
+      expect(
+        mainPortfolioDocument((await repository.read())!.content!)!
+            .content
+            .links
+            .single
+            .id,
+        saved.id,
+      );
+      await _tap(tester, 'main.editor.save');
+      expect(
+        mainPortfolioDocument((await repository.read())!.content!)!
+            .content
+            .links,
+        isEmpty,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('contact modal clears private input when repository changes', (
     tester,

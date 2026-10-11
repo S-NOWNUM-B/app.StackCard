@@ -88,6 +88,11 @@ class _AppStringsDelegate extends LocalizationsDelegate<AppStrings> {
 }
 
 const russianAppStrings = <String, String>{
+  'common.cancel': 'Отмена',
+  'common.confirm': 'Подтвердить',
+  'common.save': 'Сохранить',
+  'common.close': 'Закрыть',
+  'common.finish': 'Завершить',
   'documentEditor.baseReview': 'Обновление из профиля',
   'documentEditor.baseReviewStale':
       'База или документ изменились. Откройте обновления ещё раз.',
@@ -318,6 +323,11 @@ const russianAppStrings = <String, String>{
 };
 
 const englishAppStrings = <String, String>{
+  'common.cancel': 'Cancel',
+  'common.confirm': 'Confirm',
+  'common.save': 'Save',
+  'common.close': 'Close',
+  'common.finish': 'Finish',
   'documentEditor.baseReview': 'Profile updates',
   'documentEditor.baseReviewStale':
       'The shared profile or document changed. Open profile updates again.',

@@ -223,6 +223,22 @@ main portfolio contract suites — **23/23 PASS**, включая stale error re
 включая проверку геометрии при незавершённом скачивании; анализ двух изменённых
 Dart-файлов — **0 issues**, формат и `git diff --check` — PASS.
 
+Кнопки mobile Home/Projects 2026-10-12: «Импортировать»/«Создать» заполняют
+ширину контейнера той же адаптивной компоновкой, что Home; «Поделиться»
+получила чёрную заливку primary. Существующие Projects DI и Home suites —
+**21/21 PASS**, анализ двух изменённых экранов — **0 issues**, формат и
+`git diff --check` — PASS.
+
+Карточка mobile Projects 2026-10-12: удаление перенесено в красный минус справа
+сверху, «Редактировать» — вправо вниз с чёрной обводкой через shared outlined role.
+Диалог «Удалить проект?» предлагает «Отмена»/«Подтвердить»; отмена сохраняет
+Library и связи, смена owner во время диалога не удаляет данные.
+Parity/GitHub widget/shared button suites — **88/88 PASS**, включая геометрию,
+width320/text2, контраст/focus и подтверждение/отмену. Анализ пяти затронутых
+Dart-файлов, формат и `git diff --check` — PASS; общий анализ обнаружил unrelated
+`use_null_aware_elements` в main editor. Headless preview Projects просмотрен;
+проверка этой карточки на native device не выполнялась.
+
 Основные логи: `/private/tmp/stackcard-single-portfolio-final-verified-tests.log`,
 `stackcard-single-portfolio-final-flutter-analyze.log`, `stackcard-web-tests-final.log`,
 `stackcard-web-build-final.log`, `stackcard-single-all-rules.log`,

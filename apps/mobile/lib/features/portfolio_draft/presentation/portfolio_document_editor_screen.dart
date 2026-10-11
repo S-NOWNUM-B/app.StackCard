@@ -6,6 +6,7 @@ import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_theme.dart';
 import '../../../core/theme/stackcard_tokens.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_avatar.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
@@ -353,13 +354,9 @@ class _PortfolioDocumentEditorScreenState
         title: Text(_tr('reloadTitle')),
         content: Text(_tr('reloadHint')),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(_tr('cancel')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(_tr('reload')),
+          StackCardDialogActions(
+            onCancel: () => Navigator.of(dialogContext).pop(false),
+            onConfirm: () => Navigator.of(dialogContext).pop(true),
           ),
         ],
       ),
@@ -1508,14 +1505,10 @@ class _PortfolioDocumentEditorScreenState
         scrollable: true,
         content: Text(context.strings.tr('projectPresentation.removeHint')),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(_tr('cancel')),
-          ),
-          TextButton(
-            key: const ValueKey('document.detach.confirm'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(_tr('detach')),
+          StackCardDialogActions(
+            confirmKey: const ValueKey('document.detach.confirm'),
+            onCancel: () => Navigator.pop(context, false),
+            onConfirm: () => Navigator.pop(context, true),
           ),
         ],
       ),

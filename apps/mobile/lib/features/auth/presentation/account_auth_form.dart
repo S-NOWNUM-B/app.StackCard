@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../auth_providers.dart';
@@ -57,19 +58,9 @@ class _AccountAuthFormState extends ConsumerState<AccountAuthForm> {
               title: Text(context.strings.tr('account.unsavedTitle')),
               content: Text(context.strings.tr('account.unsavedHint')),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(
-                    context.strings.tr('account.cancel'),
-                    textAlign: TextAlign.left,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(
-                    context.strings.tr('account.discard'),
-                    textAlign: TextAlign.left,
-                  ),
+                StackCardDialogActions(
+                  onCancel: () => Navigator.pop(context, false),
+                  onConfirm: () => Navigator.pop(context, true),
                 ),
               ],
             ),

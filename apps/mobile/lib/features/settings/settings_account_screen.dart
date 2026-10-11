@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/stackcard_tokens.dart';
+import '../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../shared/widgets/stackcard_button.dart';
 import '../../shared/widgets/stackcard_card.dart';
 import '../../shared/widgets/stackcard_states.dart';
@@ -248,13 +249,9 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
         title: Text(context.strings.tr('settings.deleteAccount')),
         content: Text(_tr('deleteConfirm')),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.strings.tr('account.cancel')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.strings.tr('settings.deleteAccount')),
+          StackCardDialogActions(
+            onCancel: () => Navigator.pop(context, false),
+            onConfirm: () => Navigator.pop(context, true),
           ),
         ],
       ),
@@ -726,23 +723,15 @@ class _AccountCredentialsDialogState extends State<_AccountCredentialsDialog> {
       ),
     ),
     actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: Text(context.strings.tr('account.cancel')),
-      ),
-      TextButton(
-        onPressed: () {
+      StackCardDialogActions(
+        onCancel: () => Navigator.pop(context),
+        onConfirm: () {
           if (_form.currentState!.validate()) {
             Navigator.pop(
               context,
               _AccountInput(
                 email: _email.text.trim(),
                 password: _password.text,
-              ),
-            );
-          }
-        },
-        child: Text(context.strings.tr('settingsManagement.confirm')),
       ),
     ],
   );

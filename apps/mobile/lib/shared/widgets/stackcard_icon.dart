@@ -15,7 +15,7 @@ class StackCardIcon extends StatelessWidget {
   final String name;
   final double size;
 
-  /// Применяется только к монохромным Lucide, не к технологиям.
+  /// Применяется только к монохромным Lucide/Feather, не к технологиям.
   final Color? color;
 
   static const lucideNames = <String>{
@@ -38,6 +38,13 @@ class StackCardIcon extends StatelessWidget {
     'pencil',
     'plus',
     'search',
+    'github',
+    'linkedin',
+    'mail',
+    'phone',
+    'send',
+    'globe',
+    'link',
   };
 
   static const technologyNames = <String>{

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_async_view.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
@@ -56,14 +57,10 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
           'Если проект опубликован, обновите публичную версию портфолио.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.strings.tr('builder.cancel')),
-          ),
-          TextButton(
-            key: const ValueKey('project.delete.confirm'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.strings.tr('workspace.delete')),
+          StackCardDialogActions(
+            confirmKey: const ValueKey('project.delete.confirm'),
+            onCancel: () => Navigator.pop(context, false),
+            onConfirm: () => Navigator.pop(context, true),
           ),
         ],
       ),
@@ -108,6 +105,15 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         );
       }
     });
+    final importButton = StackCardButton(
+      label: context.strings.tr('project.importGitHub'),
+      onPressed: state.saving ? null : () => context.push('/github-import'),
+    );
+    final createButton = StackCardButton(
+      label: context.strings.tr('project.create'),
+      primary: true,
+      onPressed: state.saving ? null : () => context.push('/projects/new'),
+    );
     return SingleChildScrollView(
       padding: const EdgeInsets.all(StackCardSpacing.lg),
       child: Align(
@@ -119,24 +125,25 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Wrap(
-                spacing: StackCardSpacing.sm,
-                runSpacing: StackCardSpacing.sm,
-                children: [
-                  StackCardButton(
-                    label: context.strings.tr('project.importGitHub'),
-                    onPressed: state.saving
-                        ? null
-                        : () => context.push('/github-import'),
-                  ),
-                  StackCardButton(
-                    label: context.strings.tr('project.create'),
-                    primary: true,
-                    onPressed: state.saving
-                        ? null
-                        : () => context.push('/projects/new'),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) =>
+                    constraints.maxWidth >= 360 &&
+                        MediaQuery.textScalerOf(context).scale(1) <= 1.3
+                    ? Row(
+                        children: [
+                          Expanded(child: importButton),
+                          const SizedBox(width: StackCardSpacing.sm),
+                          Expanded(child: createButton),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          importButton,
+                          const SizedBox(height: StackCardSpacing.sm),
+                          createButton,
+                        ],
+                      ),
               ),
               const SizedBox(height: StackCardSpacing.lg),
               StackCardInput(

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/portfolio_content.dart';
@@ -210,7 +211,7 @@ class BuilderEditorScaffold extends StatelessWidget {
     required this.titleKey,
     required this.child,
     this.onApply,
-    this.applyLabelKey = 'builderForm.apply',
+    this.applyLabelKey = 'common.save',
     this.allowClose = true,
   });
   final String titleKey;
@@ -251,23 +252,12 @@ class BuilderEditorScaffold extends StatelessWidget {
           StackCardSpacing.lg,
           StackCardSpacing.sm + MediaQuery.viewInsetsOf(context).bottom,
         ),
-        child: Wrap(
-          spacing: StackCardSpacing.md,
-          runSpacing: StackCardSpacing.md,
-          children: [
-            StackCardButton(
-              key: const ValueKey('builder_form_apply'),
-              label: context.strings.tr(applyLabelKey),
-              icon: Icons.check_rounded,
-              primary: true,
-              onPressed: onApply,
-            ),
-            StackCardButton(
-              key: const ValueKey('builder_form_cancel'),
-              label: context.strings.tr('builderForm.cancel'),
-              onPressed: allowClose ? () => closeBuilderEditor(context) : null,
-            ),
-          ],
+        child: StackCardDialogActions(
+          confirmKey: const ValueKey('builder_form_apply'),
+          confirmLabel: context.strings.tr(applyLabelKey),
+          onConfirm: onApply,
+          cancelKey: const ValueKey('builder_form_cancel'),
+          onCancel: allowClose ? () => closeBuilderEditor(context) : null,
         ),
       ),
     ),
@@ -411,22 +401,12 @@ class _BuilderRecordDialogState extends ConsumerState<_BuilderRecordDialog> {
                   autofocus: true,
                 ),
                 const SizedBox(height: StackCardSpacing.xl),
-                Wrap(
-                  spacing: StackCardSpacing.md,
-                  runSpacing: StackCardSpacing.md,
-                  children: [
-                    StackCardButton(
-                      key: const ValueKey('builder_record_apply'),
-                      label: context.strings.tr('builderForm.addOrUpdate'),
-                      primary: true,
-                      onPressed: _apply,
-                    ),
-                    StackCardButton(
-                      key: const ValueKey('builder_record_cancel'),
-                      label: context.strings.tr('builderForm.cancel'),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
+                StackCardDialogActions(
+                  cancelKey: const ValueKey('builder_record_cancel'),
+                  onCancel: () => Navigator.of(context).pop(),
+                  confirmKey: const ValueKey('builder_record_apply'),
+                  confirmLabel: context.strings.tr('common.save'),
+                  onConfirm: _apply,
                 ),
               ],
             ),
