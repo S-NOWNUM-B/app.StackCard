@@ -63,51 +63,6 @@ class MainPortfolioContentView extends ConsumerWidget {
         ),
       );
     }
-    if (projects.isNotEmpty) {
-      sections.add(
-        _section(context, 'Проекты', [
-          for (final project in projects) _MainProjectRow(project: project),
-        ], key: 'projects'),
-      );
-    }
-    if (content.skills.isNotEmpty) {
-      sections.add(
-        _section(context, 'Навыки', [
-          Wrap(
-            spacing: StackCardSpacing.sm,
-            runSpacing: StackCardSpacing.sm,
-            children: [
-              for (final skill in content.skills)
-                StackCardTechnologyBadge(label: skill.name),
-            ],
-          ),
-        ], key: 'skills'),
-      );
-    }
-    if (content.experience.isNotEmpty) {
-      sections.add(
-        _section(context, 'Опыт', [
-          for (final entry in content.experience)
-            _entry(context, entry.role, [
-              entry.organization,
-              entry.period,
-              entry.description,
-            ]),
-        ], key: 'experience'),
-      );
-    }
-    if (content.education.isNotEmpty) {
-      sections.add(
-        _section(context, 'Образование', [
-          for (final entry in content.education)
-            _entry(context, entry.institution, [
-              entry.qualification,
-              entry.period,
-              entry.description,
-            ]),
-        ], key: 'education'),
-      );
-    }
     if (links.isNotEmpty) {
       sections.add(
         _section(context, 'Контакты и ссылки', [
@@ -135,6 +90,51 @@ class MainPortfolioContentView extends ConsumerWidget {
             },
           ),
         ], key: 'links'),
+      );
+    }
+    if (content.skills.isNotEmpty) {
+      sections.add(
+        _section(context, 'Навыки', [
+          Wrap(
+            spacing: StackCardSpacing.sm,
+            runSpacing: StackCardSpacing.sm,
+            children: [
+              for (final skill in content.skills)
+                StackCardTechnologyBadge(label: skill.name),
+            ],
+          ),
+        ], key: 'skills'),
+      );
+    }
+    if (projects.isNotEmpty) {
+      sections.add(
+        _section(context, 'Реализованные проекты', [
+          for (final project in projects) _MainProjectRow(project: project),
+        ], key: 'projects'),
+      );
+    }
+    if (content.experience.isNotEmpty) {
+      sections.add(
+        _section(context, 'Опыт работы', [
+          for (final entry in content.experience)
+            _entry(context, entry.role, [
+              entry.organization,
+              entry.period,
+              entry.description,
+            ]),
+        ], key: 'experience'),
+      );
+    }
+    if (content.education.isNotEmpty) {
+      sections.add(
+        _section(context, 'Образование', [
+          for (final entry in content.education)
+            _entry(context, entry.institution, [
+              entry.qualification,
+              entry.period,
+              entry.description,
+            ]),
+        ], key: 'education'),
       );
     }
     // Непарсенный legacy текст остаётся доступным после переноса.

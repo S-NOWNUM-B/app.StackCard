@@ -246,6 +246,12 @@ Dart-файлов, формат и `git diff --check` — PASS; общий ан�
 `use_null_aware_elements` в main editor. Headless preview Projects просмотрен;
 проверка этой карточки на native device не выполнялась.
 
+Уточнение карточки Projects 2026-10-12: красный минус заменён крестиком,
+как в редакторе тегов; «Редактировать» занимает всю внутреннюю ширину карточки.
+Existing parity/GitHub widget suites — **16/16 PASS**, включая ширину кнопки,
+width320/text2 и подтверждение удаления; анализ двух Dart-файлов — **0 issues**,
+формат и `git diff --check` — PASS. Native-проверка отдельно не выполнялась.
+
 Контакты mobile 2026-10-12: редактор использует ту же секцию тегов, что навыки,
 с «+», редактированием по названию и крестиком удаления. Добавление —
 «Отмена» слева / «Сохранить» справа; одинаково для добавления и изменения контакта.
@@ -259,6 +265,20 @@ Home/editor/SVG/mobile parity suites — **59/59 PASS**, анализ десят
 Просмотрены headless снимки `/private/tmp/stackcard-home-contacts.png` и
 `/private/tmp/stackcard-home-contacts-narrow.png`: категории с иконками и
 подчёркнутые пользовательские названия, адаптивные колонки и перенос text2.
+
+Единые действия mobile/web 2026-10-12: группы форм и диалогов выровнены вправо,
+«Отмена» слева с обводкой, основное действие справа с заливкой. Формы используют
+«Сохранить», подтверждения — «Подтвердить», просмотр — «Закрыть», последний
+шаг персонализации теперь «Завершить». Shared mobile footer и web confirmation
+dialog сохраняют порядок при переносе; Escape отменяет web confirmation,
+фокус возвращается к источнику. Системное предупреждение закрытия вкладки
+управляется браузером. Полный Flutter suite — **1317/1317 PASS**, анализ —
+**0 issues**; web — **152/152 PASS**, typecheck и production build — PASS.
+Геометрия/keyboard/text2 проверены widget tests; headless снимок формы контакта
+просмотрен. Web components/styles проверены в browser harness при1280/320px,
+включая Tab/Shift-Tab, Escape и возврат focus; это не новый native/live acceptance.
+Логи: `/private/tmp/stackcard-dialog-actions-verified-tests.log` и
+`/private/tmp/stackcard-dialog-actions-final-analyze.log`.
 
 Основные логи: `/private/tmp/stackcard-single-portfolio-final-verified-tests.log`,
 `stackcard-single-portfolio-final-flutter-analyze.log`, `stackcard-web-tests-final.log`,

@@ -72,6 +72,10 @@ void main() {
     final edit = find.byType(StackCardButton);
     final cardRect = tester.getRect(find.byType(ProjectLibraryCard));
     expect(
+      tester.getRect(edit).left,
+      closeTo(cardRect.left + StackCardSpacing.md, 1),
+    );
+    expect(
       tester.getRect(remove).right,
       closeTo(cardRect.right - StackCardSpacing.md, 1),
     );
@@ -95,6 +99,7 @@ void main() {
       tester.widget<IconButton>(find.byType(IconButton)).color,
       colors.error,
     );
+    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
     expect(find.text('Удалить'), findsNothing);
     await tester.tap(find.text('Редактировать'));
     await tester.tap(find.byTooltip('Удалить проект'));
