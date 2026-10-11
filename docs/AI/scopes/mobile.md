@@ -383,7 +383,8 @@ headless проверки не закрывают native visual, public/web ил
   `test/firebase_auth_controller_test.dart`, `test/firebase_auth_google_test.dart`,
   `test/account_auth_ui_test.dart`, `test/account_navigation_test.dart`,
   `test/settings_session_widget_test.dart` (identity/provider, горизонтальная
-  строка, restoring/retry, sign-out guard и переход к удалению без мутации),
+  строка только с выходом, restoring/retry, sign-out guard и переход в раздел
+  безопасности без мутации; выход там не дублируется),
   `test/account_draft_transfer_widget_test.dart` и `test/local_draft_accounts_test.dart`.
   Проверять session restore/error, typed auth failures, explicit guest access,
   guarded/named/nested routes, UID transition и in-flight save, real Hive reopen,

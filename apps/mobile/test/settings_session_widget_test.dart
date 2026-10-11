@@ -63,7 +63,7 @@ class _PublicationSpy implements DocumentPublicationRepository {
     required String recoveryKey,
   }) async {
     deletionCalls++;
-    throw StateError('Menu navigation must not delete an account');
+    throw StateError('Settings navigation must not delete an account');
   }
 
   @override
@@ -74,7 +74,7 @@ class _PublicationSpy implements DocumentPublicationRepository {
     bool retry = false,
   }) async {
     deletionCalls++;
-    throw StateError('Menu navigation must not recover or retry deletion');
+    throw StateError('Settings navigation must not recover or retry deletion');
   }
 
   @override
@@ -84,7 +84,7 @@ class _PublicationSpy implements DocumentPublicationRepository {
   @override
   Future<DocumentPublicationOperation> mutate(
     DocumentPublicationMutation mutation,
-  ) async => throw StateError('Session menu must not publish documents');
+  ) async => throw StateError('Settings navigation must not publish documents');
 }
 
 void _setViewport(WidgetTester tester, double width, double scale) {
@@ -315,7 +315,7 @@ void main() {
       expect(find.text(_strings.tr('account.signOut')), findsOneWidget);
       expect(find.text(_strings.tr('account.guestTitle')), findsNothing);
       expect(find.text(_strings.tr('settings.session')), findsNothing);
-      expect(find.byKey(_sessionMenu), findsOneWidget);
+      expect(find.byKey(_sessionMenu), findsNothing);
       expect(find.byKey(const Key('settings.deleteAccount')), findsNothing);
       expect(tester.takeException(), isNull);
     });
@@ -353,7 +353,7 @@ void main() {
     });
   }
 
-  testWidgets('Account overflow menu routes to security without deleting', (
+  testWidgets('Settings account row routes to security without deleting', (
     tester,
   ) async {
     _setViewport(tester, 390, 1);
@@ -361,10 +361,11 @@ void main() {
     final publication = _PublicationSpy();
     await _openSettings(tester, auth, publication: publication);
     expect(find.text(_strings.tr('settings.deleteAccount')), findsNothing);
-    await _tap(tester, find.byKey(_sessionMenu));
-    expect(find.text(_strings.tr('settings.deleteAccount')), findsOneWidget);
-    await _tap(tester, find.text(_strings.tr('settings.deleteAccount')));
+    expect(find.byKey(_sessionMenu), findsNothing);
+    expect(find.byKey(_sessionAction), findsOneWidget);
+    await _tap(tester, find.byKey(const Key('settings.group.account')));
     expect(find.byType(SettingsAccountScreen), findsOneWidget);
+    expect(find.byKey(_sessionAction), findsNothing);
     expect(
       _router(tester).routerDelegate.currentConfiguration.last.matchedLocation,
       '/settings/account',

@@ -318,6 +318,8 @@ void main() {
           backend = _Backend();
       final cleanup = <String>[];
       await _open(tester, auth, management, journal, backend, cleanup);
+      expect(find.byType(AccountCard), findsNothing);
+      expect(find.byKey(const Key('account.sessionAction')), findsNothing);
       await _tap(tester, find.byKey(const Key('settings.account.delete')));
       await _tap(tester, find.text('Удалить аккаунт').last);
       await tester.enterText(find.byType(TextFormField), 'current-secret');
