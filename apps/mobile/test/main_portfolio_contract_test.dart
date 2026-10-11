@@ -58,6 +58,124 @@ PortfolioContent _workspace() {
 }
 
 void main() {
+  test('section order preserves custom blocks, completes partial order and leaves defaults unchanged', () {
+    final legacy = PortfolioContent();
+    final original = legacy.blocks;
+    expect(mainPortfolioSectionOrder(legacy), mainPortfolioSectionKinds);
+    expect(legacy.blocks, same(original));
+    final custom = legacy.copyWith(
+      blocks: [
+        const PortfolioBlock(kind: PortfolioBlockKind.education),
+        const PortfolioBlock(kind: PortfolioBlockKind.links),
+        const PortfolioBlock(kind: PortfolioBlockKind.education),
+      ],
+    );
+    expect(mainPortfolioSectionOrder(custom), [
+      PortfolioBlockKind.education,
+      PortfolioBlockKind.links,
+      PortfolioBlockKind.skills,
+      PortfolioBlockKind.featuredProjects,
+      PortfolioBlockKind.experience,
+    ]);
+    final normalized = custom.copyWith(blocks: mainPortfolioBlocks(custom));
+    expect(
+      mainPortfolioSectionOrder(normalized),
+      mainPortfolioSectionOrder(custom),
+    );
+    expect(
+      normalized.blocks.map((block) => block.kind).toSet(),
+      PortfolioBlockKind.values.toSet(),
+    );
+    expect(normalized.blocks.last.visible, isFalse);
+    final kinds = normalized.blocks.map((block) => block.kind).toList();
+    expect(
+      kinds.indexOf(PortfolioBlockKind.github),
+      kinds.indexOf(PortfolioBlockKind.links) + 1,
+    );
+  });
+
+  test('saved mobile section order survives codec, web preview and trusted public projection', () async {
+    const order = [
+      PortfolioBlockKind.education,
+      PortfolioBlockKind.featuredProjects,
+      PortfolioBlockKind.links,
+      PortfolioBlockKind.experience,
+      PortfolioBlockKind.skills,
+    ];
+    final workspace = _workspace();
+    final content = workspace.documents.single.content.copyWith(
+      experience: const [
+        Experience(
+          id: 'work',
+          role: 'Developer',
+          organization: 'Studio',
+          period: '',
+          description: '',
+        ),
+      ],
+      education: const [
+        Education(
+          id: 'edu',
+          qualification: 'Engineering',
+          institution: 'University',
+          period: '',
+          description: '',
+        ),
+      ],
+      links: const [
+        SocialLink(
+          id: 'site',
+          label: 'Site',
+          url: 'https://example.com',
+          kind: SocialLinkKind.website,
+          publishAllowed: true,
+        ),
+      ],
+    );
+    final ordered = content.copyWith(
+      blocks: mainPortfolioBlocks(
+        content.copyWith(
+          blocks: [for (final kind in order) PortfolioBlock(kind: kind)],
+        ),
+      ),
+    );
+    final document = workspace.documents.single.copyWith(content: ordered);
+    final main = workspace.copyWith(
+      documents: [document],
+      mainPortfolioId: document.id,
+    );
+    final restored = decodePortfolioContent(encodePortfolioContent(main));
+    expect(
+      mainPortfolioSectionOrder(resolvedMainPortfolioContent(restored)!),
+      order,
+    );
+    final result = await Process.run('node', [
+      '--import',
+      'tsx',
+      '--input-type=module',
+      '-e',
+      r"""
+import assert from 'node:assert/strict';
+import { mainDocument, mainPortfolioSectionOrder, validateWorkspace } from './src/lib/model.ts';
+import { documentPreview } from './src/lib/preview.ts';
+import { parsePublicDocument } from './src/lib/public-document.ts';
+import { projectPublicDocument } from '../../firebase/functions/src/projection.mjs';
+const workspace = validateWorkspace(JSON.parse(process.argv[1]), 'owner');
+const main = mainDocument(workspace);
+const order = ['education', 'featuredProjects', 'links', 'experience', 'skills'];
+assert.deepEqual(mainPortfolioSectionOrder(main.content), order);
+assert.deepEqual(mainPortfolioSectionOrder(documentPreview(workspace, main)), order);
+const projected = projectPublicDocument(workspace, main.id, 'owner', 'a'.repeat(32), 1, 'section-order').publicDocument;
+projected.publishedAt = '2026-10-12T00:00:00.000Z';
+const parsed = parsePublicDocument(projected, 'a'.repeat(32));
+assert.deepEqual(mainPortfolioSectionOrder(parsed.content), order);
+assert.deepEqual(parsed.content.blocks.filter((block) => order.includes(block.kind)).map((block) => block.kind), order);
+""",
+      jsonEncode(encodePortfolioContent(restored)),
+    ], workingDirectory: Directory('../web').absolute.path);
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+  });
+
   test('GitHub profile identity normalizes separately from portfolio slug', () {
     for (final input in [
       'SNOWNUMB',
@@ -168,8 +286,9 @@ void main() {
       expect(resolved.profile.locationText, 'Алматы / Казахстан');
       expect(resolved.links.single.id, 'new');
       expect(resolved.resumeText, isEmpty);
-      expect(resolved.blocks[3].kind, PortfolioBlockKind.featuredProjects);
-      expect(resolved.blocks[4].kind, PortfolioBlockKind.skills);
+      expect(mainPortfolioSectionOrder(resolved), mainPortfolioSectionKinds);
+      expect(resolved.blocks[3].kind, PortfolioBlockKind.links);
+      expect(resolved.blocks[4].kind, PortfolioBlockKind.github);
       expect(resolved.blocks.last.visible, isFalse);
       expect(document.content.resumeText, 'Legacy private plaintext');
       expect(resolved.mainPortfolioId, isNull);

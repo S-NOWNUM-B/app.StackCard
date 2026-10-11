@@ -716,12 +716,17 @@ class _MainPortfolioEditorScreenState
         ),
       );
     } else {
-      body = SingleChildScrollView(
-        key: const Key('main.editor.scroll'),
-        padding: const EdgeInsets.all(StackCardSpacing.lg),
-        child: Form(
-          key: _formKey,
-          child: Column(
+      body = Form(
+        key: _formKey,
+        child: ReorderableListView.builder(
+          key: const Key('main.editor.scroll'),
+          padding: const EdgeInsets.all(StackCardSpacing.lg),
+          buildDefaultDragHandles: false,
+          scrollCacheExtent: const ScrollCacheExtent.viewport(3),
+          itemCount: mainPortfolioSectionKinds.length,
+          itemBuilder: (_, index) => _editorSection(workspace!, index),
+          onReorderItem: _reorderSection,
+          header: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (_dirty || _saved) ...[
@@ -790,104 +795,11 @@ class _MainPortfolioEditorScreenState
               _field('headline', 'Должность', 160),
               _field('locationText', 'Город / Страна', 200),
               _field('bio', 'О себе', 4000, multiline: true),
-              BuilderTagsEditor(
-                key: const Key('main.editor.contacts'),
-                title: 'Контакты и ссылки',
-                items: _buffer!.links.map((link) => link.label).toList(),
-                keyPrefix: 'main.editor.contact',
-                addKey: const Key('main.editor.addLink'),
-                addLabel: 'Добавить контакт или ссылку',
-                removeLabel: (name) => 'Удалить контакт $name',
-                enabled: !_busy,
-                onAdd: _editLink,
-                onEdit: (index) => _editLink(_buffer!.links[index]),
-                iconName: (index) =>
-                    portfolioContactIconName(_buffer!.links[index].kind),
-                onRemove: (index) {
-                  setState(
-                    () => _buffer = _buffer!.copyWith(
-                      links: [..._buffer!.links]..removeAt(index),
-                    ),
-                  );
-                  _changed();
-                },
-              ),
-              const SizedBox(height: StackCardSpacing.xl),
-              BuilderTagsEditor(
-                key: const Key('main.editor.skills'),
-                title: 'Навыки',
-                items: _buffer!.skills.map((skill) => skill.name).toList(),
-                keyPrefix: 'main.editor.skill',
-                addKey: const Key('main.editor.addSkill'),
-                addLabel: 'Добавить навык',
-                removeLabel: (name) => 'Удалить навык $name',
-                enabled: !_busy,
-                onAdd: _addSkill,
-                onRemove: (index) {
-                  setState(
-                    () => _buffer = _buffer!.copyWith(
-                      skills: [..._buffer!.skills]..removeAt(index),
-                    ),
-                  );
-                  _changed();
-                },
-              ),
-              const SizedBox(height: StackCardSpacing.xl),
-              _projectsEditor(workspace!),
-              _title(
-                'Опыт работы',
-                action: IconButton(
-                  key: const Key('main.editor.addExperience'),
-                  tooltip: 'Добавить опыт',
-                  onPressed: _busy ? null : _editExperience,
-                  icon: const StackCardIcon(name: 'plus'),
-                ),
-              ),
-              for (final entry in _buffer!.experience)
-                _record(
-                  entry.id,
-                  entry.role,
-                  entry.organization,
-                  iconActions: true,
-                  onEdit: () => _editExperience(entry),
-                  onRemove: () {
-                    setState(
-                      () => _buffer = _buffer!.copyWith(
-                        experience: _buffer!.experience
-                            .where((item) => item.id != entry.id)
-                            .toList(),
-                      ),
-                    );
-                    _changed();
-                  },
-                ),
-              _title(
-                'Образование',
-                action: IconButton(
-                  key: const Key('main.editor.addEducation'),
-                  tooltip: 'Добавить образование',
-                  onPressed: _busy ? null : _editEducation,
-                  icon: const StackCardIcon(name: 'plus'),
-                ),
-              ),
-              for (final entry in _buffer!.education)
-                _record(
-                  entry.id,
-                  entry.institution,
-                  entry.qualification,
-                  iconActions: true,
-                  onEdit: () => _editEducation(entry),
-                  onRemove: () {
-                    setState(
-                      () => _buffer = _buffer!.copyWith(
-                        education: _buffer!.education
-                            .where((item) => item.id != entry.id)
-                            .toList(),
-                      ),
-                    );
-                    _changed();
-                  },
-                ),
+            ],
+          ),
+          footer: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               if (_buffer!.resumeText.isNotEmpty) ...[
                 _title('Дополнительно'),
                 _field(
@@ -902,6 +814,7 @@ class _MainPortfolioEditorScreenState
         ),
       );
     }
+
     return PopScope(
       canPop: _allowPop || !_dirty && !_busy,
       onPopInvokedWithResult: (didPop, _) {
@@ -1057,8 +970,165 @@ class _MainPortfolioEditorScreenState
     ),
   );
 
-  Widget _projectsEditor(PortfolioContent workspace) => StackCardCard(
-    key: const Key('main.editor.projects'),
+  void _reorderSection(int oldIndex, int newIndex) {
+    if (!_sameOwner || _busy || oldIndex == newIndex) return;
+    final kinds = [...mainPortfolioSectionOrder(_buffer!)];
+    final kind = kinds.removeAt(oldIndex);
+    kinds.insert(newIndex, kind);
+    final blocks = [
+      for (final block in _buffer!.blocks)
+        if (!mainPortfolioSectionKinds.contains(block.kind)) block,
+      for (final item in kinds)
+        _buffer!.blocks.where((block) => block.kind == item).firstOrNull ??
+            PortfolioBlock(kind: item),
+    ];
+    setState(() => _buffer = _buffer!.copyWith(blocks: blocks));
+    _changed();
+  }
+
+  Widget _sectionHandle(PortfolioBlockKind kind, int index) => Semantics(
+    label: 'Изменить порядок раздела',
+    hint: 'Удерживайте точки и перетащите раздел',
+    child: Tooltip(
+      message: 'Перетащить раздел',
+      triggerMode: TooltipTriggerMode.manual,
+      child: ReorderableDelayedDragStartListener(
+        key: ValueKey('main.editor.section.drag.${kind.name}'),
+        index: index,
+        enabled: !_busy && _sameOwner,
+        child: const SizedBox(
+          width: StackCardSize.touchTarget,
+          height: StackCardSize.touchTarget,
+          child: ColoredBox(
+            color: Colors.transparent,
+            child: Center(
+              child: StackCardIcon(name: 'grip-vertical', size: 20),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  Widget _editorSection(PortfolioContent workspace, int index) {
+    final kind = mainPortfolioSectionOrder(_buffer!)[index];
+    final handle = _sectionHandle(kind, index);
+    final section = switch (kind) {
+      PortfolioBlockKind.links => BuilderTagsEditor(
+        key: const Key('main.editor.contacts'),
+        title: 'Контакты и ссылки',
+        headerLeading: handle,
+        items: _buffer!.links.map((link) => link.label).toList(),
+        keyPrefix: 'main.editor.contact',
+        addKey: const Key('main.editor.addLink'),
+        addLabel: 'Добавить контакт или ссылку',
+        removeLabel: (name) => 'Удалить контакт $name',
+        enabled: !_busy,
+        onAdd: _editLink,
+        onEdit: (index) => _editLink(_buffer!.links[index]),
+        iconName: (index) =>
+            portfolioContactIconName(_buffer!.links[index].kind),
+        onRemove: (index) {
+          setState(
+            () => _buffer = _buffer!.copyWith(
+              links: [..._buffer!.links]..removeAt(index),
+            ),
+          );
+          _changed();
+        },
+      ),
+      PortfolioBlockKind.skills => BuilderTagsEditor(
+        key: const Key('main.editor.skills'),
+        title: 'Навыки',
+        headerLeading: handle,
+        items: _buffer!.skills.map((skill) => skill.name).toList(),
+        keyPrefix: 'main.editor.skill',
+        addKey: const Key('main.editor.addSkill'),
+        addLabel: 'Добавить навык',
+        removeLabel: (name) => 'Удалить навык $name',
+        enabled: !_busy,
+        onAdd: _addSkill,
+        onRemove: (index) {
+          setState(
+            () => _buffer = _buffer!.copyWith(
+              skills: [..._buffer!.skills]..removeAt(index),
+            ),
+          );
+          _changed();
+        },
+      ),
+      PortfolioBlockKind.featuredProjects => _projectsEditor(
+        workspace,
+        leading: handle,
+      ),
+      PortfolioBlockKind.experience => _recordsEditor(
+        'Опыт работы',
+        handle,
+        'main.editor.addExperience',
+        _editExperience,
+        [
+          for (final entry in _buffer!.experience)
+            _record(
+              entry.id,
+              entry.role,
+              entry.organization,
+              iconActions: true,
+              onEdit: () => _editExperience(entry),
+              onRemove: () {
+                setState(
+                  () => _buffer = _buffer!.copyWith(
+                    experience: _buffer!.experience
+                        .where((item) => item.id != entry.id)
+                        .toList(),
+                  ),
+                );
+                _changed();
+              },
+            ),
+        ],
+      ),
+      PortfolioBlockKind.education => _recordsEditor(
+        'Образование',
+        handle,
+        'main.editor.addEducation',
+        _editEducation,
+        [
+          for (final entry in _buffer!.education)
+            _record(
+              entry.id,
+              entry.institution,
+              entry.qualification,
+              iconActions: true,
+              onEdit: () => _editEducation(entry),
+              onRemove: () {
+                setState(
+                  () => _buffer = _buffer!.copyWith(
+                    education: _buffer!.education
+                        .where((item) => item.id != entry.id)
+                        .toList(),
+                  ),
+                );
+                _changed();
+              },
+            ),
+        ],
+      ),
+      _ => const SizedBox.shrink(),
+    };
+    return Padding(
+      key: ValueKey('main.editor.section.${kind.name}'),
+      padding: const EdgeInsets.only(bottom: StackCardSpacing.xl),
+      child: section,
+    );
+  }
+
+  Widget _recordsEditor(
+    String title,
+    Widget handle,
+    String addKey,
+    VoidCallback onAdd,
+    List<Widget> children,
+  ) => StackCardCard(
     outlined: true,
     padding: const EdgeInsets.all(StackCardSpacing.lg),
     child: Column(
@@ -1066,36 +1136,65 @@ class _MainPortfolioEditorScreenState
       children: [
         Row(
           children: [
+            handle,
             Expanded(
-              child: Text(
-                'Реализованные проекты',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              child: Text(title, style: Theme.of(context).textTheme.titleLarge),
             ),
             IconButton(
-              key: const Key('main.editor.addProject'),
-              tooltip: 'Добавить проект',
-              onPressed: _busy ? null : _addProjects,
+              key: ValueKey(addKey),
+              tooltip: 'Добавить запись',
+              onPressed: _busy ? null : onAdd,
               icon: const StackCardIcon(name: 'plus'),
             ),
           ],
         ),
-        if (_projects.isNotEmpty) ...[
-          const SizedBox(height: StackCardSpacing.md),
-          ReorderableListView.builder(
-            key: const Key('main.editor.projectOrder'),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            buildDefaultDragHandles: false,
-            padding: EdgeInsets.zero,
-            itemCount: _projects.length,
-            itemBuilder: (_, index) => _projectRow(workspace, index),
-            onReorderItem: _reorderProject,
-          ),
-        ],
+        if (children.isNotEmpty) const SizedBox(height: StackCardSpacing.md),
+        ...children,
       ],
     ),
   );
+
+  Widget _projectsEditor(PortfolioContent workspace, {Widget? leading}) =>
+      StackCardCard(
+        key: const Key('main.editor.projects'),
+        outlined: true,
+        padding: const EdgeInsets.all(StackCardSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                ?leading,
+                Expanded(
+                  child: Text(
+                    'Реализованные проекты',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                IconButton(
+                  key: const Key('main.editor.addProject'),
+                  tooltip: 'Добавить проект',
+                  onPressed: _busy ? null : _addProjects,
+                  icon: const StackCardIcon(name: 'plus'),
+                ),
+              ],
+            ),
+            if (_projects.isNotEmpty) ...[
+              const SizedBox(height: StackCardSpacing.md),
+              ReorderableListView.builder(
+                key: const Key('main.editor.projectOrder'),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                padding: EdgeInsets.zero,
+                itemCount: _projects.length,
+                itemBuilder: (_, index) => _projectRow(workspace, index),
+                onReorderItem: _reorderProject,
+              ),
+            ],
+          ],
+        ),
+      );
 
   Widget _projectRow(PortfolioContent workspace, int index) {
     final attachment = _projects[index];

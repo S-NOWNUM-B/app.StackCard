@@ -189,7 +189,9 @@ export function DocumentView({
               ) : null;
             case 'links': {
               const links = content.links.filter(
-                (link) => link.kind !== 'github' && safePublicHref(link.url, link.kind),
+                (link) =>
+                  (link.kind !== 'github' || (modernPortfolio && visible.has('github'))) &&
+                  safePublicHref(link.url, link.kind),
               );
               return links.length ? (
                 <section
@@ -205,6 +207,7 @@ export function DocumentView({
               ) : null;
             }
             case 'github': {
+              if (modernPortfolio && visible.has('links')) return null;
               const links = content.links.filter(
                 (link) => link.kind === 'github' && safePublicHref(link.url, link.kind),
               );

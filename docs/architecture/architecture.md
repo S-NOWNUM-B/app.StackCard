@@ -565,8 +565,10 @@ Firestore sync использует тот же UID boundary; его storage/sta
 
 ## GitHub Import: HTTP и persistent-кэш
 
-`Projects → GitHub Import → username → profile + repositories` — отдельный
-просмотр источника. `GitHubProfile` и `GitHubRepository` не являются `Profile`
+`Projects → GitHub Import → saved GitHub identity → profile + repositories` —
+отдельный просмотр источника. Профиль вводится в Settings/персонализации;
+пустой источник в Import предлагает переход в Settings, не вторую форму Save.
+`GitHubProfile` и `GitHubRepository` не являются `Profile`
 или curated `Project`; Phase 9 связывает repository с draft только явными actions.
 
 [`GitHubImportController`](../../apps/mobile/lib/features/github_import/presentation/github_import_controller.dart)

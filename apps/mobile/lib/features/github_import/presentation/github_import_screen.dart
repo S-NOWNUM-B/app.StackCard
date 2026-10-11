@@ -25,22 +25,17 @@ class GitHubImportScreen extends ConsumerStatefulWidget {
 }
 
 class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
   final _searchController = TextEditingController();
   final _selectedIds = <int>{};
   PortfolioDraftRepository? _ownerRepository;
   String? _loadedSource;
   bool _sourceScheduled = false;
-  bool _editingSource = false;
-  bool _savingSource = false;
   bool _importing = false;
   bool _saveFailed = false;
   int _operationGeneration = 0;
 
   @override
   void dispose() {
-    _usernameController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -65,15 +60,10 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
       setState(() {
         _operationGeneration++;
         _importing = false;
-        _savingSource = false;
         _ownerRepository = latestRepository;
         _loadedSource = latestUsername;
         _selectedIds.clear();
         _searchController.clear();
-        _usernameController.text = latestUsername.isEmpty
-            ? ''
-            : 'https://github.com/$latestUsername';
-        _editingSource = false;
         _saveFailed = false;
       });
       final controller = ref.read(githubImportControllerProvider.notifier);
@@ -82,40 +72,11 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
     });
   }
 
-  Future<void> _saveSource() async {
-    if (_savingSource ||
-        _importing ||
-        _formKey.currentState?.validate() != true) {
-      return;
-    }
-    final repository = ref.read(portfolioDraftRepositoryProvider);
-    final generation = ++_operationGeneration;
-    setState(() {
-      _savingSource = true;
-      _saveFailed = false;
-    });
-    final saved = await ref
-        .read(portfolioDraftControllerProvider.notifier)
-        .saveGitHubIdentity(
-          _usernameController.text,
-          expectedRepository: repository,
-        );
-    if (!mounted || generation != _operationGeneration) return;
-    setState(() {
-      _savingSource = false;
-      if (identical(repository, ref.read(portfolioDraftRepositoryProvider))) {
-        _saveFailed = !saved;
-        if (saved) _editingSource = false;
-      }
-    });
-  }
-
   Future<void> _import() async {
     final repository = ref.read(portfolioDraftRepositoryProvider);
     final workspace = ref.read(githubPortfolioDraftStateProvider);
     final source = workspace?.draft?.content?.githubUsername ?? '';
     if (_importing ||
-        _savingSource ||
         workspace?.canEdit != true ||
         workspace!.saving ||
         !identical(repository, _ownerRepository) ||
@@ -192,13 +153,9 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
             .whereType<int>()
             .toSet() ??
         <int>{};
-    final busy = _importing || _savingSource || workspace?.saving == true;
+    final busy = _importing || workspace?.saving == true;
     final canSelect =
-        ownerReady &&
-        !_editingSource &&
-        !busy &&
-        !state.loading &&
-        !state.refreshing;
+        ownerReady && !busy && !state.loading && !state.refreshing;
     final loadedIds = state.repositories.map((item) => item.id).toSet();
     final selectedCount = ownerReady
         ? _selectedIds
@@ -264,53 +221,16 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(StackCardSpacing.lg),
                       children: [
-                        if (source.isEmpty || _editingSource)
-                          Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                StackCardInput(
-                                  key: const ValueKey('github_username'),
-                                  label: 'GitHub-профиль',
-                                  hint: 'https://github.com/username',
-                                  controller: _usernameController,
-                                  enabled: !busy,
-                                  keyboardType: TextInputType.url,
-                                  textInputAction: TextInputAction.done,
-                                  validator: (value) =>
-                                      normalizePortfolioGitHubUsername(
-                                            value ?? '',
-                                          ) ==
-                                          null
-                                      ? 'Введите username или ссылку на профиль GitHub'
-                                      : (value ?? '').trim().isEmpty
-                                      ? 'Добавьте GitHub-профиль'
-                                      : null,
-                                  onFieldSubmitted: (_) => _saveSource(),
-                                ),
-                                const SizedBox(height: StackCardSpacing.sm),
-                                StackCardButton(
-                                  key: const ValueKey('github_source_save'),
-                                  label: 'Сохранить GitHub-профиль',
-                                  primary: true,
-                                  loading: _savingSource,
-                                  onPressed: busy ? null : _saveSource,
-                                ),
-                                if (source.isNotEmpty)
-                                  TextButton(
-                                    onPressed: busy
-                                        ? null
-                                        : () => setState(
-                                            () => _editingSource = false,
-                                          ),
-                                    child: const Text('Отмена'),
-                                  ),
-                                const SizedBox(height: StackCardSpacing.lg),
-                              ],
-                            ),
-                          )
-                        else ...[
+                        if (source.isEmpty) ...[
+                          StackCardButton(
+                            key: const ValueKey('github_source_settings'),
+                            label: 'Добавить GitHub-профиль',
+                            onPressed: busy
+                                ? null
+                                : () => context.push('/settings/github'),
+                          ),
+                          const SizedBox(height: StackCardSpacing.lg),
+                        ] else ...[
                           Row(
                             children: [
                               Expanded(
@@ -322,10 +242,10 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
                                 ),
                               ),
                               TextButton(
+                                key: const ValueKey('github_source_settings'),
                                 onPressed: busy
                                     ? null
-                                    : () =>
-                                          setState(() => _editingSource = true),
+                                    : () => context.push('/settings/github'),
                                 child: const Text('Изменить'),
                               ),
                             ],
@@ -374,13 +294,16 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
                               onChanged: controller.setQuery,
                             ),
                             const SizedBox(height: StackCardSpacing.sm),
-                            TextButton(
-                              onPressed:
-                                  busy || state.loading || state.refreshing
-                                  ? null
-                                  : controller.refresh,
-                              child: Text(context.strings.tr('github.refresh')),
-                            ),
+                            if (state.failure == null)
+                              TextButton(
+                                onPressed:
+                                    busy || state.loading || state.refreshing
+                                    ? null
+                                    : controller.refresh,
+                                child: Text(
+                                  context.strings.tr('github.refresh'),
+                                ),
+                              ),
                             if (state.nextPage != null) ...[
                               Text(
                                 'Поиск охватывает только загруженные страницы.',
@@ -462,7 +385,7 @@ class _GitHubImportScreenState extends ConsumerState<GitHubImportScreen> {
                     child: StackCardButton(
                       key: const ValueKey('github_import_selected'),
                       label:
-                          'Импортировать выбранные${selectedCount == 0 ? '' : ' ($selectedCount)'}',
+                          'Импортировать${selectedCount == 0 ? '' : ' ($selectedCount)'}',
                       primary: true,
                       loading: _importing,
                       onPressed: !canSelect || selectedCount == 0

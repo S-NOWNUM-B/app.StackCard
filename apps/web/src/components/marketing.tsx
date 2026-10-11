@@ -86,10 +86,8 @@ export function SiteFooter() {
         </div>
         <div>
           <h2>Рабочее пространство</h2>
-          <Link href="/workspace#base">Мой профиль</Link>
-          <Link href="/workspace#resumes">Резюме</Link>
+          <Link href="/workspace">Личный кабинет</Link>
           <Link href="/workspace#projects">Проекты</Link>
-          <Link href="/workspace#portfolios">Портфолио</Link>
         </div>
       </div>
       <div className="footer-bottom">

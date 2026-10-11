@@ -52,6 +52,64 @@ void main() {
   }
 
   test(
+    'PDF URI annotations follow saved sections and omit private contacts',
+    () async {
+      final content = PortfolioContent(
+        projects: [
+          PortfolioProject(
+            id: 'project',
+            title: 'Project',
+            description: '',
+            technologies: const [],
+            liveUrl: 'https://example.com/project-marker',
+          ),
+        ],
+        links: const [
+          SocialLink(
+            id: 'contact',
+            label: 'Contact',
+            url: 'https://example.com/contact-marker',
+            publishAllowed: true,
+          ),
+          SocialLink(
+            id: 'private',
+            label: 'Private',
+            url: 'https://example.com/private-marker',
+          ),
+        ],
+      );
+      for (final contactsFirst in [true, false]) {
+        final ordered = content.copyWith(
+          blocks: mainPortfolioBlocks(
+            content.copyWith(
+              blocks: [
+                PortfolioBlock(
+                  kind: contactsFirst
+                      ? PortfolioBlockKind.links
+                      : PortfolioBlockKind.featuredProjects,
+                ),
+                PortfolioBlock(
+                  kind: contactsFirst
+                      ? PortfolioBlockKind.featuredProjects
+                      : PortfolioBlockKind.links,
+                ),
+              ],
+            ),
+          ),
+        );
+        final source = latin1.decode(await generate(ordered));
+        expect(source, contains('contact-marker'));
+        expect(source, contains('project-marker'));
+        expect(source, isNot(contains('private-marker')));
+        expect(
+          source.indexOf('contact-marker') < source.indexOf('project-marker'),
+          contactsFirst,
+        );
+      }
+    },
+  );
+
+  test(
     'empty saved portfolio generates a genuine PDF without placeholder data',
     () async {
       final bytes = await generate(PortfolioContent());

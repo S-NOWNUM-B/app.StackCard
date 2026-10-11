@@ -77,7 +77,7 @@ class InboxScreen extends ConsumerWidget {
               loading: state.loadingMore,
               onPressed: () => controller.load(more: true),
             ),
-          if (!state.loading)
+          if (!state.loading && state.failure == null)
             Padding(
               padding: const EdgeInsets.only(top: StackCardSpacing.md),
               child: StackCardButton(
@@ -176,14 +176,14 @@ class _InboxRequestScreenState extends ConsumerState<InboxRequestScreen> {
                   const SizedBox(height: StackCardSpacing.md),
                   Text(request.createdAt.toLocal().toString()),
                   const SizedBox(height: StackCardSpacing.lg),
-                  if (request.unread)
+                  if (request.unread && _failure == null)
                     StackCardButton(
                       key: const Key('inbox.markRead'),
                       label: strings.tr('inbox.markRead'),
                       loading: _reading,
                       onPressed: _markRead,
                     )
-                  else
+                  else if (!request.unread)
                     Text(strings.tr('inbox.read')),
                   if (_failure != null)
                     _InboxFailureView(failure: _failure!, retry: _markRead),
@@ -199,12 +199,21 @@ class _InboxFailureView extends StatelessWidget {
   final InboxFailure failure;
   final VoidCallback retry;
   @override
-  Widget build(BuildContext context) => StackCardStateView(
-    kind: failure.kind == InboxFailureKind.unavailable
-        ? StackCardViewState.unavailable
-        : StackCardViewState.error,
-    title: context.strings.tr('inbox.error'),
-    message: context.strings.tr('inbox.error.${failure.kind.name}'),
-    onRetry: retry,
+  Widget build(BuildContext context) => Column(
+    children: [
+      StackCardStateView(
+        kind: failure.kind == InboxFailureKind.unavailable
+            ? StackCardViewState.unavailable
+            : StackCardViewState.error,
+        title: context.strings.tr('inbox.error'),
+        message: context.strings.tr('inbox.error.${failure.kind.name}'),
+        onRetry: retry,
+      ),
+      if (failure.kind == InboxFailureKind.unavailable)
+        StackCardButton(
+          label: context.strings.tr('common.retry'),
+          onPressed: retry,
+        ),
+    ],
   );
 }

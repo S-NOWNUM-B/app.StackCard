@@ -1051,6 +1051,49 @@ export function normalizeGitHubUsername(value: string): string {
 export function mainDocument(workspace: WorkspaceContent): PortfolioDocument | undefined {
   return workspace.documents.find((d) => d.id === workspace.mainPortfolioId);
 }
+export const mainPortfolioSectionKinds = [
+  'links',
+  'skills',
+  'featuredProjects',
+  'experience',
+  'education',
+] as const;
+export type MainPortfolioSectionKind = (typeof mainPortfolioSectionKinds)[number];
+
+export function mainPortfolioSectionOrder(
+  content: Pick<DocumentContent, 'blocks'>,
+): MainPortfolioSectionKind[] {
+  const kinds = content.blocks.map((block) => block.kind);
+  if (
+    kinds.length === blockKinds.length &&
+    kinds.every((kind, index) => kind === blockKinds[index])
+  )
+    return [...mainPortfolioSectionKinds];
+  return [
+    ...new Set([
+      ...kinds.filter((kind): kind is MainPortfolioSectionKind =>
+        mainPortfolioSectionKinds.includes(kind as MainPortfolioSectionKind),
+      ),
+      ...mainPortfolioSectionKinds,
+    ]),
+  ];
+}
+
+export function mainPortfolioBlocks(
+  content: Pick<DocumentContent, 'blocks'>,
+): DocumentContent['blocks'] {
+  return [
+    { kind: 'profile', visible: true },
+    { kind: 'about', visible: true },
+    { kind: 'location', visible: true },
+    ...mainPortfolioSectionOrder(content).flatMap((kind): DocumentContent['blocks'] => [
+      { kind, visible: true },
+      ...(kind === 'links' ? [{ kind: 'github' as const, visible: true }] : []),
+    ]),
+    { kind: 'resume', visible: false },
+  ];
+}
+
 export function migrateMainPortfolio(
   workspace: WorkspaceContent,
   selectedId: string | null,
@@ -1089,20 +1132,7 @@ export function migrateMainPortfolio(
     experience: visible('experience') ? clone(input.experience) : [],
     education: visible('education') ? clone(input.education) : [],
     links: clone(selectedContacts),
-    blocks: (
-      [
-        'profile',
-        'about',
-        'location',
-        'featuredProjects',
-        'skills',
-        'experience',
-        'education',
-        'links',
-        'github',
-        'resume',
-      ] as BlockKind[]
-    ).map((kind) => ({ kind, visible: kind !== 'resume' })),
+    blocks: mainPortfolioBlocks(input),
     projects: [],
     ignoredGitHubRepositories: [],
   };

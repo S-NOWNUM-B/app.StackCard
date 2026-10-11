@@ -58,21 +58,17 @@ export function ProductDemo() {
               height={16}
             />
             <span className="mini-label">РАБОЧЕЕ ПРОСТРАНСТВО</span>
-            <Link href="/workspace">
+            <Link href="/workspace#home">
               <Icon name="home" size={16} />
-              Обзор
-            </Link>
-            <Link href="/workspace#resumes" className={kind === 'resume' ? 'selected' : ''}>
-              <Icon name="file-text" size={16} />
-              Резюме
+              Главная
             </Link>
             <Link href="/workspace#projects">
               <Icon name="folder" size={16} />
               Проекты
             </Link>
-            <Link href="/workspace#portfolios" className={kind === 'portfolio' ? 'selected' : ''}>
+            <Link href="/workspace#editor" className="selected">
               <Icon name="panels-top-left" size={16} />
-              Портфолио
+              Редактор
             </Link>
             <div className="demo-account">
               <span className="initials">AM</span>
@@ -88,7 +84,7 @@ export function ProductDemo() {
                 <span className="mini-label">МОИ ДОКУМЕНТЫ</span>
                 <h2>Ваша работа в деталях.</h2>
               </div>
-              <Link href="/workspace" className="demo-add" aria-label="Создать свой документ">
+              <Link href="/workspace#editor" className="demo-add" aria-label="Открыть редактор">
                 <Icon name="plus" size={18} />
               </Link>
             </div>

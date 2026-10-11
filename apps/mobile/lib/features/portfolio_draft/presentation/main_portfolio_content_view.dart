@@ -28,6 +28,7 @@ class MainPortfolioContentView extends ConsumerWidget {
       (link) => link.visible && link.publishAllowed,
     );
     final sections = <Widget>[];
+    final orderedSections = <PortfolioBlockKind, Widget>{};
     if (profile.avatarPath.isNotEmpty || profile.avatarUrl.isNotEmpty) {
       sections.add(
         Center(
@@ -65,8 +66,10 @@ class MainPortfolioContentView extends ConsumerWidget {
       );
     }
     if (links.isNotEmpty) {
-      sections.add(
-        _section(context, 'Контакты и ссылки', [
+      orderedSections[PortfolioBlockKind.links] = _section(
+        context,
+        'Контакты и ссылки',
+        [
           LayoutBuilder(
             builder: (context, constraints) {
               final columns =
@@ -90,53 +93,63 @@ class MainPortfolioContentView extends ConsumerWidget {
               );
             },
           ),
-        ], key: 'links'),
+        ],
+        key: 'links',
       );
     }
     if (content.skills.isNotEmpty) {
-      sections.add(
-        _section(context, 'Навыки', [
-          Wrap(
-            spacing: StackCardSpacing.sm,
-            runSpacing: StackCardSpacing.sm,
-            children: [
-              for (final skill in content.skills)
-                StackCardTechnologyBadge(label: skill.name),
-            ],
-          ),
-        ], key: 'skills'),
-      );
+      orderedSections[PortfolioBlockKind.skills] = _section(context, 'Навыки', [
+        Wrap(
+          spacing: StackCardSpacing.sm,
+          runSpacing: StackCardSpacing.sm,
+          children: [
+            for (final skill in content.skills)
+              StackCardTechnologyBadge(label: skill.name),
+          ],
+        ),
+      ], key: 'skills');
     }
     if (projects.isNotEmpty) {
-      sections.add(
-        _section(context, 'Реализованные проекты', [
-          for (final project in projects) _MainProjectRow(project: project),
-        ], key: 'projects'),
+      orderedSections[PortfolioBlockKind.featuredProjects] = _section(
+        context,
+        'Реализованные проекты',
+        [for (final project in projects) _MainProjectRow(project: project)],
+        key: 'projects',
       );
     }
     if (content.experience.isNotEmpty) {
-      sections.add(
-        _section(context, 'Опыт работы', [
+      orderedSections[PortfolioBlockKind.experience] = _section(
+        context,
+        'Опыт работы',
+        [
           for (final entry in content.experience)
             _entry(context, entry.role, [
               entry.organization,
               entry.period,
               entry.description,
             ]),
-        ], key: 'experience'),
+        ],
+        key: 'experience',
       );
     }
     if (content.education.isNotEmpty) {
-      sections.add(
-        _section(context, 'Образование', [
+      orderedSections[PortfolioBlockKind.education] = _section(
+        context,
+        'Образование',
+        [
           for (final entry in content.education)
             _entry(context, entry.institution, [
               entry.qualification,
               entry.period,
               entry.description,
             ]),
-        ], key: 'education'),
+        ],
+        key: 'education',
       );
+    }
+    for (final kind in mainPortfolioSectionOrder(content)) {
+      final section = orderedSections[kind];
+      if (section != null) sections.add(section);
     }
     // Непарсенный legacy текст остаётся доступным после переноса.
     if (content.resumeText.trim().isNotEmpty) {

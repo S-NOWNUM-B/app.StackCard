@@ -124,6 +124,53 @@ function firestoreResponse(value: Record<string, unknown>) {
   });
 }
 
+test('schema2 public reader renders saved section order with GitHub grouped into visible contacts', () => {
+  const data = modernFixture();
+  data.schemaVersion = 2;
+  data.kind = 'portfolio';
+  const content = data.content as Record<string, unknown>;
+  content.resumeText = '';
+  content.blocks = [
+    'profile',
+    'about',
+    'location',
+    'education',
+    'links',
+    'github',
+    'featuredProjects',
+    'skills',
+    'experience',
+  ].map((kind) => ({ kind, visible: true }));
+  content.links = [
+    { id: 'site', label: 'Site', url: 'https://example.com/site', kind: 'website' },
+    { id: 'github', label: 'GitHub', url: 'https://github.com/example', kind: 'github' },
+  ];
+  const parsed = parsePublicDocument(data, publicId);
+  assert.ok(parsed);
+  const html = renderToStaticMarkup(
+    createElement(DocumentView, {
+      content: parsed.content,
+      kind: 'portfolio',
+      modernPortfolio: true,
+    }),
+  );
+  const positions = ['Образование', 'Контакты', 'Проекты', 'Навыки', 'Опыт'].map((label) =>
+    html.indexOf(label),
+  );
+  assert.ok(positions.every((position, i) => position >= 0 && (!i || position > positions[i - 1])));
+  assert.equal((html.match(/href="https:\/\/github.com\/example"/g) ?? []).length, 1);
+  assert.ok(html.indexOf('https://github.com/example') < html.indexOf('Проекты'));
+  parsed.content.blocks = parsed.content.blocks.filter((block) => block.kind !== 'github');
+  const hidden = renderToStaticMarkup(
+    createElement(DocumentView, {
+      content: parsed.content,
+      kind: 'portfolio',
+      modernPortfolio: true,
+    }),
+  );
+  assert.ok(!hidden.includes('href="https://github.com/example"'));
+});
+
 test('valid projected document has the published metadata and selected content', () => {
   const document = parsePublicDocument(fixture(), publicId);
   assert.ok(document);

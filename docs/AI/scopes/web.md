@@ -7,6 +7,10 @@
 Firestore avatar, catalog icons и настоящий PDF. Home использует saved basis,
 scoped Library imports/deletes не записывают unsaved Editor. Legacy documents
 архивируются без удаления/автопубликации. Deploy отдельный.
+Порядок пяти разделов main берётся из `document.content.blocks` через
+`mainPortfolioSectionOrder`; owner preview, public projection и PDF сохраняют
+mobile Save. Profile остаётся первым, GitHub следует вместе с контактами;
+новая версия schema для перестановки не нужна.
 
 - Runtime — `apps/web/src/app`, shared controls — `src/components/ui.tsx`, tokens —
   `src/app/globals.css`.
@@ -29,6 +33,8 @@ scoped Library imports/deletes не записывают unsaved Editor. Legacy 
   root Projects Library, mainPortfolioId, GitHub identity/onboarding и legacy backup.
   GitHub identity — Settings/onboarding, без поля в ContentEditor; обычный
   Save портфолио не применяет ввод `githubInput` из настроек.
+  GitHubImporter использует сохранённый источник и ведёт в Settings, если его нет;
+  собственная форма identity Save не дублируется.
   Версии и команды берутся из `apps/web/package.json`, env — из `.env.example`.
 - `src/lib/firebase.ts` и `draft-repository.ts` — UID-bound client SDK. Web
   online-first: server read, CAS transaction по captured basis, ошибки сохраняют

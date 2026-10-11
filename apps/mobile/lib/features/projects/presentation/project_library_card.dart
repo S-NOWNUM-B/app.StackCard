@@ -87,7 +87,7 @@ class ProjectLibraryCard extends StatelessWidget {
                   minWidth: StackCardSize.touchTarget,
                   minHeight: StackCardSize.touchTarget,
                 ),
-                color: context.colors.error,
+                color: context.colors.textPrimary,
                 icon: const Icon(Icons.close_rounded, size: 20),
               ),
             ],

@@ -55,6 +55,89 @@ void main() {
   });
 
   testWidgets(
+    'section handles reorder both ways, retry failed Save and reopen saved order',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 1500);
+      final memory = await _repository(
+        name: 'Стас',
+        skills: const [Skill(id: 'dart', name: 'Dart')],
+      );
+      final before = (await memory.read())!;
+      final repository = _FailsOnce(memory);
+      final container = await _open(tester, repository);
+      await _enter(tester, 'headline', 'Разработчик');
+      final skills = find.byKey(const Key('main.editor.section.drag.skills'));
+      final contacts = find.byKey(const Key('main.editor.section.drag.links'));
+      await _ensureVisible(tester, skills);
+      final gesture = await tester.startGesture(tester.getCenter(skills));
+      await tester.pump(const Duration(milliseconds: 600));
+      await gesture.moveTo(tester.getCenter(contacts) + const Offset(0, 10));
+      await tester.pump(const Duration(milliseconds: 500));
+      await gesture.up();
+      await tester.pumpAndSettle();
+      const chosen = [
+        PortfolioBlockKind.skills,
+        PortfolioBlockKind.links,
+        PortfolioBlockKind.featuredProjects,
+        PortfolioBlockKind.experience,
+        PortfolioBlockKind.education,
+      ];
+      expect(
+        mainPortfolioSectionOrder(
+          mainPortfolioDocument(
+            container.read(portfolioDraftControllerProvider).content!,
+          )!.content,
+        ),
+        chosen,
+      );
+      expect((await memory.read())!.revision, before.revision);
+      await _tap(tester, 'main.editor.save');
+      expect(find.byKey(const Key('main.editor.error')), findsOneWidget);
+      expect((await memory.read())!.revision, before.revision);
+      await _tap(tester, 'main.editor.save');
+      final saved = mainPortfolioDocument((await memory.read())!.content!)!;
+      expect(mainPortfolioSectionOrder(saved.content), chosen);
+      expect(saved.content.profile.headline, 'Разработчик');
+      expect(saved.content.skills.single.name, 'Dart');
+      await tester.pumpWidget(const SizedBox.shrink());
+      final reopened = await _open(tester, repository);
+      await _ensureVisible(tester, skills);
+      expect(
+        tester.getTopLeft(skills).dy,
+        lessThan(tester.getTopLeft(contacts).dy),
+      );
+      final reverse = await tester.startGesture(tester.getCenter(skills));
+      await tester.pump(const Duration(milliseconds: 600));
+      await reverse.moveTo(
+        tester.getCenter(
+              find.byKey(
+                const Key('main.editor.section.drag.featuredProjects'),
+              ),
+            ) +
+            const Offset(0, 10),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await reverse.up();
+      await tester.pumpAndSettle();
+      expect(
+        mainPortfolioSectionOrder(
+          mainPortfolioDocument(
+            reopened.read(portfolioDraftControllerProvider).content!,
+          )!.content,
+        ),
+        mainPortfolioSectionKinds,
+      );
+      expect(
+        mainPortfolioSectionOrder(
+          mainPortfolioDocument((await memory.read())!.content!)!.content,
+        ),
+        chosen,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'experience and education modal changes persist only with main Save',
     (tester) async {
       final repository = await _repository();
@@ -139,11 +222,14 @@ void main() {
         'Опыт работы',
         'Образование',
       ];
-      for (var index = 1; index < headings.length; index++) {
-        expect(
-          tester.getTopLeft(find.text(headings[index])).dy,
-          greaterThan(tester.getTopLeft(find.text(headings[index - 1])).dy),
-        );
+      var previousTop = double.negativeInfinity;
+      for (final heading in headings) {
+        final finder = find.text(heading);
+        await _ensureVisible(tester, finder);
+        final scroll = tester.state<ScrollableState>(_editorScrollable());
+        final top = tester.getTopLeft(finder).dy + scroll.position.pixels;
+        expect(top, greaterThan(previousTop));
+        previousTop = top;
       }
       await _tap(tester, 'main.editor.addSkill');
       for (final invalid in ['', ' dart ', 'x' * 61]) {
@@ -988,9 +1074,30 @@ Future<ProviderContainer> _open(
 
 Future<void> _tap(WidgetTester tester, String key) async {
   final finder = find.byKey(ValueKey(key));
-  await tester.ensureVisible(finder);
+  await _ensureVisible(tester, finder);
   await tester.pumpAndSettle();
   await tester.tap(finder);
+  await tester.pumpAndSettle();
+}
+
+Finder _editorScrollable() => find
+    .descendant(
+      of: find.byKey(const Key('main.editor.scroll')),
+      matching: find.byType(Scrollable),
+    )
+    .first;
+
+Future<void> _ensureVisible(WidgetTester tester, Finder finder) async {
+  if (finder.evaluate().isEmpty) {
+    tester.state<ScrollableState>(_editorScrollable()).position.jumpTo(0);
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      finder,
+      300,
+      scrollable: _editorScrollable(),
+    );
+  }
+  await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
 }
 
@@ -1003,7 +1110,7 @@ Future<void> _enterKey(WidgetTester tester, String key, String value) async {
     of: find.byKey(ValueKey(key)),
     matching: find.byType(TextFormField),
   );
-  await tester.ensureVisible(finder);
+  await _ensureVisible(tester, finder);
   await tester.enterText(finder, value);
   await tester.pumpAndSettle();
 }

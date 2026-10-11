@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_tokens.dart';
@@ -45,18 +44,32 @@ class NotificationsScreen extends ConsumerWidget {
             )
           else ...[
             StackCardButton(
-              key: const Key('notifications.enable'),
-              label: strings.tr('notifications.enable'),
+              key: Key(
+                state.enabled
+                    ? 'notifications.disable'
+                    : 'notifications.enable',
+              ),
+              label: strings.tr(
+                state.enabled
+                    ? 'notifications.disable'
+                    : 'notifications.enable',
+              ),
               loading: state.busy,
-              onPressed: state.busy || state.enabled ? null : controller.enable,
+              onPressed: state.busy
+                  ? null
+                  : state.enabled
+                  ? controller.disable
+                  : controller.enable,
             ),
-            const SizedBox(height: StackCardSpacing.md),
-            StackCardButton(
-              key: const Key('notifications.disable'),
-              label: strings.tr('notifications.disable'),
-              role: StackCardButtonRole.secondary,
-              onPressed: state.busy ? null : controller.disable,
-            ),
+            if (!state.enabled && state.cleanupFailed) ...[
+              const SizedBox(height: StackCardSpacing.md),
+              StackCardButton(
+                key: const Key('notifications.disable'),
+                label: strings.tr('notifications.retryCleanup'),
+                role: StackCardButtonRole.secondary,
+                onPressed: state.busy ? null : controller.disable,
+              ),
+            ],
           ],
           if (state.failure != null)
             Padding(
@@ -73,12 +86,6 @@ class NotificationsScreen extends ConsumerWidget {
                 ),
               ),
             ),
-          const SizedBox(height: StackCardSpacing.lg),
-          StackCardButton(
-            label: strings.tr('inbox.title'),
-            role: StackCardButtonRole.secondary,
-            onPressed: () => context.push('/inbox'),
-          ),
         ],
       ),
     );
