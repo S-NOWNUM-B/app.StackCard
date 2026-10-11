@@ -120,8 +120,8 @@ void main() {
         Theme.of(tester.element(find.byType(TextFormField))).brightness,
         Brightness.light,
       );
-      await tester.ensureVisible(find.text('Очистить поиск'));
-      await tester.tap(find.text('Очистить поиск'));
+      expect(find.text('Очистить поиск'), findsNothing);
+      await tester.enterText(find.byType(TextFormField), '');
       await tester.pumpAndSettle();
       expect(
         tester

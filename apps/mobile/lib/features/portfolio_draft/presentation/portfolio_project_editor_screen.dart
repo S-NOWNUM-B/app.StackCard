@@ -8,16 +8,15 @@ import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../../../shared/widgets/stackcard_button.dart';
-import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
 import '../../../shared/widgets/stackcard_input.dart';
-import '../../../shared/widgets/stackcard_technology_badge.dart';
 import '../../projects/projects.dart';
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_draft_repository.dart';
 import '../domain/portfolio_validation.dart';
 import '../portfolio_draft_providers.dart';
 import 'builder_editor_widgets.dart';
+import 'builder_tag_editor.dart';
 import 'portfolio_draft_controller.dart';
 
 class PortfolioProjectEditorScreen extends ConsumerStatefulWidget {
@@ -281,130 +280,94 @@ class _PortfolioProjectEditorScreenState
   Widget _field(String name) {
     final field = _fields!.firstWhere((item) => item.name == name);
     final multiline = field.kind == BuilderFieldKind.multiline;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          context.strings.tr(field.labelKey),
-          style: Theme.of(context).textTheme.labelMedium,
-        ),
-        const SizedBox(height: StackCardSpacing.sm),
-        StackCardInput(
-          key: ValueKey('builder_form_$name'),
-          label: context.strings.tr(field.labelKey),
-          showLabel: false,
-          controller: _controllers![name],
-          hint: field.hintKey == null ? '' : context.strings.tr(field.hintKey!),
-          keyboardType: field.kind == BuilderFieldKind.url
-              ? TextInputType.url
-              : multiline
-              ? TextInputType.multiline
-              : TextInputType.text,
-          minLines: multiline ? 4 : null,
-          maxLines: multiline ? 10 : 1,
-          textInputAction: multiline
-              ? TextInputAction.newline
-              : TextInputAction.next,
-          validator: (value) {
-            final raw = value ?? '';
-            final basic = validatePortfolioText(
-              raw,
-              required: field.required,
+    return StackCardInput(
+      key: ValueKey('builder_form_$name'),
+      label: context.strings.tr(field.labelKey),
+      controller: _controllers![name],
+      hint: field.hintKey == null ? null : context.strings.tr(field.hintKey!),
+      keyboardType: field.kind == BuilderFieldKind.url
+          ? TextInputType.url
+          : multiline
+          ? TextInputType.multiline
+          : TextInputType.text,
+      minLines: multiline ? 3 : null,
+      maxLines: multiline ? 8 : 1,
+      textInputAction: multiline
+          ? TextInputAction.newline
+          : TextInputAction.next,
+      validator: (value) {
+        final raw = value ?? '';
+        final basic = validatePortfolioText(
+          raw,
+          required: field.required,
+          maxLength: field.maxLength,
+        );
+        final issue =
+            basic ??
+            (field.kind == BuilderFieldKind.url
+                ? validatePortfolioUrl(raw)
+                : null);
+        return builderValidationMessage(
+              context,
+              issue,
               maxLength: field.maxLength,
-            );
-            final issue =
-                basic ??
-                (field.kind == BuilderFieldKind.url
-                    ? validatePortfolioUrl(raw)
-                    : null);
-            return builderValidationMessage(
-                  context,
-                  issue,
-                  maxLength: field.maxLength,
-                ) ??
-                field.validate?.call(context, raw);
-          },
-        ),
-      ],
+            ) ??
+            field.validate?.call(context, raw);
+      },
     );
   }
 
-  Widget _technologiesSection() {
-    final enabled = !ref.watch(portfolioDraftControllerProvider).saving;
-    return StackCardCard(
-      key: const ValueKey('project.technologies.editor'),
-      outlined: true,
-      padding: const EdgeInsets.all(StackCardSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  context.strings.tr('builderForm.technologies'),
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              IconButton(
-                key: const ValueKey('project.technology.add'),
-                tooltip: context.strings.tr('mobileParity.addTechnology'),
-                onPressed: enabled ? _addTechnology : null,
-                icon: const StackCardIcon(name: 'plus'),
-              ),
-            ],
-          ),
-          if (_technologies.isNotEmpty) ...[
-            const SizedBox(height: StackCardSpacing.md),
-            Wrap(
-              spacing: StackCardSpacing.sm,
-              runSpacing: StackCardSpacing.sm,
-              children: [
-                for (var index = 0; index < _technologies.length; index++)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: StackCardTechnologyBadge(
-                          label: _technologies[index],
-                        ),
-                      ),
-                      IconButton(
-                        key: ValueKey('project.technology.remove.$index'),
-                        tooltip: context.strings.tr(
-                          'mobileParity.removeTechnology',
-                          {'name': _technologies[index]},
-                        ),
-                        onPressed: enabled
-                            ? () => setState(() {
-                                _technologies = [..._technologies]
-                                  ..removeAt(index);
-                                _saveFailed = false;
-                              })
-                            : null,
-                        icon: Icon(
-                          Icons.delete_outline_rounded,
-                          color: context.colors.error,
-                          size: 22,
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+  Widget _technologiesSection() => BuilderTagsEditor(
+    key: const ValueKey('project.technologies.editor'),
+    title: context.strings.tr('builderForm.technologies'),
+    items: _technologies,
+    keyPrefix: 'project.technology',
+    addLabel: context.strings.tr('mobileParity.addTechnology'),
+    removeLabel: (name) =>
+        context.strings.tr('mobileParity.removeTechnology', {'name': name}),
+    enabled: !ref.watch(portfolioDraftControllerProvider).saving,
+    onAdd: _addTechnology,
+    onRemove: (index) => setState(() {
+      _technologies = [..._technologies]..removeAt(index);
+      _saveFailed = false;
+    }),
+  );
 
   Future<void> _addTechnology() async {
     final repository = _initialRepository;
     final controllers = _controllers;
     FocusManager.instance.primaryFocus?.unfocus();
+    final existing = List.of(_technologies);
     final technology = await showDialog<String>(
       context: context,
-      builder: (_) => _TechnologyDialog(existing: List.of(_technologies)),
+      builder: (_) => BuilderTagDialog(
+        title: context.strings.tr('mobileParity.technology'),
+        keyPrefix: 'project.technology',
+        validate: (context, name) {
+          final issue = validatePortfolioText(
+            name,
+            required: true,
+            maxLength: 60,
+          );
+          if (issue != null) {
+            return builderValidationMessage(context, issue, maxLength: 60);
+          }
+          if (name.contains(',')) {
+            return context.strings.tr('mobileParity.singleTechnology');
+          }
+          if (existing.any(
+            (item) => item.trim().toLowerCase() == name.toLowerCase(),
+          )) {
+            return context.strings.tr('mobileParity.technologyDuplicate');
+          }
+          if (existing.length >= 20) {
+            return context.strings.tr('builderForm.tooManyTechnologies', {
+              'limit': 20,
+            });
+          }
+          return null;
+        },
+      ),
     );
     if (!mounted ||
         technology == null ||
@@ -737,85 +700,4 @@ class _PortfolioProjectEditorScreenState
       ),
     );
   }
-}
-
-class _TechnologyDialog extends StatefulWidget {
-  const _TechnologyDialog({required this.existing});
-
-  final List<String> existing;
-
-  @override
-  State<_TechnologyDialog> createState() => _TechnologyDialogState();
-}
-
-class _TechnologyDialogState extends State<_TechnologyDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  String? _validate(String? raw) {
-    final name = (raw ?? '').trim();
-    final issue = validatePortfolioText(name, required: true, maxLength: 60);
-    if (issue != null) {
-      return builderValidationMessage(context, issue, maxLength: 60);
-    }
-    if (name.contains(',')) {
-      return context.strings.tr('mobileParity.singleTechnology');
-    }
-    if (widget.existing.any(
-      (item) => item.trim().toLowerCase() == name.toLowerCase(),
-    )) {
-      return context.strings.tr('mobileParity.technologyDuplicate');
-    }
-    if (widget.existing.length >= 20) {
-      return context.strings.tr('builderForm.tooManyTechnologies', {
-        'limit': 20,
-      });
-    }
-    return null;
-  }
-
-  void _submit() {
-    if (_formKey.currentState?.validate() == true) {
-      Navigator.pop(context, _controller.text.trim());
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    scrollable: true,
-    title: Text(context.strings.tr('mobileParity.technology')),
-    content: Form(
-      key: _formKey,
-      child: StackCardInput(
-        key: const ValueKey('project.technology.name'),
-        label: context.strings.tr('builderForm.name'),
-        controller: _controller,
-        autofocus: true,
-        validator: _validate,
-        textInputAction: TextInputAction.done,
-        onFieldSubmitted: (_) => _submit(),
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-      ),
-    ),
-    actions: [
-      IconButton(
-        key: const ValueKey('project.technology.cancel'),
-        tooltip: context.strings.tr('builderForm.cancel'),
-        onPressed: () => Navigator.pop(context),
-        icon: const Icon(Icons.close_rounded),
-      ),
-      IconButton(
-        key: const ValueKey('project.technology.confirm'),
-        tooltip: context.strings.tr('builderForm.add'),
-        onPressed: _submit,
-        icon: const StackCardIcon(name: 'plus'),
-      ),
-    ],
-  );
 }

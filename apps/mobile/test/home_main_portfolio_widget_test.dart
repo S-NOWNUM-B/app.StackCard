@@ -133,8 +133,16 @@ void main() {
       generator: generator,
       files: files,
     );
+    final downloadRect = tester.getRect(find.byKey(const Key('home.download')));
+    final labelRect = tester.getRect(find.text('Скачать портфолио'));
     await _tap(tester, 'home.download', settle: false);
-    expect(_button(tester, 'home.download').loading, isTrue);
+    expect(_button(tester, 'home.download').onPressed, isNull);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(
+      tester.getRect(find.byKey(const Key('home.download'))),
+      downloadRect,
+    );
+    expect(tester.getRect(find.text('Скачать портфолио')), labelRect);
     container.updateOverrides([
       portfolioDraftRepositoryProvider.overrideWithValue(
         MemoryPortfolioDraftRepository(),
@@ -298,7 +306,7 @@ void main() {
       );
       await _tap(tester, 'home.download', settle: false);
       expect(reader.urls, [_legacyAvatarUrl]);
-      expect(_button(tester, 'home.download').loading, isTrue);
+      expect(_button(tester, 'home.download').onPressed, isNull);
       container.updateOverrides([
         portfolioDraftRepositoryProvider.overrideWithValue(
           MemoryPortfolioDraftRepository(),

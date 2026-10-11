@@ -124,7 +124,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                 runSpacing: StackCardSpacing.sm,
                 children: [
                   StackCardButton(
-                    label: 'Импортировать из GitHub',
+                    label: context.strings.tr('project.importGitHub'),
                     onPressed: state.saving
                         ? null
                         : () => context.push('/github-import'),
@@ -177,13 +177,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                               ? 'Проектов пока нет'
                               : context.strings.tr('project.noResultsTitle'),
                         ),
-                        if (filters.query.trim().isNotEmpty)
-                          StackCardButton(
-                            label: context.strings.tr('project.clearSearch'),
-                            onPressed: () => ref
-                                .read(projectFiltersProvider.notifier)
-                                .setQuery(''),
-                          ),
                       ] else
                         for (final project in projects) ...[
                           ProjectLibraryCard(

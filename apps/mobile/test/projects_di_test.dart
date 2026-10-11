@@ -130,15 +130,15 @@ void main() {
       );
       await tester.pump();
       expect(find.text('Загрузка данных'), findsOneWidget);
-      expect(find.text('Импортировать из GitHub'), findsOneWidget);
-      expect(find.text('Создать проект'), findsOneWidget);
+      expect(find.text('Импортировать'), findsOneWidget);
+      expect(find.text('Создать'), findsOneWidget);
 
       pending.completeError(Exception('Unavailable source'));
       await tester.pumpAndSettle();
       expect(find.text('Не удалось загрузить данные'), findsOneWidget);
       expect(requests, 1);
-      expect(find.text('Импортировать из GitHub'), findsOneWidget);
-      expect(find.text('Создать проект'), findsOneWidget);
+      expect(find.text('Импортировать'), findsOneWidget);
+      expect(find.text('Создать'), findsOneWidget);
 
       pending = Completer<List<Project>>();
       await tester.tap(find.text('Повторить'));
@@ -185,13 +185,13 @@ void main() {
       expect(find.text('Проектов пока нет'), findsOneWidget);
       expect(find.text('Ничего не найдено'), findsNothing);
       expect(find.text('Очистить поиск'), findsNothing);
-      expect(find.text('Импортировать из GitHub'), findsOneWidget);
-      expect(find.text('Создать проект'), findsOneWidget);
+      expect(find.text('Импортировать'), findsOneWidget);
+      expect(find.text('Создать'), findsOneWidget);
       await tester.enterText(find.byType(TextFormField), 'missing');
       await tester.pumpAndSettle();
       expect(find.text('Ничего не найдено'), findsOneWidget);
-      await tester.ensureVisible(find.text('Очистить поиск'));
-      await tester.tap(find.text('Очистить поиск'));
+      expect(find.text('Очистить поиск'), findsNothing);
+      await tester.enterText(find.byType(TextFormField), '');
       await tester.pumpAndSettle();
       expect(
         find.byWidgetPredicate(

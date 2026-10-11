@@ -16,6 +16,7 @@ import '../domain/portfolio_draft_repository.dart';
 import '../domain/portfolio_validation.dart';
 import '../portfolio_draft_providers.dart';
 import 'builder_editor_widgets.dart';
+import 'builder_tag_editor.dart';
 import 'portfolio_draft_controller.dart';
 
 /// Shell спрашивает редактор перед сменой вкладки, включая Save его local buffer.
@@ -462,31 +463,45 @@ class _MainPortfolioEditorScreenState
     _changed();
   }
 
-  Future<void> _editSkill([Skill? item]) async {
-    final values = await showBuilderRecordEditor(
-      context,
-      titleKey: 'builderForm.skillsTitle',
-      fields: [
-        BuilderFieldSpec(
-          name: 'name',
-          labelKey: 'builderForm.skillName',
-          value: item?.name ?? '',
-          maxLength: 60,
-          required: true,
-        ),
-      ],
+  Future<void> _addSkill() async {
+    final fields = _fields;
+    final existing = _buffer!.skills.map((item) => item.name).toList();
+    FocusManager.instance.primaryFocus?.unfocus();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => BuilderTagDialog(
+        title: 'Навык',
+        keyPrefix: 'main.editor.skill',
+        validate: (context, name) {
+          final issue = validatePortfolioText(
+            name,
+            required: true,
+            maxLength: 60,
+          );
+          if (issue != null) {
+            return builderValidationMessage(context, issue, maxLength: 60);
+          }
+          if (existing.any(
+            (item) => item.trim().toLowerCase() == name.toLowerCase(),
+          )) {
+            return 'Этот навык уже добавлен';
+          }
+          return null;
+        },
+      ),
     );
-    if (!mounted || !_sameOwner || values == null) return;
-    final next = Skill(
-      id: item?.id ?? _createId(),
-      name: values['name']!.trim(),
-    );
+    if (!mounted ||
+        !_sameOwner ||
+        name == null ||
+        !identical(fields, _fields) ||
+        _busy) {
+      return;
+    }
     setState(
       () => _buffer = _buffer!.copyWith(
         skills: [
-          for (final previous in _buffer!.skills)
-            previous.id == next.id ? next : previous,
-          if (item == null) next,
+          ..._buffer!.skills,
+          Skill(id: _createId(), name: name),
         ],
       ),
     );
@@ -805,7 +820,7 @@ class _MainPortfolioEditorScreenState
               const SizedBox(height: StackCardSpacing.lg),
               _field('name', 'Имя', 100),
               _field('headline', 'Должность', 160),
-              _field('locationText', 'Город / страна', 200),
+              _field('locationText', 'Город / Страна', 200),
               _field('bio', 'О себе', 4000, multiline: true),
               _title('Контакты и ссылки'),
               for (final link in _buffer!.links)
@@ -830,7 +845,27 @@ class _MainPortfolioEditorScreenState
                 'Добавить контакт или ссылку',
                 _editLink,
               ),
-              _title('Проекты'),
+              const SizedBox(height: StackCardSpacing.xl),
+              BuilderTagsEditor(
+                key: const Key('main.editor.skills'),
+                title: 'Навыки',
+                items: _buffer!.skills.map((skill) => skill.name).toList(),
+                keyPrefix: 'main.editor.skill',
+                addKey: const Key('main.editor.addSkill'),
+                addLabel: 'Добавить навык',
+                removeLabel: (name) => 'Удалить навык $name',
+                enabled: !_busy,
+                onAdd: _addSkill,
+                onRemove: (index) {
+                  setState(
+                    () => _buffer = _buffer!.copyWith(
+                      skills: [..._buffer!.skills]..removeAt(index),
+                    ),
+                  );
+                  _changed();
+                },
+              ),
+              _title('Реализованные проекты'),
               for (var index = 0; index < _projects.length; index++)
                 _projectRow(workspace!, index),
               _addButton(
@@ -838,26 +873,7 @@ class _MainPortfolioEditorScreenState
                 'Добавить проект',
                 _addProjects,
               ),
-              _title('Навыки'),
-              for (final skill in _buffer!.skills)
-                _record(
-                  skill.id,
-                  skill.name,
-                  '',
-                  onEdit: () => _editSkill(skill),
-                  onRemove: () {
-                    setState(
-                      () => _buffer = _buffer!.copyWith(
-                        skills: _buffer!.skills
-                            .where((item) => item.id != skill.id)
-                            .toList(),
-                      ),
-                    );
-                    _changed();
-                  },
-                ),
-              _addButton('main.editor.addSkill', 'Добавить навык', _editSkill),
-              _title('Опыт'),
+              _title('Опыт работы'),
               for (final entry in _buffer!.experience)
                 _record(
                   entry.id,

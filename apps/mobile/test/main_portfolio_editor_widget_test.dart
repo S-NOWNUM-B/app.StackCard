@@ -7,12 +7,23 @@ import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_dra
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
+  setUpAll(() async {
+    final font = FontLoader('Manrope');
+    for (final weight in ['Regular', 'SemiBold', 'Bold', 'ExtraBold']) {
+      font.addFont(rootBundle.load('assets/fonts/Manrope-$weight.ttf'));
+    }
+    await font.load();
+    final icons = FontLoader('MaterialIcons')
+      ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+    await icons.load();
+  });
   setUp(() {
     final view =
         TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
@@ -38,6 +49,96 @@ void main() {
     expect(mainPortfolioDocument(workspace)!.content.profile.headline, isEmpty);
     expect(workspace.documents.length, 1);
     expect(find.text('Изменения сохранены'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'skill tags validate, cancel and remove locally before explicit Save at 320px text2',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 680);
+      final repository = await _repository(
+        skills: const [
+          Skill(id: 'dart', name: 'Dart'),
+          Skill(id: 'raw', name: 'Team, tools'),
+        ],
+      );
+      final before = (await repository.read())!;
+      await _open(tester, repository, textScale: 2);
+      final headings = [
+        'Контакты и ссылки',
+        'Навыки',
+        'Реализованные проекты',
+        'Опыт работы',
+        'Образование',
+      ];
+      for (var index = 1; index < headings.length; index++) {
+        expect(
+          tester.getTopLeft(find.text(headings[index])).dy,
+          greaterThan(tester.getTopLeft(find.text(headings[index - 1])).dy),
+        );
+      }
+      await _tap(tester, 'main.editor.addSkill');
+      for (final invalid in ['', ' dart ', 'x' * 61]) {
+        await _enterKey(tester, 'main.editor.skill.name', invalid);
+        await _tap(tester, 'main.editor.skill.confirm');
+        expect(find.byKey(const Key('main.editor.skill.name')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
+      await _enterKey(tester, 'main.editor.skill.name', ' React ');
+      await _tap(tester, 'main.editor.skill.confirm');
+      await _tap(tester, 'main.editor.addSkill');
+      await _enterKey(tester, 'main.editor.skill.name', 'Cancelled');
+      await _tap(tester, 'main.editor.skill.cancel');
+      expect(find.text('Cancelled'), findsNothing);
+      await _tap(tester, 'main.editor.skill.remove.0');
+      expect((await repository.read())!.revision, before.revision);
+      expect(
+        mainPortfolioDocument((await repository.read())!.content!)!
+            .content
+            .skills,
+        const [
+          Skill(id: 'dart', name: 'Dart'),
+          Skill(id: 'raw', name: 'Team, tools'),
+        ],
+      );
+      if (const bool.fromEnvironment('UPDATE_SINGLE_PORTFOLIO_PREVIEWS')) {
+        await tester.ensureVisible(find.byKey(const Key('main.editor.skills')));
+        await tester.pumpAndSettle();
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('/private/tmp/stackcard-main-skill-tags.png'),
+        );
+      }
+      await _tap(tester, 'main.editor.save');
+      final saved = (await repository.read())!.content!;
+      final skills = mainPortfolioDocument(saved)!.content.skills;
+      expect(skills.map((skill) => skill.name), ['Team, tools', 'React']);
+      expect(skills.first.id, 'raw');
+      expect(skills.map((skill) => skill.id).toSet(), hasLength(2));
+      expect(saved.skills, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('owner transition clears and closes the pending skill dialog', (
+    tester,
+  ) async {
+    final first = await _repository(name: 'Первый');
+    final second = await _repository(name: 'Второй');
+    final container = await _open(tester, first);
+    await _tap(tester, 'main.editor.addSkill');
+    await _enterKey(tester, 'main.editor.skill.name', 'Private skill');
+    container.updateOverrides([
+      portfolioDraftRepositoryProvider.overrideWithValue(second),
+    ]);
+    await tester.pumpAndSettle();
+    expect(find.text('Private skill'), findsNothing);
+    expect(find.byKey(const Key('main.editor.skill.confirm')), findsNothing);
+    expect(_value(tester, 'main.editor.name'), 'Второй');
+    expect(
+      mainPortfolioDocument((await second.read())!.content!)!.content.skills,
+      isEmpty,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -613,13 +714,17 @@ PortfolioDocument _document(
   String title,
   String name, {
   List<PortfolioProjectAttachment> attachments = const [],
+  List<Skill> skills = const [],
 }) => PortfolioDocument(
   id: id,
   title: title,
   kind: PortfolioDocumentKind.portfolio,
   createdAt: DateTime.utc(2026, 10, 11),
   updatedAt: DateTime.utc(2026, 10, 11),
-  content: PortfolioContent(profile: PortfolioProfile(name: name)),
+  content: PortfolioContent(
+    profile: PortfolioProfile(name: name),
+    skills: skills,
+  ),
   projects: attachments,
 );
 
@@ -628,6 +733,7 @@ Future<MemoryPortfolioDraftRepository> _repository({
   String githubUsername = '',
   List<PortfolioProject> projects = const [],
   List<PortfolioProjectAttachment> attachments = const [],
+  List<Skill> skills = const [],
 }) async {
   final repository = MemoryPortfolioDraftRepository();
   await repository.save(
@@ -636,7 +742,13 @@ Future<MemoryPortfolioDraftRepository> _repository({
       githubUsername: githubUsername,
       projects: projects,
       documents: [
-        _document('main', 'Основное', name, attachments: attachments),
+        _document(
+          'main',
+          'Основное',
+          name,
+          attachments: attachments,
+          skills: skills,
+        ),
       ],
     ),
     expectedRevision: 0,

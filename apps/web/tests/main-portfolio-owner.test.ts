@@ -26,7 +26,7 @@ import {
   type GitHubSource,
 } from '../src/lib/model';
 import { documentPreview } from '../src/lib/preview';
-import { ContentEditor } from '../src/components/content-editor';
+import { ContentEditor, appendPortfolioSkill } from '../src/components/content-editor';
 import {
   ProjectForm,
   AttachmentsEditor,
@@ -268,6 +268,73 @@ test('technology editor renders accessible individual removal controls and an op
   );
   assert.ok(!empty.includes('aria-label="Удалить технологию '));
   assert.ok(!empty.includes('Технологии проекта'));
+});
+test('skill additions preserve raw names and IDs, accept one complete name and do not inherit the technology count limit', () => {
+  const existing = [
+    { id: 'raw-dart', name: ' Dart ' },
+    { id: 'legacy-name', name: 'Планирование, коммуникация' },
+  ];
+  const added = appendPortfolioSkill(existing, '  Kotlin  ');
+  assert.equal(added[0], existing[0]);
+  assert.equal(added[1], existing[1]);
+  assert.deepEqual(added.slice(0, 2), existing);
+  assert.equal(added[2].name, 'Kotlin');
+  assert.ok(added[2].id && !existing.some((item) => item.id === added[2].id));
+  assert.equal(appendPortfolioSkill([], 'Коммуникация, презентации').length, 1);
+  for (const value of ['', '  ', '\n\t'])
+    assert.throws(() => appendPortfolioSkill(existing, value), /Введите название/);
+  for (const value of ['DART', ' dart '])
+    assert.throws(() => appendPortfolioSkill(existing, value), /уже добавлен/);
+  assert.equal(appendPortfolioSkill([], 'x'.repeat(60))[0].name.length, 60);
+  assert.equal(appendPortfolioSkill([], '🛠'.repeat(30))[0].name.length, 60);
+  for (const value of ['x'.repeat(61), '🛠'.repeat(31)])
+    assert.throws(() => appendPortfolioSkill([], value), /60 символов/);
+  const many = Array.from({ length: 25 }, (_, i) => ({ id: `skill-${i}`, name: `Skill ${i}` }));
+  const next = appendPortfolioSkill(many, 'More than twenty');
+  assert.equal(next.length, 26);
+  const workspace = migrateMainPortfolio(emptyContent(), null);
+  mainDocument(workspace)!.content.skills = next;
+  assert.deepEqual(reload(workspace).documents[0].content.skills, next);
+});
+test('owner skill tags share the technology dialog and editor sections follow the requested order', () => {
+  const workspace = migrateMainPortfolio(emptyContent(), null);
+  const content = mainDocument(workspace)!.content;
+  content.skills = [
+    { id: 'known', name: 'React' },
+    { id: 'raw', name: 'Планирование, коммуникация' },
+    { id: 'long', name: 'x'.repeat(60) },
+  ];
+  const html = renderToStaticMarkup(
+    createElement(ContentEditor, {
+      content,
+      onChange: () => {},
+      projects: createElement('div', {}, 'Project attachments'),
+    }),
+  );
+  const headings = [
+    'Контакты и ссылки',
+    'Навыки',
+    'Реализованные проекты',
+    'Опыт работы',
+    'Образование',
+  ].map((label) => html.indexOf(`<h2>${label}</h2>`));
+  assert.ok(
+    headings.every(
+      (position, index) => position >= 0 && (!index || position > headings[index - 1]),
+    ),
+  );
+  assert.ok(html.includes('aria-label="Добавить навык"'));
+  assert.ok(html.includes('aria-label="Навыки портфолио"'));
+  assert.equal((html.match(/aria-label="Удалить навык /g) ?? []).length, 3);
+  assert.ok(html.includes('Планирование, коммуникация'));
+  assert.ok(html.includes('x'.repeat(60)));
+  assert.ok(html.includes('technology/react.svg'));
+  assert.ok(html.includes('dialog tag-editor-dialog'));
+  assert.ok(html.includes('Отмена'));
+  assert.ok(html.includes('Сохранить'));
+  assert.ok(!html.includes('Навык 1'));
+  assert.ok(!html.includes('value="React"'));
+  assert.deepEqual(content.skills[1], { id: 'raw', name: 'Планирование, коммуникация' });
 });
 test('scoped import keeps adjacent unsaved portfolio input and existing project manual overrides', () => {
   const previous = migrateMainPortfolio(emptyContent(), null),

@@ -188,6 +188,23 @@ visual/native проверок фиксируются отдельно. Android 
 | Компоновка / доступность | Width320, keyboard, text scale2, scroll/targets и Tab/Shift-Tab — PASS в widget tests. Убраны лишний заголовок Editor и ловушка focus пустой Home. Actual web owner просмотрен при320/desktop/text2; последняя обычная Android APK установлена без uninstall, просмотрены Auth, read-only Home с тремя вкладками и Settings. Legacy основу не выбирали и реальные drafts не изменяли. |
 | Документы / assets | Product/architecture/design/AI scopes и setup согласованы. Local docs links/format — PASS; `check_imports.py --require-brand --require-imported` — PASS. Android APK оставлена с обычным `lib/main.dart`; временные web servers/Firebase emulators остановлены, QA tabs закрыты. |
 
+Правка поиска 2026-10-12: кнопка «Очистить поиск» убрана из пустого результата
+Projects; очистка текста в поле возвращает список. Обновлены существующие
+widget/state/DI проверки. Widget и state suites — **11/11 PASS**; анализ пяти
+затронутых Dart-файлов и формат — PASS. Общий запуск трёх suites — **14 PASS,
+2 FAIL** из-за уже изменённых ожиданий подписей «Импортировать»/«Создать» в
+`projects_di_test.dart`; общий анализ нашёл два замечания в параллельных правках
+main/project editors. Эти посторонние изменения сохранены.
+Следующее поручение сократило подписи кнопок Projects до «Импортировать» и
+«Создать»; повторный `projects_di_test.dart` — **5/5 PASS**, формат двух
+изменённых Dart-файлов и `git diff --check` — PASS.
+
+Кнопка «Скачать портфолио» 2026-10-12: убран индикатор загрузки в mobile,
+размеры кнопки и положение надписи не меняются при подготовке PDF. Повторное
+нажатие остаётся заблокированным. Существующий Home suite — **15/15 PASS**,
+включая проверку геометрии при незавершённом скачивании; анализ двух изменённых
+Dart-файлов — **0 issues**, формат и `git diff --check` — PASS.
+
 Основные логи: `/private/tmp/stackcard-single-portfolio-final-verified-tests.log`,
 `stackcard-single-portfolio-final-flutter-analyze.log`, `stackcard-web-tests-final.log`,
 `stackcard-web-build-final.log`, `stackcard-single-all-rules.log`,

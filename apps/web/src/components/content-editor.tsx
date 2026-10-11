@@ -1,7 +1,15 @@
 'use client';
 import type { ReactNode } from 'react';
 import { Button, Field } from './ui';
-import { uid, linkKinds, type DocumentContent, type Profile, type Contact } from '@/lib/model';
+import { TagEditor } from './tag-editor';
+import {
+  uid,
+  linkKinds,
+  type DocumentContent,
+  type Profile,
+  type Contact,
+  type Skill,
+} from '@/lib/model';
 const contactLabels: Record<Contact['kind'], string> = {
   other: 'Другая ссылка',
   github: 'GitHub',
@@ -11,6 +19,14 @@ const contactLabels: Record<Contact['kind'], string> = {
   phone: 'Телефон',
   telegram: 'Telegram',
 };
+export function appendPortfolioSkill(items: Skill[], input: string): Skill[] {
+  const name = input.trim();
+  if (!name) throw new Error('Введите название.');
+  if (name.length > 60) throw new Error('Максимум 60 символов.');
+  if (items.some((item) => item.name.trim().toLowerCase() === name.toLowerCase()))
+    throw new Error('Навык уже добавлен.');
+  return [...items, { id: uid(), name }];
+}
 export function ContentEditor({
   content,
   onChange,
@@ -136,47 +152,28 @@ export function ContentEditor({
           Добавить контакт
         </Button>
       </section>
+      <section className="editor-group stack">
+        <TagEditor
+          heading={<h2>Навыки</h2>}
+          title="Навык"
+          addLabel="Добавить навык"
+          removeLabel="Удалить навык"
+          listLabel="Навыки портфолио"
+          items={content.skills}
+          onAdd={(name) => patch({ skills: appendPortfolioSkill(content.skills, name) })}
+          onRemove={(index) =>
+            patch({ skills: content.skills.filter((_, position) => position !== index) })
+          }
+        />
+      </section>
       {projects && (
         <section className="editor-group stack">
-          <h2>Проекты</h2>
+          <h2>Реализованные проекты</h2>
           {projects}
         </section>
       )}
       <section className="editor-group stack">
-        <h2>Навыки</h2>
-        {content.skills.map((s, i) => (
-          <div className="row" key={s.id}>
-            <Field
-              label={`Навык ${i + 1}`}
-              value={s.name}
-              required
-              maxLength={60}
-              onChange={(e) =>
-                patch({
-                  skills: content.skills.map((v) =>
-                    v.id === s.id ? { ...v, name: e.target.value } : v,
-                  ),
-                })
-              }
-            />
-            <Button
-              variant="quiet"
-              className="text-danger"
-              onClick={() => patch({ skills: content.skills.filter((v) => v.id !== s.id) })}
-            >
-              Удалить
-            </Button>
-          </div>
-        ))}
-        <Button
-          variant="secondary"
-          onClick={() => patch({ skills: [...content.skills, { id: uid(), name: '' }] })}
-        >
-          Добавить навык
-        </Button>
-      </section>
-      <section className="editor-group stack">
-        <h2>Опыт</h2>
+        <h2>Опыт работы</h2>
         {content.experience.map((x, i) => (
           <div key={x.id} className="entry-editor stack">
             <h3>Опыт {i + 1}</h3>
