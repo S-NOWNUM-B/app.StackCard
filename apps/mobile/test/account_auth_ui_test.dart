@@ -337,7 +337,7 @@ void main() {
       repository.pending!.complete();
       await tester.pumpAndSettle();
       expect(
-        find.text('Не удалось войти. Проверьте email и пароль.'),
+        find.text('Не удалось войти. Проверьте почту и пароль.'),
         findsOneWidget,
       );
       repository.failure = null;

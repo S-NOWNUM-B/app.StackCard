@@ -184,7 +184,10 @@ class AppShell extends StatelessWidget {
                   borderRadius: BorderRadius.circular(StackCardRadius.xlarge),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final textStyle = Theme.of(context).textTheme.labelMedium;
+                      final textTheme = Theme.of(context).textTheme;
+                      final textStyle = constraints.maxWidth < 360
+                          ? textTheme.labelSmall
+                          : textTheme.labelMedium;
                       final textScaler = MediaQuery.textScalerOf(context);
                       var labelHeight = 0.0;
                       for (final item in _destinations) {
@@ -202,7 +205,7 @@ class AppShell extends StatelessWidget {
                               maxWidth: math.max(
                                 0.0,
                                 constraints.maxWidth / _destinations.length -
-                                    StackCardSpacing.lg,
+                                    StackCardSpacing.xs,
                               ),
                             );
                         labelHeight = math.max(labelHeight, painter.height);
@@ -224,6 +227,7 @@ class AppShell extends StatelessWidget {
                               label: context.strings.tr(_destinations[i].label),
                               icon: _destinations[i].icon,
                               selected: i == index,
+                              labelStyle: textStyle,
                               onPressed: () => navigate(i),
                             ),
                         ],
@@ -247,17 +251,19 @@ class _RootDestination extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.selected,
+    required this.labelStyle,
     required this.onPressed,
   });
 
   final String label;
   final String icon;
   final bool selected;
+  final TextStyle? labelStyle;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.all(StackCardSpacing.xs),
+    padding: const EdgeInsets.all(StackCardSpacing.xs / 2),
     child: Semantics(
       selected: selected,
       child: TextButton(
@@ -269,7 +275,7 @@ class _RootDestination extends StatelessWidget {
                 StackCardSize.touchTarget,
               ),
               padding: const EdgeInsets.symmetric(
-                horizontal: StackCardSpacing.xs,
+                horizontal: 0,
                 vertical: StackCardSpacing.sm,
               ),
               foregroundColor: selected
@@ -309,7 +315,7 @@ class _RootDestination extends StatelessWidget {
             Text(
               label,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              style: labelStyle?.copyWith(
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 color: selected
                     ? context.colors.onPrimary

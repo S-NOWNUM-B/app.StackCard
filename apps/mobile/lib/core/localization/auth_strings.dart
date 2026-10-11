@@ -11,7 +11,7 @@ const russianAuthStrings = <String, String>{
   'account.signIn': 'Войти',
   'account.register': 'Создать аккаунт',
   'account.resetPassword': 'Восстановить пароль',
-  'account.email': 'Электронная почта',
+  'account.email': 'Почта',
   'account.emailHint': 'you@example.com',
   'account.password': 'Пароль',
   'account.passwordHint': 'Не менее 6 символов',

@@ -141,7 +141,7 @@ void main() {
       expect(find.textContaining('не менее 180 дней назад'), findsOneWidget);
       expect(find.textContaining('У репозитория 8 звёзд'), findsOneWidget);
       expect(find.text('Проверить актуальность'), findsOneWidget);
-      expect(find.text('Проверить Featured'), findsOneWidget);
+      expect(find.text('Проверить избранные проекты'), findsOneWidget);
       expect(
         _container(
           tester,
@@ -166,7 +166,7 @@ void main() {
         find.textContaining('Есть описание, технологии и демо-ссылка'),
         findsOneWidget,
       );
-      expect(find.text('Проверить Featured'), findsOneWidget);
+      expect(find.text('Проверить избранные проекты'), findsOneWidget);
       expect(find.textContaining('звёзд'), findsNothing);
       expect(local.writes, 0);
       expect(
