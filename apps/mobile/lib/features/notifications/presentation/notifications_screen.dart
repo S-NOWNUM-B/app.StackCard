@@ -24,8 +24,6 @@ class NotificationsScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(strings.tr('notifications.hint')),
-          const SizedBox(height: StackCardSpacing.lg),
           Semantics(
             liveRegion: true,
             child: Text(
@@ -44,7 +42,6 @@ class NotificationsScreen extends ConsumerWidget {
             StackCardStateView(
               kind: StackCardViewState.unavailable,
               title: strings.tr('notifications.unavailable'),
-              message: strings.tr('notifications.inboxWorks'),
             )
           else ...[
             StackCardButton(
@@ -77,8 +74,6 @@ class NotificationsScreen extends ConsumerWidget {
               ),
             ),
           const SizedBox(height: StackCardSpacing.lg),
-          Text(strings.tr('notifications.inboxWorks')),
-          const SizedBox(height: StackCardSpacing.md),
           StackCardButton(
             label: strings.tr('inbox.title'),
             role: StackCardButtonRole.secondary,

@@ -114,7 +114,7 @@ export default async function PublicDocumentPage({ params }: Props) {
     ...(hasContacts ? [{ label: 'Контакты', href: '#contacts' }] : []),
   ];
   return (
-    <div className="public-document-page" data-theme={document.content.theme}>
+    <div className="public-document-page" data-theme="light">
       <Header context="public" links={nav} />
       <main id="main" className="container">
         <div className={document.kind === 'resume' ? 'public-resume' : 'public-portfolio'}>

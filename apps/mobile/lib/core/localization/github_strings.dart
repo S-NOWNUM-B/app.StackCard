@@ -1,7 +1,7 @@
 const russianGitHubStrings = <String, String>{
   'github.back': 'Назад к проектам',
   'github.title': 'Найди свои репозитории',
-  'github.hint': 'Просмотр публичного GitHub без входа. Данные остаются источником: портфолио и демонстрационный профиль не меняются.',
+  'github.hint': 'Публичные репозитории GitHub',
   'github.username': 'Username GitHub',
   'github.usernameHint': 'Например, octocat',
   'github.usernameEmpty': 'Введи username GitHub',
@@ -71,7 +71,7 @@ const russianGitHubStrings = <String, String>{
 const englishGitHubStrings = <String, String>{
   'github.back': 'Back to projects',
   'github.title': 'Find your repositories',
-  'github.hint': 'Browse public GitHub data without signing in. This source does not change your portfolio or demo profile.',
+  'github.hint': 'Public GitHub repositories',
   'github.username': 'GitHub username',
   'github.usernameHint': 'For example, octocat',
   'github.usernameEmpty': 'Enter a GitHub username',

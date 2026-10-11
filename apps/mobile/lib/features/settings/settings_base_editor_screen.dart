@@ -514,8 +514,6 @@ class _SettingsBaseEditorScreenState
     _QualificationEditor(content: _data!, onChanged: _update),
   ];
   List<Widget> _contacts() => [
-    Text(_tr('contactsHint')),
-    const SizedBox(height: StackCardSpacing.lg),
     TextFormField(
       key: const Key('settings.contacts.email'),
       controller: _fields!['contactEmail'],
@@ -523,8 +521,6 @@ class _SettingsBaseEditorScreenState
       maxLength: 254,
       decoration: InputDecoration(
         labelText: _tr('publicEmail'),
-        helperText: _tr('publicEmailHint'),
-        helperMaxLines: 8,
         counterText: '',
       ),
       validator: (value) =>
@@ -556,8 +552,7 @@ class _SettingsBaseEditorScreenState
       maxLength: 16,
       decoration: InputDecoration(
         labelText: _tr('kind.phone'),
-        helperText: _tr('phoneHint'),
-        helperMaxLines: 8,
+        hintText: '+77001234567',
         counterText: '',
       ),
       validator: (value) =>
@@ -691,11 +686,9 @@ class _SettingsBaseEditorScreenState
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             title: Text(_tr('location')),
-            subtitle: Text(
-              _data!.profile.locationText.isEmpty
-                  ? _tr('locationHint')
-                  : _data!.profile.locationText,
-            ),
+            subtitle: _data!.profile.locationText.isEmpty
+                ? null
+                : Text(_data!.profile.locationText),
             value: _data!.profile.publishLocation,
             onChanged: (value) => _update(
               _data!.copyWith(

@@ -179,7 +179,7 @@ void main() {
         find.byType(StackCardButton),
       );
       expect(button.onPressed, isNull);
-      expect(find.text('Ссылка не добавлена'), findsOneWidget);
+      expect(find.text('Ссылка не добавлена'), findsNothing);
     });
   }
 

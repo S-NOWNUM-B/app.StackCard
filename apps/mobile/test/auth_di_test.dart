@@ -91,8 +91,8 @@ void main() {
     );
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField), 'invalid');
-    await tester.ensureVisible(find.text('Открыть демо'));
-    await tester.tap(find.text('Открыть демо'));
+    await tester.ensureVisible(find.text('Продолжить'));
+    await tester.tap(find.text('Продолжить'));
     await tester.pumpAndSettle();
     expect(repository.requests, isEmpty);
     expect(find.text('Укажите корректный email'), findsOneWidget);
@@ -111,8 +111,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Открыть демо'));
-    await tester.tap(find.text('Открыть демо'));
+    await tester.ensureVisible(find.text('Продолжить'));
+    await tester.tap(find.text('Продолжить'));
     await tester.pump();
     final button = tester.widget<StackCardButton>(find.byType(StackCardButton));
     expect(button.loading, isTrue);
@@ -129,9 +129,7 @@ void main() {
     expect(find.byType(SignInScreen), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
     expect(
-      find.text(
-        'Не удалось открыть демо. Нажмите «Открыть демо», чтобы повторить.',
-      ),
+      find.text('Не удалось продолжить. Попробуйте ещё раз.'),
       findsOneWidget,
     );
     expect(
@@ -143,8 +141,8 @@ void main() {
       isTrue,
     );
 
-    await tester.ensureVisible(find.text('Открыть демо'));
-    await tester.tap(find.text('Открыть демо'));
+    await tester.ensureVisible(find.text('Продолжить'));
+    await tester.tap(find.text('Продолжить'));
     await tester.pump();
     expect(repository.requests, ['alex@example.dev', 'alex@example.dev']);
     repository.completions.last.complete(

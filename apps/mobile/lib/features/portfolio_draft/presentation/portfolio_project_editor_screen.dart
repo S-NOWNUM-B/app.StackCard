@@ -305,7 +305,7 @@ class _PortfolioProjectEditorScreenState
     if (discard == true && mounted) _leave();
   }
 
-  Widget _field(String name, {String? helperKey, int? limit}) {
+  Widget _field(String name) {
     final field = _fields!.firstWhere((item) => item.name == name);
     final multiline = field.kind == BuilderFieldKind.multiline;
     return Column(
@@ -321,9 +321,7 @@ class _PortfolioProjectEditorScreenState
           label: context.strings.tr(field.labelKey),
           showLabel: false,
           controller: _controllers![name],
-          hint: field.hintKey == null
-              ? null
-              : context.strings.tr(field.hintKey!),
+          hint: field.hintKey == null ? '' : context.strings.tr(field.hintKey!),
           keyboardType: field.kind == BuilderFieldKind.url
               ? TextInputType.url
               : multiline
@@ -354,16 +352,6 @@ class _PortfolioProjectEditorScreenState
                 field.validate?.call(context, raw);
           },
         ),
-        if (helperKey != null || limit != null) ...[
-          const SizedBox(height: StackCardSpacing.sm),
-          Text(
-            helperKey != null
-                ? context.strings.tr(helperKey)
-                : context.strings.tr('mobileParity.limit', {'limit': limit!}),
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: context.colors.textMeta),
-          ),
-        ],
       ],
     );
   }
@@ -547,16 +535,11 @@ class _PortfolioProjectEditorScreenState
                             ),
                             const SizedBox(height: StackCardSpacing.lg),
                           ],
-                          if (project?.source ==
-                              PortfolioProjectSource.github) ...[
-                            Text(context.strings.tr('githubSync.editorNote')),
-                            const SizedBox(height: StackCardSpacing.lg),
-                          ],
-                          _field('title', limit: 120),
+                          _field('title'),
                           const SizedBox(height: StackCardSpacing.lg),
-                          _field('description', limit: 4000),
+                          _field('description'),
                           const SizedBox(height: StackCardSpacing.lg),
-                          _field('contribution', limit: 4000),
+                          _field('contribution'),
                           const SizedBox(height: StackCardSpacing.lg),
                           _technologiesSection(),
                           const SizedBox(height: StackCardSpacing.lg),
@@ -572,37 +555,12 @@ class _PortfolioProjectEditorScreenState
                                   maxImages: portfolioProjectImageLimit,
                                   paths: _imagePaths,
                                   enabled: !state.saving && !ownerChanged,
-                                  emptyState: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      Text(
-                                        context.strings.tr(
-                                          'mobileParity.noCover',
-                                        ),
-                                        key: const ValueKey(
-                                          'project.cover.empty',
-                                        ),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge,
-                                      ),
-                                      const SizedBox(
-                                        height: StackCardSpacing.md,
-                                      ),
-                                      Text(
-                                        context.strings.tr(
-                                          'mobileParity.coverHint',
-                                        ),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              color:
-                                                  context.colors.textSecondary,
-                                            ),
-                                      ),
-                                    ],
+                                  emptyState: Text(
+                                    context.strings.tr('mobileParity.noCover'),
+                                    key: const ValueKey('project.cover.empty'),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium,
                                   ),
                                   onChanged: (paths) =>
                                       setState(() => _imagePaths = paths),
@@ -613,20 +571,9 @@ class _PortfolioProjectEditorScreenState
                             ),
                           ),
                           const SizedBox(height: StackCardSpacing.lg),
-                          _field(
-                            'repositoryUrl',
-                            helperKey: 'mobileParity.repositoryHint',
-                          ),
+                          _field('repositoryUrl'),
                           const SizedBox(height: StackCardSpacing.lg),
-                          _field('liveUrl', helperKey: 'mobileParity.demoHint'),
-                          const SizedBox(height: StackCardSpacing.lg),
-                          Text(
-                            context.strings.tr(
-                              'mobileParity.projectLibraryHint',
-                            ),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: context.colors.textSecondary),
-                          ),
+                          _field('liveUrl'),
                           const SizedBox(height: StackCardSpacing.xl),
                           Text(
                             context.strings.tr('mobileParity.preview'),

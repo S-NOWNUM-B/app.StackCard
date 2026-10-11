@@ -3,7 +3,7 @@ import { DocumentView, exampleDocumentContent } from '@/components/document-view
 import { Header, LinkButton } from '@/components/ui';
 
 export const metadata: Metadata = {
-  title: 'Демонстрационное резюме | StackCard',
+  title: 'Демонстрационное резюме',
   robots: { index: false, follow: false },
 };
 export default function ExampleResumePage() {
@@ -21,8 +21,8 @@ export default function ExampleResumePage() {
           <div className="stack public-page-label">
             <p className="muted">Демонстрационное резюме</p>
             <p className="muted">
-              Alex Morgan — вымышленный профиль из примера. Этот документ не является опубликованным
-              резюме пользователя.
+              Алекс Морган — вымышленный профиль из примера. Этот документ не является
+              опубликованным резюме пользователя.
             </p>
           </div>
           <DocumentView kind="resume" content={exampleDocumentContent('resume')} />

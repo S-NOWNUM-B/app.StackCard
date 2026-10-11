@@ -1,21 +1,16 @@
 const russianAuthStrings = <String, String>{
   'account.transferTitle': 'Гостевой черновик',
-  'account.transferWorkingPreserved': 'Сохранённый черновик перенесён. Новые рабочие правки сохранены в редакторе; перечитай черновик явно, когда решишь их отменить.',
+  'account.transferWorkingPreserved':
+      'Черновик перенесён. Несохранённые правки остались в редакторе.',
   'account.transfer': 'Перенести в этот аккаунт',
-  'account.transferHint': 'На устройстве есть сохранённый гостевой черновик. Его можно перенести в пустой черновик этого аккаунта; после переноса данные будут синхронизироваться с аккаунтом.',
   'account.transferConfirm': 'Перенести сохранённое портфолио и приватные заметки в этот аккаунт? После переноса гостевой черновик станет пустым, а перенесённые данные будут синхронизироваться с аккаунтом.',
-  'account.transferSuccess':
-      'Черновик перенесён. Открой Builder, чтобы продолжить.',
+  'account.transferSuccess': 'Черновик перенесён',
   'account.transferUnsaved':
       'Сначала сохрани или отмени текущие правки аккаунта.',
   'account.transferConflict': 'Перенос заблокирован: аккаунт уже содержит черновик или перенос ожидает завершения в другом аккаунте. Данные сохранены. После сбоя повтори перенос в исходный аккаунт.',
   'account.signIn': 'Войти',
   'account.register': 'Создать аккаунт',
   'account.resetPassword': 'Восстановить пароль',
-  'account.signInDescription': 'Войдите, чтобы открыть свой черновик и синхронизировать сохранённые правки.',
-  'account.registerDescription': 'Создайте аккаунт с email и паролем.',
-  'account.resetDescription':
-      'Укажите email аккаунта для восстановления доступа.',
   'account.email': 'Email',
   'account.emailHint': 'you@example.com',
   'account.password': 'Пароль',
@@ -28,15 +23,13 @@ const russianAuthStrings = <String, String>{
   'account.sendReset': 'Отправить письмо',
   'account.resetSuccess': 'Если для этого email существует аккаунт, письмо с инструкцией отправлено. Проверьте почту и папку «Спам».',
   'account.guest': 'Продолжить без аккаунта',
-  'account.guestNote': 'Только на этом устройстве. Доступно без сети.',
-  'account.localNote':
-      'Черновик синхронизируется и доступен без сети. Публикация — отдельно.',
   'account.title': 'Аккаунт',
   'account.guestTitle': 'Гостевой режим',
   'account.signedIn': 'Вы вошли в аккаунт',
   'account.signOut': 'Выйти из аккаунта',
   'account.unsavedTitle': 'Есть несохранённые изменения',
-  'account.unsavedHint': 'При смене аккаунта несохранённые правки локального черновика будут потеряны. Отмените действие и сохраните черновик, либо продолжите со сбросом правок.',
+  'account.unsavedHint':
+      'При смене аккаунта несохранённые изменения будут потеряны.',
   'account.discard': 'Продолжить без сохранения',
   'account.cancel': 'Отмена',
   'account.sessionError': 'Не удалось проверить аккаунт. Повторите попытку.',
@@ -59,21 +52,16 @@ const russianAuthStrings = <String, String>{
 
 const englishAuthStrings = <String, String>{
   'account.transferTitle': 'Guest draft',
-  'account.transferWorkingPreserved': 'The saved draft was moved. New working edits remain in the editor; reload the draft explicitly when you choose to discard them.',
+  'account.transferWorkingPreserved':
+      'Draft moved. Unsaved changes remain in the editor.',
   'account.transfer': 'Move to this account',
-  'account.transferHint': 'This device has a saved guest draft. You can move it into this account’s empty draft; the moved data will synchronize with this account.',
   'account.transferConfirm': 'Move the saved portfolio and private notes to this account? The guest draft will become empty and the moved data will synchronize with this account.',
-  'account.transferSuccess': 'Draft moved. Open Builder to continue.',
+  'account.transferSuccess': 'Draft moved',
   'account.transferUnsaved': 'Save or discard current account changes first.',
   'account.transferConflict': 'Transfer is blocked: this account already has a draft or another account has a pending transfer. Data is preserved. After a failure, retry in the original account.',
   'account.signIn': 'Sign in',
   'account.register': 'Create account',
   'account.resetPassword': 'Reset password',
-  'account.signInDescription':
-      'Sign in to open your draft and synchronize saved edits.',
-  'account.registerDescription':
-      'Create an account with your email and password.',
-  'account.resetDescription': 'Enter your account email to restore access.',
   'account.email': 'Email',
   'account.emailHint': 'you@example.com',
   'account.password': 'Password',
@@ -86,15 +74,12 @@ const englishAuthStrings = <String, String>{
   'account.sendReset': 'Send reset email',
   'account.resetSuccess': 'If an account exists for this email, reset instructions have been sent. Check your inbox and spam folder.',
   'account.guest': 'Continue without an account',
-  'account.guestNote': 'On this device only. Available offline.',
-  'account.localNote':
-      'Your draft syncs and works offline. Publishing is separate.',
   'account.title': 'Account',
   'account.guestTitle': 'Guest mode',
   'account.signedIn': 'You are signed in',
   'account.signOut': 'Sign out',
   'account.unsavedTitle': 'You have unsaved changes',
-  'account.unsavedHint': 'Changing accounts will lose unsaved changes to your local draft. Cancel and save your draft first, or continue and discard these changes.',
+  'account.unsavedHint': 'Changing accounts will discard unsaved changes.',
   'account.discard': 'Continue without saving',
   'account.cancel': 'Cancel',
   'account.sessionError': 'Unable to check your account. Please try again.',

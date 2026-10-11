@@ -1,226 +1,213 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { DocumentView, exampleDocumentContent } from '@/components/document-view';
-import { Header, LinkButton, TechnologyBadges } from '@/components/ui';
+import { Icon, LinkButton } from '@/components/ui';
+import { MarketingPage, StartSection } from '@/components/marketing';
+import { ProductDemo } from '@/components/product-demo';
 
 export const metadata: Metadata = {
-  title: 'StackCard — профессиональная база, резюме и портфолио',
+  title: { absolute: 'StackCard — ваша работа, ваша история' },
   description:
-    'Соберите профессиональную базу и библиотеку проектов. Создавайте независимые резюме и портфолио, публикуйте выбранные версии.',
+    'Соберите проекты, опыт и навыки в одну базу. Создавайте резюме и портфолио для разных задач и делитесь выбранной версией.',
 };
 
 export default function LandingPage() {
   return (
-    <>
-      <Header />
-      <main id="main" className="container stack landing-content">
-        <section className="section stack">
-          <h1 className="hero">Один профиль. Резюме и портфолио под вашу задачу.</h1>
-          <h2>Ваша работа в нужной версии</h2>
-          <div className="columns">
-            <div className="stack">
-              <h2>Начните с профессиональной базы</h2>
-              <p>Добавьте сведения о себе, выберите проекты и опубликуйте нужный документ.</p>
-              <div className="row">
-                <LinkButton href="/workspace" variant="primary">
-                  Создать документ
-                </LinkButton>
-                <LinkButton href="/examples/portfolio">Посмотреть пример</LinkButton>
-              </div>
-            </div>
-            <div className="stack">
-              <h2>Пример портфолио</h2>
-              <p>Проекты, технологии и выбранные контакты в одной композиции.</p>
-              <div className="section preview-crop">
-                <DocumentView
-                  kind="portfolio"
-                  content={exampleDocumentContent('portfolio', true)}
-                  preview
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-        <section id="features" className="stack">
-          <h2>Общая база → разные документы</h2>
-          <div className="columns three">
-            <div className="stack">
-              <h2>Профессиональная база</h2>
-              <p>
-                Имя, роль, фото, публичные контакты, опыт и навыки. Фото и необязательные сведения
-                можно пропустить.
-              </p>
-            </div>
-            <div className="stack">
-              <h2>Резюме под роль</h2>
-              <p>Выберите подходящие сведения и проекты. Изменения относятся к этому резюме.</p>
-            </div>
-            <div className="stack">
-              <h2>Портфолио под аудиторию</h2>
-              <p>
-                Представьте свои работы, настройте порядок и видимость для конкретного портфолио.
-              </p>
-            </div>
-          </div>
-        </section>
-        <section className="stack">
-          <h2>Проекты из одной библиотеки</h2>
-          <div className="columns three">
-            <div className="stack">
-              <h2>Из GitHub или вручную</h2>
-              <p>
-                Импортируйте исходные сведения или создайте проект сами. Обновления источника
-                просматривайте перед применением.
-              </p>
-              <TechnologyBadges items={['Flutter', 'Dart', 'React', 'TypeScript']} />
-            </div>
-            <div className="stack">
-              <h2>Atlas UI Kit</h2>
-              <p>Набор компонентов для спокойных и удобных интерфейсов.</p>
-            </div>
-            <div className="stack">
-              <h2>Readme Studio</h2>
-              <p>Редактор структуры README для небольших open source проектов.</p>
-            </div>
-          </div>
-        </section>
-        <section className="stack">
-          <h2>Резюме для конкретной роли</h2>
-          <div className="columns">
-            <div className="stack">
-              <h2>Выберите то, что подходит</h2>
-              <p>
-                Контакты, опыт, образование, технологии и проекты собираются в читаемый документ.
-                Пустые секции не появляются.
-              </p>
-              <LinkButton href="/examples/resume">Пример резюме</LinkButton>
-            </div>
-            <div className="stack">
-              <h2>Документ без лишнего</h2>
-              <p>Фото необязательно. Содержание и оформление редактируются отдельно.</p>
-              <div className="section preview-crop">
-                <DocumentView
-                  kind="resume"
-                  content={exampleDocumentContent('resume', true)}
-                  preview
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-        <section className="section stack">
-          <h3>Портфолио ваших работ</h3>
-          <p>
-            Используйте одну работу в разных портфолио. Для каждого выберите порядок, видимость и
-            проекты, на которые хотите обратить внимание.
+    <MarketingPage>
+      <section className="landing-hero">
+        <Link href="/about" className="hero-note">
+          <span className="status-dot" /> Для тех, кто создаёт <span aria-hidden="true">↗</span>
+        </Link>
+        <h1>
+          Ваша работа.
+          <br />
+          <em>Ваша история.</em>
+        </h1>
+        <p>
+          Соберите проекты, опыт и навыки в одном месте.
+          <br className="desktop-break" /> Превратите их в резюме и портфолио — под вашу следующую
+          цель.
+        </p>
+        <div className="marketing-actions">
+          <LinkButton href="/workspace" variant="primary">
+            Создать свою историю <span aria-hidden="true">→</span>
+          </LinkButton>
+          <LinkButton href="/examples">
+            Посмотреть примеры <span aria-hidden="true">↗</span>
+          </LinkButton>
+        </div>
+        <div className="hero-meta">
+          <span>Одна база</span>
+          <i />
+          <span>Независимые документы</span>
+          <i />
+          <span>Публикация под вашим контролем</span>
+        </div>
+        <ProductDemo />
+        <p className="demo-caption">Показаны вымышленный профиль и демонстрационные проекты.</p>
+      </section>
+      <section className="marketing-section site-width" id="features">
+        <div className="section-heading">
+          <span className="eyebrow">Одна база. Больше возможностей.</span>
+          <h2>
+            Всё связано.
+            <br />
+            <em>Всё по-вашему.</em>
+          </h2>
+          <p className="section-lead">
+            Вы уже сделали работу. StackCard помогает рассказать о ней — без сборки каждого
+            документа с нуля.
           </p>
-          <p>
-            Добавляйте публичные контакты и выбранное резюме. Удаление проекта из портфолио
-            сохраняет работу в библиотеке.
+        </div>
+        <div className="base-flow">
+          <div className="flow-source">
+            <Icon name="user-round" size={24} />
+            <strong>Ваш профессиональный профиль</strong>
+            <span>Опыт · навыки · образование · контакты</span>
+          </div>
+          <span className="flow-arrow" aria-hidden="true">
+            ↓
+          </span>
+          <div className="flow-outputs">
+            <Link href="/features#resumes">
+              <Icon name="file-text" />
+              <strong>Резюме</strong>
+              <span>Под конкретную роль</span>
+            </Link>
+            <Link href="/features#projects">
+              <Icon name="folder" />
+              <strong>Проекты</strong>
+              <span>Ваша библиотека работ</span>
+            </Link>
+            <Link href="/features#portfolios">
+              <Icon name="panels-top-left" />
+              <strong>Портфолио</strong>
+              <span>Под вашу аудиторию</span>
+            </Link>
+          </div>
+        </div>
+        <div className="feature-grid">
+          <div className="feature-item">
+            <span className="numbered-label">01 / СОБЕРИТЕ</span>
+            <h3>Начните с себя</h3>
+            <p>
+              Добавьте свой опыт и работы в общую базу. Используйте её как основу новых документов.
+            </p>
+          </div>
+          <div className="feature-item">
+            <span className="numbered-label">02 / АДАПТИРУЙТЕ</span>
+            <h3>Выберите главное</h3>
+            <p>
+              Свои акценты, проекты и порядок секций для каждой роли. Другие документы сохраняют
+              свою версию.
+            </p>
+          </div>
+          <div className="feature-item">
+            <span className="numbered-label">03 / ПОДЕЛИТЕСЬ</span>
+            <h3>Публикуйте осознанно</h3>
+            <p>
+              Сохранение и публикация — отдельные действия. Вы решаете, какую версию увидят по
+              ссылке.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section className="soft-section">
+        <div className="site-width split-section">
+          <div className="section-heading">
+            <span className="eyebrow">Ваша работа говорит за вас</span>
+            <h2>
+              Один проект.
+              <br />
+              <em>Разные акценты.</em>
+            </h2>
+            <p className="section-lead">
+              Покажите архитектуру работодателю, результат клиенту, процесс — команде. Работа
+              хранится в одной библиотеке, её история меняется под задачу.
+            </p>
+            <Link className="text-link" href="/use-cases">
+              Найти свой сценарий <span aria-hidden="true">↗</span>
+            </Link>
+          </div>
+          <div className="project-story">
+            <div className="story-source">
+              <span className="project-glyph">{'{ }'}</span>
+              <div>
+                <span className="mini-label">ПРИМЕР ПРОЕКТА</span>
+                <h3>Atlas UI Kit</h3>
+                <p>React · TypeScript · Дизайн-системы</p>
+              </div>
+            </div>
+            <div className="story-version">
+              <Icon name="file-text" size={20} />
+              <div>
+                <span>В резюме</span>
+                <p>«Разработал библиотеку переиспользуемых компонентов»</p>
+              </div>
+            </div>
+            <div className="story-version">
+              <Icon name="panels-top-left" size={20} />
+              <div>
+                <span>В портфолио</span>
+                <p>«От идеи до интерфейса: система, которая объединяет продукт»</p>
+              </div>
+            </div>
+            <span className="story-caption">
+              Своё описание в каждом документе. Общий проект в библиотеке.
+            </span>
+          </div>
+        </div>
+      </section>
+      <section className="marketing-section site-width publication-section">
+        <div className="section-heading">
+          <span className="eyebrow">Без сюрпризов</span>
+          <h2>
+            Ваш черновик.
+            <br />
+            <em>Ваше решение.</em>
+          </h2>
+          <p className="section-lead">
+            Редактируйте спокойно. Новые правки появятся в публичном документе только после
+            отдельной публикации.
           </p>
-          <LinkButton href="/examples/portfolio">Пример портфолио</LinkButton>
-        </section>
-        <section className="stack">
-          <h2>Публикуйте только нужную версию</h2>
-          <div className="columns three">
-            <div className="stack">
-              <h2>Сохраните изменения</h2>
-              <p>
-                Рабочий черновик остаётся вашим. Правки и сохранение не меняют то, что уже видят по
-                опубликованной ссылке.
-              </p>
-            </div>
-            <div className="stack">
-              <h2>Опубликуйте отдельно</h2>
-              <p>
-                Проверьте выбранные сведения и явно опубликуйте документ. Публичный просмотр
-                доступен без входа.
-              </p>
-            </div>
-            <div className="stack">
-              <h2>Поделитесь адресом</h2>
-              <p>
-                У каждого документа свой постоянный адрес. Переименование сохраняет его; снятие с
-                публикации закрывает доступ.
-              </p>
-            </div>
+        </div>
+        <div className="publication-flow">
+          <div>
+            <span className="step-number">01</span>
+            <h3>Создайте</h3>
+            <p>Работайте над своей версией.</p>
           </div>
-        </section>
-        <section className="section stack" id="application">
-          <h3>Мобильное приложение</h3>
-          <p className="muted">
-            Android и iOS — мобильные платформы StackCard. Публичных релизов для скачивания пока
-            нет.
-          </p>
-          <h2>Доступность установки</h2>
-          <div className="columns">
-            <div className="stack">
-              <h3>Android</h3>
-              <p>Публичная сборка пока недоступна.</p>
-              <LinkButton href="/download">Страница приложения</LinkButton>
-            </div>
-            <div className="stack">
-              <h3>iOS</h3>
-              <p>Публичная сборка пока недоступна.</p>
-              <LinkButton href="/download">Открыть приложение</LinkButton>
-            </div>
+          <span aria-hidden="true">→</span>
+          <div>
+            <span className="step-number">02</span>
+            <h3>Сохраните</h3>
+            <p>Зафиксируйте черновик.</p>
           </div>
-          <small className="muted">
-            Скачивание станет доступно после появления публичного релиза.
-          </small>
-        </section>
-        <section className="section stack">
-          <h3>Начните с вашего профиля</h3>
-          <p>Добавьте свою работу, выберите данные под задачу и контролируйте публикацию.</p>
-          <div className="row">
-            <LinkButton href="/workspace" variant="primary">
-              Создать документ
-            </LinkButton>
-            <LinkButton href="/sign-in">Войти</LinkButton>
+          <span aria-hidden="true">→</span>
+          <div>
+            <span className="step-number">03</span>
+            <h3>Опубликуйте</h3>
+            <p>Поделитесь выбранной версией.</p>
           </div>
-        </section>
-        <footer className="stack">
-          <p>StackCard</p>
-          <div className="columns">
-            <div className="stack">
-              <h3>Профессиональная база, резюме и портфолио</h3>
-              <p>Данные выбираете вы. Документы публикуете отдельно.</p>
-              <div className="row">
-                <LinkButton variant="quiet" href="#features">
-                  Возможности
-                </LinkButton>
-                <LinkButton variant="quiet" href="/download">
-                  Мобильное приложение
-                </LinkButton>
-              </div>
-            </div>
-            <div className="stack">
-              <h3>Разделы</h3>
-              <p>Выберите нужный сценарий.</p>
-              <div className="row">
-                <LinkButton variant="quiet" href="/workspace">
-                  Проекты
-                </LinkButton>
-                <LinkButton variant="quiet" href="/examples/resume">
-                  Резюме
-                </LinkButton>
-              </div>
-              <div className="row">
-                <LinkButton variant="quiet" href="/examples/portfolio">
-                  Портфолио
-                </LinkButton>
-                <LinkButton variant="quiet" href="/workspace">
-                  Публикация
-                </LinkButton>
-              </div>
-            </div>
-          </div>
-          <small className="muted">
-            Alex Morgan и показанные проекты — демонстрационные примеры.{' '}
-            <Link href="/examples/portfolio">Подробнее о примере</Link>
-          </small>
-        </footer>
-      </main>
-    </>
+        </div>
+        <Link href="/help#publication" className="text-link">
+          Как устроена публикация <span aria-hidden="true">↗</span>
+        </Link>
+      </section>
+      <section className="site-width application-teaser">
+        <div>
+          <span className="eyebrow">Там, где вам удобно</span>
+          <h2>
+            Большой экран.
+            <br />
+            <em>И большие планы.</em>
+          </h2>
+          <p>Работайте в браузере. Узнайте о мобильной версии для Android и iOS.</p>
+        </div>
+        <LinkButton href="/download">
+          О приложении <span aria-hidden="true">↗</span>
+        </LinkButton>
+      </section>
+      <StartSection />
+    </MarketingPage>
   );
 }

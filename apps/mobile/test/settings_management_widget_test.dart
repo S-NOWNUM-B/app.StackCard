@@ -93,7 +93,7 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
 
 void main() {
   testWidgets(
-    'contact helper text stays readable at narrow width and doubled text',
+    'contact labels stay readable without helper paragraphs at doubled text',
     (tester) async {
       tester.view.physicalSize = const Size(640, 1440);
       tester.view.devicePixelRatio = 2;
@@ -103,7 +103,7 @@ void main() {
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       await _open(tester, await _seed(), '/settings/contacts');
       const strings = AppStrings(Locale('ru'));
-      for (final key in ['publicEmailHint', 'phoneHint']) {
+      for (final key in ['publicEmail', 'kind.phone']) {
         final hint = find.text(strings.tr('settingsManagement.$key'));
         await tester.ensureVisible(hint);
         await tester.pumpAndSettle();
@@ -114,6 +114,14 @@ void main() {
               '$key: ${tester.renderObject<RenderParagraph>(hint).toStringDeep()}',
         );
       }
+      expect(
+        find.text(strings.tr('settingsManagement.publicEmailHint')),
+        findsNothing,
+      );
+      expect(
+        find.text(strings.tr('settingsManagement.phoneHint')),
+        findsNothing,
+      );
       expect(tester.takeException(), isNull);
     },
   );
@@ -132,7 +140,7 @@ void main() {
       expect(draft.content!.profile.name, 'Updated');
       expect(draft.content!.documents.single.content.profile.name, 'Document');
       expect(draft.notes, 'private notes');
-      expect(find.text('Изменения сохранены на устройстве'), findsOneWidget);
+      expect(find.text('Изменения сохранены'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

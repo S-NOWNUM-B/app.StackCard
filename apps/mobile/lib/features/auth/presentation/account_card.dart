@@ -90,16 +90,8 @@ class _AccountCardState extends ConsumerState<AccountCard> {
                     strings.tr('account.signedIn'),
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
             ],
-            Text(
-              strings.tr(
-                user == null ? 'account.guestNote' : 'account.localNote',
-              ),
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: context.colors.textSecondary),
-            ),
-            const SizedBox(height: 20),
             StackCardButton(
               key: const Key('account.sessionAction'),
               label: strings.tr(

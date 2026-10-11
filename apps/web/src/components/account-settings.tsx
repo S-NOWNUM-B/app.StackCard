@@ -250,7 +250,6 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
   const [deletion, setDeletion] = useState<AccountDeletionJournal | null>(null);
   const [deletionStatus, setDeletionStatus] = useState<'pending' | 'unknown' | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [reduceMotion, setReduceMotion] = useState(false),
     [systemReduced, setSystemReduced] = useState(false);
 
@@ -262,7 +261,6 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
     media.addEventListener('change', updateMotion);
     try {
       setDeletion(readDeletionJournal(localStorage, user.uid));
-      setTheme(localStorage.getItem('stackcard.theme') === 'light' ? 'light' : 'dark');
       setReduceMotion(localStorage.getItem('stackcard.reducedMotion') === 'true');
     } catch (failure) {
       setError(accountErrorMessage(failure));
@@ -380,16 +378,11 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
       await finishDeletion(journal, checkedDeletionResult(await deletionRequest(journal), journal));
     });
   }
-  function preference(kind: 'theme' | 'motion', value: string) {
-    if (kind === 'theme') {
-      setTheme(value === 'light' ? 'light' : 'dark');
-      document.documentElement.dataset.theme = value;
-    } else {
-      setReduceMotion(value === 'true');
-      document.documentElement.dataset.reducedMotion = value;
-    }
+  function preference(value: boolean) {
+    setReduceMotion(value);
+    document.documentElement.dataset.reducedMotion = String(value);
     try {
-      localStorage.setItem(kind === 'theme' ? 'stackcard.theme' : 'stackcard.reducedMotion', value);
+      localStorage.setItem('stackcard.reducedMotion', String(value));
     } catch {
       setError('Выбор применён, но не сохранён в браузере.');
     }
@@ -593,24 +586,17 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
       </section>
       <section className="section stack" aria-labelledby="app-preferences">
         <h3 id="app-preferences">Приложение</h3>
-        <label className="field">
-          <span>Тема</span>
-          <select value={theme} onChange={(e) => preference('theme', e.target.value)}>
-            <option value="dark">Тёмная</option>
-            <option value="light">Светлая</option>
-          </select>
-        </label>
         <label className="list-row">
           <span>Сократить анимации</span>
           <input
             type="checkbox"
             checked={reduceMotion || systemReduced}
             disabled={systemReduced}
-            onChange={(e) => preference('motion', String(e.target.checked))}
+            onChange={(e) => preference(e.target.checked)}
           />
         </label>
         {systemReduced && <p className="muted">Анимации сокращены по настройке системы.</p>}
-        <p className="muted">Уведомления и Inbox пока недоступны.</p>
+        <p className="muted">Входящие доступны из настроек и работают независимо от уведомлений.</p>
       </section>
       <section className="section stack" aria-labelledby="account-session">
         <h3 id="account-session">Сеанс</h3>

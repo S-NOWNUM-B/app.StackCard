@@ -11,14 +11,14 @@ export const metadata: Metadata = {
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="ru" data-theme="light" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body>
         <Script
           id="stackcard-preferences"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html:
-              "try{const t=localStorage.getItem('stackcard.theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t;document.documentElement.dataset.reducedMotion=localStorage.getItem('stackcard.reducedMotion')==='true'?'true':'false'}catch{}",
+              "try{document.documentElement.dataset.reducedMotion=localStorage.getItem('stackcard.reducedMotion')==='true'?'true':'false'}catch{}",
           }}
         />
         <a className="skip-link" href="#main">

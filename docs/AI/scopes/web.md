@@ -5,8 +5,14 @@
 Последнее поручение пользователя разрешает web и явную публикацию; deploy отдельный.
 
 - Runtime — `apps/web/src/app`, shared controls — `src/components/ui.tsx`, tokens —
-  `src/app/globals.css`. Сохранять Figma R6 Brand A, Lime, локальный Manrope,
-  исходные SVG/font bytes и лицензии в `public`. Screenshot не runtime asset.
+  `src/app/globals.css`. Поручение 2026-10-11 заменяет web target R6 светлой
+  композицией по Openship: белые поверхности, чёрные CTA, русские тексты StackCard.
+  [Web brief](../../redesign/web-openship.md) задаёт страницы и границы переноса.
+  Сохранять Brand A, локальный Manrope, исходные SVG/font bytes и лицензии в `public`.
+  Screenshot не runtime asset. Web всегда light; переключателей dark нет.
+  Shared `dark | light` schema сохраняется для mobile и старых данных: чтение
+  не меняет сохранённую тему, новые web документы получают light. Flutter redesign
+  ждёт оценки web пользователем.
 - `src/lib/model.ts` реализует тот же JSON aggregate mobile PortfolioContent:
   root base/Projects Library, independent document snapshots и attachments.
   Версии и команды берутся из `apps/web/package.json`, env — из `.env.example`.
@@ -37,6 +43,8 @@
   unavailable/noindex state, missing/withdrawn — 404/noindex.
 - Auth route guard служит UX; права обеспечивают Rules и trusted backend. Смена UID
   очищает private state, несохранённый ввод требует подтверждения перед discard.
+  Переход ко входу сохраняет owner path и разрешённый workspace hash через
+  `safeReturnPath`; ссылки регистрации/восстановления сохраняют тот же returnTo.
 - Phase 14 Contact/Inbox — [ADR 0004](../../decisions/0004-contact-inbox-notifications.md).
   ContactForm только при visible projected typed contact; server проверяет текущую
   публикацию повторно. `contact-repository.ts` получает limited-use App Check token;

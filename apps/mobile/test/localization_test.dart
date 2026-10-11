@@ -126,7 +126,7 @@ void main() {
   );
 
   for (final item in [
-    (route: '/home', heading: 'Your work will appear here'),
+    (route: '/home', heading: 'No work yet'),
     (route: '/resumes', heading: 'No resumes yet'),
     (route: '/portfolio', heading: 'No portfolios yet'),
     (route: '/projects', heading: 'Projects: 4'),
@@ -170,8 +170,8 @@ void main() {
     );
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField), 'invalid');
-    await tester.ensureVisible(find.text('Open demo'));
-    await tester.tap(find.text('Open demo'));
+    await tester.ensureVisible(find.text('Continue'));
+    await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
     expect(find.text('Enter a valid email'), findsOneWidget);
     expect(find.text('Укажите корректный email'), findsNothing);

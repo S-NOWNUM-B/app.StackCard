@@ -164,10 +164,7 @@ void main() {
         _scope(tester).read(portfolioDraftControllerProvider).notes,
         'Guest private notes',
       );
-      expect(
-        find.text('Черновик перенесён. Открой Builder, чтобы продолжить.'),
-        findsOneWidget,
-      );
+      expect(find.text('Черновик перенесён'), findsOneWidget);
       expect(
         find.widgetWithText(StackCardButton, 'Перенести в этот аккаунт'),
         findsNothing,

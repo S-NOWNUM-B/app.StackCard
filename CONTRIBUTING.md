@@ -237,8 +237,10 @@ application ID/bundle ID с существующими приложениями.
 В dev Firebase Console включён Email/Password. Для нового окружения включи его
 в Authentication → Sign-in method по
 [password-auth guide](https://firebase.google.com/docs/auth/flutter/password-auth).
-Google provider подготовлен, но сохранение provider в Console требует выбранного
-project support email; live Google flow пока не подтверждён.
+Google provider включён в dev project; владелец подтвердил project support email
+и публичное OAuth-название. Android configuration обновлена после включения;
+фактическая native приёмка и открытые targets находятся в
+[product spec](docs/product/product-spec.md#phase-7--firebase-authentication).
 Для Android зарегистрирован debug SHA-1. На другой машине или для другого
 signing certificate получи fingerprint и добавь его к соответствующему Firebase
 app; Google provider должен быть включён, а config после этого обновлён.
@@ -671,6 +673,44 @@ flutter test integration_test/account_runtime_test.dart -d "<android-id>" --no-u
 
 При прерывании пары disposable account остаётся в dev project; завершай `check`
 на том же устройстве. Проверка не читает и не очищает пользовательский Hive draft.
+
+#### Android Google acceptance
+
+[Google native suite](apps/mobile/integration_test/google_auth_runtime_test.dart)
+запускается отдельно после включения Google provider и обновления Android
+`google-services.json`. Сверь package name и debug signing SHA-1; Gradle plugin
+берёт web OAuth client (`client_type: 3`) из этого generated файла, отдельный
+Android Dart `serverClientId` не нужен. Provider support email виден на Google
+OAuth-экране и выбирается владельцем проекта. Эта настройка не требует Blaze.
+
+Устройство должно иметь Google Play Services и настоящий Google account.
+`seed` нажимает настоящую кнопку Google в существующей форме; владелец выбирает
+аккаунт и при необходимости сам завершает login/2FA. Тест проверяет credential
+exchange, `google.com` provider, protected AppShell и server-only чтение своего
+Firestore draft. Отсутствующий draft допускается и не считается проверкой sync.
+`check` в новом процессе проверяет прежний UID до sign-in, затем sign out.
+
+Named Firebase Auth/Firestore, memory-only workspace и отдельный временный
+metadata файл сохраняют default Firebase session и обычный Hive/settings.
+Metadata содержит UID/processId/outcomes, без email/password/token. Google SDK
+singleton относится ко всему приложению: provider sign out завершает его SDK
+session, но не удаляет Google account с устройства. Firebase/Firestore аккаунты
+и данные тест не удаляет. Не задавай Auth/Firestore emulator defines.
+
+macOS — zsh/bash, из `apps/mobile`, на одном устройстве без удаления app data:
+
+```sh
+GOOGLE_AUTH_RUN_ID="$(openssl rand -hex 16)"
+flutter test integration_test/google_auth_runtime_test.dart -d "<android-id>" --no-uninstall --dart-define=RUN_GOOGLE_AUTH_ACCEPTANCE=true --dart-define=GOOGLE_AUTH_PHASE=seed --dart-define=GOOGLE_AUTH_RUN_ID="$GOOGLE_AUTH_RUN_ID"
+flutter test integration_test/google_auth_runtime_test.dart -d "<android-id>" --no-uninstall --dart-define=RUN_GOOGLE_AUTH_ACCEPTANCE=true --dart-define=GOOGLE_AUTH_PHASE=check --dart-define=GOOGLE_AUTH_RUN_ID="$GOOGLE_AUTH_RUN_ID"
+```
+
+Ожидаются два успешных native запуска и итоговый metadata `status=passed`
+с новым processId, `restoredBeforeSignIn=true`, `signedOut=true` и
+`defaultSessionPreserved=true`. При прерывании после успешного seed заверши check
+с тем же run ID. После tests восстанови обычную сборку через `adb install -r`,
+без uninstall/clear app data. Actual outcomes записываются в product spec;
+наличие suite, анализ и mocked Google tests не закрывают live приёмку.
 
 ### Firestore Rules и native sync acceptance
 

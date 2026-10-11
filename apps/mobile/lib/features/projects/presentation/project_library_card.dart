@@ -216,17 +216,16 @@ class _ProjectLibraryCardState extends State<ProjectLibraryCard> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Text(
-                      context.strings.tr(
-                        validUrl
-                            ? 'mobileParity.demoLink'
-                            : 'mobileParity.noLinkHint',
+                  if (validUrl) ...[
+                    Expanded(
+                      child: Text(
+                        context.strings.tr('mobileParity.demoLink'),
+                        style: text.bodySmall?.copyWith(color: colors.textMeta),
                       ),
-                      style: text.bodySmall?.copyWith(color: colors.textMeta),
                     ),
-                  ),
-                  const SizedBox(width: StackCardSpacing.sm),
+                    const SizedBox(width: StackCardSpacing.sm),
+                  ] else
+                    const Spacer(),
                   Flexible(
                     child: StackCardButton(
                       label: context.strings.tr(

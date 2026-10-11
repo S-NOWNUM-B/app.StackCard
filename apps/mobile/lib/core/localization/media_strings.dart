@@ -6,10 +6,9 @@ const russianMediaStrings = <String, String>{
   'media.remove': 'Убрать изображение',
   'media.uploading': 'Загрузка: {percent}%',
   'media.preparing': 'Подготовка изображения',
-  'media.formNote': 'Примените изменения формы, затем сохраните портфолио.',
   'media.limit': 'Не более {limit} изображений.',
-  'media.guest': 'Войдите в аккаунт, чтобы загружать изображения. Текстовые поля доступны в гостевом режиме.',
-  'media.unconfigured': 'Загрузка изображений сейчас недоступна. Текстовые поля можно редактировать.',
+  'media.guest': 'Войдите, чтобы добавить фото.',
+  'media.unconfigured': 'Загрузка фото недоступна.',
   'media.permissionDenied': 'Нет доступа к камере или фотографиям. Разрешите доступ в настройках устройства и попробуйте снова.',
   'media.invalidType': 'Выберите изображение JPEG, PNG или WebP.',
   'media.tooLarge': 'Изображение слишком большое. Выберите файл меньшего размера или разрешения.',
@@ -31,12 +30,9 @@ const englishMediaStrings = <String, String>{
   'media.remove': 'Remove image',
   'media.uploading': 'Uploading: {percent}%',
   'media.preparing': 'Preparing image',
-  'media.formNote': 'Apply the form changes, then save your portfolio.',
   'media.limit': 'Up to {limit} images.',
-  'media.guest':
-      'Sign in to upload images. Text fields are available in guest mode.',
-  'media.unconfigured':
-      'Image upload is currently unavailable. Text fields can still be edited.',
+  'media.guest': 'Sign in to add photos.',
+  'media.unconfigured': 'Photo upload unavailable.',
   'media.permissionDenied': 'Camera or photo access was denied. Allow access in device settings and try again.',
   'media.invalidType': 'Choose a JPEG, PNG or WebP image.',
   'media.tooLarge':

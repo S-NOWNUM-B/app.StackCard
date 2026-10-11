@@ -286,8 +286,6 @@ void _showPreview(BuildContext context, PortfolioOverview overview) {
               context.strings.tr('portfolio.previewTitle'),
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: StackCardSpacing.sm),
-            Text(context.strings.tr('portfolio.previewStatus')),
             const SizedBox(height: StackCardSpacing.xl),
             _DemoPortfolio(overview: overview),
             StackCardButton(

@@ -37,6 +37,7 @@ import {
   equal,
   resolveDocument,
   safeHttpUrl,
+  safeReturnPath,
   uid,
   validateWorkspace,
   type DraftEnvelope,
@@ -100,8 +101,12 @@ export function Workspace({ initialView = 'home' }: { initialView?: string }) {
   const session = useSession();
   const router = useRouter();
   useEffect(() => {
-    if (!session.loading && !session.error && !session.user)
-      router.replace('/sign-in?returnTo=%2Fworkspace');
+    if (!session.loading && !session.error && !session.user) {
+      const destination = safeReturnPath(
+        window.location.pathname + window.location.search + window.location.hash,
+      );
+      router.replace(`/sign-in?returnTo=${encodeURIComponent(destination)}`);
+    }
   }, [session, router]);
   if (session.loading)
     return (
@@ -573,15 +578,17 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       setError('Не удалось скопировать ссылку. Выделите её и скопируйте вручную.');
     }
   }
-  const shownDocuments = content.documents.filter(
-    (d) =>
-      (view === 'resumes'
-        ? d.kind === 'resume'
-        : view === 'portfolios'
-          ? d.kind === 'portfolio'
-          : true) &&
-      `${d.title} ${d.content.profile.name}`.toLowerCase().includes(search.toLowerCase()),
-  );
+  const shownDocuments = content.documents
+    .filter(
+      (d) =>
+        (view === 'resumes'
+          ? d.kind === 'resume'
+          : view === 'portfolios'
+            ? d.kind === 'portfolio'
+            : true) &&
+        `${d.title} ${d.content.profile.name}`.toLowerCase().includes(search.toLowerCase()),
+    )
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   return (
     <div className="workspace">
       <Header
@@ -760,8 +767,9 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                         </div>
                         {!shownDocuments.length && (
                           <p className="muted">
-                            Документов пока нет. Создайте первый из общей базы или начните с пустого
-                            профиля.
+                            {search.trim()
+                              ? 'Ничего не найдено. Попробуйте другое название или имя.'
+                              : 'Документов пока нет. Создайте первый из общей базы или начните с пустого профиля.'}
                           </p>
                         )}
                         {shownDocuments.map((d) => {

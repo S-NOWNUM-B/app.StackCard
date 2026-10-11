@@ -21,7 +21,6 @@ class PortfolioMediaEditor extends ConsumerStatefulWidget {
     this.maxImages = 6,
     this.titleKey = 'media.projectImages',
     this.enabled = true,
-    this.formNoteKey = 'media.formNote',
     this.emptyState,
   });
 
@@ -31,7 +30,6 @@ class PortfolioMediaEditor extends ConsumerStatefulWidget {
   final int maxImages;
   final String titleKey;
   final bool enabled;
-  final String formNoteKey;
   final Widget? emptyState;
 
   @override
@@ -291,22 +289,21 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
             ),
           ],
         ),
-        const SizedBox(height: StackCardSpacing.sm),
-        Text(
-          context.strings.tr(
-            repository == null
-                ? isGuest
-                      ? 'media.guest'
-                      : 'media.unconfigured'
-                : widget.formNoteKey,
+        if (repository == null) ...[
+          const SizedBox(height: StackCardSpacing.sm),
+          Text(
+            context.strings.tr(isGuest ? 'media.guest' : 'media.unconfigured'),
+            style: text.bodySmall?.copyWith(color: context.colors.textMeta),
           ),
-          style: text.bodySmall?.copyWith(color: context.colors.textMeta),
-        ),
-        if (widget.maxImages > 1)
+        ],
+        if (widget.maxImages > 1 &&
+            widget.paths.length >= widget.maxImages) ...[
+          const SizedBox(height: StackCardSpacing.sm),
           Text(
             context.strings.tr('media.limit', {'limit': widget.maxImages}),
             style: text.bodySmall?.copyWith(color: context.colors.textMeta),
           ),
+        ],
         if (_busy) ...[
           const SizedBox(height: StackCardSpacing.sm),
           Semantics(

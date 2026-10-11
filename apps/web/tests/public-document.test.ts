@@ -349,16 +349,19 @@ test('emulator endpoint is limited to an explicit local origin', async () => {
   });
   assert.ok(requested.startsWith('http://127.0.0.1:8085/v1/projects/demo-stackcard/'));
 });
-test('renderer escapes author text and preserves the selected theme and content', () => {
+test('renderer escapes author text and shows saved dark content in light without mutating it', () => {
   const data = fixture();
   (content(data).profile as Record<string, unknown>).bio = '<script>alert("unsafe")</script>';
-  content(data).theme = 'light';
+  content(data).theme = 'dark';
   const document = parsePublicDocument(data);
   assert.ok(document);
+  const original = structuredClone(document.content);
   const html = renderToStaticMarkup(
     createElement(DocumentView, { content: document.content, kind: document.kind }),
   );
   assert.ok(html.includes('data-theme="light"'));
+  assert.deepEqual(document.content, original);
+  assert.equal(document.content.theme, 'dark');
   assert.ok(html.includes('&lt;script&gt;'));
   assert.ok(!html.includes('<script>'));
   assert.ok(html.includes('mailto:hello@example.com'));

@@ -98,12 +98,26 @@ confirmed published URL `/d/<publicId>`. Configuration/unknown/guest не выд
 фиктивную ссылку или success. Это функциональный source slice;
 полная Figma/native visual parity не подтверждена.
 
+Mobile copy после поручения 2026-10-11: короткие названия, действия и состояния
+без постоянных поясняющих абзацев. Empty state содержит один заголовок; optional
+message в `StackCardStateView` выводится только при необходимости. Не показывать
+служебные сведения о demo, Firebase tests, будущих этапах или реализации offline.
+Не повторять label внутри пустого поля и состояние отсутствующего фото рядом
+с каждым действием. Ошибки, причины disabled actions, несохранённые изменения,
+подтверждения удаления и последствия публикации сохраняют понятный короткий текст.
+Постоянные format/limit подсказки заменяются validation или сообщением при
+достижении лимита. Русская и английская локализации следуют одному правилу.
+
 Web tokens/shared controls находятся в `apps/web/src/app/globals.css` и
 `src/components/ui.tsx`, original Manrope/Brand A — в `apps/web/public`.
-Figma R6 target переиспользует тот же visual language; React не импортирует
-Flutter runtime. Wide/narrow layout, focus и state implementation проверяются
-headless contracts/build; visual/browser/native проверка D048 разрешена
-последующим явным ответом пользователя. Actual acceptance/evidence отдельно.
+Поручение 2026-10-11 переопределяет web target R6:
+[светлый StackCard по Openship](../redesign/web-openship.md), белые поверхности,
+чёрные CTA, овальная навигация и крупная редакционная типографика. Русский контент
+описывает StackCard. Web не предлагает dark и показывает старые документы в light
+без изменения shared `dark | light` schema. React не импортирует Flutter runtime.
+Flutter redesign по этому референсу ждёт оценки web пользователем. Wide/narrow,
+focus и states проверяются в браузере отдельно от contract tests/build;
+пользовательская приёмка и live сценарии остаются отдельными результатами.
 
 Исторический supported UI результат D040:950headless tests PASS/analyze0issues,
 Dark/Light,ru/en,scale1/2,7viewports включая320×568/568×320;32runtime SVGdecoded,

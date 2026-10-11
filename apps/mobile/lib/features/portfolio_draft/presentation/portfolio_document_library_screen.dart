@@ -61,7 +61,6 @@ class PortfolioDocumentLibraryScreen extends ConsumerWidget {
                     ? 'workspace.emptyResumes'
                     : 'workspace.emptyPortfolios',
               ),
-              message: context.strings.tr('workspace.emptyDocumentsHint'),
             ),
           for (final document in documents) ...[
             PortfolioDocumentCard(document: document),

@@ -15,8 +15,7 @@ const russianInboxStrings = <String, String>{
   'inbox.missing': 'Обращение недоступно',
   'inbox.missingHint': 'Обновите список входящих.',
   'inbox.error': 'Входящие недоступны',
-  'inbox.error.unavailable':
-      'Сервис пока не настроен или недоступен. Повторите позже.',
+  'inbox.error.unavailable': 'Не удалось загрузить обращения. Повторите позже.',
   'inbox.error.unauthenticated': 'Аккаунт изменился. Войдите заново.',
   'inbox.error.permissionDenied': 'Нет доступа к этим обращениям.',
   'inbox.error.invalidData': 'Сервер вернул неподдерживаемые данные.',
