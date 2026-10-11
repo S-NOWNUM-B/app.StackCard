@@ -5,18 +5,18 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Registration password length', () {
-    test('Requires at least 15 code points', () {
-      expect(RegistrationPasswordPolicy.evaluate('copper mooncat'), {
+    test('Requires at least 8 code points', () {
+      expect(RegistrationPasswordPolicy.evaluate('cloudca'), {
         RegistrationPasswordIssue.tooShort,
       });
-      expect(RegistrationPasswordPolicy.evaluate('copper mooncats'), isEmpty);
+      expect(RegistrationPasswordPolicy.evaluate('cloudcat'), isEmpty);
     });
 
     test('Counts supplementary Unicode by code point rather than UTF-16', () {
-      final tooShort = _unicodePassword(14);
-      final minimum = _unicodePassword(15);
+      final tooShort = _unicodePassword(7);
+      final minimum = _unicodePassword(8);
 
-      expect(tooShort.length, 28);
+      expect(tooShort.length, 14);
       expect(RegistrationPasswordPolicy.evaluate(tooShort), {
         RegistrationPasswordIssue.tooShort,
       });

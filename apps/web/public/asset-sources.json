@@ -184,6 +184,16 @@
       "path": "fonts/Manrope-Bold.ttf",
       "source": "apps/mobile/assets/fonts/Manrope-Bold.ttf",
       "sha256": "2da33eb378d59e6314ed7afdfa837cdcb60e41ac8b1f5d3c4909471b95fcf7d9"
+    },
+    {
+      "path": "icons/lucide/github.svg",
+      "source": "apps/mobile/assets/icons/lucide/github.svg",
+      "sha256": "c36005fa0c9acc686418569a4a23c7a4d34ba753267a39dcdf953c63937783db"
+    },
+    {
+      "path": "icons/lucide/globe.svg",
+      "source": "apps/mobile/assets/icons/lucide/globe.svg",
+      "sha256": "82c6b8fa0b8e8d775ec9becd86f74a4e50bff7bee4c81f7362de45348504f14d"
     }
   ],
   "demoPortrait": {

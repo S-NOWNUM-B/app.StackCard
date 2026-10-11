@@ -13,6 +13,7 @@ import { firebaseServices } from '@/lib/firebase';
 import { safeReturnPath } from '@/lib/model';
 import {
   registrationPasswordIssues,
+  registrationPasswordMaximumLength,
   registrationPasswordMinimumLength,
 } from '@/lib/registration-password';
 import { useSession } from './auth-session';
@@ -195,7 +196,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
                   {[
                     {
                       passed: !issues.has('tooShort') && !issues.has('tooLong'),
-                      label: 'От 15 до 128 символов',
+                      label: `От ${registrationPasswordMinimumLength} до ${registrationPasswordMaximumLength} символов`,
                     },
                     {
                       passed: !issues.has('tooCommon'),

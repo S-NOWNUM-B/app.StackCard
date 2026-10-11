@@ -56,8 +56,9 @@ snapshots не содержат этих root metadata. Предельные 20 
 Mobile Home использует durable `draft.content`, web Home — confirmed basis;
 редактор хранит working buffer с явным Save и guard выхода. Scoped Library
 import/delete и GitHub identity Save не сохраняют соседний несохранённый ввод.
-Main Editor проверяет captured GitHub baseline при CAS; нетронутое поле принимает
-новую durable identity, конфликт собственного ввода блокирует запись без потери текста.
+GitHub-профиль редактируется в Settings и персонализации; Main Editor не содержит
+этого поля и не изменяет root identity при Save. Scoped сохранение портфолио
+сохраняет актуальный GitHub-профиль вместе с остальными соседними данными.
 Удаление Library удаляет все attachments, сохраняя старую архивную копию и
 GitHub repository. Проекты не добавляются в основное портфолио автоматически.
 Каталог `iconId` из семи pinned Lucide IDs одинаков для Library/main/public/PDF;

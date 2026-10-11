@@ -10,7 +10,7 @@ const manifest = JSON.parse(readFileSync(new URL('asset-sources.json', publicRoo
 };
 const hash = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 test('Brand A/font/icon runtime files preserve the imported original source bytes', () => {
-  assert.equal(manifest.assets.length, 37);
+  assert.equal(manifest.assets.length, 39);
   for (const entry of manifest.assets) {
     assert.equal(hash(readFileSync(new URL(entry.path, publicRoot))), entry.sha256, entry.path);
     assert.equal(hash(readFileSync(new URL(entry.source, root))), entry.sha256, entry.source);
@@ -33,6 +33,8 @@ test('every literal UI icon resolves to a local licensed asset and original typo
     'image',
     'user-round',
     'chevron-down',
+    'github',
+    'globe',
   ]) {
     assert.match(readFileSync(new URL(`icons/lucide/${name}.svg`, publicRoot), 'utf8'), /<svg/);
   }
@@ -42,5 +44,9 @@ test('every literal UI icon resolves to a local licensed asset and original typo
   assert.match(
     readFileSync(new URL('licenses/Manrope_OFL.txt', publicRoot), 'utf8'),
     /SIL OPEN FONT LICENSE/,
+  );
+  assert.match(
+    readFileSync(new URL('licenses/LICENSE-FEATHER.txt', publicRoot), 'utf8'),
+    /Copyright \(c\) 2013-2023 Cole Bemis/,
   );
 });

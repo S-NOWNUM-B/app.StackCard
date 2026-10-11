@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_avatar.dart';
+import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
 import '../../../shared/widgets/stackcard_technology_badge.dart';
 import '../../media/media.dart';
@@ -220,60 +221,66 @@ class _MainProjectRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final url = project.liveUrl.isNotEmpty
-        ? project.liveUrl
-        : project.repositoryUrl;
+    final repositoryUrl = project.repositoryUrl.trim();
+    final liveUrl = project.liveUrl.trim();
     return Padding(
       key: ValueKey('main.project.${project.id}'),
-      padding: const EdgeInsets.only(bottom: StackCardSpacing.sm),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: url.isEmpty ? null : () => _openLink(context, ref, url),
-          borderRadius: BorderRadius.circular(StackCardRadius.medium),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minHeight: StackCardSize.touchTarget,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: StackCardSpacing.sm,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ProjectStockIcon(iconId: project.iconId),
-                  const SizedBox(width: StackCardSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          project.title,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        if (project.description.isNotEmpty) ...[
-                          const SizedBox(height: StackCardSpacing.xs),
-                          Text(
-                            project.description,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ],
+      padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ProjectStockIcon(iconId: project.iconId),
+              const SizedBox(width: StackCardSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      project.title,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                  ),
-                  if (url.isNotEmpty)
-                    const Padding(
-                      padding: EdgeInsets.only(left: StackCardSpacing.sm),
-                      child: Icon(Icons.open_in_new_rounded, size: 18),
-                    ),
-                ],
+                    if (project.description.trim().isNotEmpty) ...[
+                      const SizedBox(height: StackCardSpacing.xs),
+                      Text(
+                        project.description,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-        ),
+          if (repositoryUrl.isNotEmpty || liveUrl.isNotEmpty) ...[
+            const SizedBox(height: StackCardSpacing.sm),
+            Wrap(
+              key: ValueKey('main.project.links.${project.id}'),
+              spacing: StackCardSpacing.sm,
+              runSpacing: StackCardSpacing.xs,
+              children: [
+                if (repositoryUrl.isNotEmpty)
+                  StackCardButton(
+                    key: ValueKey('main.project.repository.${project.id}'),
+                    label: 'Репозиторий',
+                    iconWidget: const StackCardIcon(name: 'github'),
+                    role: StackCardButtonRole.quiet,
+                    onPressed: () => _openLink(context, ref, repositoryUrl),
+                  ),
+                if (liveUrl.isNotEmpty)
+                  StackCardButton(
+                    key: ValueKey('main.project.product.${project.id}'),
+                    label: 'Продукт',
+                    iconWidget: const StackCardIcon(name: 'globe'),
+                    role: StackCardButtonRole.quiet,
+                    onPressed: () => _openLink(context, ref, liveUrl),
+                  ),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }

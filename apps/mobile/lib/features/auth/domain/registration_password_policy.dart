@@ -1,7 +1,7 @@
 enum RegistrationPasswordIssue { tooShort, tooLong, tooCommon, matchesEmail }
 
 abstract final class RegistrationPasswordPolicy {
-  static const minimumLength = 15;
+  static const minimumLength = 8;
   static const maximumLength = 128;
 
   // Небольшой локальный список очевидных вариантов, без проверки утечек.

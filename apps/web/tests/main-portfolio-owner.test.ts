@@ -341,6 +341,8 @@ test('owner skill tags share the technology dialog and editor sections follow th
   assert.ok(html.includes('Отмена'));
   assert.ok(html.includes('Сохранить'));
   assert.ok(!html.includes('Навык 1'));
+  assert.ok(!html.includes('<h2>GitHub</h2>'));
+  assert.ok(!html.includes('GitHub-профиль'));
   assert.ok(!html.includes('value="React"'));
   assert.deepEqual(content.skills[1], { id: 'raw', name: 'Планирование, коммуникация' });
 });
@@ -490,7 +492,7 @@ test('scoped import keeps adjacent unsaved portfolio input and existing project 
   assert.equal(rebased.projects.length, 1);
   assert.equal(mainDocument(rebased)!.projects.length, 0);
 });
-test('confirmed scoped GitHub change updates an unchanged working source and retains newer source edits', () => {
+test('confirmed settings GitHub change survives an editor save with adjacent unsaved content', () => {
   const previous = migrateMainPortfolio(emptyContent(), null);
   previous.githubUsername = 'old-source';
   const working = clone(previous);
@@ -499,6 +501,9 @@ test('confirmed scoped GitHub change updates an unchanged working source and ret
   const confirmed = rebaseLibraryChange(saved, previous, working);
   assert.equal(confirmed.githubUsername, 'saved-source');
   assert.equal(mainDocument(confirmed)!.content.profile.bio, 'Unsaved description');
+  const editorSaved = reload(validateWorkspace(confirmed, 'owner'));
+  assert.equal(editorSaved.githubUsername, 'saved-source');
+  assert.equal(mainDocument(editorSaved)!.content.profile.bio, 'Unsaved description');
   working.githubUsername = 'newer-source';
   assert.equal(rebaseLibraryChange(saved, previous, working).githubUsername, 'newer-source');
 });

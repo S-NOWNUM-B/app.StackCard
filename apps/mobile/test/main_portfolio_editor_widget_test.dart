@@ -43,6 +43,8 @@ void main() {
   ) async {
     final repository = await _repository();
     await _open(tester, repository);
+    expect(find.byKey(const Key('main.editor.github')), findsNothing);
+    expect(find.text('GitHub'), findsNothing);
     await _tap(tester, 'main.editor.save');
     final workspace = (await repository.read())!.content!;
     expect(mainPortfolioDocument(workspace)!.content.profile.name, isEmpty);
@@ -295,7 +297,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
       await gesture.moveBy(const Offset(0, -5));
       await tester.pump();
-      await gesture.moveTo(target - const Offset(0, 20));
+      await gesture.moveTo(target + const Offset(0, 10));
       await tester.pump(const Duration(milliseconds: 300));
       await gesture.up();
       await tester.pumpAndSettle();
@@ -367,7 +369,7 @@ void main() {
   );
 
   testWidgets(
-    'saved GitHub changes refresh an unedited field without losing dirty profile input',
+    'settings GitHub changes survive main Save without losing dirty profile input',
     (tester) async {
       final repository = await _repository(
         name: 'Сохранённое имя',
@@ -382,9 +384,17 @@ void main() {
         isTrue,
       );
       await tester.pumpAndSettle();
-      expect(_value(tester, 'main.editor.github'), 'new-owner');
+      expect(find.byKey(const Key('main.editor.github')), findsNothing);
       expect(_value(tester, 'main.editor.name'), 'Новое имя');
       expect(find.text('Есть несохранённые изменения'), findsOneWidget);
+      await _enter(tester, 'headline', 'Разработчик');
+      expect(
+        container
+            .read(portfolioDraftControllerProvider)
+            .content!
+            .githubUsername,
+        'new-owner',
+      );
       final before = (await repository.read())!;
       expect(
         mainPortfolioDocument(before.content!)!.content.profile.name,
@@ -404,55 +414,6 @@ void main() {
   );
 
   testWidgets(
-    'saved GitHub changes conflict with edited identity and preserve all editor input',
-    (tester) async {
-      final repository = await _repository(
-        name: 'Сохранённое имя',
-        githubUsername: 'old-owner',
-      );
-      final container = await _open(tester, repository);
-      await _enter(tester, 'name', 'Несохранённое имя');
-      await _enter(tester, 'github', 'my-edited-owner');
-      expect(
-        await container
-            .read(portfolioDraftControllerProvider.notifier)
-            .saveGitHubIdentity('other-owner', expectedRepository: repository),
-        isTrue,
-      );
-      await tester.pumpAndSettle();
-      expect(_value(tester, 'main.editor.github'), 'my-edited-owner');
-      expect(_value(tester, 'main.editor.name'), 'Несохранённое имя');
-      expect(
-        find.text(
-          'Сохранённая версия изменилась. Ваш ввод сохранён в редакторе.',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        tester
-            .widget<StackCardButton>(find.byKey(const Key('main.editor.save')))
-            .onPressed,
-        isNull,
-      );
-      final saved = (await repository.read())!;
-      expect(saved.content!.githubUsername, 'other-owner');
-      expect(
-        mainPortfolioDocument(saved.content!)!.content.profile.name,
-        'Сохранённое имя',
-      );
-      final working = container.read(portfolioDraftControllerProvider);
-      expect(working.content!.githubUsername, 'my-edited-owner');
-      expect(
-        mainPortfolioDocument(working.content!)!.content.profile.name,
-        'Несохранённое имя',
-      );
-      expect(working.hasUnsavedChanges, isTrue);
-      expect(saved.notes, 'private');
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets(
     'repository owner transition clears private editor input and rejects late Save',
     (tester) async {
       final first = await _repository(
@@ -466,7 +427,6 @@ void main() {
       final repository = _BlockingSave(first);
       final container = await _open(tester, repository);
       await _enter(tester, 'name', 'Секрет первого владельца');
-      await _enter(tester, 'github', 'first-private-owner');
       await tester.ensureVisible(find.byKey(const Key('main.editor.save')));
       await tester.tap(find.byKey(const Key('main.editor.save')));
       await tester.pump();
@@ -475,12 +435,10 @@ void main() {
       ]);
       await tester.pumpAndSettle();
       expect(_value(tester, 'main.editor.name'), 'Второй владелец');
-      expect(_value(tester, 'main.editor.github'), 'second-owner');
       expect(find.text('Секрет первого владельца'), findsNothing);
       repository.release.complete();
       await tester.pump(const Duration(milliseconds: 100));
       expect(_value(tester, 'main.editor.name'), 'Второй владелец');
-      expect(_value(tester, 'main.editor.github'), 'second-owner');
       expect(
         mainPortfolioDocument((await second.read())!.content!)!
             .content
@@ -507,39 +465,40 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('chosen stock icon and GitHub identity save atomically', (
-    tester,
-  ) async {
-    final repository = await _repository(
-      projects: [
-        PortfolioProject(
-          id: 'one',
-          title: 'Проект',
-          description: '',
-          technologies: const [],
-          imagePaths: const [
-            'accounts/test-owner/media/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg',
-          ],
-        ),
-      ],
-      attachments: const [PortfolioProjectAttachment(projectId: 'one')],
-    );
-    await _open(tester, repository);
-    await _tap(tester, 'main.editor.icon.one');
-    await _tap(tester, 'project.icon.camera');
-    await _enter(tester, 'github', 'https://github.com/SNOWNUMB');
-    await _tap(tester, 'main.editor.save');
-    final workspace = (await repository.read())!.content!;
-    expect(workspace.githubUsername, 'snownumb');
-    expect(workspace.profile.username, isEmpty);
-    expect(workspace.projects.single.iconId, 'camera');
-    expect(workspace.projects.single.imagePaths, isNotEmpty);
-    expect(
-      resolvedMainPortfolioContent(workspace)!.projects.single.imagePaths,
-      isEmpty,
-    );
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'chosen stock icon saves while Settings GitHub identity is retained',
+    (tester) async {
+      final repository = await _repository(
+        githubUsername: 'snownumb',
+        projects: [
+          PortfolioProject(
+            id: 'one',
+            title: 'Проект',
+            description: '',
+            technologies: const [],
+            imagePaths: const [
+              'accounts/test-owner/media/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg',
+            ],
+          ),
+        ],
+        attachments: const [PortfolioProjectAttachment(projectId: 'one')],
+      );
+      await _open(tester, repository);
+      await _tap(tester, 'main.editor.icon.one');
+      await _tap(tester, 'project.icon.camera');
+      await _tap(tester, 'main.editor.save');
+      final workspace = (await repository.read())!.content!;
+      expect(workspace.githubUsername, 'snownumb');
+      expect(workspace.profile.username, isEmpty);
+      expect(workspace.projects.single.iconId, 'camera');
+      expect(workspace.projects.single.imagePaths, isNotEmpty);
+      expect(
+        resolvedMainPortfolioContent(workspace)!.projects.single.imagePaths,
+        isEmpty,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('contact validation remains open and preserves entered values', (
     tester,
@@ -816,12 +775,24 @@ void main() {
       attachments: const [PortfolioProjectAttachment(projectId: 'one')],
     );
     await _open(tester, repository, textScale: 2);
+    if (const bool.fromEnvironment('UPDATE_SINGLE_PORTFOLIO_PREVIEWS')) {
+      await Scrollable.ensureVisible(
+        tester.element(find.byKey(const Key('main.editor.projects'))),
+        alignment: 0.5,
+      );
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile(
+          '/private/tmp/stackcard-main-project-order-narrow.png',
+        ),
+      );
+    }
     await _enter(tester, 'name', 'Очень длинное имя пользователя');
     await _tap(tester, 'main.editor.addProject');
     await _tap(tester, 'main.projectSelection.apply');
     await _tap(tester, 'main.editor.icon.one');
     await _tap(tester, 'project.icon.folder');
-    await _enter(tester, 'github', 'snownumb');
     tester.view.viewInsets = const FakeViewPadding(bottom: 220);
     await tester.pumpAndSettle();
     final saveRect = tester.getRect(find.byKey(const Key('main.editor.save')));

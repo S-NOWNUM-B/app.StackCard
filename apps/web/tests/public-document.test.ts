@@ -268,7 +268,7 @@ test('empty public sections omit their headings, separators and artificial profi
   ])
     assert.ok(!html.includes(omitted), omitted);
 });
-test('project rows use one safe existing link and retain icon and text without gallery or large metadata', () => {
+test('project rows retain their catalog icon and text without gallery or large metadata', () => {
   const data = modernFixture();
   const project = (content(data).projects as Record<string, unknown>[])[0];
   project.iconId = 'camera';
@@ -281,7 +281,7 @@ test('project rows use one safe existing link and retain icon and text without g
   assert.ok(html.includes('/icons/lucide/camera.svg'));
   assert.ok(html.includes('href="https://example.com/live"'));
   assert.ok(html.includes('rel="noopener noreferrer nofollow"'));
-  assert.ok(!html.includes('href="https://github.com/example/atlas"'));
+  assert.ok(html.includes('href="https://github.com/example/atlas"'));
   assert.ok(!html.includes('Design'));
   assert.ok(!html.includes('technology-badges'));
   document.content.projects[0].iconId = '../unsafe' as 'folder';
@@ -290,6 +290,81 @@ test('project rows use one safe existing link and retain icon and text without g
   );
   assert.ok(safe.includes('/icons/lucide/folder.svg'));
   assert.ok(!safe.includes('../unsafe'));
+});
+test('repository and product links render independently after the full project description', () => {
+  const description = 'Полное описание проекта '.repeat(30) + '\nПоследняя строка описания';
+  for (const scenario of [
+    { repository: '', product: '' },
+    { repository: 'https://github.com/example/atlas', product: '' },
+    { repository: '', product: 'https://example.com/live' },
+    { repository: 'https://github.com/example/atlas', product: 'https://example.com/live' },
+  ]) {
+    const document = parsePublicDocument(modernFixture());
+    assert.ok(document);
+    Object.assign(document.content.projects[0], {
+      description,
+      repositoryUrl: scenario.repository,
+      liveUrl: scenario.product,
+    });
+    const html = renderToStaticMarkup(
+      createElement(DocumentView, { content: document.content, kind: document.kind }),
+    );
+    const projectHtml = html.match(/<div class="document-project-row">([\s\S]*?)<\/section>/)?.[1];
+    assert.ok(projectHtml);
+    assert.ok(projectHtml.includes(`<h3>Atlas</h3><p>${description}</p>`));
+    const count = Number(!!scenario.repository) + Number(!!scenario.product);
+    assert.equal((projectHtml.match(/<a /g) ?? []).length, count);
+    assert.equal(projectHtml.includes('document-project-links'), count > 0);
+    assert.equal(projectHtml.includes('/icons/lucide/github.svg'), !!scenario.repository);
+    assert.equal(projectHtml.includes('/icons/lucide/globe.svg'), !!scenario.product);
+    for (const [href, label] of [
+      [scenario.repository, 'Репозиторий'],
+      [scenario.product, 'Продукт'],
+    ]) {
+      assert.equal(projectHtml.includes(`aria-label="${label} проекта Atlas"`), !!href);
+      if (href) {
+        assert.ok(projectHtml.includes(`href="${href}" target="_blank"`));
+        assert.ok(projectHtml.indexOf(description) < projectHtml.indexOf(`href="${href}"`));
+      }
+    }
+    assert.equal((projectHtml.match(/rel="noopener noreferrer nofollow"/g) ?? []).length, count);
+    assert.ok(!html.includes('<a class="document-project-row"'));
+  }
+});
+test('project renderer trims safe URLs and omits unsafe actions independently', () => {
+  for (const scenario of [
+    { repository: '   ', product: '', expected: [] },
+    {
+      repository: 'javascript:alert(1)',
+      product: ' https://example.com/live ',
+      expected: ['https://example.com/live'],
+    },
+    {
+      repository: ' https://github.com/example/atlas ',
+      product: 'https://user:secret@example.com',
+      expected: ['https://github.com/example/atlas'],
+    },
+    { repository: 'javascript:alert(1)', product: '//evil.test', expected: [] },
+  ]) {
+    const document = parsePublicDocument(modernFixture());
+    assert.ok(document);
+    Object.assign(document.content.projects[0], {
+      repositoryUrl: scenario.repository,
+      liveUrl: scenario.product,
+    });
+    const html = renderToStaticMarkup(
+      createElement(DocumentView, { content: document.content, kind: document.kind }),
+    );
+    const projectHtml = html.match(/<div class="document-project-row">([\s\S]*?)<\/section>/)?.[1];
+    assert.ok(projectHtml);
+    assert.deepEqual(
+      [...projectHtml.matchAll(/href="([^"]+)"/g)].map((match) => match[1]),
+      scenario.expected,
+    );
+    assert.equal(projectHtml.includes('document-project-links'), scenario.expected.length > 0);
+    for (const omitted of ['javascript:', 'secret', 'evil.test'])
+      assert.ok(!projectHtml.includes(omitted));
+  }
 });
 test('modern Home opts into city before biography while existing public and legacy headers keep their order', () => {
   const document = parsePublicDocument(modernFixture());

@@ -78,7 +78,6 @@ class _MainPortfolioEditorScreenState
   final _mediaKey = GlobalKey<PortfolioMediaEditorState>();
   PortfolioDraftRepository? _repository;
   PortfolioDocument? _expected;
-  String? _expectedGitHubUsername;
   PortfolioContent? _buffer;
   Map<String, TextEditingController>? _fields;
   List<PortfolioProjectAttachment> _projects = [];
@@ -145,7 +144,6 @@ class _MainPortfolioEditorScreenState
     final saved =
         ref.read(portfolioDraftControllerProvider).draft?.content ?? workspace;
     _expected = mainPortfolioDocument(saved);
-    _expectedGitHubUsername = saved.githubUsername;
     _buffer = document.content;
     _projects = [...document.projects];
     final profile = document.content.profile;
@@ -154,7 +152,6 @@ class _MainPortfolioEditorScreenState
       'headline': TextEditingController(text: profile.headline),
       'bio': TextEditingController(text: profile.bio),
       'locationText': TextEditingController(text: profile.locationText),
-      'github': TextEditingController(text: workspace.githubUsername),
       'legacyText': TextEditingController(text: document.content.resumeText),
     };
     for (final field in _fields!.values) {
@@ -166,7 +163,6 @@ class _MainPortfolioEditorScreenState
     _ownerInvalid = true;
     _buffer = null;
     _expected = null;
-    _expectedGitHubUsername = null;
     _projects = [];
     _iconUpdates.clear();
     for (final field in _fields?.values ?? <TextEditingController>[]) {
@@ -216,9 +212,6 @@ class _MainPortfolioEditorScreenState
               for (final item in workspace.documents)
                 item.id == document.id ? document : item,
             ],
-            githubUsername: normalizePortfolioGitHubUsername(
-              _fields!['github']!.text,
-            ),
           ),
         );
   }
@@ -226,32 +219,11 @@ class _MainPortfolioEditorScreenState
   bool get _conflict {
     final state = ref.read(portfolioDraftControllerProvider);
     return state.remoteUpdateAvailable ||
-        (state.draft?.content?.githubUsername ?? '') !=
-            _expectedGitHubUsername ||
         mainPortfolioDocument(state.draft?.content ?? PortfolioContent()) !=
             _expected;
   }
 
-  void _refreshUneditedGitHub(PortfolioContent? saved) {
-    final input = _fields?['github'];
-    if (!_sameOwner || _saving || input == null || saved == null) return;
-    final username = saved.githubUsername;
-    if (username == _expectedGitHubUsername ||
-        normalizePortfolioGitHubUsername(input.text) !=
-            _expectedGitHubUsername) {
-      return;
-    }
-    // Обновление соседней формы не должно превращаться в откат старого кэша.
-    input.removeListener(_changed);
-    input.text = username;
-    input.addListener(_changed);
-    _expectedGitHubUsername = username;
-  }
-
   Future<bool> _save() async {
-    _refreshUneditedGitHub(
-      ref.read(portfolioDraftControllerProvider).draft?.content,
-    );
     if (!_sameOwner ||
         _busy ||
         _conflict ||
@@ -260,7 +232,6 @@ class _MainPortfolioEditorScreenState
     }
     final document = _document();
     final generation = _generation;
-    final githubUsername = _fields!['github']!.text;
     final icons = Map<String, String>.of(_iconUpdates);
     setState(() {
       _saving = true;
@@ -272,8 +243,6 @@ class _MainPortfolioEditorScreenState
         .saveMainPortfolio(
           document,
           expectedDocument: _expected,
-          githubUsername: githubUsername,
-          expectedGitHubUsername: _expectedGitHubUsername,
           projectIconUpdates: icons,
           expectedRepository: _repository!,
         );
@@ -291,9 +260,6 @@ class _MainPortfolioEditorScreenState
       _saveError = !success;
       if (success) {
         _expected = document;
-        _expectedGitHubUsername = normalizePortfolioGitHubUsername(
-          githubUsername,
-        );
         _dirty = generation != _generation;
         _saved = !_dirty;
         for (final entry in icons.entries) {
@@ -710,7 +676,6 @@ class _MainPortfolioEditorScreenState
     if (_fields == null && main != null && !_ownerInvalid) {
       _initialize(workspace!, main);
     }
-    _refreshUneditedGitHub(state.draft?.content);
     Widget body;
     if (_ownerInvalid || state.loading || _initializing) {
       body = _scrollableStatus(
@@ -932,17 +897,6 @@ class _MainPortfolioEditorScreenState
                   multiline: true,
                 ),
               ],
-              _title('GitHub'),
-              _field(
-                'github',
-                'Профиль GitHub',
-                200,
-                hint: 'https://github.com/username',
-                validate: (value) =>
-                    normalizePortfolioGitHubUsername(value) == null
-                    ? 'Введите username или ссылку на профиль GitHub'
-                    : null,
-              ),
             ],
           ),
         ),
@@ -1020,15 +974,12 @@ class _MainPortfolioEditorScreenState
     String label,
     int maxLength, {
     bool multiline = false,
-    String? hint,
-    String? Function(String)? validate,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: StackCardSpacing.lg),
     child: StackCardInput(
       key: ValueKey('main.editor.$name'),
       controller: _fields![name],
       label: label,
-      hint: hint,
       enabled: !_saving,
       minLines: multiline ? 3 : null,
       maxLines: multiline ? 8 : 1,
@@ -1036,13 +987,11 @@ class _MainPortfolioEditorScreenState
       textInputAction: multiline
           ? TextInputAction.newline
           : TextInputAction.next,
-      validator: (value) =>
-          builderValidationMessage(
-            context,
-            validatePortfolioText(value ?? '', maxLength: maxLength),
-            maxLength: maxLength,
-          ) ??
-          validate?.call(value ?? ''),
+      validator: (value) => builderValidationMessage(
+        context,
+        validatePortfolioText(value ?? '', maxLength: maxLength),
+        maxLength: maxLength,
+      ),
     ),
   );
 
@@ -1154,6 +1103,55 @@ class _MainPortfolioEditorScreenState
         .where((item) => item.id == attachment.projectId)
         .firstOrNull;
     if (project == null) return const SizedBox.shrink();
+    final handle = Semantics(
+      label: 'Изменить порядок проекта ${project.title}',
+      hint: 'Удерживайте точки и перетащите',
+      child: Tooltip(
+        message: 'Удерживайте и перетащите',
+        triggerMode: TooltipTriggerMode.manual,
+        child: ReorderableDelayedDragStartListener(
+          key: ValueKey('main.editor.drag.${project.id}'),
+          index: index,
+          enabled: !_busy && _sameOwner,
+          child: const SizedBox(
+            width: StackCardSize.touchTarget,
+            height: StackCardSize.touchTarget,
+            child: ColoredBox(
+              color: Colors.transparent,
+              child: Center(
+                child: StackCardIcon(name: 'grip-vertical', size: 20),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    final icon = IconButton(
+      key: ValueKey('main.editor.icon.${project.id}'),
+      tooltip: 'Выбрать иконку',
+      onPressed: _busy ? null : () => _chooseIcon(project),
+      icon: ProjectStockIcon(
+        iconId: _iconUpdates[project.id] ?? project.iconId,
+      ),
+    );
+    final title = Padding(
+      padding: const EdgeInsets.all(StackCardSpacing.sm),
+      child: Text(
+        attachment.titleOverride ?? project.title,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+    );
+    final remove = IconButton(
+      key: ValueKey('main.editor.removeProject.${project.id}'),
+      tooltip: 'Убрать из портфолио ${project.title}',
+      onPressed: _busy
+          ? null
+          : () {
+              setState(() => _projects.removeAt(index));
+              _changed();
+            },
+      icon: const Icon(Icons.close_rounded, size: 20),
+    );
     return Padding(
       key: ValueKey('main.editor.project.${project.id}'),
       padding: const EdgeInsets.only(bottom: StackCardSpacing.md),
@@ -1162,62 +1160,28 @@ class _MainPortfolioEditorScreenState
           color: context.colors.surfaceElevated,
           borderRadius: BorderRadius.circular(StackCardRadius.small),
         ),
-        child: Row(
-          children: [
-            Semantics(
-              label: 'Изменить порядок проекта ${project.title}',
-              hint: 'Удерживайте точки и перетащите',
-              child: Tooltip(
-                message: 'Удерживайте и перетащите',
-                child: ReorderableDelayedDragStartListener(
-                  key: ValueKey('main.editor.drag.${project.id}'),
-                  index: index,
-                  enabled: !_busy && _sameOwner,
-                  child: const SizedBox(
-                    width: StackCardSize.touchTarget,
-                    height: StackCardSize.touchTarget,
-                    child: ColoredBox(
-                      color: Colors.transparent,
-                      child: Center(
-                        child: StackCardIcon(name: 'grip-vertical', size: 20),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            IconButton(
-              key: ValueKey('main.editor.icon.${project.id}'),
-              tooltip: 'Выбрать иконку',
-              onPressed: _busy ? null : () => _chooseIcon(project),
-              icon: ProjectStockIcon(
-                iconId: _iconUpdates[project.id] ?? project.iconId,
-              ),
-            ),
-            const SizedBox(width: StackCardSpacing.sm),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: StackCardSpacing.sm,
-                ),
-                child: Text(
-                  attachment.titleOverride ?? project.title,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-            ),
-            IconButton(
-              key: ValueKey('main.editor.removeProject.${project.id}'),
-              tooltip: 'Убрать из портфолио ${project.title}',
-              onPressed: _busy
-                  ? null
-                  : () {
-                      setState(() => _projects.removeAt(index));
-                      _changed();
-                    },
-              icon: const Icon(Icons.close_rounded, size: 20),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final titleWidth = 120 * MediaQuery.textScalerOf(context).scale(1);
+            if (constraints.maxWidth <
+                3 * StackCardSize.touchTarget + titleWidth) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(children: [handle, icon, const Spacer(), remove]),
+                  title,
+                ],
+              );
+            }
+            return Row(
+              children: [
+                handle,
+                icon,
+                Expanded(child: title),
+                remove,
+              ],
+            );
+          },
         ),
       ),
     );
