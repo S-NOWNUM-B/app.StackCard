@@ -88,20 +88,17 @@ class ProjectLibraryCard extends StatelessWidget {
                   minHeight: StackCardSize.touchTarget,
                 ),
                 color: context.colors.error,
-                icon: const Icon(Icons.remove_rounded),
+                icon: const Icon(Icons.close_rounded, size: 20),
               ),
             ],
           ],
         ),
         if (showActions && onEdit != null) ...[
           const SizedBox(height: StackCardSpacing.sm),
-          Align(
-            alignment: Alignment.centerRight,
-            child: StackCardButton(
-              label: context.strings.tr('builderForm.edit'),
-              role: StackCardButtonRole.outlined,
-              onPressed: onEdit,
-            ),
+          StackCardButton(
+            label: context.strings.tr('builderForm.edit'),
+            role: StackCardButtonRole.outlined,
+            onPressed: onEdit,
           ),
         ],
       ],

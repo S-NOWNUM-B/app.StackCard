@@ -7,6 +7,7 @@ import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_avatar.dart';
 import '../../../shared/widgets/stackcard_button.dart';
+import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
@@ -456,12 +457,11 @@ class _MainPortfolioEditorScreenState
     _changed();
   }
 
-  void _moveProject(int index, int offset) {
-    final other = index + offset;
-    if (other < 0 || other >= _projects.length || _busy) return;
+  void _reorderProject(int oldIndex, int newIndex) {
+    if (!_sameOwner || _busy || oldIndex == newIndex) return;
     setState(() {
-      final entry = _projects.removeAt(index);
-      _projects.insert(other, entry);
+      final entry = _projects.removeAt(oldIndex);
+      _projects.insert(newIndex, entry);
     });
     _changed();
   }
@@ -867,14 +867,8 @@ class _MainPortfolioEditorScreenState
                   _changed();
                 },
               ),
-              _title('Реализованные проекты'),
-              for (var index = 0; index < _projects.length; index++)
-                _projectRow(workspace!, index),
-              _addButton(
-                'main.editor.addProject',
-                'Добавить проект',
-                _addProjects,
-              ),
+              const SizedBox(height: StackCardSpacing.xl),
+              _projectsEditor(workspace!),
               _title(
                 'Опыт работы',
                 action: IconButton(
@@ -1052,14 +1046,6 @@ class _MainPortfolioEditorScreenState
     ),
   );
 
-  Widget _addButton(String key, String label, VoidCallback callback) =>
-      StackCardButton(
-        key: ValueKey(key),
-        label: label,
-        icon: Icons.add_rounded,
-        onPressed: _busy ? null : callback,
-      );
-
   Widget _record(
     String id,
     String title,
@@ -1122,6 +1108,46 @@ class _MainPortfolioEditorScreenState
     ),
   );
 
+  Widget _projectsEditor(PortfolioContent workspace) => StackCardCard(
+    key: const Key('main.editor.projects'),
+    outlined: true,
+    padding: const EdgeInsets.all(StackCardSpacing.lg),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Реализованные проекты',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            IconButton(
+              key: const Key('main.editor.addProject'),
+              tooltip: 'Добавить проект',
+              onPressed: _busy ? null : _addProjects,
+              icon: const StackCardIcon(name: 'plus'),
+            ),
+          ],
+        ),
+        if (_projects.isNotEmpty) ...[
+          const SizedBox(height: StackCardSpacing.md),
+          ReorderableListView.builder(
+            key: const Key('main.editor.projectOrder'),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
+            padding: EdgeInsets.zero,
+            itemCount: _projects.length,
+            itemBuilder: (_, index) => _projectRow(workspace, index),
+            onReorderItem: _reorderProject,
+          ),
+        ],
+      ],
+    ),
+  );
+
   Widget _projectRow(PortfolioContent workspace, int index) {
     final attachment = _projects[index];
     final project = workspace.projects
@@ -1131,61 +1157,65 @@ class _MainPortfolioEditorScreenState
     return Padding(
       key: ValueKey('main.editor.project.${project.id}'),
       padding: const EdgeInsets.only(bottom: StackCardSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              IconButton(
-                key: ValueKey('main.editor.icon.${project.id}'),
-                tooltip: 'Выбрать иконку',
-                onPressed: _busy ? null : () => _chooseIcon(project),
-                icon: ProjectStockIcon(
-                  iconId: _iconUpdates[project.id] ?? project.iconId,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: context.colors.surfaceElevated,
+          borderRadius: BorderRadius.circular(StackCardRadius.small),
+        ),
+        child: Row(
+          children: [
+            Semantics(
+              label: 'Изменить порядок проекта ${project.title}',
+              hint: 'Удерживайте точки и перетащите',
+              child: Tooltip(
+                message: 'Удерживайте и перетащите',
+                child: ReorderableDelayedDragStartListener(
+                  key: ValueKey('main.editor.drag.${project.id}'),
+                  index: index,
+                  enabled: !_busy && _sameOwner,
+                  child: const SizedBox(
+                    width: StackCardSize.touchTarget,
+                    height: StackCardSize.touchTarget,
+                    child: Center(
+                      child: StackCardIcon(name: 'grip-vertical', size: 20),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: StackCardSpacing.sm),
-              Expanded(
+            ),
+            IconButton(
+              key: ValueKey('main.editor.icon.${project.id}'),
+              tooltip: 'Выбрать иконку',
+              onPressed: _busy ? null : () => _chooseIcon(project),
+              icon: ProjectStockIcon(
+                iconId: _iconUpdates[project.id] ?? project.iconId,
+              ),
+            ),
+            const SizedBox(width: StackCardSpacing.sm),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: StackCardSpacing.sm,
+                ),
                 child: Text(
                   attachment.titleOverride ?? project.title,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-            ],
-          ),
-          Wrap(
-            spacing: StackCardSpacing.sm,
-            children: [
-              IconButton(
-                key: ValueKey('main.editor.up.${project.id}'),
-                tooltip: 'Выше',
-                onPressed: _busy || index == 0
-                    ? null
-                    : () => _moveProject(index, -1),
-                icon: const Icon(Icons.arrow_upward_rounded),
-              ),
-              IconButton(
-                key: ValueKey('main.editor.down.${project.id}'),
-                tooltip: 'Ниже',
-                onPressed: _busy || index == _projects.length - 1
-                    ? null
-                    : () => _moveProject(index, 1),
-                icon: const Icon(Icons.arrow_downward_rounded),
-              ),
-              TextButton(
-                key: ValueKey('main.editor.removeProject.${project.id}'),
-                onPressed: _busy
-                    ? null
-                    : () {
-                        setState(() => _projects.removeAt(index));
-                        _changed();
-                      },
-                child: const Text('Убрать из портфолио'),
-              ),
-            ],
-          ),
-          Divider(color: context.colors.border),
-        ],
+            ),
+            IconButton(
+              key: ValueKey('main.editor.removeProject.${project.id}'),
+              tooltip: 'Убрать из портфолио ${project.title}',
+              onPressed: _busy
+                  ? null
+                  : () {
+                      setState(() => _projects.removeAt(index));
+                      _changed();
+                    },
+              icon: const Icon(Icons.close_rounded, size: 20),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -265,13 +265,48 @@ void main() {
           ),
         ],
       );
-      await _open(tester, repository);
+      final container = await _open(tester, repository);
       await _tap(tester, 'main.editor.addProject');
       expect(find.text('Создать проект'), findsNothing);
       await _tap(tester, 'main.projectSelection.one');
       await _tap(tester, 'main.projectSelection.two');
       await _tap(tester, 'main.projectSelection.apply');
-      await _tap(tester, 'main.editor.up.two');
+      expect(find.byKey(const Key('main.editor.up.two')), findsNothing);
+      final drag = find.byKey(const Key('main.editor.drag.two'));
+      await tester.ensureVisible(drag);
+      await tester.pumpAndSettle();
+      final start = tester.getCenter(drag);
+      final target = tester.getCenter(
+        find.byKey(const Key('main.editor.drag.one')),
+      );
+      expect(
+        start.dx,
+        lessThan(
+          tester.getCenter(find.byKey(const Key('main.editor.icon.two'))).dx,
+        ),
+      );
+      expect(
+        tester
+            .getCenter(find.byKey(const Key('main.editor.removeProject.two')))
+            .dx,
+        greaterThan(start.dx),
+      );
+      final gesture = await tester.startGesture(start);
+      await tester.pump(const Duration(milliseconds: 600));
+      await gesture.moveTo(target - const Offset(0, 20));
+      await tester.pump(const Duration(milliseconds: 300));
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(
+        mainPortfolioDocument(
+          container.read(portfolioDraftControllerProvider).content!,
+        )!.projects.map((item) => item.projectId),
+        ['two', 'one'],
+      );
+      expect(
+        mainPortfolioDocument((await repository.read())!.content!)!.projects,
+        isEmpty,
+      );
       await _tap(tester, 'main.editor.save');
       var workspace = (await repository.read())!.content!;
       expect(
