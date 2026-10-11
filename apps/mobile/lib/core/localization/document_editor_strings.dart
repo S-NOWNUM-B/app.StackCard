@@ -30,7 +30,7 @@ const russianDocumentEditorStrings = <String, String>{
   'documentEditor.addExperience': 'Добавить опыт',
   'documentEditor.addEducation': 'Добавить образование',
   'documentEditor.addSkill': 'Добавить технологию',
-  'documentEditor.addProject': 'Создать проект',
+  'documentEditor.addProject': 'Создать',
   'documentEditor.editNewProject': 'Редактировать новый проект',
   'documentEditor.organization': 'Организация',
   'documentEditor.period': 'Период',

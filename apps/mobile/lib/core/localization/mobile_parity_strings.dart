@@ -24,8 +24,8 @@ const russianMobileParityStrings = <String, String>{
       'Не удалось сохранить проект. Ввод сохранён в форме; повторите попытку.',
   'mobileParity.leaveTitle': 'Несохранённые изменения',
   'mobileParity.leaveHint': 'Изменения проекта ещё не сохранены.',
-  'mobileParity.stay': 'Продолжить редактирование',
-  'mobileParity.discard': 'Выйти без сохранения',
+  'mobileParity.stay': 'Продолжить',
+  'mobileParity.discard': 'Выйти',
   'mobileParity.projectNameEmpty': 'Название проекта',
   'mobileParity.limit': 'До {limit} символов',
 };

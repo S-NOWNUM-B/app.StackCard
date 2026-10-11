@@ -258,7 +258,6 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
       final download = StackCardButton(
         key: const Key('home.download'),
         label: 'Скачать портфолио',
-        loading: _downloading,
         onPressed: nonempty && !busy ? () => _download(saved) : null,
       );
       final share = StackCardButton(

@@ -2541,17 +2541,17 @@ h2.section-heading,
   background: var(--surface-elevated);
   border-color: var(--outline);
 }
-.project-technologies {
+.tag-editor {
   gap: var(--sm);
 }
-.project-technology-heading {
+.tag-editor-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--sm);
   font-size: 14px;
 }
-.project-technology-list {
+.tag-editor-list {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sm);
@@ -2559,49 +2559,48 @@ h2.section-heading,
   margin: 0;
   padding: 0;
 }
-.project-technology-item {
+.tag-editor-item {
   display: flex;
   align-items: center;
+  gap: var(--xs);
   min-width: 0;
   max-width: 100%;
+  padding-left: var(--xs);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-elevated);
 }
-.project-technology-item .badges {
+.tag-editor-item .badges {
   flex: 1;
   min-width: 0;
 }
-.project-technology-item .badge {
+.tag-editor-item .badge {
   min-width: 0;
   max-width: 100%;
   border: 0;
   background: transparent;
   overflow-wrap: anywhere;
 }
-.project-technology-item .technology-icon {
+.tag-editor-item .technology-icon {
   flex-shrink: 0;
 }
-.project-technology-action {
+.tag-editor-action {
   flex-shrink: 0;
   min-width: 48px;
   padding: var(--sm);
 }
-.project-technology-dialog {
+.tag-editor-dialog {
   margin: auto;
   color: var(--text);
 }
-.project-technology-dialog::backdrop {
+.tag-editor-dialog::backdrop {
   background: #000a;
 }
-.project-technology-dialog-actions {
+.tag-editor-dialog-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--sm);
-}
-.project-technology-dialog-actions .button > span:not(.icon) {
-  font-size: 24px;
-  line-height: 1;
 }
 .repository-choice input,
 .project-row input[type='radio'] {

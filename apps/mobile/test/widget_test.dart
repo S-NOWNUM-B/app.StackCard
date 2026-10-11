@@ -215,8 +215,8 @@ void main() {
       await tester.enterText(find.byType(TextFormField), 'no-such-project');
       await tester.pumpAndSettle();
       expect(find.text('Ничего не найдено'), findsOneWidget);
-      await tester.ensureVisible(find.text('Очистить поиск'));
-      await tester.tap(find.text('Очистить поиск'));
+      expect(find.text('Очистить поиск'), findsNothing);
+      await tester.enterText(find.byType(TextFormField), '');
       await tester.pumpAndSettle();
       expect(
         find.byWidgetPredicate(
