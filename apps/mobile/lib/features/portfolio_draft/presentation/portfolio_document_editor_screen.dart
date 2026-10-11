@@ -309,20 +309,23 @@ class _PortfolioDocumentEditorScreenState
         title: Text(_tr('leaveTitle')),
         content: Text(_tr('leaveHint')),
         actions: [
-          TextButton(
+          StackCardButton(
             key: const Key('document.leave.stay'),
             onPressed: () => Navigator.of(dialogContext).pop('stay'),
-            child: Text(_tr('stay')),
+            label: context.strings.tr('common.cancel'),
+            role: StackCardButtonRole.outlined,
           ),
-          TextButton(
+          StackCardButton(
             key: const Key('document.leave.discard'),
             onPressed: () => Navigator.of(dialogContext).pop('discard'),
-            child: Text(_tr('discard')),
+            label: _tr('discard'),
+            role: StackCardButtonRole.outlined,
           ),
-          TextButton(
+          StackCardButton(
             key: const Key('document.leave.save'),
             onPressed: () => Navigator.of(dialogContext).pop('save'),
-            child: Text(_tr('save')),
+            label: context.strings.tr('common.save'),
+            primary: true,
           ),
         ],
       ),

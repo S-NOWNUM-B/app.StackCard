@@ -9,6 +9,7 @@ import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_dra
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/settings/settings_screen.dart';
 import 'package:app_stackcard/main.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -534,14 +535,14 @@ void main() {
     expect(auth.signOutCalls, 0);
     await _tap(
       tester,
-      find.widgetWithText(TextButton, _strings.tr('account.cancel')),
+      find.widgetWithText(StackCardButton, _strings.tr('common.cancel')),
     );
     expect(scope.read(portfolioDraftControllerProvider).notes, 'Unsaved notes');
     expect(auth.signOutCalls, 0);
     await _tap(tester, find.byKey(_sessionAction), settle: false);
     await _tap(
       tester,
-      find.widgetWithText(TextButton, _strings.tr('account.discard')),
+      find.widgetWithText(StackCardButton, _strings.tr('common.confirm')),
     );
     expect(auth.signOutCalls, 1);
     expect(find.byType(SignInScreen), findsOneWidget);

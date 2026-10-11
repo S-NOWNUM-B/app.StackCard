@@ -752,7 +752,7 @@ void main() {
       expect(repository.requests, isEmpty);
       await _tap(tester, key);
       await tester.pump(const Duration(milliseconds: 300));
-      await tester.tap(find.text('Продолжить без сохранения'));
+      await tester.tap(find.text('Подтвердить'));
       await tester.pumpAndSettle();
       expect(repository.requests, [operation]);
       expect(find.text('Destination home'), findsOneWidget);

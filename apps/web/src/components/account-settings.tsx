@@ -24,6 +24,7 @@ import {
   type OperationResult,
 } from '@/lib/publication';
 import { Button, Field, Icon, LinkButton, Notice } from './ui';
+import { useConfirmation } from './confirmation-dialog';
 
 export function linkedProviderIds(providers: readonly { providerId: string }[]): string[] {
   return [...new Set(providers.map((item) => item.providerId).filter(Boolean))];
@@ -280,6 +281,7 @@ export function ApplicationPreferences({ children }: { children?: ReactNode }) {
 }
 
 function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut?: () => void }) {
+  const { confirm, confirmation: confirmationDialog } = useConfirmation();
   const active = useRef(true),
     running = useRef(false);
   const [providers, setProviders] = useState(() => linkedProviderIds(user.providerData));
@@ -557,7 +559,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
               onChange={(e) => setConfirmation(e.target.value)}
             />
             <Button type="submit" disabled={busy || !!deletion || (!passwordLinked && !email)}>
-              Сохранить пароль
+              Сохранить
             </Button>
           </form>
         </details>
@@ -574,8 +576,9 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
             <Button
               variant="quiet"
               disabled={busy || !!deletion || !canUnlinkProvider(user.providerData, id)}
-              onClick={() => {
-                if (!window.confirm('Отключить этот способ входа?')) return;
+              onClick={async () => {
+                if (!(await confirm('Отключить этот способ входа?', 'Отключить способ входа?')))
+                  return;
                 void run(async () => {
                   await reauthenticate();
                   await reload(user);
@@ -664,11 +667,13 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
           </Button>
         </form>
       </section>
+      {confirmationDialog}
     </div>
   );
 }
 
 export function AccountDeletionRecovery() {
+  const { confirm, confirmation } = useConfirmation();
   const [journals, setJournals] = useState<AccountDeletionJournal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(''),
@@ -750,8 +755,15 @@ export function AccountDeletionRecovery() {
             <Button
               variant="danger"
               disabled={busy}
-              onClick={() => {
-                if (window.confirm('Продолжить ранее подтверждённое удаление?'))
+              onClick={async () => {
+                if (
+                  active.current &&
+                  (await confirm(
+                    'Продолжить ранее подтверждённое удаление?',
+                    'Продолжить удаление?',
+                  )) &&
+                  active.current
+                )
                   void check(journal, true);
               }}
             >
@@ -765,6 +777,7 @@ export function AccountDeletionRecovery() {
         <Notice>В этом браузере нет сохранённого запроса удаления.</Notice>
       )}
       <LinkButton href="/sign-in">Перейти ко входу</LinkButton>
+      {confirmation}
     </div>
   );
 }

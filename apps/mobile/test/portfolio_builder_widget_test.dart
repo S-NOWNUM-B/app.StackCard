@@ -72,7 +72,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(_state(tester).content!.projects.length, 1);
       await _tap(tester, 'builder_delete_project-1');
-      await tester.tap(find.text('Удалить'));
+      await tester.tap(find.text('Подтвердить'));
       await tester.pumpAndSettle();
       expect(_state(tester).content!.projects, isEmpty);
       expect((await repository.read())!.content!.projects.length, 1);
@@ -160,7 +160,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(_state(tester).notes, 'My unsaved private notes');
       await _tap(tester, 'builder_reload');
-      await tester.tap(find.text('Открыть сохранённое'));
+      await tester.tap(find.text('Подтвердить'));
       await tester.pumpAndSettle();
       expect(_state(tester).content!.resumeText, 'External durable resume');
       expect(_state(tester).notes, 'External private notes');

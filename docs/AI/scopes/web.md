@@ -9,7 +9,13 @@ scoped Library imports/deletes не записывают unsaved Editor. Legacy 
 архивируются без удаления/автопубликации. Deploy отдельный.
 
 - Runtime — `apps/web/src/app`, shared controls — `src/components/ui.tsx`, tokens —
-  `src/app/globals.css`. Поручение 2026-10-11 заменяет web target R6 светлой
+  `src/app/globals.css`.
+  Пары действий используют `.dialog-actions`: «Отмена» слева, основное действие
+  справа; вся группа выровнена вправо. Подтверждения — shared
+  [confirmation dialog](../../../apps/web/src/components/confirmation-dialog.tsx)
+  с «Подтвердить» и повторной проверкой owner/state после await. Save/Close/Finish —
+  по [design contract](../../design/design-system.md#действующий-runtime-contract-r8).
+  Поручение 2026-10-11 заменяет web target R6 светлой
   композицией по Openship: белые поверхности, чёрные CTA, русские тексты StackCard.
   [Web brief](../../redesign/web-openship.md) задаёт страницы и границы переноса.
   Сохранять Brand A, локальный Manrope, исходные SVG/font bytes и лицензии в `public`.

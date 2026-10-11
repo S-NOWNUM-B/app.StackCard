@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/localization/app_strings.dart';
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
 import '../../shared/widgets/stackcard_dialog_actions.dart';
@@ -104,10 +105,26 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
       title: Text(title),
       content: Text(message),
       actions: [
-        StackCardDialogActions(
-          onCancel: () => Navigator.pop(context),
-          onConfirm: () => Navigator.pop(context, choice.value),
-        ),
+        if (choices.length == 1)
+          StackCardDialogActions(
+            onCancel: () => Navigator.pop(context),
+            onConfirm: () => Navigator.pop(context, choices.single.value),
+          )
+        else ...[
+          StackCardButton(
+            label: context.strings.tr('common.cancel'),
+            role: StackCardButtonRole.outlined,
+            onPressed: () => Navigator.pop(context),
+          ),
+          for (final (index, choice) in choices.indexed)
+            StackCardButton(
+              label: choice.label,
+              role: index == choices.length - 1
+                  ? StackCardButtonRole.primary
+                  : StackCardButtonRole.outlined,
+              onPressed: () => Navigator.pop(context, choice.value),
+            ),
+        ],
       ],
     ),
   );
@@ -261,7 +278,7 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
         label: 'Поделиться',
         primary: true,
         loading: _sharing,
-        onPressed: nonempty && !busy && document != null
+        onPressed: nonempty && !_sharing && document != null
             ? () => _share(document.id)
             : null,
       );

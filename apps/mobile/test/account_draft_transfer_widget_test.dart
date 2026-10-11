@@ -5,6 +5,7 @@ import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_dra
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/settings/account_settings_section.dart';
 import 'package:app_stackcard/main.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -149,7 +150,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Есть несохранённые изменения'), findsOneWidget);
       expect(auth.signOutCalls, 0);
-      await tester.tap(find.widgetWithText(TextButton, 'Отмена'));
+      await tester.tap(find.widgetWithText(StackCardButton, 'Отмена'));
       await tester.pumpAndSettle();
       expect(
         scope.read(portfolioDraftControllerProvider).notes,
@@ -158,9 +159,7 @@ void main() {
       expect(auth.signOutCalls, 0);
       await tester.tap(find.byKey(const Key('account.sessionAction')));
       await tester.pump(const Duration(milliseconds: 300));
-      await tester.tap(
-        find.widgetWithText(TextButton, 'Продолжить без сохранения'),
-      );
+      await tester.tap(find.widgetWithText(StackCardButton, 'Подтвердить'));
       await tester.pumpAndSettle();
       expect(auth.signOutCalls, 1);
       expect(find.byType(SignInScreen), findsOneWidget);

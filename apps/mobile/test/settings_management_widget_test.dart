@@ -212,7 +212,7 @@ void main() {
         'Discard me',
       );
       await _tap(tester, find.text('Отмена').last);
-      await _tap(tester, find.text('Отменить изменения').last);
+      await _tap(tester, find.text('Подтвердить').last);
       expect((await repository.read())!.content!.profile.name, 'Original');
       expect(find.text('Settings hub'), findsOneWidget);
     },

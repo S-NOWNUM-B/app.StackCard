@@ -282,7 +282,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(AlertDialog),
-          matching: find.text('Загрузить новую версию'),
+          matching: find.text('Подтвердить'),
         ),
       );
       await tester.pumpAndSettle();

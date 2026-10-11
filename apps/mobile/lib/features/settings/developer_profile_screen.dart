@@ -53,17 +53,20 @@ class _DeveloperProfileScreenState
         title: Text(context.strings.tr('builder.unsaved')),
         content: Text(context.strings.tr('workspace.profileHint')),
         actions: [
-          TextButton(
+          StackCardButton(
             onPressed: () => Navigator.pop(context, 'stay'),
-            child: Text(context.strings.tr('builder.cancel')),
+            label: context.strings.tr('common.cancel'),
+            role: StackCardButtonRole.outlined,
           ),
-          TextButton(
+          StackCardButton(
             onPressed: () => Navigator.pop(context, 'discard'),
-            child: Text(context.strings.tr('builderForm.cancel')),
+            label: context.strings.tr('documentEditor.discard'),
+            role: StackCardButtonRole.outlined,
           ),
-          TextButton(
+          StackCardButton(
             onPressed: () => Navigator.pop(context, 'save'),
-            child: Text(context.strings.tr('workspace.saveProfile')),
+            label: context.strings.tr('common.save'),
+            primary: true,
           ),
         ],
       ),

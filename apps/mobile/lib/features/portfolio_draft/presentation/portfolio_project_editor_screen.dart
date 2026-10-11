@@ -257,21 +257,16 @@ class _PortfolioProjectEditorScreenState
             ),
             const SizedBox(height: StackCardSpacing.md),
             Text(context.strings.tr('mobileParity.leaveHint')),
-            const SizedBox(height: StackCardSpacing.lg),
-            StackCardButton(
-              key: const ValueKey('project.leave.stay'),
-              label: context.strings.tr('mobileParity.stay'),
-              onPressed: () => Navigator.pop(context, false),
-            ),
-            const SizedBox(height: StackCardSpacing.sm),
-            StackCardButton(
-              key: const ValueKey('project.leave.discard'),
-              role: StackCardButtonRole.danger,
-              label: context.strings.tr('mobileParity.discard'),
-              onPressed: () => Navigator.pop(context, true),
-            ),
           ],
         ),
+        actions: [
+          StackCardDialogActions(
+            cancelKey: const ValueKey('project.leave.stay'),
+            confirmKey: const ValueKey('project.leave.discard'),
+            onCancel: () => Navigator.pop(context, false),
+            onConfirm: () => Navigator.pop(context, true),
+          ),
+        ],
       ),
     );
     _confirmingExit = false;

@@ -229,6 +229,13 @@ Dart-файлов — **0 issues**, формат и `git diff --check` — PASS.
 **21/21 PASS**, анализ двух изменённых экранов — **0 issues**, формат и
 `git diff --check` — PASS.
 
+Исправление mobile Home 2026-10-12: подготовка и сохранение PDF больше не
+отключают «Поделиться»; кнопка сохраняет чёрный фон и отправляет подтверждённую
+ссылку. Повторное скачивание заблокировано до завершения операции.
+Home/shared button suites — **92/92 PASS**, включая новый regression;
+анализ двух Dart-файлов — **0 issues**, формат и `git diff --check` — PASS.
+На устройстве этот сценарий отдельно не проверялся.
+
 Карточка mobile Projects 2026-10-12: удаление перенесено в красный минус справа
 сверху, «Редактировать» — вправо вниз с чёрной обводкой через shared outlined role.
 Диалог «Удалить проект?» предлагает «Отмена»/«Подтвердить»; отмена сохраняет
@@ -238,6 +245,20 @@ width320/text2, контраст/focus и подтверждение/отмен�
 Dart-файлов, формат и `git diff --check` — PASS; общий анализ обнаружил unrelated
 `use_null_aware_elements` в main editor. Headless preview Projects просмотрен;
 проверка этой карточки на native device не выполнялась.
+
+Контакты mobile 2026-10-12: редактор использует ту же секцию тегов, что навыки,
+с «+», редактированием по названию и крестиком удаления. Добавление —
+«Отмена» слева / «Сохранить» справа; одинаково для добавления и изменения контакта.
+Home показывает категорию с её иконкой и пользовательское название-ссылку,
+без raw URL; приватность и существующий typed URL validation сохранены.
+Добавлены семь монохромных pinned Lucide/Feather SVG с exact hashes/лицензиями.
+Home/editor/SVG/mobile parity suites — **59/59 PASS**, анализ десяти Dart-файлов
+— **0 issues**, формат восьми файлов, asset checker и `git diff --check` — PASS.
+Лог: `/private/tmp/stackcard-contact-ui-tests.log`. Проверки локальные,
+без изменения реальных пользовательских данных и нового live/device acceptance.
+Просмотрены headless снимки `/private/tmp/stackcard-home-contacts.png` и
+`/private/tmp/stackcard-home-contacts-narrow.png`: категории с иконками и
+подчёркнутые пользовательские названия, адаптивные колонки и перенос text2.
 
 Основные логи: `/private/tmp/stackcard-single-portfolio-final-verified-tests.log`,
 `stackcard-single-portfolio-final-flutter-analyze.log`, `stackcard-web-tests-final.log`,

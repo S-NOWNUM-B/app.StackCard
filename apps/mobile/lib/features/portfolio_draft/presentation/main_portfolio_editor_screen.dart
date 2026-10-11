@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_avatar.dart';
 import '../../../shared/widgets/stackcard_button.dart';
+import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
 import '../../../shared/widgets/stackcard_states.dart';
@@ -314,13 +316,9 @@ class _MainPortfolioEditorScreenState
                 title: const Text('Открыть сохранённую версию?'),
                 content: const Text('Несохранённые изменения будут отменены.'),
                 actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Остаться'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Открыть'),
+                  StackCardDialogActions(
+                    onCancel: () => Navigator.pop(context, false),
+                    onConfirm: () => Navigator.pop(context, true),
                   ),
                 ],
               ),
@@ -354,20 +352,23 @@ class _MainPortfolioEditorScreenState
         builder: (context) => AlertDialog(
           title: const Text('Сохранить изменения?'),
           actions: [
-            TextButton(
+            StackCardButton(
               key: const Key('main.editor.leave.stay'),
+              label: context.strings.tr('common.cancel'),
+              role: StackCardButtonRole.outlined,
               onPressed: () => Navigator.pop(context, 'stay'),
-              child: const Text('Остаться'),
             ),
-            TextButton(
+            StackCardButton(
               key: const Key('main.editor.leave.discard'),
+              label: 'Не сохранять',
+              role: StackCardButtonRole.quiet,
               onPressed: () => Navigator.pop(context, 'discard'),
-              child: const Text('Не сохранять'),
             ),
-            TextButton(
+            StackCardButton(
               key: const Key('main.editor.leave.save'),
+              label: context.strings.tr('common.save'),
+              primary: true,
               onPressed: () => Navigator.pop(context, 'save'),
-              child: const Text('Сохранить'),
             ),
           ],
         ),
@@ -1409,16 +1410,12 @@ class _MainContactDialogState extends ConsumerState<_MainContactDialog> {
         ),
       ),
       actions: [
-        StackCardButton(
-          key: const Key('main.contact.cancel'),
-          label: 'Отмена',
-          onPressed: () => Navigator.pop(context),
-        ),
-        StackCardButton(
-          key: const Key('main.contact.apply'),
-          label: widget.item == null ? 'Добавить' : 'Сохранить',
-          primary: true,
-          onPressed: _apply,
+        StackCardDialogActions(
+          cancelKey: const Key('main.contact.cancel'),
+          onCancel: () => Navigator.pop(context),
+          confirmKey: const Key('main.contact.apply'),
+          confirmLabel: context.strings.tr('common.save'),
+          onConfirm: _apply,
         ),
       ],
     );

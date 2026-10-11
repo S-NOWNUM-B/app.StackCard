@@ -5,6 +5,7 @@ import 'package:app_stackcard/features/media/media.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/projects/projects.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -316,6 +317,21 @@ void main() {
       expect(find.textContaining('публичную версию'), findsOneWidget);
       expect((await local.read())!.content!.projects, hasLength(1));
       expect(find.text('Подтвердить'), findsOneWidget);
+      final cancel = find.widgetWithText(StackCardButton, 'Отмена');
+      final confirm = find.byKey(const ValueKey('project.delete.confirm'));
+      expect(
+        tester.getRect(cancel).right,
+        lessThan(tester.getRect(confirm).left),
+      );
+      expect(
+        tester.getRect(cancel).center.dy,
+        closeTo(tester.getRect(confirm).center.dy, 1),
+      );
+      expect(tester.widget<StackCardButton>(confirm).primary, isTrue);
+      expect(
+        tester.widget<StackCardButton>(cancel).role,
+        StackCardButtonRole.outlined,
+      );
       await _tap(tester, find.text('Отмена'));
       expect((await local.read())!.content!.projects, hasLength(1));
       expect(

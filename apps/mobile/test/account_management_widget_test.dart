@@ -321,7 +321,7 @@ void main() {
       expect(find.byType(AccountCard), findsNothing);
       expect(find.byKey(const Key('account.sessionAction')), findsNothing);
       await _tap(tester, find.byKey(const Key('settings.account.delete')));
-      await _tap(tester, find.text('Удалить аккаунт').last);
+      await _tap(tester, find.text('Подтвердить'));
       await tester.enterText(find.byType(TextFormField), 'current-secret');
       await _tap(tester, find.text('Подтвердить'));
       expect(management.actions, contains('reauth:owner'));

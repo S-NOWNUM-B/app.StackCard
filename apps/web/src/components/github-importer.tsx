@@ -121,7 +121,7 @@ export function GitHubImporter({
             onChange={(e) => setProfile(e.target.value)}
           />
           <Button disabled={busy} onClick={() => void link()}>
-            Сохранить профиль
+            Сохранить
           </Button>
         </>
       ) : (
