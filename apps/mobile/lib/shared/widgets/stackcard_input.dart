@@ -14,6 +14,9 @@ class StackCardInput extends StatelessWidget {
     this.enabled = true,
     this.prefixIcon,
     this.prefixIconWidget,
+    this.suffixIcon,
+    this.autofillHints,
+    this.autovalidateMode,
     this.keyboardType,
     this.textInputAction,
     this.onFieldSubmitted,
@@ -37,6 +40,9 @@ class StackCardInput extends StatelessWidget {
   final bool enabled;
   final IconData? prefixIcon;
   final Widget? prefixIconWidget;
+  final Widget? suffixIcon;
+  final Iterable<String>? autofillHints;
+  final AutovalidateMode? autovalidateMode;
   final double prefixIconSize;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
@@ -54,6 +60,8 @@ class StackCardInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final passwordInput =
+        obscureText || keyboardType == TextInputType.visiblePassword;
     final multiline =
         !obscureText && ((maxLines ?? 2) > 1 || (minLines ?? 1) > 1);
     return Semantics(
@@ -63,6 +71,8 @@ class StackCardInput extends StatelessWidget {
         focusNode: focusNode,
         onChanged: onChanged,
         validator: validator,
+        autovalidateMode: autovalidateMode,
+        autofillHints: autofillHints,
         errorBuilder: (_, message) => Text(message),
         enabled: enabled,
         keyboardType: keyboardType,
@@ -72,13 +82,16 @@ class StackCardInput extends StatelessWidget {
         autofocus: autofocus,
         minLines: minLines,
         maxLines: maxLines,
-        autocorrect: !obscureText,
-        enableSuggestions: !obscureText,
+        autocorrect: !passwordInput,
+        enableSuggestions: !passwordInput,
+        smartDashesType: passwordInput ? SmartDashesType.disabled : null,
+        smartQuotesType: passwordInput ? SmartQuotesType.disabled : null,
         style: Theme.of(context).textTheme.bodyLarge,
         decoration: InputDecoration(
           labelText: showLabel ? label : null,
           floatingLabelBehavior: FloatingLabelBehavior.always,
           hintText: hint ?? (showLabel ? null : label),
+          suffixIcon: suffixIcon,
           helper: switch (helperText) {
             final message? => Text(
               message,

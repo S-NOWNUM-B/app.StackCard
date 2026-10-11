@@ -14,6 +14,8 @@ export 'domain/auth_failure.dart' show AuthFailure, AuthFailureKind;
 export 'domain/auth_repository.dart' show AuthRepository;
 export 'domain/auth_user.dart' show AuthUser;
 export 'domain/demo_session.dart' show DemoSession, validateDemoEmail;
+export 'domain/registration_password_policy.dart'
+    show RegistrationPasswordIssue, RegistrationPasswordPolicy;
 export 'presentation/account_auth_form.dart' show AuthFormMode;
 export 'presentation/account_card.dart' show AccountCard;
 export 'presentation/auth_controller.dart'

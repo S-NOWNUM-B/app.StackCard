@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_theme.dart';
+import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_brand.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_input.dart';
@@ -53,7 +54,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final padding = EdgeInsets.all(
-              constraints.maxWidth >= 700 ? 32 : 24,
+              constraints.maxWidth >= 700
+                  ? StackCardSpacing.xxl
+                  : StackCardSpacing.xl,
             );
             return SingleChildScrollView(
               padding: padding,
@@ -74,18 +77,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Center(
-                              child: Theme(
-                                data: baseTheme.copyWith(
-                                  textTheme: baseTheme.textTheme.copyWith(
-                                    titleLarge: baseTheme.textTheme.titleLarge
-                                        ?.copyWith(fontSize: 28),
-                                  ),
-                                ),
-                                child: const StackCardBrand(),
-                              ),
+                            const Center(
+                              child: StackCardBrand(trimWordmarkPadding: true),
                             ),
-                            const SizedBox(height: 40),
+                            const SizedBox(height: StackCardSpacing.xl),
                             accountConfigured
                                 ? AccountAuthForm(mode: widget.mode)
                                 : Padding(
@@ -100,6 +95,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                         children: [
                                           Text(
                                             context.strings.tr('auth.title'),
+                                            textAlign: TextAlign.center,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .headlineMedium,

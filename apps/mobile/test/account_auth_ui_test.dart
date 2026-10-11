@@ -204,8 +204,12 @@ Future<void> _checkAccountAccessibility(WidgetTester tester) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
+    final manrope = FontLoader('Manrope');
+    for (final weight in ['Regular', 'SemiBold', 'Bold', 'ExtraBold']) {
+      manrope.addFont(rootBundle.load('assets/fonts/Manrope-$weight.ttf'));
+    }
+    await manrope.load();
     for (final entry in [
-      ('DM Sans', 'assets/fonts/DM_Sans.ttf'),
       ('Noto Sans', 'assets/fonts/Noto_Sans.ttf'),
       ('MaterialIcons', 'fonts/MaterialIcons-Regular.otf'),
     ]) {
@@ -276,14 +280,146 @@ void main() {
       await tester.pumpAndSettle();
       expect(repository.requests, isEmpty);
       expect(find.text('Пароли не совпадают'), findsOneWidget);
-      await _enter(tester, 'account.password', 'valid-password');
-      await _enter(tester, 'account.confirmPassword', 'valid-password');
+      const password = '  correct horse battery  ';
+      await _enter(tester, 'account.password', password);
+      await _enter(tester, 'account.confirmPassword', password);
       await _tap(tester, 'account.submit');
       await tester.pumpAndSettle();
       expect(repository.requests, ['register']);
+      expect(repository.password, password);
       expect(find.text('Destination home'), findsOneWidget);
     },
   );
+
+  for (final mode in ['/sign-in', '/register']) {
+    testWidgets(
+      'Password visibility in $mode preserves editing and disables while busy',
+      (tester) async {
+        final repository = _AuthRepository();
+        await _pumpAuth(tester, repository, location: mode);
+        await _enter(tester, 'account.email', 'new@example.com');
+        const password = '  correct horse battery  ';
+        await _enter(tester, 'account.password', password);
+        final fields = [
+          ('account.password', 'account.passwordVisibility'),
+          if (mode == '/register')
+            ('account.confirmPassword', 'account.confirmPasswordVisibility'),
+        ];
+        if (mode == '/register') {
+          await _enter(tester, 'account.confirmPassword', password);
+        }
+        for (final field in fields) {
+          final input = find.descendant(
+            of: find.byKey(Key(field.$1)),
+            matching: find.byType(TextFormField),
+          );
+          final toggle = find.byKey(Key(field.$2));
+          final editable = find.descendant(
+            of: input,
+            matching: find.byType(EditableText),
+          );
+          final before = tester.widget<TextFormField>(input).controller!.value;
+          expect(tester.widget<EditableText>(editable).obscureText, isTrue);
+          expect(tester.getSize(toggle).shortestSide, greaterThanOrEqualTo(48));
+          expect(tester.widget<IconButton>(toggle).tooltip, 'Показать пароль');
+          await _tap(tester, field.$2);
+          final revealed = tester.widget<EditableText>(editable);
+          expect(revealed.obscureText, isFalse);
+          expect(revealed.autocorrect, isFalse);
+          expect(revealed.enableSuggestions, isFalse);
+          expect(revealed.smartDashesType, SmartDashesType.disabled);
+          expect(revealed.smartQuotesType, SmartQuotesType.disabled);
+          expect(revealed.controller.value, before);
+          expect(tester.widget<IconButton>(toggle).tooltip, 'Скрыть пароль');
+          if (mode == '/register' && field.$1 == 'account.password') {
+            expect(
+              tester
+                  .widget<StackCardInput>(
+                    find.byKey(const Key('account.confirmPassword')),
+                  )
+                  .obscureText,
+              isTrue,
+            );
+          }
+          await _tap(tester, field.$2);
+          expect(tester.widget<EditableText>(editable).obscureText, isTrue);
+        }
+        repository.pending = Completer<void>();
+        await _tap(tester, 'account.submit');
+        await tester.pump(const Duration(milliseconds: 300));
+        for (final field in fields) {
+          expect(
+            tester.widget<IconButton>(find.byKey(Key(field.$2))).onPressed,
+            isNull,
+          );
+        }
+        repository.pending!.complete();
+        await tester.pumpAndSettle();
+        expect(repository.password, password);
+      },
+    );
+  }
+
+  for (final locale in [const Locale('ru'), const Locale('en')]) {
+    testWidgets(
+      'Registration rules update before submit in ${locale.languageCode}',
+      (tester) async {
+        final repository = _AuthRepository();
+        await _pumpAuth(
+          tester,
+          repository,
+          location: '/register',
+          locale: locale,
+        );
+        final strings = AppStrings(locale);
+        await _enter(tester, 'account.email', 'long.username@example.com');
+        for (final candidate in [
+          ('short', 'tooShort'),
+          ('aaaaaaaaaaaaaaa', 'tooCommon'),
+          ('long.username@example.com', 'matchesEmail'),
+          (List.filled(129, 'x').join(), 'tooLong'),
+        ]) {
+          await _enter(tester, 'account.password', candidate.$1);
+          await tester.pumpAndSettle();
+          expect(
+            find.text(strings.tr('account.passwordIssue.${candidate.$2}')),
+            findsOneWidget,
+          );
+          await _enter(tester, 'account.confirmPassword', candidate.$1);
+          await _tap(tester, 'account.submit');
+          expect(repository.requests, isEmpty);
+        }
+        await _enter(tester, 'account.password', 'correct horse battery');
+        await _enter(
+          tester,
+          'account.confirmPassword',
+          'correct horse battery',
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text(strings.tr('account.passwordIssue.tooLong')),
+          findsNothing,
+        );
+        // Смена основного пароля повторно проверяет уже заполненное подтверждение.
+        await _enter(tester, 'account.password', 'another lengthy phrase');
+        await tester.pumpAndSettle();
+        expect(
+          find.text(strings.tr('account.passwordMismatch')),
+          findsOneWidget,
+        );
+        await _tap(tester, 'account.submit');
+        expect(repository.requests, isEmpty);
+        await _enter(
+          tester,
+          'account.confirmPassword',
+          'another lengthy phrase',
+        );
+        await _tap(tester, 'account.submit');
+        await tester.pumpAndSettle();
+        expect(repository.requests, ['register']);
+      },
+    );
+  }
 
   testWidgets(
     'Reset stays on screen with a generic email-enumeration-safe response',
@@ -541,9 +677,12 @@ void main() {
       );
       if (operation != 'google') {
         await _enter(tester, 'account.email', 'user@example.com');
-        await _enter(tester, 'account.password', 'secret');
+        final password = operation == 'register'
+            ? 'correct horse battery'
+            : 'secret';
+        await _enter(tester, 'account.password', password);
         if (operation == 'register') {
-          await _enter(tester, 'account.confirmPassword', 'secret');
+          await _enter(tester, 'account.confirmPassword', password);
         }
       }
       final key = operation == 'google' ? 'account.google' : 'account.submit';
@@ -680,11 +819,7 @@ void main() {
           );
 
           final brand = find.byType(StackCardBrand);
-          final wordmark = find.descendant(
-            of: brand,
-            matching: find.byType(SvgPicture),
-          );
-          final brandRect = tester.getRect(wordmark);
+          final brandRect = tester.getRect(brand);
           final content = brandRect.expandToInclude(
             tester.getRect(find.byType(AccountAuthForm)),
           );
@@ -696,8 +831,27 @@ void main() {
 
           final title = find.byKey(const Key('account.title'));
           final email = find.byKey(const Key('account.email'));
-          expect(tester.widget<Text>(title).textAlign, TextAlign.left);
-          expect(tester.getRect(title).left, tester.getRect(email).left);
+          expect(tester.widget<Text>(title).textAlign, TextAlign.center);
+          expect(
+            tester.getRect(title).center.dx,
+            tester.getRect(email).center.dx,
+          );
+          for (final button
+              in find
+                  .descendant(
+                    of: find.byType(AccountAuthForm),
+                    matching: find.byType(TextButton),
+                  )
+                  .evaluate()) {
+            final label = find.descendant(
+              of: find.byWidget(button.widget),
+              matching: find.byType(Text),
+            );
+            expect(
+              tester.getRect(label).center.dx,
+              closeTo(viewport.width / 2, 1),
+            );
+          }
           await _checkAccountAccessibility(tester);
           if (const bool.fromEnvironment('UPDATE_UI_PREVIEWS') &&
               viewport.width == 390) {
