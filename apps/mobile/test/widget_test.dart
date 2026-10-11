@@ -31,7 +31,7 @@ void main() {
     await tester.ensureVisible(find.text('Продолжить'));
     await tester.tap(find.text('Продолжить'));
     await tester.pumpAndSettle();
-    expect(find.text('Укажите корректный email'), findsOneWidget);
+    expect(find.text('Укажите корректную электронную почту'), findsOneWidget);
     await tester.enterText(find.byType(TextFormField), 'alex@example.dev');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
@@ -105,8 +105,9 @@ void main() {
       }
       await tester.tap(find.byKey(const Key('app.settings')));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Вернуться ко входу'));
-      await tester.tap(find.text('Вернуться ко входу'));
+      final signIn = find.byKey(const Key('account.sessionAction'));
+      await tester.ensureVisible(signIn);
+      await tester.tap(signIn);
       await tester.pumpAndSettle();
       expect(find.text('Продолжить'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -260,18 +261,13 @@ void main() {
       await tester.tap(appearance);
       await tester.pumpAndSettle();
       expect(find.byType(SettingsAppearanceScreen), findsOneWidget);
-      await tester.tap(find.text('Светлая'));
-      await tester.pumpAndSettle();
       expect(
-        Theme.of(tester.element(find.text('Внешний вид'))).brightness,
+        Theme.of(tester.element(find.text('Приложение'))).brightness,
         Brightness.light,
       );
-      await tester.tap(find.text('Тёмная'));
-      await tester.pumpAndSettle();
-      expect(
-        Theme.of(tester.element(find.text('Внешний вид'))).brightness,
-        Brightness.dark,
-      );
+      expect(find.text('Тёмная'), findsNothing);
+      expect(find.text('Системная'), findsNothing);
+      expect(find.text('English'), findsNothing);
       expect(
         tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig,
         same(router),

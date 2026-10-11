@@ -12,14 +12,14 @@ final class MockProjectsRepository implements ProjectsRepository {
     Project(
       title: 'Atlas UI Kit',
       description: 'Набор компонентов для спокойных и удобных интерфейсов.',
-      technologies: ['Flutter', 'Dart', 'UI Design'],
+      technologies: ['Flutter', 'Dart', 'Дизайн интерфейсов'],
       symbol: 'A',
-      category: 'Design system',
+      category: 'Дизайн-система',
       source: ProjectSource.github,
       featured: true,
       details:
           'Демонстрационный кейс библиотеки компонентов: карточки, формы, '
-          'навигация и две темы. В примере показаны задачи дизайна и реализации '
+          'навигация и светлая тема. В примере показаны задачи дизайна и реализации '
           'интерфейса; репозиторий к приложению не подключён.',
     ),
     Project(
@@ -27,7 +27,7 @@ final class MockProjectsRepository implements ProjectsRepository {
       description: 'Небольшой планировщик, который помогает держать фокус.',
       technologies: ['Flutter', 'Dart', 'Firebase'],
       symbol: 'P',
-      category: 'Mobile app',
+      category: 'Мобильное приложение',
       source: ProjectSource.manual,
       featured: true,
       details:
@@ -37,11 +37,10 @@ final class MockProjectsRepository implements ProjectsRepository {
     ),
     Project(
       title: 'Readme Studio',
-      description:
-          'Редактор структуры README для небольших open source проектов.',
+      description: 'Редактор структуры README для небольших открытых проектов.',
       technologies: ['React', 'TypeScript'],
       symbol: 'R',
-      category: 'Web tool',
+      category: 'Веб-инструмент',
       source: ProjectSource.github,
       featured: false,
       details:
@@ -54,13 +53,12 @@ final class MockProjectsRepository implements ProjectsRepository {
       description: 'Погода и короткие заметки о городе в одном интерфейсе.',
       technologies: ['Flutter', 'Dart'],
       symbol: 'W',
-      category: 'Side project',
+      category: 'Личный проект',
       source: ProjectSource.manual,
       featured: false,
       details:
-          'Демонстрационный side project для практики экранов, состояний '
-          'и работы с данными. Сетевые запросы и определение геопозиции '
-          'в текущей версии StackCard отсутствуют.',
+          'Демонстрационный личный проект для практики экранов, состояний '
+          'и работы с данными. Пример оформления проекта в StackCard.',
     ),
   ]);
 }

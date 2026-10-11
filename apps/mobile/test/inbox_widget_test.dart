@@ -140,7 +140,7 @@ void main() {
       expect(find.byType(InboxRequestScreen), findsOneWidget);
       expect(
         find.text(
-          'Email указан отправителем. Его принадлежность не подтверждена.',
+          'Электронная почта указана отправителем. Её принадлежность не подтверждена.',
         ),
         findsOneWidget,
       );

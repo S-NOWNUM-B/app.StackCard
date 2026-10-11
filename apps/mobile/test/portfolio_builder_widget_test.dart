@@ -79,9 +79,11 @@ void main() {
   );
 
   testWidgets(
-    'Block order and visibility plus independent light theme apply immediately to preview',
+    'Block order and visibility apply to white preview without rewriting legacy theme',
     (tester) async {
-      final repository = await _repository(_content());
+      final repository = await _repository(
+        _content().copyWith(theme: PortfolioTheme.dark),
+      );
       await _open(tester, repository);
       expect(
         tester
@@ -92,8 +94,8 @@ void main() {
       await _tap(tester, 'builder_block_up_about');
       await _tap(tester, 'builder_block_profile');
       expect(_state(tester).completion!.percent, 100);
-      await _tap(tester, 'builder_theme_light');
-      expect(_state(tester).content!.theme, PortfolioTheme.light);
+      expect(find.byKey(const ValueKey('builder_theme_light')), findsNothing);
+      expect(_state(tester).content!.theme, PortfolioTheme.dark);
       final router = GoRouter.of(
         tester.element(find.byType(PortfolioBuilderScreen)),
       );
@@ -179,23 +181,24 @@ void main() {
     },
   );
 
-  testWidgets('English Builder labels and theme are localized', (tester) async {
+  testWidgets('Legacy English preference keeps Builder labels Russian', (
+    tester,
+  ) async {
     await _open(
       tester,
       await _repository(_content()),
       language: AppLanguage.en,
     );
-    expect(find.text('Portfolio editor'), findsOneWidget);
-    expect(find.text('Save portfolio'), findsOneWidget);
+    expect(find.text('Редактор портфолио'), findsOneWidget);
+    expect(find.text('Сохранить портфолио'), findsOneWidget);
     expect(
       tester
           .widget<Text>(find.byKey(const ValueKey('builder_completion')))
           .data,
       '100%',
     );
-    await _tap(tester, 'builder_theme_light');
-    expect(find.text('Light'), findsOneWidget);
-    expect(find.text('Редактор портфолио'), findsNothing);
+    expect(find.byKey(const ValueKey('builder_theme_light')), findsNothing);
+    expect(find.text('Portfolio editor'), findsNothing);
   });
 
   for (final theme in [AppTheme.dark, AppTheme.light]) {
@@ -218,7 +221,10 @@ void main() {
           );
           await _open(tester, await _repository(content), theme: theme);
           expect(tester.takeException(), isNull);
-          await _tap(tester, 'builder_theme_light');
+          expect(
+            find.byKey(const ValueKey('builder_theme_light')),
+            findsNothing,
+          );
           expect(tester.takeException(), isNull);
           if (scale == 1) {
             final semantics = tester.ensureSemantics();

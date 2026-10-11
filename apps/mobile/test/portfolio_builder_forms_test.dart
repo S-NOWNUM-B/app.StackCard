@@ -406,7 +406,7 @@ void main() {
         const PortfolioProfileEditorScreen(),
         legacy: true,
       );
-      expect(find.text('Builder ещё не начат'), findsOneWidget);
+      expect(find.text('Портфолио ещё не создано'), findsOneWidget);
       expect(
         _button(tester, const ValueKey('builder_form_apply')).onPressed,
         isNull,

@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
+import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
-import '../../../shared/widgets/stackcard_card.dart';
 import '../auth_providers.dart';
 import 'auth_controller.dart';
 import 'account_auth_form.dart';
@@ -47,77 +47,167 @@ class _AccountCardState extends ConsumerState<AccountCard> {
     final errorKey = accountAuthErrorKey(operation.error);
     final busy = operation.isLoading || _confirming;
     final strings = context.strings;
-    return StackCardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Icon(
-                user == null ? Icons.devices_rounded : Icons.person_outline,
-                color: context.colors.textSecondary,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  strings.tr(
-                    user == null ? 'account.guestTitle' : 'account.title',
-                  ),
-                  style: Theme.of(context).textTheme.titleLarge,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact =
+            constraints.maxWidth < 300 ||
+            MediaQuery.textScalerOf(context).scale(16) > 20;
+        final ready = !session.isLoading && !session.hasError;
+        final title = session.isLoading
+            ? strings.tr('account.sessionRestoring')
+            : session.hasError
+            ? strings.tr('account.sessionError')
+            : user == null
+            ? strings.tr('account.guestTitle')
+            : [user.displayName, user.email]
+                      .whereType<String>()
+                      .map((value) => value.trim())
+                      .where((value) => value.isNotEmpty)
+                      .firstOrNull ??
+                  strings.tr('account.title');
+        final actionLabel = strings.tr(
+          session.hasError
+              ? 'common.retry'
+              : user == null
+              ? 'account.signIn'
+              : 'account.signOut',
+        );
+        final actionIcon = session.hasError
+            ? Icons.refresh_rounded
+            : user == null
+            ? Icons.login_rounded
+            : Icons.logout_rounded;
+        final VoidCallback? action = session.isLoading || busy
+            ? null
+            : session.hasError
+            ? () => ref.invalidate(accountSessionProvider)
+            : user == null
+            ? () => context.go('/sign-in?from=%2Fsettings')
+            : _signOut;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 64),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: StackCardSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    ExcludeSemantics(
+                      child: Icon(
+                        ready && user == null
+                            ? Icons.person_off_outlined
+                            : Icons.person_outline_rounded,
+                        color: context.colors.textSecondary,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: StackCardSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Semantics(
+                            liveRegion: !ready,
+                            child: Text(
+                              title,
+                              maxLines: ready ? 2 : null,
+                              overflow: ready ? TextOverflow.ellipsis : null,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ),
+                          if (ready && user?.hasGoogle == true) ...[
+                            const SizedBox(height: StackCardSpacing.xs),
+                            Text(
+                              strings.tr('account.googleProvider'),
+                              key: const Key('account.googleProvider'),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: context.colors.textSecondary,
+                                  ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: StackCardSpacing.sm),
+                    if (session.isLoading)
+                      const SizedBox(
+                        width: StackCardSize.touchTarget,
+                        height: StackCardSize.touchTarget,
+                        child: Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      )
+                    else if (compact)
+                      IconButton(
+                        key: const Key('account.sessionAction'),
+                        tooltip: actionLabel,
+                        constraints: const BoxConstraints(
+                          minWidth: StackCardSize.touchTarget,
+                          minHeight: StackCardSize.touchTarget,
+                        ),
+                        onPressed: action,
+                        icon: busy
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(actionIcon, size: 24),
+                      )
+                    else
+                      StackCardButton(
+                        key: const Key('account.sessionAction'),
+                        label: actionLabel,
+                        role: StackCardButtonRole.quiet,
+                        loading: busy,
+                        onPressed: action,
+                      ),
+                    if (ready && user != null)
+                      PopupMenuButton<String>(
+                        key: const Key('account.sessionMenu'),
+                        tooltip: strings.tr('account.actions'),
+                        enabled: !busy,
+                        icon: const Icon(Icons.more_vert_rounded, size: 20),
+                        constraints: const BoxConstraints(minWidth: 160),
+                        onSelected: (_) => context.push('/settings/account'),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Text(
+                              strings.tr('settings.deleteAccount'),
+                              style: TextStyle(color: context.colors.error),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (session.isLoading)
-            const Center(child: CircularProgressIndicator())
-          else if (session.hasError) ...[
-            Semantics(
-              liveRegion: true,
-              child: Text(strings.tr('account.sessionError')),
             ),
-            const SizedBox(height: 12),
-            StackCardButton(
-              label: strings.tr('common.retry'),
-              onPressed: () => ref.invalidate(accountSessionProvider),
-            ),
-          ] else ...[
-            if (user != null) ...[
-              Text(
-                user.email ??
-                    user.displayName ??
-                    strings.tr('account.signedIn'),
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 20),
-            ],
-            StackCardButton(
-              key: const Key('account.sessionAction'),
-              label: strings.tr(
-                user == null ? 'account.signIn' : 'account.signOut',
-              ),
-              icon: user == null ? Icons.login_rounded : Icons.logout_rounded,
-              loading: busy,
-              onPressed: busy
-                  ? null
-                  : user == null
-                  ? () => context.go('/sign-in?from=%2Fsettings')
-                  : _signOut,
-            ),
-            if (errorKey != null) ...[
-              const SizedBox(height: 12),
+            if (ready && errorKey != null) ...[
+              const SizedBox(height: StackCardSpacing.sm),
               Semantics(
                 liveRegion: true,
                 child: Text(
                   strings.tr(errorKey),
-                  style: TextStyle(color: context.colors.error),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: context.colors.error),
                 ),
               ),
             ],
           ],
-        ],
-      ),
+        );
+      },
     );
   }
 }

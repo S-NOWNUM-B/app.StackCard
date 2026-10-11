@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
+import 'stackcard_card.dart';
 
-/// Цельная цветовая поверхность. Декор не участвует в interaction/semantics.
+/// Совместимый контейнер legacy Builder в общей светлой системе StackCard.
 class StackCardPoster extends StatelessWidget {
   const StackCardPoster({
     super.key,
@@ -23,68 +24,8 @@ class StackCardPoster extends StatelessWidget {
   final bool art;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final theme = Theme.of(context);
-    // Цветной legacy poster использует Ink/paper для собственных контролов.
-    final posterColors = colors.copyWith(
-      surface: colors.paper,
-      surfaceElevated: colors.paper,
-      surfaceHover: colors.paper,
-      textPrimary: colors.ink,
-      textSecondary: colors.ink.withValues(alpha: 0.8),
-      textMuted: colors.ink.withValues(alpha: 0.8),
-      textMeta: colors.ink.withValues(alpha: 0.8),
-      sourceText: colors.ink,
-      accentText: colors.ink,
-      focus: colors.ink,
-      controlOutline: colors.ink,
-      primaryOutline: colors.ink,
-      error: StackCardColors.light.error,
-      successText: StackCardColors.light.successText,
-    );
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(StackCardRadius.xlarge),
-      child: ColoredBox(
-        color: color,
-        child: Stack(
-          children: [
-            if (art)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: ExcludeSemantics(
-                    child: CustomPaint(
-                      painter: _PosterTexture(colors.ink, variant),
-                    ),
-                  ),
-                ),
-              ),
-            Padding(
-              padding: padding,
-              child: Theme(
-                data: theme.copyWith(
-                  colorScheme: theme.colorScheme.copyWith(
-                    surface: posterColors.surface,
-                    onSurface: posterColors.textPrimary,
-                    onSurfaceVariant: posterColors.textSecondary,
-                    outline: posterColors.controlOutline,
-                    error: posterColors.error,
-                  ),
-                  textTheme: theme.textTheme.apply(
-                    bodyColor: colors.ink,
-                    displayColor: colors.ink,
-                  ),
-                  iconTheme: IconThemeData(color: colors.ink),
-                  extensions: [posterColors],
-                ),
-                child: child,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      StackCardCard(outlined: true, padding: padding, child: child);
 }
 
 /// Локальная абстрактная графика для posters; без загрузки внешних изображений.
@@ -112,37 +53,6 @@ class StackCardArtwork extends StatelessWidget {
       ),
     ),
   );
-}
-
-class _PosterTexture extends CustomPainter {
-  const _PosterTexture(this.ink, this.variant);
-  final Color ink;
-  final int variant;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = ink.withValues(alpha: 0.055)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    final center = Offset(size.width * 1.05, size.height * 0.35);
-    for (var i = 0; i < 12; i++) {
-      final radius = 30.0 + i * 18;
-      canvas.drawCircle(center, radius, paint);
-    }
-    final stripe = Paint()..color = ink.withValues(alpha: 0.13);
-    for (var i = 0; i < 18; i++) {
-      final x = size.width - 72 + i * 4;
-      canvas.drawRect(
-        Rect.fromLTWH(x, size.height - 18, i % 3 == 0 ? 2 : 1, 8),
-        stripe,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_PosterTexture oldDelegate) =>
-      ink != oldDelegate.ink || variant != oldDelegate.variant;
 }
 
 class _RibbonPainter extends CustomPainter {

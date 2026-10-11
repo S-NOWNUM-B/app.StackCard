@@ -5,7 +5,7 @@ import 'settings_repository.dart';
 
 class AppearanceController extends ChangeNotifier {
   AppearanceController({
-    ThemeMode themeMode = ThemeMode.dark,
+    ThemeMode themeMode = ThemeMode.light,
     AppSettings? initialSettings,
     SettingsRepository? settingsRepository,
   }) : _settings = initialSettings ?? AppSettings(theme: _appTheme(themeMode)),

@@ -71,6 +71,9 @@
   runtime через `core/theme`/`shared/widgets`; provenance —
   `apps/mobile/assets/design_v2/source-manifest.json`, текущий contract —
   [design guide](../design/design-system.md#действующий-runtime-contract-r8).
+  Последующее поручение 2026-10-11 переносит одобренный светлый web дизайн
+  в mobile: ink/white controls, белые поверхности и русский интерфейс, через
+  существующие core/theme/shared widgets без изменения asset bytes и data schema.
   Runtime использует четыре stateful roots: Home / Resumes / Projects / Portfolios;
   Home — mixed library, Resume/Portfolio — независимые private documents.
   Legacy Builder остаётся редактором общей базы. Полную Figma parity и live
@@ -100,7 +103,9 @@
   раздельные Hive boxes для GitHub cache и portfolio draft, инициализирует
   Firebase Auth/Firestore до `StackCardApp`. Configuration failure не включает demo fallback.
   ThemeMode/Locale и простые preferences принадлежат Provider AppearanceController;
-  SharedPreferencesAsync сохраняет цельный settings snapshot, UI переведён на ru/en.
+  SharedPreferencesAsync сохраняет цельный settings snapshot. После одобрения
+  web 2026-10-11 native UI всегда light/ru; legacy theme/language fields читаются
+  без read-time rewrite, переключателей dark/system/en нет.
   `portfolio_draft` — публичный API общей базы, private documents и notes.
   Profile/Projects — проекции working content, запись принадлежит только draft
   repository. Документы хранят собственные структурированные секции и связи с

@@ -10,8 +10,7 @@ const russianInboxStrings = <String, String>{
   'inbox.more': 'Ещё обращения',
   'inbox.refresh': 'Обновить',
   'inbox.requestTitle': 'Обращение',
-  'inbox.unverified':
-      'Email указан отправителем. Его принадлежность не подтверждена.',
+  'inbox.unverified': 'Электронная почта указана отправителем. Её принадлежность не подтверждена.',
   'inbox.missing': 'Обращение недоступно',
   'inbox.missingHint': 'Обновите список входящих.',
   'inbox.error': 'Входящие недоступны',
@@ -21,7 +20,7 @@ const russianInboxStrings = <String, String>{
   'inbox.error.invalidData': 'Сервер вернул неподдерживаемые данные.',
   'inbox.error.network':
       'Не удалось связаться с сервером. Проверьте сеть и повторите.',
-  'notifications.hint': 'Разрешение запрашивается только при включении. Push содержит общий сигнал об обращении, без текста и email.',
+  'notifications.hint': 'Разрешение запрашивается только при включении. Уведомление сообщает об обращении, без текста и электронной почты.',
   'notifications.permission.notDetermined': 'Разрешение ещё не запрошено',
   'notifications.permission.denied': 'Разрешение отклонено в системе',
   'notifications.permission.authorized': 'Системное разрешение предоставлено',
@@ -29,7 +28,7 @@ const russianInboxStrings = <String, String>{
       'Предоставлено предварительное разрешение',
   'notifications.permission.unavailable': 'Системный статус недоступен',
   'notifications.enabled': 'Устройство зарегистрировано для этого аккаунта',
-  'notifications.disabled': 'Push для этого аккаунта не включён',
+  'notifications.disabled': 'Уведомления для этого аккаунта не включены',
   'notifications.enable': 'Включить уведомления',
   'notifications.disable': 'Отключить / повторить очистку',
   'notifications.unavailable': 'Уведомления недоступны',

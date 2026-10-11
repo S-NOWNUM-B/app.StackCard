@@ -1,6 +1,9 @@
 const russianWorkspaceStrings = <String, String>{
   'nav.resumes': 'Резюме',
   'workspace.all': 'Все',
+  'workspace.heroWork': 'Ваша работа.',
+  'workspace.heroStory': 'Ваша история.',
+  'workspace.library': 'Библиотека',
   'workspace.resume': 'Резюме',
   'workspace.portfolio': 'Портфолио',
   'workspace.createResume': 'Создать резюме',
@@ -40,6 +43,9 @@ const russianWorkspaceStrings = <String, String>{
 const englishWorkspaceStrings = <String, String>{
   'nav.resumes': 'Resumes',
   'workspace.all': 'All',
+  'workspace.heroWork': 'Your work.',
+  'workspace.heroStory': 'Your story.',
+  'workspace.library': 'Library',
   'workspace.resume': 'Resume',
   'workspace.portfolio': 'Portfolio',
   'workspace.createResume': 'Create resume',

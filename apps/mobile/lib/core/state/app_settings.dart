@@ -4,7 +4,7 @@ enum AppLanguage { ru, en }
 
 final class AppSettings {
   const AppSettings({
-    this.theme = AppTheme.dark,
+    this.theme = AppTheme.light,
     this.language = AppLanguage.ru,
     this.showSourceDescriptions = true,
     this.reducedMotion = false,

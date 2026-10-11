@@ -61,6 +61,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: ListView(
               padding: const EdgeInsets.all(StackCardSpacing.cardPadding),
               children: [
+                const SizedBox(height: StackCardSpacing.lg),
+                Semantics(
+                  header: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.strings.tr('workspace.heroWork'),
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      Text(
+                        context.strings.tr('workspace.heroStory'),
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(
+                              color: context.colors.textSecondary,
+                              fontStyle: FontStyle.italic,
+                              fontWeight: FontWeight.w400,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: StackCardSpacing.xxl),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -76,27 +99,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           selected: _filter == item.$1,
                           child: TextButton(
                             key: ValueKey('home.filter.${item.$1}'),
-                            style: TextButton.styleFrom(
-                              minimumSize: const Size(48, 48),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 8,
-                              ),
-                              foregroundColor: context.colors.textPrimary,
-                              backgroundColor: _filter == item.$1
-                                  ? context.colors.surfaceHover
-                                  : Colors.transparent,
-                              side: _filter == item.$1
-                                  ? BorderSide(
-                                      color: context.colors.controlOutline,
-                                    )
-                                  : null,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  StackCardRadius.medium,
+                            style:
+                                TextButton.styleFrom(
+                                  minimumSize: const Size(48, 48),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 8,
+                                  ),
+                                  foregroundColor: _filter == item.$1
+                                      ? context.colors.onPrimary
+                                      : context.colors.textSecondary,
+                                  backgroundColor: _filter == item.$1
+                                      ? context.colors.primary
+                                      : context.colors.surface,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      StackCardRadius.capsule,
+                                    ),
+                                  ),
+                                ).copyWith(
+                                  side: WidgetStateProperty.resolveWith(
+                                    (states) => BorderSide(
+                                      color:
+                                          states.contains(WidgetState.focused)
+                                          ? _filter == item.$1
+                                                ? context.colors.onPrimary
+                                                : context.colors.focus
+                                          : _filter == item.$1
+                                          ? context.colors.primary
+                                          : context.colors.border,
+                                      width:
+                                          states.contains(WidgetState.focused)
+                                          ? 2
+                                          : 1,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
                             onPressed: () => setState(() => _filter = item.$1),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -105,7 +143,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   StackCardIcon(
                                     name: 'check',
                                     size: 16,
-                                    color: context.colors.accentText,
+                                    color: context.colors.onPrimary,
                                   ),
                                   const SizedBox(width: StackCardSpacing.sm),
                                 ],
@@ -123,6 +161,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ],
                 ),
+                const SizedBox(height: StackCardSpacing.xl),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        context.strings.tr('workspace.library'),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    Text(
+                      '${entries.length}',
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: context.colors.textMeta),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: StackCardSpacing.sm),
+                Divider(color: context.colors.borderSubtle),
                 const SizedBox(height: StackCardSpacing.lg),
                 if (entries.isEmpty)
                   StackCardStateView(

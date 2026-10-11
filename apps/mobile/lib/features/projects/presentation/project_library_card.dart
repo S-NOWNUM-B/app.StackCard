@@ -11,7 +11,7 @@ import '../../../shared/widgets/stackcard_technology_badge.dart';
 import '../../media/media.dart';
 import '../../portfolio_draft/portfolio_draft.dart';
 
-/// Общая композиция ProjectListItem 185:2771 для Home и Projects.
+/// Общая светлая карточка проекта для Home и Projects.
 /// Открытие, полный список технологий и Copy имеют отдельные hit areas.
 class ProjectLibraryCard extends StatefulWidget {
   const ProjectLibraryCard({
@@ -148,7 +148,25 @@ class _ProjectLibraryCardState extends State<ProjectLibraryCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(widget.title, style: text.titleLarge),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              widget.title,
+                              style: text.headlineSmall,
+                            ),
+                          ),
+                          const SizedBox(width: StackCardSpacing.sm),
+                          ExcludeSemantics(
+                            child: Icon(
+                              Icons.north_east_rounded,
+                              size: 20,
+                              color: colors.textMeta,
+                            ),
+                          ),
+                        ],
+                      ),
                       if (widget.description.isNotEmpty) ...[
                         const SizedBox(height: StackCardSpacing.md),
                         Text(
@@ -163,8 +181,8 @@ class _ProjectLibraryCardState extends State<ProjectLibraryCard> {
                       const SizedBox(height: StackCardSpacing.md),
                       Text(
                         widget.sourceLabel,
-                        style: text.bodySmall?.copyWith(
-                          color: colors.sourceText,
+                        style: text.labelSmall?.copyWith(
+                          color: colors.textSecondary,
                         ),
                       ),
                       if (widget.updatedAt != null) ...[

@@ -1,10 +1,12 @@
 const russianGitHubStrings = <String, String>{
+  'github.importTitle': 'Импорт из GitHub',
+  'github.fork': 'Форк',
   'github.back': 'Назад к проектам',
   'github.title': 'Найди свои репозитории',
   'github.hint': 'Публичные репозитории GitHub',
-  'github.username': 'Username GitHub',
+  'github.username': 'Имя пользователя GitHub',
   'github.usernameHint': 'Например, octocat',
-  'github.usernameEmpty': 'Введи username GitHub',
+  'github.usernameEmpty': 'Введи имя пользователя GitHub',
   'github.usernameInvalid': 'Используй до 39 букв, цифр и одиночных дефисов',
   'github.load': 'Загрузить профиль',
   'github.loading': 'Загрузка GitHub',
@@ -15,16 +17,16 @@ const russianGitHubStrings = <String, String>{
   'github.searchHint': 'Название, описание или язык',
   'github.filter.all': 'Все',
   'github.filter.originals': 'Оригинальные',
-  'github.filter.forks': 'Forks',
+  'github.filter.forks': 'Форки',
   'github.filter.archived': 'Архив',
   'github.counts': 'Показано: {visible} · Загружено: {loaded}',
   'github.searchScope': 'Поиск и фильтры применяются к загруженным страницам.',
-  'github.emptyUsername': 'Введи username',
+  'github.emptyUsername': 'Введи имя пользователя',
   'github.emptyUsernameHint':
       'Покажем профиль и доступные публичные репозитории.',
   'github.emptyRepos': 'Публичных репозиториев нет',
   'github.emptySearch': 'Ничего не найдено',
-  'github.emptyReposHint': 'Можно попробовать другой username.',
+  'github.emptyReposHint': 'Можно попробовать другое имя пользователя.',
   'github.emptySearchHint':
       'Измени поиск, сбрось фильтры или загрузи следующую страницу.',
   'github.reset': 'Сбросить поиск и фильтры',
@@ -40,12 +42,12 @@ const russianGitHubStrings = <String, String>{
   'github.cache.storageTitle': 'Копия на устройстве недоступна',
   'github.cache.storageHint':
       'Данные загружены, но не сохранены для доступа без сети.',
-  'github.failure.invalidUsername.title': 'Проверь username',
+  'github.failure.invalidUsername.title': 'Проверь имя пользователя',
   'github.failure.invalidUsername.message':
       'Введи имя аккаунта GitHub без ссылки.',
   'github.failure.notFound.title': 'Профиль не найден',
   'github.failure.notFound.message':
-      'Проверь username. Доступны только публичные данные GitHub.',
+      'Проверь имя пользователя. Доступны только публичные данные GitHub.',
   'github.failure.network.title': 'Нет соединения',
   'github.failure.network.message':
       'Проверь доступ к интернету и повтори запрос.',
@@ -69,6 +71,8 @@ const russianGitHubStrings = <String, String>{
 };
 
 const englishGitHubStrings = <String, String>{
+  'github.importTitle': 'GitHub Import',
+  'github.fork': 'Fork',
   'github.back': 'Back to projects',
   'github.title': 'Find your repositories',
   'github.hint': 'Public GitHub repositories',

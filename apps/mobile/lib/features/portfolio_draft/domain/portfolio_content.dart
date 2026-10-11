@@ -23,7 +23,7 @@ final class PortfolioContent {
     List<PortfolioBlock>? blocks,
     List<GitHubIgnoredRepository> ignoredGitHubRepositories = const [],
     List<PortfolioDocument> documents = const [],
-    this.theme = PortfolioTheme.dark,
+    this.theme = PortfolioTheme.light,
   }) : skills = List.unmodifiable(skills),
        projects = List.unmodifiable(projects),
        experience = List.unmodifiable(experience),

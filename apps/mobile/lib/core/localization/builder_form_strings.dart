@@ -7,7 +7,7 @@ const builderFormRussianStrings = <String, String>{
   'builderForm.resumeTitle': 'Текст резюме',
   'builderForm.newProjectTitle': 'Новый проект',
   'builderForm.editProjectTitle': 'Редактировать проект',
-  'builderForm.applyHint': 'Примените изменения к черновику, затем сохраните его на устройстве в Builder.',
+  'builderForm.applyHint': 'Примените изменения к черновику, затем сохраните его на устройстве в редакторе.',
   'builderForm.apply': 'Применить',
   'builderForm.cancel': 'Отмена',
   'builderForm.add': 'Добавить',
@@ -15,7 +15,7 @@ const builderFormRussianStrings = <String, String>{
   'builderForm.edit': 'Редактировать',
   'builderForm.delete': 'Удалить',
   'builderForm.name': 'Имя',
-  'builderForm.username': 'Username',
+  'builderForm.username': 'Имя пользователя',
   'builderForm.usernameHint':
       '3–30 символов: строчные латинские буквы, цифры и дефис',
   'builderForm.headline': 'Профессиональный заголовок',
@@ -37,13 +37,13 @@ const builderFormRussianStrings = <String, String>{
   'builderForm.kindWebsite': 'Сайт',
   'builderForm.kindLinkedIn': 'LinkedIn',
   'builderForm.resumeText': 'Резюме',
-  'builderForm.resumeHint': 'Обычный текст с переносами строк. Он появится в блоке Resume вашего портфолио.',
+  'builderForm.resumeHint': 'Обычный текст с переносами строк. Он появится в блоке резюме вашего портфолио.',
   'builderForm.projectName': 'Название проекта',
   'builderForm.technologies': 'Технологии',
   'builderForm.technologiesHint': 'Через запятую, например Flutter, Dart',
   'builderForm.repositoryUrl': 'Репозиторий (необязательно)',
   'builderForm.liveUrl': 'Ссылка на проект (необязательно)',
-  'builderForm.featured': 'Featured: показывать среди избранных',
+  'builderForm.featured': 'Показывать среди избранных',
   'builderForm.visible': 'Показывать проект в портфолио',
   'builderForm.required': 'Заполните поле.',
   'builderForm.tooLong': 'Не более {limit} символов.',
@@ -61,15 +61,15 @@ const builderFormRussianStrings = <String, String>{
   'builderForm.unsupportedVersion': 'Черновик записан в другой версии формата. Исходная запись сохранена; перезапись заблокирована.',
   'builderForm.unavailableHint':
       'Не удалось безопасно открыть черновик. Сохранённые данные не изменены.',
-  'builderForm.noContent': 'Builder ещё не начат',
-  'builderForm.noContentHint': 'Откройте Builder и создайте свой черновик.',
-  'builderForm.openBuilder': 'Открыть Builder',
+  'builderForm.noContent': 'Портфолио ещё не создано',
+  'builderForm.noContentHint': 'Откройте редактор и создайте свой черновик.',
+  'builderForm.openBuilder': 'Открыть редактор',
   'builderForm.empty': 'Список пока пуст',
   'builderForm.emptyHint':
       'Добавьте запись. Изменения появятся в черновике после «Применить».',
   'builderForm.projectMissing': 'Проект не найден',
   'builderForm.projectMissingHint':
-      'Этот проект больше не находится в черновике. Вернитесь в Builder.',
+      'Этот проект больше не находится в черновике. Вернитесь в редактор.',
 };
 
 const builderFormEnglishStrings = <String, String>{

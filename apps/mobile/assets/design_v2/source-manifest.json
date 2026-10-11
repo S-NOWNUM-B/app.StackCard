@@ -870,6 +870,55 @@
     "generatedReferenceCodeImported": false
   },
   "runtimeSourceMap": {
+    "acceptedOverrides": {
+      "acceptedAt": "2026-10-11",
+      "source": "docs/redesign/web-openship.md",
+      "reason": "Пользователь принял светлый web StackCard по Openship и поручил перенести его в мобильное приложение. Исходные Figma IDs, значения registry и bytes assets сохранены; этот override описывает только runtime.",
+      "colorFormat": "ARGB",
+      "compatibilityAliases": {
+        "Dark": "Light"
+      },
+      "colorRoles": {
+        "background": "FFFFFFFF",
+        "surface": "FFFFFFFF",
+        "surfaceElevated": "FFF7F7F8",
+        "surfaceHover": "FFEFEFF1",
+        "border": "FFE4E4E7",
+        "borderSubtle": "FFEDEDEF",
+        "textPrimary": "FF151518",
+        "textSecondary": "FF606067",
+        "textMuted": "FF71717A",
+        "accent": "FF151518",
+        "accentHover": "FF333338",
+        "accentSoft": "FFF1F1F3",
+        "primary": "FF151518",
+        "onPrimary": "FFFFFFFF",
+        "acid": "FFF7F7F8",
+        "cyan": "FFF5F6F8",
+        "pink": "FFF8F5F7",
+        "ink": "FF151518",
+        "success": "FF168449",
+        "warning": "FF996000",
+        "error": "FFC92D45",
+        "borderStrong": "FFB8BBC4",
+        "paper": "FFFFFFFF",
+        "sourceText": "FF606067",
+        "focus": "FF151518",
+        "textMeta": "FF676C77",
+        "controlOutline": "FF676C77",
+        "accentText": "FF151518",
+        "successText": "FF147B44",
+        "primaryOutline": "FF151518"
+      },
+      "textStyles": {
+        "headlineLarge": {
+          "size": 32,
+          "weight": 800,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.9
+        }
+      }
+    },
     "colorRoles": [
       {
         "sourceId": "VariableID:2:34",

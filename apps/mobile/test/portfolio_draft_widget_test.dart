@@ -4,6 +4,7 @@ import 'package:app_stackcard/core/state/app_settings.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/main.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -188,38 +189,37 @@ void main() {
     );
   }
 
-  testWidgets('English locale translates form, statuses and typed failures', (
-    tester,
-  ) async {
-    await _open(
-      tester,
-      _Source(
-        save: (_) async => throw const PortfolioDraftFailure(
-          PortfolioDraftFailureKind.unavailable,
+  testWidgets(
+    'Legacy English preference keeps Russian errors and unchanged note input',
+    (tester) async {
+      await _open(
+        tester,
+        _Source(
+          save: (_) async => throw const PortfolioDraftFailure(
+            PortfolioDraftFailureKind.unavailable,
+          ),
         ),
-      ),
-      language: AppLanguage.en,
-    );
-    expect(find.text('Notes'), findsNWidgets(2));
-    expect(
-      find.text(
-        'Notes are not part of the portfolio and do not appear in the preview.',
-      ),
-      findsOneWidget,
-    );
-    expect(find.text('Save'), findsOneWidget);
-    await tester.enterText(_notes, 'English note');
-    await tester.pump();
-    await tester.ensureVisible(find.text('You have unsaved changes'));
-    expect(find.text('You have unsaved changes'), findsOneWidget);
-    await _save(tester);
-    expect(find.text('Notes were not saved'), findsOneWidget);
-    expect(
-      find.text('Local storage is unavailable. Try again later.'),
-      findsOneWidget,
-    );
-    expect(find.text('Заметки'), findsNothing);
-  });
+        language: AppLanguage.en,
+      );
+      expect(find.text('Заметки'), findsNWidgets(2));
+      expect(find.text('Сохранить'), findsOneWidget);
+      await tester.enterText(_notes, 'English note');
+      await tester.pump();
+      await tester.ensureVisible(find.text('Есть несохранённые изменения'));
+      expect(find.text('Есть несохранённые изменения'), findsOneWidget);
+      await _save(tester);
+      expect(find.text('Заметки не сохранены'), findsOneWidget);
+      expect(
+        find.text('Локальное хранилище недоступно. Повтори действие позже.'),
+        findsOneWidget,
+      );
+      expect(find.text('Notes'), findsNothing);
+      expect(
+        tester.widget<StackCardInput>(_notes).controller!.text,
+        'English note',
+      );
+    },
+  );
 
   for (final theme in [AppTheme.dark, AppTheme.light]) {
     for (final viewport in [

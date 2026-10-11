@@ -36,6 +36,9 @@ class FirebaseAccountAuthRepository
                     uid: user.uid,
                     email: user.email,
                     displayName: user.displayName,
+                    hasGoogle: user.providerData.any(
+                      (provider) => provider.providerId == 'google.com',
+                    ),
                   );
           })
           .handleError((Object error) {

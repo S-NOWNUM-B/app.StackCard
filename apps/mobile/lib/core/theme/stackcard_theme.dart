@@ -4,8 +4,9 @@ import 'stackcard_colors.dart';
 import 'stackcard_tokens.dart';
 
 abstract final class StackCardTheme {
-  static final dark = _build(Brightness.dark, StackCardColors.dark);
   static final light = _build(Brightness.light, StackCardColors.light);
+  // Сохранённые dark документы читаются без миграции и отображаются в light.
+  static final dark = light;
 
   /// Формы входа используют спокойные controls без ярких рекламных поверхностей.
   static ThemeData authentication(ThemeData base) {
@@ -90,10 +91,9 @@ abstract final class StackCardTheme {
 
   static ThemeData _build(Brightness brightness, StackCardColors colors) {
     final isDark = brightness == Brightness.dark;
-    final inverse = isDark ? StackCardColors.light : StackCardColors.dark;
     final scheme = ColorScheme(
       brightness: brightness,
-      // Primary fill и ink точно соответствуют обеим Figma modes.
+      // Primary использует ту же чёрно-белую пару, что одобренный web.
       primary: colors.primary,
       onPrimary: colors.onPrimary,
       primaryContainer: colors.accentSoft,
@@ -122,19 +122,19 @@ abstract final class StackCardTheme {
       surfaceContainerHighest: colors.surfaceHover,
       outline: colors.controlOutline,
       outlineVariant: colors.border,
-      inverseSurface: inverse.surface,
-      onInverseSurface: inverse.textPrimary,
+      inverseSurface: colors.ink,
+      onInverseSurface: colors.paper,
       inversePrimary: colors.primary,
-      shadow: StackCardColors.dark.background,
-      scrim: StackCardColors.dark.background,
+      shadow: colors.ink,
+      scrim: colors.ink,
       surfaceTint: Colors.transparent,
     );
-    // Десять Manrope styles из принятой DS; Flutter roles без новой scale.
+    // Manrope связывает редакционную типографику web с мобильными экранами.
     final textTheme = TextTheme(
       displayLarge: _text(40, FontWeight.w800, 1.2, -1),
       displayMedium: _text(40, FontWeight.w800, 1.2, -1),
       displaySmall: _text(40, FontWeight.w800, 1.2, -1),
-      headlineLarge: _text(28, FontWeight.w700, 1.2, -0.6),
+      headlineLarge: _text(32, FontWeight.w800, 1.2, -0.9),
       headlineMedium: _text(28, FontWeight.w700, 1.2, -0.6),
       headlineSmall: _text(24, FontWeight.w700, 1.25, -0.4),
       titleLarge: _text(20, FontWeight.w700, 1.3, -0.3),
@@ -175,11 +175,11 @@ abstract final class StackCardTheme {
             StackCardSize.touchTarget,
             StackCardSize.touchTarget,
           ),
-          padding: const EdgeInsets.all(StackCardSpacing.sm),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           textStyle: textTheme.labelLarge,
           side: BorderSide(color: colors.primaryOutline),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(StackCardRadius.medium),
+            borderRadius: BorderRadius.circular(StackCardRadius.capsule),
           ),
           elevation: 0,
           surfaceTintColor: Colors.transparent,

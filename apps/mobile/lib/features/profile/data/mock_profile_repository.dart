@@ -6,11 +6,11 @@ class MockProfileRepository implements ProfileRepository {
   Future<Profile> getProfile() async => _profile;
 
   final _profile = Profile(
-    name: 'Alex Morgan',
+    name: 'Алекс Морган',
     handle: 'alex-dev-demo',
-    role: 'Flutter & Web Developer',
+    role: 'Разработчик Flutter и веб-приложений',
     location: 'Алматы, Казахстан',
-    initials: 'AM',
+    initials: 'АМ',
     about:
         'Создаю понятные цифровые продукты: от небольших мобильных приложений '
         'до интерфейсов для веба. Люблю чистую типографику, продуманные детали '
@@ -23,15 +23,15 @@ class MockProfileRepository implements ProfileRepository {
       'Firebase',
       'Git',
       'Figma',
-      'UI Design',
+      'Дизайн интерфейсов',
     ],
     readiness: ProfileReadiness(completedBlocks: 4, totalBlocks: 5),
     experience: const ProfileHighlight(
-      title: 'Frontend Developer',
-      details: 'Studio Example · 2024–2026',
+      title: 'Фронтенд-разработчик',
+      details: 'Студия «Пример» · 2024–2026',
     ),
     education: const ProfileHighlight(
-      title: 'Software Engineering',
+      title: 'Программная инженерия',
       details: 'Пример учебного профиля · 2023–2027',
     ),
   );

@@ -60,7 +60,7 @@ void main() {
       expect(source.profileReads, 0);
       await tester.tap(find.text('Загрузить профиль'));
       await tester.pumpAndSettle();
-      expect(find.text('Введи username GitHub'), findsOneWidget);
+      expect(find.text('Введи имя пользователя GitHub'), findsOneWidget);
       expect(source.profileReads, 0);
       await tester.enterText(
         find.byKey(const ValueKey('github_username')),

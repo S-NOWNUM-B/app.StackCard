@@ -45,7 +45,7 @@ void main() {
       ...fixture,
       'updatedAt': Timestamp.fromDate(timestamp),
     }, ownerUid: 'owner');
-    expect(draft.content, _workspace(now));
+    expect(draft.content, _workspace(now, theme: PortfolioTheme.dark));
     final encoded = encodeCloudPortfolioDraft(draft);
     encoded['updatedAt'] = timestamp.toIso8601String();
     expect(encoded, fixture);
@@ -501,7 +501,10 @@ void main() {
   });
 }
 
-PortfolioContent _workspace(DateTime now) {
+PortfolioContent _workspace(
+  DateTime now, {
+  PortfolioTheme theme = PortfolioTheme.light,
+}) {
   const link = SocialLink(
     id: 'email',
     label: 'Work email',
@@ -510,6 +513,7 @@ PortfolioContent _workspace(DateTime now) {
     publishAllowed: true,
   );
   final base = PortfolioContent(
+    theme: theme,
     profile: const PortfolioProfile(
       name: 'Owner',
       locationText: 'Almaty',
@@ -526,7 +530,7 @@ PortfolioContent _workspace(DateTime now) {
       ),
     ],
   );
-  final snapshot = seedDocumentContent(base);
+  final snapshot = seedDocumentContent(base).copyWith(theme: theme);
   return base.copyWith(
     documents: [
       PortfolioDocument(

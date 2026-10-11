@@ -126,7 +126,7 @@ class _StackCardBootstrapState extends State<StackCardBootstrap> {
       }
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: StackCardTheme.dark,
+        theme: StackCardTheme.light,
         locale: const Locale('ru'),
         supportedLocales: AppStrings.supportedLocales,
         localizationsDelegates: const [
@@ -168,7 +168,7 @@ class StackCardApp extends StatefulWidget {
   const StackCardApp({
     super.key,
     this.initialLocation = '/sign-in',
-    this.initialThemeMode = ThemeMode.dark,
+    this.initialThemeMode = ThemeMode.light,
     this.providerOverrides = const [],
     this.initialSettings,
     this.settingsRepository,
@@ -319,9 +319,9 @@ class _RoutedStackCardAppState
         title: 'StackCard',
         debugShowCheckedModeBanner: false,
         theme: StackCardTheme.light,
-        darkTheme: StackCardTheme.dark,
-        themeMode: appearance.$1,
-        locale: appearance.$2,
+        // Старые preferences читаются без перезаписи; runtime всегда light/ru.
+        themeMode: ThemeMode.light,
+        locale: const Locale('ru'),
         supportedLocales: AppStrings.supportedLocales,
         localizationsDelegates: const [
           AppStrings.delegate,

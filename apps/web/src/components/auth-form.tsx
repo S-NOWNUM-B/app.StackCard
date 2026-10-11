@@ -8,6 +8,7 @@ import {
 } from 'firebase/auth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { firebaseServices } from '@/lib/firebase';
 import { safeReturnPath } from '@/lib/model';
 import { useSession } from './auth-session';
@@ -67,8 +68,8 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
   }
   return (
     <>
-      <Header context="auth" />
-      <main id="main" className="auth-container stack">
+      <Header context="auth" links={[]} />
+      <main id="main" className="auth-container auth-card stack">
         <h1>
           {accepted
             ? 'Проверьте почту'
@@ -103,7 +104,6 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
               value={email}
               maxLength={254}
               onChange={(e) => setEmail(e.target.value)}
-              helper="Почта для входа. Публичные контакты настраиваются отдельно."
             />
             {mode !== 'reset' && (
               <Field
@@ -115,7 +115,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-            )}{' '}
+            )}
             {mode === 'register' && (
               <Field
                 label="Подтверждение пароля"
@@ -128,13 +128,24 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
             )}
             {error && <Notice error>{error}</Notice>}
             {mode === 'login' && (
-              <LinkButton variant="quiet" href={`/reset-password${returnQuery}`}>
+              <Link className="auth-forgot" href={`/reset-password${returnQuery}`}>
                 Забыли пароль?
-              </LinkButton>
+              </Link>
             )}
+            <Button type="submit" disabled={busy || session.loading || !!session.error}>
+              {busy
+                ? 'Выполняем…'
+                : mode === 'login'
+                  ? 'Войти'
+                  : mode === 'register'
+                    ? 'Создать аккаунт'
+                    : 'Отправить письмо'}
+            </Button>
             {mode !== 'reset' && (
               <>
-                <p className="muted">или</p>
+                <div className="auth-divider">
+                  <span>или</span>
+                </div>
                 <Button
                   variant="secondary"
                   onClick={() => void submit(true)}
@@ -142,32 +153,19 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
                 >
                   Продолжить с Google
                 </Button>
-                <LinkButton
-                  variant="quiet"
-                  href={`${mode === 'login' ? '/sign-up' : '/sign-in'}${returnQuery}`}
-                >
-                  {mode === 'login' ? 'Создать аккаунт' : 'Уже есть аккаунт? Войти'}
-                </LinkButton>
+                <p className="auth-switch muted">
+                  {mode === 'login' ? 'Нет аккаунта? ' : 'Уже есть аккаунт? '}
+                  <Link href={`${mode === 'login' ? '/sign-up' : '/sign-in'}${returnQuery}`}>
+                    {mode === 'login' ? 'Зарегистрироваться' : 'Войти'}
+                  </Link>
+                </p>
               </>
             )}
-            <p className="muted">Публичные резюме и портфолио можно читать без входа.</p>
-            {mode === 'login' && (
-              <LinkButton variant="quiet" href="/account-deletion">
-                Проверить начатое удаление аккаунта
+            {mode === 'reset' && (
+              <LinkButton variant="quiet" href={`/sign-in${returnQuery}`}>
+                Вернуться ко входу
               </LinkButton>
             )}
-            <div className="row">
-              <LinkButton href="/">Отмена</LinkButton>
-              <Button type="submit" disabled={busy || session.loading || !!session.error}>
-                {busy
-                  ? 'Выполняем…'
-                  : mode === 'login'
-                    ? 'Войти'
-                    : mode === 'register'
-                      ? 'Создать аккаунт'
-                      : 'Отправить письмо'}
-              </Button>
-            </div>
           </form>
         )}
       </main>

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Семантические цвета принятой StackCard Design v2, R3.1–R3.4.
+/// Светлый StackCard: белые поверхности, чернильный текст и нейтральные controls.
 @immutable
 class StackCardColors extends ThemeExtension<StackCardColors> {
   const StackCardColors({
@@ -46,70 +46,40 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
        successText = successText ?? success,
        primaryOutline = primaryOutline ?? onPrimary ?? ink;
 
-  static const dark = StackCardColors(
-    background: Color(0xFF070708),
-    surface: Color(0xFF0D0E11),
-    surfaceElevated: Color(0xFF14161B),
-    surfaceHover: Color(0xFF1B1E24),
-    border: Color(0xFF272A32),
-    borderSubtle: Color(0xFF20232A),
-    textPrimary: Color(0xFFF4F5F7),
-    textSecondary: Color(0xFFA4A8B3),
-    textMuted: Color(0xFF737884),
-    accent: Color(0xFFC7FF1A),
-    accentHover: Color(0xFFAFDC10),
-    accentSoft: Color(0xFF252F0A),
-    acid: Color(0xFFC7FF1A),
-    cyan: Color(0xFF6FE7F2),
-    pink: Color(0xFFFF6AB2),
-    ink: Color(0xFF070708),
-    success: Color(0xFF41E68A),
-    warning: Color(0xFFFFD166),
-    error: Color(0xFFF06272),
-    primary: Color(0xFFC7FF1A),
-    onPrimary: Color(0xFF070708),
-    borderStrong: Color(0xFF373B46),
-    paper: Color(0xFFF4F5F7),
-    sourceText: Color(0xFF6FE7F2),
-    focus: Color(0xFFC7FF1A),
-    textMeta: Color(0xFFA4A8B3),
-    controlOutline: Color(0xFF737884),
-    accentText: Color(0xFFC7FF1A),
-    successText: Color(0xFF41E68A),
-    primaryOutline: Color(0xFFC7FF1A),
-  );
+  // Совместимость прежних callers; отдельной тёмной палитры больше нет.
+  static const dark = light;
 
   static const light = StackCardColors(
-    background: Color(0xFFF5F5F6),
+    background: Color(0xFFFFFFFF),
     surface: Color(0xFFFFFFFF),
-    surfaceElevated: Color(0xFFFAFAFA),
+    surfaceElevated: Color(0xFFF7F7F8),
     surfaceHover: Color(0xFFEFEFF1),
-    border: Color(0xFFDEDEE3),
-    borderSubtle: Color(0xFFE8E8EC),
-    textPrimary: Color(0xFF18181B),
-    textSecondary: Color(0xFF52525B),
-    textMuted: Color(0xFF676C77),
-    accent: Color(0xFFC7FF1A),
-    accentHover: Color(0xFFAFDC10),
-    accentSoft: Color(0xFFEAF6C9),
-    acid: Color(0xFFC7FF1A),
-    cyan: Color(0xFF6FE7F2),
-    pink: Color(0xFFFF6AB2),
-    ink: Color(0xFF070708),
+    border: Color(0xFFE4E4E7),
+    borderSubtle: Color(0xFFEDEDEF),
+    textPrimary: Color(0xFF151518),
+    textSecondary: Color(0xFF606067),
+    textMuted: Color(0xFF71717A),
+    accent: Color(0xFF151518),
+    accentHover: Color(0xFF333338),
+    accentSoft: Color(0xFFF1F1F3),
+    acid: Color(0xFFF7F7F8),
+    cyan: Color(0xFFF5F6F8),
+    pink: Color(0xFFF8F5F7),
+    ink: Color(0xFF151518),
     success: Color(0xFF168449),
     warning: Color(0xFF996000),
     error: Color(0xFFC92D45),
-    primary: Color(0xFFC7FF1A),
-    onPrimary: Color(0xFF070708),
+    primary: Color(0xFF151518),
+    onPrimary: Color(0xFFFFFFFF),
     borderStrong: Color(0xFFB8BBC4),
-    paper: Color(0xFFF4F5F7),
-    sourceText: Color(0xFF0B6570),
-    focus: Color(0xFF526B00),
+    paper: Color(0xFFFFFFFF),
+    sourceText: Color(0xFF606067),
+    focus: Color(0xFF151518),
     textMeta: Color(0xFF676C77),
     controlOutline: Color(0xFF676C77),
-    accentText: Color(0xFF526B00),
+    accentText: Color(0xFF151518),
     successText: Color(0xFF147B44),
-    primaryOutline: Color(0xFF070708),
+    primaryOutline: Color(0xFF151518),
   );
 
   final Color background;

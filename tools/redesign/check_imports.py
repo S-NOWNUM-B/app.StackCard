@@ -268,7 +268,43 @@ def validate(repo, require_brand=True):
     theme_text = (mobile / 'lib/core/theme/stackcard_theme.dart').read_text()
     token_text = (mobile / 'lib/core/theme/stackcard_tokens.dart').read_text()
     check(re.search(r"fontFamily:\s*'Manrope'", theme_text) is not None, 'UI font family drift')
-    for mode in ('Dark', 'Light'):
+    # Последующее решение меняет runtime, не исходные Figma IDs/values/assets.
+    overrides = maps.get('acceptedOverrides')
+    accepted_colors, accepted_styles = {}, {}
+    modes = ('Dark', 'Light')
+    if overrides is not None:
+        if not isinstance(overrides, dict):
+            raise ValueError('Runtime accepted overrides must be an object')
+        check(set(overrides) == {'acceptedAt', 'source', 'reason', 'colorFormat',
+                                 'compatibilityAliases', 'colorRoles', 'textStyles'},
+              'Accepted runtime override fields drift')
+        check(overrides.get('acceptedAt') == '2026-10-11'
+              and overrides.get('source') == 'docs/redesign/web-openship.md'
+              and bool(overrides.get('reason')),
+              'Missing accepted light runtime provenance')
+        check(overrides.get('colorFormat') == 'ARGB', 'Accepted color format drift')
+        check(overrides.get('compatibilityAliases') == {'Dark': 'Light'},
+              'Only the accepted light palette may render')
+        accepted_colors = overrides.get('colorRoles')
+        accepted_styles = overrides.get('textStyles')
+        if not isinstance(accepted_colors, dict) or not isinstance(accepted_styles, dict):
+            raise ValueError('Accepted runtime colors/styles must be objects')
+        check(set(accepted_colors) == {x['runtimeField'] for x in maps['colorRoles']},
+              'Accepted30 color roles are incomplete or unexpected')
+        check(all(isinstance(value, str) and re.fullmatch(r'[0-9A-F]{8}', value)
+                  for value in accepted_colors.values()), 'Accepted ARGB color value drift')
+        check(set(accepted_styles) == {'headlineLarge'}, 'Unexpected accepted text-style override')
+        check(accepted_styles.get('headlineLarge') ==
+              {'size': 32, 'weight': 800, 'lineHeight': 1.2, 'letterSpacing': -0.9},
+              'Accepted headlineLarge metrics drift')
+        check(re.search(r'static const dark\s*=\s*light\s*;', colors_text) is not None
+              and re.search(r'static const dark\s*=\s*StackCardColors\(', colors_text) is None,
+              'Dark colors must alias Light without a separate palette')
+        check(re.search(r'static final dark\s*=\s*light\s*;', theme_text) is not None
+              and re.search(r'static final light\s*=\s*_build\(Brightness.light,\s*StackCardColors.light\)', theme_text) is not None,
+              'Dark theme must alias the accepted Light theme')
+        modes = ('Light',)
+    for mode in modes:
         block = re.search(r'static const ' + mode.lower() + r'\s*=\s*StackCardColors\((.*?)\n\s*\);', colors_text, re.S)
         fields = dict(re.findall(r'(\w+):\s*Color\(0x([0-9a-fA-F]{8})\)', block[1] if block else ''))
         for row in maps['colorRoles']:
@@ -276,6 +312,8 @@ def validate(repo, require_brand=True):
             check(variable['name'] == 'color/' + row['runtimeField'], 'Color field mapping drift')
             color = variable['values'][mode]
             expected = f"{round(color['alpha'] * 255):02X}" + color['hex'].lstrip('#').upper()
+            if overrides is not None:
+                expected = accepted_colors.get(row['runtimeField'])
             check(fields.get(row['runtimeField'], '').upper() == expected, mode + ' color mismatch: ' + row['runtimeField'])
     actual_styles = {role: [float(size), int(weight), float(height), float(tracking)] for role, size, weight, height, tracking in re.findall(r'(\w+):\s*_text\(([\d.]+),\s*FontWeight.w(\d+),\s*([\d.]+),\s*(-?[\d.]+)\)', theme_text)}
     for row in maps['textStyles']:
@@ -283,8 +321,18 @@ def validate(repo, require_brand=True):
         check(style['font']['family'] == 'Manrope', 'Non-Manrope source style')
         expected = [style['size'], style['font']['variationSettings']['wght'], style['lineHeight']['value'] / style['size'], style['letterSpacing']['value']]
         for role in row['runtimeTextThemeRoles']:
+            role_expected = expected
+            if role in accepted_styles:
+                override = accepted_styles[role]
+                if not isinstance(override, dict) or not all(
+                        isinstance(override.get(key), (int, float))
+                        and not isinstance(override.get(key), bool)
+                        and math.isfinite(override[key])
+                        for key in ('size', 'weight', 'lineHeight', 'letterSpacing')):
+                    raise ValueError('Accepted text-style metrics must be finite numbers')
+                role_expected = [override['size'], override['weight'], override['lineHeight'], override['letterSpacing']]
             actual = actual_styles.get(role)
-            check(actual is not None and all(math.isclose(a, b, abs_tol=1e-6, rel_tol=0) for a, b in zip(actual or [], expected)), 'Style mismatch: ' + role)
+            check(actual is not None and all(math.isclose(a, b, abs_tol=1e-6, rel_tol=0) for a, b in zip(actual or [], role_expected)), 'Style mismatch: ' + role)
     for row in maps['numericTokens']:
         api, name = row['runtimeSymbol'].split('.')
         block = re.search(r'abstract final class ' + api + r'\s*\{(.*?)\n\}', token_text, re.S)

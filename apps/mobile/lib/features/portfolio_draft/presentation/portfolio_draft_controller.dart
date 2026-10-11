@@ -224,7 +224,8 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
     final now = DateTime.now().toUtc();
     PortfolioContent migrate(PortfolioContent content) {
       if (content.documents.isNotEmpty) return content;
-      final snapshot = seedDocumentContent(content);
+      final snapshot = seedDocumentContent(content)
+          .copyWith(theme: PortfolioTheme.light);
       final projects = [
         for (final project in content.projects)
           PortfolioProjectAttachment(

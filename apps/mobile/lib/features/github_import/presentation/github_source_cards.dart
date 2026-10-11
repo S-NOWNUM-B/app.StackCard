@@ -130,7 +130,7 @@ class GitHubRepositoryCard extends StatelessWidget {
               value: repository.forks,
               label: context.strings.tr('githubSync.metadata.forks'),
             ),
-            if (repository.isFork) const Text('Fork'),
+            if (repository.isFork) Text(context.strings.tr('github.fork')),
             if (repository.archived)
               Text(context.strings.tr('github.filter.archived')),
           ],

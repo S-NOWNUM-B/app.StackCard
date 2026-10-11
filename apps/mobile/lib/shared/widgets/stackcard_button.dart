@@ -93,7 +93,7 @@ class _StackCardButtonState extends State<StackCardButton> {
             onTap: enabled ? widget.onPressed : null,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(StackCardRadius.medium),
+                borderRadius: BorderRadius.circular(StackCardRadius.capsule),
                 border: Border.all(
                   color: focused ? colors.focus : Colors.transparent,
                   width: 2,
@@ -150,7 +150,7 @@ class _StackCardButtonState extends State<StackCardButton> {
                     shape: WidgetStatePropertyAll(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(
-                          StackCardRadius.medium,
+                          StackCardRadius.capsule,
                         ),
                       ),
                     ),

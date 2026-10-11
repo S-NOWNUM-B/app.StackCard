@@ -5,7 +5,7 @@
 **Действующий shared UI contract R8 и история визуального target от 2026-10-04**
 
 ![Design partial runtime](https://raster.shields.io/badge/Design-partial_runtime-111111?style=for-the-badge)
-![Accent Acid Lime](https://raster.shields.io/badge/Accent-Acid_Lime-C7FF1A?style=for-the-badge)
+![Light UI](https://raster.shields.io/badge/UI-light_only-ffffff?style=for-the-badge)
 
 </div>
 
@@ -45,8 +45,11 @@ categories/artwork требования не переопределяют Design
 [StackCardColors](../../apps/mobile/lib/core/theme/stackcard_colors.dart),
 [StackCardTheme](../../apps/mobile/lib/core/theme/stackcard_theme.dart) и
 [tokens](../../apps/mobile/lib/core/theme/stackcard_tokens.dart) остаются единым
-source для Material3 и shared widgets. Dark/Light используют semantic Lime/ink
-`primary/onPrimary`; error/destructive отделены от brand. Важный текст получает
+source для Material3 и shared widgets. После одобрения web 2026-10-11
+Flutter использует только light: белый фон, нейтральные поверхности, чёрный
+`primary` и белый `onPrimary`; error/destructive отделены от brand.
+Legacy `StackCardTheme.dark`/`StackCardColors.dark` — совместимые aliases к light,
+отдельной тёмной палитры нет. Manrope, original SVG и лицензии сохранены. Важный текст получает
 textPrimary/textSecondary/textMeta; accentText/successText и controlOutline/
 primaryOutline/focus проверяются по реальной поверхности и состоянию. Цвета
 брендов технологий не превращаются в цвета UI действий.
@@ -55,8 +58,9 @@ Manrope400/600/700/800 — живой UI font с Noto Sans fallback; регис�
 исходные TTF/OFL в [pubspec](../../apps/mobile/pubspec.yaml) и [manifest](../../apps/mobile/assets/design_v2/source-manifest.json).
 Оригинальный outlined Wordmark A сохраняет Noto ExtraBold36/44 source geometry:
 [StackCardBrand](../../apps/mobile/lib/shared/widgets/stackcard_brand.dart)
-выбирает один Wordmark (уже содержит Mark) либо compact Mark, Dark paper/
-Light ink, contain/no tint/no дублирующий Text.9BrandA SVG импортированы.
+выбирает один Wordmark (уже содержит Mark) либо compact Mark, contain/no tint/
+no дублирующий Text. Текущий light runtime выбирает original ink variant;
+исторический paper variant сохранён в исходных assets.9BrandA SVG импортированы.
 D048 экспортирует pinned AppIcon source в existing Android mipmaps и iOS
 AppIcon set: 5 Android + 15 iOS PNG. Source geometry/fills/bytes не меняются;
 iOS transparent corners flattened на исходный #070708 и RGB без alpha.
@@ -76,7 +80,9 @@ opacity/polygon geometry; raw original не менять. [TechnologyBadge](../.
 использует живой Text/полный wrap; неизвестное название остаётся полным,
 +N открывает реальный список.40canonical records +1explicit derivative имеют
 SHA/provenance; portable [check_imports](../../tools/redesign/check_imports.py)
-проверяет источники независимо от headless SVG paint tests.
+проверяет источники независимо от headless SVG paint tests. Одобренные light
+runtime overrides палитры и `headlineLarge` зафиксированы в прежнем manifest;
+исторические Figma IDs/values и исходные bytes сохраняются.
 
 Controls используют внешний tap target≥48, input height56 и content max600;
 focus/loading/disabled/error сохраняют доступное имя и input. Timing constants
@@ -106,7 +112,16 @@ message в `StackCardStateView` выводится только при необ�
 с каждым действием. Ошибки, причины disabled actions, несохранённые изменения,
 подтверждения удаления и последствия публикации сохраняют понятный короткий текст.
 Постоянные format/limit подсказки заменяются validation или сообщением при
-достижении лимита. Русская и английская локализации следуют одному правилу.
+достижении лимита. Runtime интерфейс русский; сохранённые переводы ru/en следуют одному правилу
+и остаются совместимыми для компонентных проверок.
+
+Mobile Settings использует общий `SettingsEditorScaffold`: строки меню от 64dp,
+иконки 24dp, единые отступы и разделители. Аккаунт — горизонтальная строка
+с именем (или email), действием справа и меткой Google только для подключённого
+Google provider. Гость видит иконку гостя, «Гостевой режим» и вход. Удаление
+доступно через меню аккаунта и существующий экран подтверждения; у гостя его нет.
+При узком экране или увеличенном шрифте действия становятся иконками с tooltip,
+а длинное имя ограничивается двумя строками без вытеснения кнопок.
 
 Web tokens/shared controls находятся в `apps/web/src/app/globals.css` и
 `src/components/ui.tsx`, original Manrope/Brand A — в `apps/web/public`.
@@ -115,7 +130,13 @@ Web tokens/shared controls находятся в `apps/web/src/app/globals.css` 
 чёрные CTA, овальная навигация и крупная редакционная типографика. Русский контент
 описывает StackCard. Web не предлагает dark и показывает старые документы в light
 без изменения shared `dark | light` schema. React не импортирует Flutter runtime.
-Flutter redesign по этому референсу ждёт оценки web пользователем. Wide/narrow,
+Пользователь одобрил web и поручил перенести этот референс в Flutter.
+Runtime mobile всегда light/ru; theme/language selectors удалены, legacy
+preferences читаются без перезаписи. PortfolioTheme dark/light остаётся
+в data contract, но оба preview используют light. Home получает редакционный
+заголовок, Shell — брендированную овальную навигацию, библиотеки — тонкие
+разделители и крупную типографику. При компактной высоте заголовок помещается
+в header рядом с compact Brand A; text scaling и targets48 сохраняются. Wide/narrow,
 focus и states проверяются в браузере отдельно от contract tests/build;
 пользовательская приёмка и live сценарии остаются отдельными результатами.
 

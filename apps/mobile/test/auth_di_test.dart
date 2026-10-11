@@ -95,7 +95,7 @@ void main() {
     await tester.tap(find.text('Продолжить'));
     await tester.pumpAndSettle();
     expect(repository.requests, isEmpty);
-    expect(find.text('Укажите корректный email'), findsOneWidget);
+    expect(find.text('Укажите корректную электронную почту'), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
   });
 

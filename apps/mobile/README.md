@@ -52,12 +52,14 @@ Offline draft/cache и нативные функции относятся к м�
 
 GitHub Import загружает публичный профиль и repositories через Dio.
 Hive сохраняет response cache с offline fallback и отдельный portfolio draft;
-SharedPreferences — настройки приложения, UI переведён на ru/en.
+SharedPreferences — совместимые настройки приложения; runtime всегда light/ru.
 Локальный Builder позволяет собрать профиль, ручные проекты и разделы,
-выбрать порядок, видимость и тему блоков и посмотреть рабочий результат.
+выбрать порядок и видимость блоков и посмотреть рабочий результат.
 Общая база и документы читаются через прежний draft API; legacy Builder остаётся
 редактором базы. Demo сохранён для изолированного preview/read-model сценария.
-Общий stateful app shell и Material 3 light/dark сохранены.
+Общий stateful app shell и Material 3 сохранены. После одобрения web
+2026-10-11 применяется светлый Openship-derived дизайн StackCard: белые
+поверхности, чёрные кнопки, Manrope, Brand A и русский интерфейс.
 Phase 7 добавила Firebase Auth, защищённые именованные routes и изоляцию draft
 по guest/UID. Native entry настраивает настоящий account adapter; локальный guest
 доступ выбирается явно. Google flow, полный password reset и iOS приёмка остаются
@@ -156,9 +158,8 @@ Legacy demo-email/`openDemo` остаётся только preview/test harness 
 либо demo-данные до его начала, открывать карточку с подробностями.
 Loading/error/retry работают с текущими repository
 states; подмена источника не требует правки widgets. Settings получает профиль
-из того же profile provider, переключает dark/light/system и показывает
-loading/empty/error с retry. Dark — тема по умолчанию; выбранная тема сохраняется
-после перезапуска. Query/filter state остаётся в app session до смены владельца.
+из того же profile provider и показывает loading/empty/error с retry.
+Интерфейс всегда светлый и русский, включая bootstrap и preview старых документов. Query/filter state остаётся в app session до смены владельца.
 
 Settings позволяет явно перенести сохранённый guest draft в account с пустым
 local/cloud draft; начало переноса требует сети. Server read и create-if-absent
@@ -212,7 +213,8 @@ guest access. Изменение UID или проекта после откры
 
 ### Сохранить настройки и локальные заметки
 
-В Settings выбери dark/light/system, Русский/English и показ описаний источника.
+В Settings доступны показ описаний источника и уменьшение движения.
+Выбор темы и языка удалён: runtime всегда light/ru.
 UI, navigation и сообщения переведены; исходные названия и тексты контента
 сохраняются. Один version 1 snapshot записывается в `stackcard.settings.v1`
 через SharedPreferencesAsync. Ошибка сохранения видна с retry; выбор сразу
