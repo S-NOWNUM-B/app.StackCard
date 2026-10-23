@@ -52,10 +52,14 @@ final class LocalDraftAccounts {
     _userGenerations[uid] = (_userGenerations[uid] ?? 0) + 1;
     return HiveDraftOperations.run(_box, () async {
       final journal = _journal();
-      final keys = _box.keys.where((item) =>
-          item == key ||
-          (item is String && item.startsWith('$key.v')) ||
-          item == HivePortfolioSyncMetadataStore.storageKeyForUser(uid)).toList();
+      final keys = _box.keys
+          .where(
+            (item) =>
+                item == key ||
+                (item is String && item.startsWith('$key.v')) ||
+                item == HivePortfolioSyncMetadataStore.storageKeyForUser(uid),
+          )
+          .toList();
       for (final item in keys) {
         await _box.delete(item);
       }

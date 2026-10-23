@@ -84,6 +84,8 @@ mobile Save. Profile остаётся первым, GitHub следует вме
   Inbox доступен из Settings/hash, не зависит от draft и не добавляет root-вкладку.
   После awaited чтения проверять UID и generation; browser push не подключён.
 - Проверять typecheck, meaningful contract tests и build из `apps/web`.
+  CI использует корневую `.node-version`, `packageManager` из manifest и
+  `npm ci` по package-lock; общий workflow — [CI scope](ci.md).
   Prettier config/scripts в `apps/web` задают формат новых TS/CSS. `agentRules:false`
   в Next config сохраняет тонкий AGENTS adapter; AI guidance остаётся в `docs/AI`.
   По D048 пользователь разрешил browser/dev server и native проверки в этой задаче.

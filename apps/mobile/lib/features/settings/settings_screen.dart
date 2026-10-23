@@ -321,9 +321,7 @@ class _SettingsGitHubState
     return _SettingsPage(
       titleKey: 'settings.github',
       children: [
-        const Text(
-          'Профиль GitHub используется для импорта проектов',
-        ),
+        const Text('Профиль GitHub используется для импорта проектов'),
         const SizedBox(height: StackCardSpacing.xl),
         StackCardInput(
           key: const Key('settings.github.username'),

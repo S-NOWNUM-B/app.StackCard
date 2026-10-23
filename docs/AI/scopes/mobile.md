@@ -4,7 +4,9 @@
 Home/Projects/Editor — единственные roots; saved Home не использует buffer.
 Порядок пяти разделов main хранится в существующем `document.content.blocks`;
 `mainPortfolioSectionOrder` задаёт совместимый default и сохраняет выбранный порядок.
-Editor переставляет секции за точки в заголовках, Home/PDF читают saved snapshot.
+Современный Editor переставляет записи только внутри раздела; точки в заголовках
+и управление порядком разделов удалены. Прежний saved порядок совместимо
+читается через blocks; Home/PDF используют saved snapshot.
 Технологии проекта переставляются через `BuilderTagsEditor.onReorder` с final index;
 sliver mode находится в едином `CustomScrollView` редактора для автопрокрутки
 удерживаемого элемента у края. Сохранение остаётся отдельным scoped Save проекта.
@@ -62,7 +64,8 @@ Opt-in `integration_test/notification_permission_runtime_test.dart` читает
 Android permission без prompt/token/Auth/draft mutations; его локальный результат
 не подтверждает FCM delivery. Запуск и восстановление permission/APK — в CONTRIBUTING.
 
-Область этих правил — `apps/mobile/`.
+Область этих правил — `apps/mobile/`. CI и версии SDK — в [CI scope](ci.md);
+Flutter pin берётся из корневого `.fvmrc`, формат включает также `tool/test_driver`.
 
 Общие правила и границы текущей фазы наследуются из [общих правил](../AGENTS.md).
 Перед изменениями прочитай [общий AI router](../README.md) и применимые

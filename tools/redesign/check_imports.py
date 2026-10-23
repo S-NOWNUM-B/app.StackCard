@@ -123,6 +123,35 @@ def font_evidence(data):
             'latinRussianCodepoints': len(required), 'nativeRenderingVerified': False}
 
 
+def technology_icons_evidence(mobile):
+    """Каталог вне Design v2: закреплённые bytes, источник и безопасный SVG."""
+    base = mobile / 'assets/icons/technology'
+    manifest = json.loads((base / 'SIMPLE-ICONS-MANIFEST.json').read_text())
+    commit = manifest['commit']
+    if manifest['project'] != 'Simple Icons' or not re.fullmatch(r'[0-9a-f]{40}', commit):
+        raise ValueError('Invalid Simple Icons provenance')
+    if 'CC0-1.0' not in manifest['license']:
+        raise ValueError('Missing Simple Icons license')
+    (mobile / 'assets/icons/LICENSE-SIMPLE-ICONS.txt').read_text()
+    slugs = set()
+    for icon in manifest['icons']:
+        slug = icon['slug']
+        if not re.fullmatch(r'[a-z0-9]+', slug) or slug in slugs:
+            raise ValueError('Invalid or duplicate technology slug: ' + slug)
+        slugs.add(slug)
+        source = f'https://raw.githubusercontent.com/simple-icons/simple-icons/{commit}/icons/{slug}.svg'
+        if icon['sourceUrl'] != source:
+            raise ValueError('Technology source drift: ' + slug)
+        data = (base / 'simple-icons' / (slug + '.svg')).read_bytes()
+        if len(data) != icon['bytes'] or sha256(data) != icon['sha256']:
+            raise ValueError('Technology bytes/hash drift: ' + slug)
+        svg_evidence(data)
+    actual = {path.stem for path in (base / 'simple-icons').glob('*.svg')}
+    if not slugs or actual != slugs:
+        raise ValueError('Technology SVG inventory differs from manifest')
+    return len(slugs)
+
+
 def validate(repo, require_brand=True):
     mobile = repo / 'apps/mobile'
     manifest_path = mobile / 'assets/design_v2/source-manifest.json'
@@ -378,7 +407,9 @@ def validate(repo, require_brand=True):
         regex = r'\b' + name + r'\s*=\s*' + (r'Duration\(milliseconds:\s*(\d+)\)' if row['unit'] == 'milliseconds' else r'([\d.]+)')
         actual = re.search(regex, block[1] if block else '')
         check(actual is not None and float(actual[1]) == variables[row['sourceId']]['values']['Value'], 'Numeric mismatch: ' + row['runtimeSymbol'])
+    technology_icons = technology_icons_evidence(mobile)
     return {'status': 'FAIL' if errors else 'PASS', 'fonts': 4, 'canonicalSvgs': 30,
+            'technologyCatalogSvgs': technology_icons,
             'brandASvgs': len(brands), 'renderDerivativeSvgs': len(derivatives),
             'totalSvgs': 30 + len(brands) + len(derivatives), 'licenseNoticeFiles': 5,
             'sourceVariables': len(variables), 'sourceTextStyles': len(styles),

@@ -62,8 +62,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '713694392116',
     projectId: 'stackcard-dev-snownumb',
     storageBucket: 'stackcard-dev-snownumb.firebasestorage.app',
-    iosClientId:
-        '713694392116-69gr7d31phvd3uv3lbiec69kre0hidd7.apps.googleusercontent.com',
+    iosClientId: '713694392116-69gr7d31phvd3uv3lbiec69kre0hidd7.apps.googleusercontent.com',
     iosBundleId: 'com.example.appStackcard',
   );
 }

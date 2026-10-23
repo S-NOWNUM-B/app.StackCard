@@ -26,6 +26,7 @@
 - [Web и document publication](#web-и-document-publication)
 - [Основные команды](#основные-команды)
 - [Проверки](#проверки)
+- [CI/CD — Phase 18](#cicd--phase-18)
 - [Коммиты](#коммиты)
 - [Pull Requests](#pull-requests)
 
@@ -1151,6 +1152,64 @@ Actual web/functions commands и env описаны в
 [Web и document publication](#web-и-document-publication).
 
 ---
+
+### CI/CD — Phase 18
+
+[GitHub Actions CI](.github/workflows/ci.yml) запускается на push/PR и вручную.
+Отдельные jobs проверяют assets/tooling, web, backend/Rules и Flutter/Android.
+Итоговый `All checks` проходит только при success всех четырёх jobs; это имя
+можно выбрать required check в GitHub branch rules после первого запуска.
+Branch protection автоматически не меняется.
+
+Для совпадения с CI используйте версии из [`.fvmrc`](.fvmrc),
+[`.node-version`](.node-version) и [`.java-version`](.java-version).
+Flutter pin соответствует текущему SDK/Dart constraint; Node22 — backend
+runtime из `firebase/functions/package.json`, Java21 подходит Gradle/emulators.
+Версия npm закреплена `packageManager` во всех трёх npm manifests; workflow
+устанавливает её перед locked resolution. Существующие pnpm-файлы не используются CI.
+FVM устанавливать необязательно: достаточно выбранного Flutter SDK.
+Команды ниже для macOS zsh/bash или Linux bash.
+
+```sh
+# Корень: исходные assets, каталог технологий и tooling
+python3 tools/redesign/check_imports.py --require-imported --require-brand
+python3 -m unittest discover -s tools/redesign -p 'test_*.py' -v
+python3 -m unittest discover -s tools/testing -p 'test_*.py' -v
+python3 -m unittest discover -s tools/git -p 'test_*.py' -v
+# apps/web
+npm ci --no-audit --no-fund
+npm run format:check
+npm run check
+# firebase; локальный Firebase CLI также закреплён package-lock
+npm ci --no-audit --no-fund
+npm ci --prefix functions --no-audit --no-fund
+npm run check:functions
+npm run test:publication
+npm run test:all-rules
+# apps/mobile; web dependencies выше нужны cross-client tests
+flutter pub get --enforce-lockfile
+dart format --output=none --set-exit-if-changed lib test integration_test tool test_driver
+flutter analyze --no-pub
+flutter test --no-pub --coverage --reporter expanded
+python3 ../../tools/testing/check_coverage.py coverage/lcov.info --project . --minimum 40 --output coverage/summary.json
+flutter build apk --debug --no-pub
+```
+
+Все quality commands сохраняют nonzero exit code при ошибке; `continue-on-error`
+нет. Для negative gate используйте отдельный временный LCOV с нулевыми hits:
+существующий checker должен вернуть1. Его regressions дополнительно проверяют
+границу ровно40%, повреждённый LCOV и duplicate records. Asset regressions
+проверяют подменённый SVG, внешние элементы и inventory drift. Негативный GitHub
+run в отдельной ветке — самостоятельная приёмка после разрешённой публикации
+workflow; локальные negative checks не называются failed GitHub pipeline.
+
+Artifacts хранятся 7 дней: `android-debug-<sha>` содержит только `app-debug.apk`,
+`mobile-coverage-<sha>` — только LCOV и summary с denominator/unreported files.
+APK использует обычный `main.dart` и existing development Firebase app config;
+это debug build, без release keystore/signing/AAB и без настроенного hosting.
+Credentials, emulator exports, app storage, приватные fixtures и logs не
+загружаются. Remote branch rules, зелёный run и доступность artifacts требуют
+проверки на GitHub; iOS/native/live приёмка прежних фаз остаётся отдельно.
 
 ## Коммиты
 

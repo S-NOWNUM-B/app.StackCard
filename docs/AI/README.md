@@ -3,8 +3,9 @@
 Начало: [общие правила](AGENTS.md). Общие правила хранятся в репозитории;
 отдельные копии для разных AI-клиентов не требуются.
 
-Текущее поручение 2026-10-21: Phase 17 Testing по обновлённому плану;
-незакрытые проверки Phase 15 и16 отдельно сохраняются в product spec.
+Текущее поручение 2026-10-23: продолжить разработку с Phase 18 CI/CD.
+Source/local и Android Phase 17 проверены; отложенный iOS и незакрытые
+проверки Phase 15–16 отдельно сохраняются в product spec.
 Native Share переиспользует существующий канал; новые root-вкладки не добавляются.
 
 Действующий продуктовый контракт 2026-10-12 — [одно основное портфолио](../decisions/0005-single-main-portfolio.md):
@@ -33,6 +34,7 @@ deploy/billing/Git сохраняют отдельные ограничения.
 | Задача | Читать | Canonical source |
 | --- | --- | --- |
 | Commit, pull, rebase, push и исправление истории | [Git workflow](GIT_WORKFLOW.md) | [шаблон commit-msg](../../tools/git/commit-msg), [validator](../../tools/git/validate_commit_message.py), реальные status/diff, сохранённые commit objects/body, upstream и актуальные remote refs |
+| CI/CD, checks, APK и coverage artifacts | [CI scope](scopes/ci.md), [Phase 18](../product/product-spec.md#phase-18--cicd), [команды](../../CONTRIBUTING.md#cicd--phase-18) | `.github/workflows/ci.yml`, `.fvmrc`, `.node-version`, `.java-version`, actual manifests/lockfiles, `tools/redesign/check_imports.py`, `tools/testing/check_coverage.py` |
 | Testing / coverage / journeys | [Phase 17](../product/product-spec.md#phase-17--testing), [команды](../../CONTRIBUTING.md#testing--phase-17) | `tools/testing/check_coverage.py`, `tools/testing/native_journey.py`, mobile `main_portfolio_journey_test.dart` и `integration_test/main_portfolio_runtime_test.dart`, web `main-portfolio-journey.bridge.mjs`, `tool/testing/emulator-journey.cjs`, actual backend/Rules suites; evidence в `docs/product/evidence/phase17` |
 | Performance / measurements | [Phase 16](../product/product-spec.md#phase-16--performance), [команды](../../CONTRIBUTING.md#performance--phase-16), mobile/web scope | `apps/mobile/tool/performance`, `apps/web/tool/performance`; raw evidence в `docs/product/evidence/phase16`; native DevTools отдельно от host diagnostics |
 | Developer Card / QR / Share | [Phase 15](../product/product-spec.md#phase-15--developer-card-и-native-sharing), [architecture](../architecture/architecture.md#developer-card-и-qr--phase-15), mobile scope | `portfolio_draft/domain/developer_card.dart`, public codec/Firestore adapter, UID-bound providers и card screen; existing `stackcard/document_links` channel |

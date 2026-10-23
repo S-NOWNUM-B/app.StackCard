@@ -1,0 +1,169 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CI: 'true'
+  FIREBASE_CLI_DISABLE_UPDATE_CHECK: 'true'
+  FIREBASE_CLI_DISABLE_TELEMETRY: 'true'
+
+jobs:
+  assets:
+    name: Assets and tooling
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Validate pinned assets
+        run: python3 tools/redesign/check_imports.py --require-imported --require-brand
+      - name: Test asset integrity failures
+        run: python3 -m unittest discover -s tools/redesign -p 'test_*.py' -v
+      - name: Test coverage and native runner guards
+        run: python3 -m unittest discover -s tools/testing -p 'test_*.py' -v
+      - name: Test commit validator
+        run: python3 -m unittest discover -s tools/git -p 'test_*.py' -v
+
+  web:
+    name: Web
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Use manifest-pinned npm
+        run: npm install --global "$(node --print 'require("./package.json").packageManager')"
+      - run: npm ci --no-audit --no-fund
+      - run: npm run format:check
+      - run: npm run check
+
+  firebase:
+    name: Backend and emulator Rules
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: firebase
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: |
+            firebase/package-lock.json
+            firebase/functions/package-lock.json
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+      - name: Use manifest-pinned npm
+        run: npm install --global "$(node --print 'require("./package.json").packageManager')"
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix functions --no-audit --no-fund
+      - run: npm run check:functions
+      - run: npm run test:publication
+      - name: Test actual Auth, Firestore and Storage emulators
+        run: npm run test:all-rules
+
+  mobile:
+    name: Flutter and Android APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Use manifest-pinned npm
+        working-directory: apps/web
+        run: npm install --global "$(node --print 'require("./package.json").packageManager')"
+      - name: Install actual web codecs for cross-client tests
+        run: npm ci --prefix ../web --no-audit --no-fund
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+          cache: gradle
+          cache-dependency-path: |
+            apps/mobile/android/**/*.gradle.kts
+            apps/mobile/android/gradle/wrapper/gradle-wrapper.properties
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version-file: .fvmrc
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: dart format --output=none --set-exit-if-changed lib test integration_test tool test_driver
+      - run: flutter analyze --no-pub
+      - run: flutter test --no-pub --coverage --reporter expanded
+      - name: Enforce coverage strictly above 40 percent
+        run: python3 ../../tools/testing/check_coverage.py coverage/lcov.info --project . --minimum 40 --output coverage/summary.json
+      - name: Upload coverage only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: mobile-coverage-${{ github.sha }}
+          path: |
+            apps/mobile/coverage/lcov.info
+            apps/mobile/coverage/summary.json
+          if-no-files-found: error
+          retention-days: 7
+      - run: flutter build apk --debug --no-pub
+      - name: Upload development APK only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-debug-${{ github.sha }}
+          path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  required:
+    name: All checks
+    if: always()
+    needs: [assets, web, firebase, mobile]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every job to succeed
+        env:
+          ASSETS: ${{ needs.assets.result }}
+          WEB: ${{ needs.web.result }}
+          FIREBASE: ${{ needs.firebase.result }}
+          MOBILE: ${{ needs.mobile.result }}
+        run: |
+          for result in "$ASSETS" "$WEB" "$FIREBASE" "$MOBILE"; do
+            test "$result" = success
+          done

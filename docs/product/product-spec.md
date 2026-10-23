@@ -36,6 +36,14 @@
 
 ## Статус и границы текущей работы
 
+**2026-10-23: разрешена Phase 18 — CI/CD.** Пользователь попросил проверить
+остановку продукта и продолжить следующий этап. Phase17 source/local и Android
+проверки сохранены; iOS отложен. Незакрытые Phase15 QR/system/live и Phase16
+profile gates не считаются выполненными. Разрешены GitHub Actions checks,
+coverage и debug APK artifacts; Phase19–20/deploy/billing не запускаются.
+Commit/push предыдущих накопленных изменений завершён до этого поручения;
+новые CI изменения требуют отдельной Git авторизации.
+
 **2026-10-21: разрешена Phase 17 — Testing.** После source/local результатов
 Phase 15–16 пользователь явно разрешил следующий этап по обновлённому плану.
 ADR 0005, одно основное портфолио, «Главная / Проекты / Редактор», светлый русский
@@ -1074,10 +1082,9 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 
 ## План разработки
 
-**Актуальное поручение 2026-10-21:** перейти к Phase 17 Testing по обновлённому
-плану одного портфолио; незакрытые проверки Phase 15 и16 оставить отдельно.
-Прежняя пауза очереди 2026-10-07 не блокирует явно разрешённый этап;
-Phase 18–20 не запускаются.
+**Актуальное поручение 2026-10-23:** продолжить Phase 18 CI/CD после source/local
+и Android результатов Phase17. Отложенный iOS и незакрытые Phase15–16 проверки
+сохраняются отдельно. Phase19–20, deployment и billing не запускаются.
 Разрешённый capability scope и оставшаяся работа перечислены
 [в текущем статусе](#статус-и-границы-текущей-работы). Phase 11/12 и R0–R9 ниже
 сохраняют историю реализации и evidence; новые mobile changes не считаются
@@ -1296,7 +1303,7 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 15 — Developer Card и native sharing | Source/local gate реализованы:1365 tests, QR decode и APK PASS; native/live/iOS приёмка открыта |
 | Phase 16 — Performance | В работе: локальные baseline/after и две оптимизации; native DevTools gate открыт |
 | Phase 17 — Testing | Source/local и Android QA PASS:1372 mobile tests, coverage86,92%, browser journey и11 native checkpoints; iOS отложен отдельно |
-| Phase 18 — CI/CD | Запланирована |
+| Phase 18 — CI/CD | В работе: workflow/checks/debug APK artifacts; фактический GitHub run ещё не подтверждён |
 | Phase 19 — Production hardening | Запланирована |
 | Phase 20 — Release | Запланирована |
 
@@ -2861,11 +2868,25 @@ rebuild/retained-memory traces, длинный Editor drag и реальные G
 
 ### Phase 18 — CI/CD
 
+**Переход разрешён 2026-10-23.** Следующий этап подтверждён прямым поручением
+пользователя; Phase17/iOS и отдельные Phase15–16 gates сохраняются.
+
+**План выполнения**
+
+1. Закрепить runtime и locked installs по действующим manifests; проверить
+   существующие format/asset/coverage команды на чистом окружении зависимостей.
+2. Добавить push/PR workflow с отдельными jobs web/backend/emulators/mobile,
+   неизменным coverage denominator, debug APK и узкими artifact paths.
+3. Проверить YAML и локальные эквиваленты quality gates, включая отказы при
+   дефектном coverage/asset; записать результаты и открытый remote gate.
+4. После отдельной Git авторизации проверить настоящий GitHub green/red run
+   и доступность artifacts. Phase19 автоматически не начинать.
+
 **Задачи**
 
-- [ ] Добавить GitHub Actions на push/PR: locked dependency resolution, format,
+- [x] Добавить GitHub Actions на push/PR: locked dependency resolution, format,
   analyze, tests/coverage>40%, Android APK build и artifact по actual manifests.
-- [ ] Добавить actual web typecheck/tests/build/format, backend tests/check,
+- [x] Добавить actual web typecheck/tests/build/format, backend tests/check,
   demo Firestore/Storage Rules, mobile↔web fixtures и pinned asset integrity.
   Проверять основной portfolio/public2, Firestore avatar и legacy read compatibility.
 - [ ] Подтвердить failed pipeline при ошибке проверки; исключить secrets/private
@@ -2877,11 +2898,48 @@ rebuild/retained-memory traces, длинный Editor drag и реальные G
   SDK/package-manager versions берутся из текущих configs.
 - [ ] Ошибка format/analyze/tests/coverage/build делает pipeline неуспешным;
   негативный сценарий проверен.
-- [ ] Web/backend/Rules и asset checks работают без production credentials,
+- [x] Web/backend/Rules и asset checks работают без production credentials,
   billing и автоматического deployment.
 
 **Готово, когда:** проверки проходят на рабочей версии и блокируют дефектную;
 APK artifact доступен, release signing/deploy не выполняются без разрешения.
+
+**Фактический source/local результат — 2026-10-23**
+
+- Добавлен `.github/workflows/ci.yml`: push/PR/manual, отдельные assets/web/
+  Firebase/mobile jobs и обязательный aggregate `All checks`. Actions закреплены
+  полными SHA, checkout не сохраняет credentials, token только contents:read.
+  Failed/cancelled/skipped job не превращается в зелёный aggregate.
+- Flutter закреплён в `.fvmrc`, Node в `.node-version`, Java в `.java-version`,
+  npm через `packageManager` трёх manifests. Проверены locked Flutter resolution
+  и чистые npm installs на Node22; Firebase CLI закреплён в package-lock без
+  изменения версий прежних зависимостей. Linux SDK archive совпадает с текущим
+  Flutter3.47.7/Dart3.13.5/revision, installer использует upstream manifest.
+- Формат всего Dart tree331files PASS после автоматического форматирования
+  четырёх прежних файлов без изменения поведения/config values. Analyze0,
+  **1378/1378 Flutter tests PASS**, настоящий LCOV **13407/15422 =86,93%**,
+  173 reported files из205, 32 unreported перечислены без фильтров.
+- Web **163/163**, format/typecheck/production build PASS; backend syntax и
+  **42/42** unit PASS; полный demo Auth/Firestore/Storage suite **82/82 PASS**.
+  Cross-client codecs выполнялись с actual web dependencies. Backend/API live
+  не запускались; emulator session остановлена после checks.
+- Существующий asset checker дополнен каталогом159 Simple Icons: exact
+  inventory/provenance/bytes/SHA256 и vector parser. **4/4** новых failure
+  regressions, **8/8** coverage/native runner guards и **15/15** commit-validator
+  tests PASS. Actionlint1.7.12 PASS. Нулевой coverage report возвращает1;
+  подмена/активный SVG/duplicate inventory отвергаются; aggregate проверен для
+  success/failure/cancelled/skipped. Это локальные negative gates, не GitHub red run.
+- `flutter build apk --debug --no-pub` PASS из обычного main. APK остаётся в
+  ignored build directory; в workflow загружается только точный APK path,
+  отдельный artifact содержит только LCOV/summary, срок хранения7дней.
+  Release signing/AAB/deploy не добавлены. Существующее предупреждение Flutter
+  про KGP в Firebase plugins не блокирует текущую сборку; upgrade SDK/dependencies
+  ради предупреждения не выполнялся.
+- [Source/local evidence](evidence/phase18/checks.json) содержит versions,
+  coverage denominator/hashes, APK size/SHA256 и ограничения. Проверки выполнены
+  на macOS/Java25; actual GitHub Ubuntu/Java21, зелёный и намеренно красный run,
+  скачивание artifacts остаются открытыми до отдельного разрешённого push.
+  Branch protection не менялась. **Phase18 целиком ещё не закрыта.**
 
 ### Phase 19 — Production hardening
 
@@ -2942,7 +3000,8 @@ APK artifact доступен, release signing/deploy не выполняютс�
 постоянный web/API hosting требуют отдельного поручения.
 
 **История Phase 0–14 сохранена. Действующая реализация — ADR 0005, source/local
-Phase 15–16 и разрешённая 2026-10-21 Phase 17; Phase 18–20 остаются планом. Новые local checks
+Phase 15–16 и source/local результаты Phase17; с2026-10-23 разрешена Phase18 CI/CD.
+Phase19–20 остаются планом. Новые local checks
 не закрывают прежние live/iOS/Figma/release gates.**
 
 ---
