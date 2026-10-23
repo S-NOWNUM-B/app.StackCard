@@ -131,7 +131,7 @@ jobs:
       - run: flutter analyze --no-pub
       - run: flutter test --no-pub --coverage --reporter expanded
       - name: Enforce coverage strictly above 40 percent
-        run: python3 ../../tools/testing/check_coverage.py coverage/lcov.info --project . --minimum 40 --output coverage/summary.json
+        run: python3 ../../tools/testing/check_coverage.py coverage/lcov.info --project . --minimum 100 --output coverage/summary.json
       - name: Upload coverage only
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
