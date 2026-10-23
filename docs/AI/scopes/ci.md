@@ -6,6 +6,10 @@
 - Workflow — [ci.yml](../../../.github/workflows/ci.yml). Push, pull_request и
   workflow_dispatch запускают все проверки без path filters. `All checks`
   требует success каждого job, включая случаи failure/cancelled/skipped.
+  Полный Flutter suite/coverage исполняется на macos-15: SDK pixel contrast
+  matcher при Linux FreeType AA ошибочно выбирает оттенки сглаживания Manrope.
+  Порог WCAG и весь набор tests сохраняются. Android APK собирается отдельным
+  Ubuntu job только после assets/web/firebase/mobile success.
 - Flutter закреплён в [`.fvmrc`](../../../.fvmrc), Node — в
   [`.node-version`](../../../.node-version), Java — в
   [`.java-version`](../../../.java-version). Версии менять вместе с проверкой

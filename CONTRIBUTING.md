@@ -1157,7 +1157,10 @@ Actual web/functions commands и env описаны в
 
 [GitHub Actions CI](.github/workflows/ci.yml) запускается на push/PR и вручную.
 Отдельные jobs проверяют assets/tooling, web, backend/Rules и Flutter/Android.
-Итоговый `All checks` проходит только при success всех четырёх jobs; это имя
+Flutter suite/coverage использует macos-15: SDK histogram contrast matcher
+чувствителен к Linux FreeType AA Manrope. Все tests и WCAG threshold сохранены.
+Отдельный Ubuntu Android job собирает APK только после успешных quality jobs.
+Итоговый `All checks` проходит только при success всех пяти jobs; это имя
 можно выбрать required check в GitHub branch rules после первого запуска.
 Branch protection автоматически не меняется.
 
