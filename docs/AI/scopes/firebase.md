@@ -11,6 +11,9 @@ Scope и фактическая приёмка остаются в [product spec
   и Emulator Suite configuration; [package.json](../../../firebase/package.json)
   и lockfile — отдельными Rules tests. Mobile SDK dependencies находятся в
   `apps/mobile/pubspec.yaml`, generated app config — в `apps/mobile`.
+  Emulator CLI закреплён точной devDependency `firebase-tools`; `npm ci`
+  восстанавливает локальный executable для package scripts. CI использует
+  только demo project; общий contract — [CI scope](ci.md).
 - Публичные mobile Firebase API keys ограничивать по Android package/signing
   SHA-1 или iOS bundle ID и используемым Firebase API. Не разрешать этим ключам
   AI Logic/Gemini или сторонние API; не привязывать их к service account.

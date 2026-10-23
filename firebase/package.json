@@ -1,6 +1,7 @@
 {
   "name": "stackcard-firestore-rules",
   "private": true,
+  "packageManager": "npm@11.19.1",
   "type": "module",
   "scripts": {
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
@@ -18,7 +19,8 @@
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "5.0.2",
-    "firebase": "12.19.0"
+    "firebase": "12.19.0",
+    "firebase-tools": "15.5.1"
   },
   "overrides": {
     "@grpc/grpc-js": "1.14.5"

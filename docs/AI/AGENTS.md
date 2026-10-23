@@ -139,6 +139,11 @@
 
 ## Разработка по плану
 
+Прямое поручение 2026-10-23 продолжить разработку с Phase 18 разрешает
+CI/CD по actual manifests: проверки, coverage и debug APK artifacts.
+Правила — [CI scope](scopes/ci.md). Прежние iOS/live/profile gates остаются
+открытыми; Phase 19–20, commit/push/deploy/billing этим переходом не разрешаются.
+
 Прямой переход пользователя 2026-10-21 разрешает Phase 17 Testing по
 обновлённому плану ADR 0005: одно main и три roots. Незакрытые проверки
 Phase 15 и16 сохраняются отдельно в product spec; local tests/emulators не

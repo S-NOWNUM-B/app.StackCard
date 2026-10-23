@@ -9,7 +9,7 @@
 
 **Flutter-клиент для Android и iOS с одним портфолио и библиотекой проектов**
 
-![Flutter 3.47.4](https://img.shields.io/badge/Flutter-3.47.4-02569B?style=for-the-badge&logo=flutter&logoColor=white)
+![Flutter 3.47.7](https://img.shields.io/badge/Flutter-3.47.7-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 
 </div>
 

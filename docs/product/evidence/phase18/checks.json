@@ -1,0 +1,148 @@
+{
+  "date": "2026-10-23",
+  "phase": 18,
+  "scope": "Local validation of CI workflow and exact quality commands; no GitHub run yet",
+  "runtime": {
+    "flutter": "3.47.7",
+    "dart": "3.13.5",
+    "node": "22.23.4",
+    "npm": "11.19.1",
+    "firebaseCli": "15.5.1",
+    "host": "macOS arm64",
+    "localJava": "25.0.4.1",
+    "ciJava": "21",
+    "ciRunner": "ubuntu-24.04"
+  },
+  "lockedResolution": {
+    "flutter": "PASS --enforce-lockfile",
+    "web": "PASS npm ci",
+    "firebase": "PASS npm ci",
+    "backend": "PASS npm ci",
+    "previousDependencyVersionsChanged": false
+  },
+  "workflow": {
+    "file": ".github/workflows/ci.yml",
+    "actionlint": "1.7.12 PASS",
+    "triggers": [
+      "push",
+      "pull_request",
+      "workflow_dispatch"
+    ],
+    "jobs": [
+      "assets",
+      "web",
+      "firebase",
+      "mobile",
+      "required"
+    ],
+    "githubRun": "NOT RUN",
+    "remoteArtifacts": "NOT VERIFIED"
+  },
+  "mobile": {
+    "passed": 1378,
+    "failed": 0,
+    "analyzeIssues": 0,
+    "formattedFiles": 331,
+    "formatChangesRemaining": 0,
+    "coverage": {
+      "coveredLines": 13407,
+      "executableLines": 15422,
+      "linePercent": 86.93424977305149,
+      "reportedFiles": 173,
+      "runtimeDartFiles": 205,
+      "unreportedFiles": [
+        "lib/core/localization/auth_strings.dart",
+        "lib/core/localization/builder_form_strings.dart",
+        "lib/core/localization/builder_integration_strings.dart",
+        "lib/core/localization/builder_strings.dart",
+        "lib/core/localization/document_editor_strings.dart",
+        "lib/core/localization/document_publication_strings.dart",
+        "lib/core/localization/draft_strings.dart",
+        "lib/core/localization/github_strings.dart",
+        "lib/core/localization/github_sync_strings.dart",
+        "lib/core/localization/inbox_strings.dart",
+        "lib/core/localization/location_strings.dart",
+        "lib/core/localization/media_strings.dart",
+        "lib/core/localization/mobile_parity_strings.dart",
+        "lib/core/localization/settings_management_strings.dart",
+        "lib/core/localization/suggestion_strings.dart",
+        "lib/core/localization/sync_strings.dart",
+        "lib/core/localization/workspace_strings.dart",
+        "lib/core/theme/stackcard_tokens.dart",
+        "lib/features/auth/auth.dart",
+        "lib/features/auth/domain/auth_repository.dart",
+        "lib/features/github_import/domain/github_import_repository.dart",
+        "lib/features/github_import/github_import.dart",
+        "lib/features/inbox/inbox.dart",
+        "lib/features/media/media.dart",
+        "lib/features/notifications/notifications.dart",
+        "lib/features/portfolio/portfolio.dart",
+        "lib/features/portfolio_draft/portfolio_draft.dart",
+        "lib/features/profile/domain/profile_repository.dart",
+        "lib/features/profile/profile.dart",
+        "lib/features/projects/domain/projects_repository.dart",
+        "lib/features/projects/projects.dart",
+        "lib/features/settings/developer_profile_screen.dart"
+      ],
+      "runtimeSourceSha256": "4b61b2cf88a356c8f1b53bdd6697f117b9ae0994d31b5924d11c0ff45d7cb468",
+      "lcovSha256": "2193d1775537373845a1fd3186f1b23cde27d76508448dbf0cd81b2d58a5b412",
+      "scope": "Executable DA lines reported by Flutter; no filters. Unreported files listed separately.",
+      "minimumExclusive": 40.0,
+      "passed": true
+    }
+  },
+  "web": {
+    "testsPassed": 163,
+    "failed": 0,
+    "typecheck": "PASS",
+    "format": "PASS",
+    "productionBuild": "PASS"
+  },
+  "backend": {
+    "syntax": "PASS",
+    "testsPassed": 42,
+    "failed": 0
+  },
+  "emulators": {
+    "project": "demo-stackcard-test",
+    "testsPassed": 82,
+    "failed": 0,
+    "services": [
+      "auth",
+      "firestore",
+      "storage"
+    ]
+  },
+  "tooling": {
+    "assetIntegrity": "PASS",
+    "technologyCatalogSvgs": 159,
+    "assetFailureTests": 4,
+    "coverageAndNativeGuardTests": 8,
+    "commitValidatorTests": 15
+  },
+  "negativeGates": {
+    "zeroCoverageExitCode": 1,
+    "modifiedSvg": "REJECTED",
+    "activeSvgWithMatchingHash": "REJECTED",
+    "unlistedAndDuplicateSvg": "REJECTED",
+    "aggregateSuccessExitCode": 0,
+    "aggregateFailureExitCode": 1,
+    "aggregateCancelledExitCode": 1,
+    "aggregateSkippedExitCode": 1
+  },
+  "androidApk": {
+    "build": "PASS debug main.dart",
+    "bytes": 224913137,
+    "sha256": "ad13939e9458ecb7dac37ddc1179c9b78448ae8f45e75a4dc5b0e902ce482b19",
+    "path": "apps/mobile/build/app/outputs/flutter-apk/app-debug.apk",
+    "committed": false,
+    "warning": "Existing firebase_auth/firebase_core/firebase_storage plugins still apply KGP; future Flutter compatibility requires separate dependency work"
+  },
+  "limitations": [
+    "No hosted GitHub green/red run or downloaded artifact yet",
+    "Local macOS/Java25 does not replace Ubuntu/Java21 runner acceptance",
+    "No new iOS, physical QR camera, native Share/Open, live hosting or comparable native profile acceptance",
+    "No release signing, deployment or billing"
+  ],
+  "mutations": "CI configuration, locked CLI, asset validation, documentation and automated Dart formatting only; no commit or push"
+}
