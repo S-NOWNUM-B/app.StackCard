@@ -36,7 +36,7 @@
 
 ## Статус и границы текущей работы
 
-**2026-10-23: разрешена Phase 18 — CI/CD.** Пользователь попросил проверить
+**2026-10-23: Phase 18 — CI/CD завершена и проверена на GitHub.** Пользователь попросил проверить
 остановку продукта и продолжить следующий этап. Phase17 source/local и Android
 проверки сохранены; iOS отложен. Незакрытые Phase15 QR/system/live и Phase16
 profile gates не считаются выполненными. Разрешены GitHub Actions checks,
@@ -1304,7 +1304,7 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 15 — Developer Card и native sharing | Source/local gate реализованы:1365 tests, QR decode и APK PASS; native/live/iOS приёмка открыта |
 | Phase 16 — Performance | В работе: локальные baseline/after и две оптимизации; native DevTools gate открыт |
 | Phase 17 — Testing | Source/local и Android QA PASS:1372 mobile tests, coverage86,92%, browser journey и11 native checkpoints; iOS отложен отдельно |
-| Phase 18 — CI/CD | В работе: workflow/checks/debug APK artifacts; фактический GitHub run ещё не подтверждён |
+| Phase 18 — CI/CD | Завершена: GitHub green/red runs, полный suite/coverage и скачанные APK/LCOV artifacts проверены |
 | Phase 19 — Production hardening | Запланирована |
 | Phase 20 — Release | Запланирована |
 
@@ -2890,14 +2890,14 @@ rebuild/retained-memory traces, длинный Editor drag и реальные G
 - [x] Добавить actual web typecheck/tests/build/format, backend tests/check,
   demo Firestore/Storage Rules, mobile↔web fixtures и pinned asset integrity.
   Проверять основной portfolio/public2, Firestore avatar и legacy read compatibility.
-- [ ] Подтвердить failed pipeline при ошибке проверки; исключить secrets/private
+- [x] Подтвердить failed pipeline при ошибке проверки; исключить secrets/private
   fixtures из логов/artifacts. Signing и release AAB остаются в Phase20.
 
 **Проверки и приёмка**
 
-- [ ] Pipeline воспроизводим, запускается на push/PR и отдаёт APK artifact;
+- [x] Pipeline воспроизводим, запускается на push/PR и отдаёт APK artifact;
   SDK/package-manager versions берутся из текущих configs.
-- [ ] Ошибка format/analyze/tests/coverage/build делает pipeline неуспешным;
+- [x] Ошибка format/analyze/tests/coverage/build делает pipeline неуспешным;
   негативный сценарий проверен.
 - [x] Web/backend/Rules и asset checks работают без production credentials,
   billing и автоматического deployment.
@@ -2940,7 +2940,37 @@ APK artifact доступен, release signing/deploy не выполняютс�
   coverage denominator/hashes, APK size/SHA256 и ограничения. Проверки выполнены
   на macOS/Java25; actual GitHub Ubuntu/Java21, зелёный и намеренно красный run,
   скачивание artifacts остаются открытыми до отдельного разрешённого push.
-  Branch protection не менялась. **Phase18 целиком ещё не закрыта.**
+  Это историческая граница source/local проверки; удалённая приёмка подтверждена ниже.
+
+**Удалённая приёмка и завершение — 2026-10-23**
+
+- [Основной GitHub run](https://github.com/S-NOWNUM-B/app.StackCard/actions/runs/39985614786)
+  на `e51359f` — **SUCCESS всех6 jobs**, включая `All checks`. Push проверен
+  настоящим запуском; pull_request trigger задан тем же workflow без path filters/
+  PR-only условий, YAML проверен actionlint. Отдельный PR в рамках приёмки не создавался.
+- Первый Ubuntu run обнаружил24 ложных contrast failures: SDK histogram matcher
+  выбирал сглаженные оттенки Manrope вместо заданной краски текста. Полный suite
+  перенесён на macos-15/CoreText, Android APK выделен в Ubuntu job после всех
+  quality gates. **Все1378 tests, WCAG thresholds, fonts, tokens и runtime UI сохранены.**
+  Analyze0, coverage **13407/15422 =86,93%**; web163, backend42, Rules82 PASS.
+- [Негативный GitHub run](https://github.com/S-NOWNUM-B/app.StackCard/actions/runs/39985722398)
+  на `AIrevision/phase18-coverage-gate` — ожидаемый **FAILURE**. Единственная разница
+  workflow с dev — `--minimum 100`. После1378 PASS checker вернул1 на86,93%,
+  APK job был skipped, `All checks` — failure. Ослабления/skip tests нет;
+  проверочная ветка не объединяется с dev.
+- [APK artifact](https://github.com/S-NOWNUM-B/app.StackCard/actions/runs/39985614786/artifacts/12515569979)
+  и [coverage artifact](https://github.com/S-NOWNUM-B/app.StackCard/actions/runs/39985614786/artifacts/12515238910)
+  скачаны. В них ровно `app-debug.apk`, `lcov.info`, `summary.json` — без env,
+  emulator data, private fixtures и logs. Срок хранения7дней; архивные digest и
+  APK SHA256 сохранены в [evidence](evidence/phase18/checks.json).
+- APK **184009424 bytes**: ZIP CRC PASS, AndroidManifest/classes.dex/Flutter
+  assets/native libraries присутствуют; aapt подтвердил `com.example.app_stackcard`
+  и debuggable. LCOV SHA256 совпадает с summary; числитель/denominator независимо
+  пересчитаны, reported/unreported files сохранены. Raw APK не коммитится.
+- **Phase18 завершена.** GitHub artifacts доказывают CI packaging, не релиз/store
+  или device acceptance. Прежние iOS/live/QR/profile gates остаются открытыми;
+  Phase19 автоматически не начиналась. Billing, deploy, signing и branch rules
+  не менялись. Следующий этап — Phase19 только после отдельного поручения.
 
 ### Phase 19 — Production hardening
 
@@ -3001,7 +3031,7 @@ APK artifact доступен, release signing/deploy не выполняютс�
 постоянный web/API hosting требуют отдельного поручения.
 
 **История Phase 0–14 сохранена. Действующая реализация — ADR 0005, source/local
-Phase 15–16 и source/local результаты Phase17; с2026-10-23 разрешена Phase18 CI/CD.
+Phase 15–16 и source/local результаты Phase17; Phase18 CI/CD завершена и проверена2026-10-23.
 Phase19–20 остаются планом. Новые local checks
 не закрывают прежние live/iOS/Figma/release gates.**
 

@@ -1,7 +1,7 @@
 {
   "date": "2026-10-23",
   "phase": 18,
-  "scope": "Local validation of CI workflow and exact quality commands; no GitHub run yet",
+  "scope": "Phase 18 accepted: local checks, hosted GitHub green/red runs and downloaded artifacts",
   "runtime": {
     "flutter": "3.47.7",
     "dart": "3.13.5",
@@ -33,10 +33,11 @@
       "web",
       "firebase",
       "mobile",
+      "android",
       "required"
     ],
-    "githubRun": "NOT RUN",
-    "remoteArtifacts": "NOT VERIFIED"
+    "githubRun": "SUCCESS 39985614786",
+    "remoteArtifacts": "DOWNLOADED AND VERIFIED"
   },
   "mobile": {
     "passed": 1378,
@@ -139,10 +140,186 @@
     "warning": "Existing firebase_auth/firebase_core/firebase_storage plugins still apply KGP; future Flutter compatibility requires separate dependency work"
   },
   "limitations": [
-    "No hosted GitHub green/red run or downloaded artifact yet",
-    "Local macOS/Java25 does not replace Ubuntu/Java21 runner acceptance",
     "No new iOS, physical QR camera, native Share/Open, live hosting or comparable native profile acceptance",
-    "No release signing, deployment or billing"
+    "No release signing, deployment or billing",
+    "Phase 19 requires separate user transition",
+    "Negative coverage branch intentionally remains failing and is not merged into dev"
   ],
-  "mutations": "CI configuration, locked CLI, asset validation, documentation and automated Dart formatting only; no commit or push"
+  "mutations": "Phase18 implementation and CI fixes committed/pushed to dev; coverage failure verified in an isolated branch; no deployment, distribution, billing or branch-protection changes",
+  "remote": {
+    "initialRun": {
+      "id": 39984098042,
+      "sha": "8f2261460d3b485798b0a150dfbb659a6ce5ff4c",
+      "url": "https://github.com/S-NOWNUM-B/app.StackCard/actions/runs/39984098042",
+      "conclusion": "failure",
+      "failedStep": "flutter test",
+      "failures": 24,
+      "cause": "Pixel contrast histogram selected anti-aliased Manrope shades under Linux; full suite passes on the development CoreText renderer"
+    },
+    "runnerFix": {
+      "sha": "e51359f6301b7fe1ca06b74cd97688ebc1af563f",
+      "qualityRunner": "macos-15",
+      "apkRunner": "ubuntu-24.04",
+      "testsOrThresholdsReduced": false,
+      "apkNeeds": [
+        "assets",
+        "web",
+        "firebase",
+        "mobile"
+      ]
+    },
+    "acceptanceRun": {
+      "id": 39985614786,
+      "url": "https://github.com/S-NOWNUM-B/app.StackCard/actions/runs/39985614786",
+      "conclusion": "success",
+      "qualityJobs": "all passed",
+      "mobileTestsPassed": 1378,
+      "coveragePercent": 86.93424977305149,
+      "sha": "e51359f6301b7fe1ca06b74cd97688ebc1af563f",
+      "jobs": [
+        {
+          "id": 120523879985,
+          "name": "Assets and tooling",
+          "conclusion": "success"
+        },
+        {
+          "id": 120523880442,
+          "name": "Flutter tests and coverage",
+          "conclusion": "success"
+        },
+        {
+          "id": 120523880560,
+          "name": "Backend and emulator Rules",
+          "conclusion": "success"
+        },
+        {
+          "id": 120523881046,
+          "name": "Web",
+          "conclusion": "success"
+        },
+        {
+          "id": 120528642572,
+          "name": "Android APK",
+          "conclusion": "success"
+        },
+        {
+          "id": 120533124488,
+          "name": "All checks",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "coverageNegativeRun": {
+      "id": 39985722398,
+      "url": "https://github.com/S-NOWNUM-B/app.StackCard/actions/runs/39985722398",
+      "sha": "2802e95665e7898d20b0aabe23de9ad6d053c82e",
+      "branch": "AIrevision/phase18-coverage-gate",
+      "singleWorkflowDifference": "--minimum 100 instead of --minimum 40",
+      "conclusion": "failure",
+      "testsPassed": 1378,
+      "coveredLines": 13407,
+      "executableLines": 15422,
+      "coveragePercent": 86.93424977305149,
+      "failedStep": "Enforce coverage strictly above 40 percent (--minimum 100)",
+      "exitCode": 1,
+      "androidJob": "skipped",
+      "aggregate": "failure",
+      "privateCredentialPatternScan": "no private keys or access tokens found"
+    },
+    "fiveJobAggregateNegativeCasesPassed": 15,
+    "downloadedCoverage": {
+      "artifactId": 12515238910,
+      "lcovSha256": "309c26119a7374b6b7aac534f078103d462cbd1b62d2a0b967cd4959389d43f1",
+      "coveredLines": 13407,
+      "executableLines": 15422,
+      "passed": true,
+      "files": [
+        "lcov.info",
+        "summary.json"
+      ]
+    },
+    "artifacts": [
+      {
+        "id": 12515569979,
+        "name": "android-debug-e51359f6301b7fe1ca06b74cd97688ebc1af563f",
+        "size_in_bytes": 102568460,
+        "digest": "sha256:d1c9aec4568fdceb8bbefaf7d5acf33aa8642ff0191f90440a4aad83eea6e890",
+        "expires_at": "2026-10-30T16:35:35Z"
+      },
+      {
+        "id": 12515238910,
+        "name": "mobile-coverage-e51359f6301b7fe1ca06b74cd97688ebc1af563f",
+        "size_in_bytes": 40051,
+        "digest": "sha256:a0cfde2707415a77506e6859d0b2eb347df1485e7e2a04e6a869ad9ada28efdb",
+        "expires_at": "2026-10-30T16:27:01Z"
+      }
+    ],
+    "downloadVerification": {
+      "apk": {
+        "bytes": 184009424,
+        "sha256": "1d1333010aad4bb7698664770a439ae7a530d3de46ffc526aee7463605d542d2",
+        "zipCrc": "PASS",
+        "package": "com.example.app_stackcard",
+        "debuggable": true
+      },
+      "coverage": {
+        "coveredLines": 13407,
+        "executableLines": 15422,
+        "linePercent": 86.93424977305149,
+        "reportedFiles": 173,
+        "runtimeDartFiles": 205,
+        "unreportedFiles": [
+          "lib/core/localization/auth_strings.dart",
+          "lib/core/localization/builder_form_strings.dart",
+          "lib/core/localization/builder_integration_strings.dart",
+          "lib/core/localization/builder_strings.dart",
+          "lib/core/localization/document_editor_strings.dart",
+          "lib/core/localization/document_publication_strings.dart",
+          "lib/core/localization/draft_strings.dart",
+          "lib/core/localization/github_strings.dart",
+          "lib/core/localization/github_sync_strings.dart",
+          "lib/core/localization/inbox_strings.dart",
+          "lib/core/localization/location_strings.dart",
+          "lib/core/localization/media_strings.dart",
+          "lib/core/localization/mobile_parity_strings.dart",
+          "lib/core/localization/settings_management_strings.dart",
+          "lib/core/localization/suggestion_strings.dart",
+          "lib/core/localization/sync_strings.dart",
+          "lib/core/localization/workspace_strings.dart",
+          "lib/core/theme/stackcard_tokens.dart",
+          "lib/features/auth/auth.dart",
+          "lib/features/auth/domain/auth_repository.dart",
+          "lib/features/github_import/domain/github_import_repository.dart",
+          "lib/features/github_import/github_import.dart",
+          "lib/features/inbox/inbox.dart",
+          "lib/features/media/media.dart",
+          "lib/features/notifications/notifications.dart",
+          "lib/features/portfolio/portfolio.dart",
+          "lib/features/portfolio_draft/portfolio_draft.dart",
+          "lib/features/profile/domain/profile_repository.dart",
+          "lib/features/profile/profile.dart",
+          "lib/features/projects/domain/projects_repository.dart",
+          "lib/features/projects/projects.dart",
+          "lib/features/settings/developer_profile_screen.dart"
+        ],
+        "runtimeSourceSha256": "4b61b2cf88a356c8f1b53bdd6697f117b9ae0994d31b5924d11c0ff45d7cb468",
+        "lcovSha256": "309c26119a7374b6b7aac534f078103d462cbd1b62d2a0b967cd4959389d43f1",
+        "scope": "Executable DA lines reported by Flutter; no filters. Unreported files listed separately.",
+        "minimumExclusive": 40.0,
+        "passed": true
+      },
+      "downloadedFiles": [
+        "apk/app-debug.apk",
+        "coverage/lcov.info",
+        "coverage/summary.json"
+      ],
+      "lcovCountsIndependentlyVerified": true
+    },
+    "logsCredentialPatternScan": "No private keys or access tokens found in inspected workflow logs; artifacts contain only APK/LCOV/summary",
+    "eventAcceptance": {
+      "push": "real hosted runs",
+      "pull_request": "trigger declared, no PR-specific condition or path filter; workflow validated by actionlint; no PR created",
+      "workflow_dispatch": "declared; not used for acceptance"
+    }
+  }
 }
