@@ -37,3 +37,6 @@ app.*.map.json
 
 # Локальные установленные Git hooks; шаблон хранится в tools/git.
 /.githooks/
+
+# Локальные данные Firebase Emulator (демо-аккаунт)
+firebase/.emulator-data/

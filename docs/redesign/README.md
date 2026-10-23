@@ -28,6 +28,13 @@
 
 ## Цель и статус
 
+**Актуализация 2026-10-21:** текущие задачи определяет
+[roadmap одного портфолио](../product/product-spec.md#актуальная-последовательность-2026-10-21)
+и ADR 0005. R0–R9/PR-* ниже сохраняют историю D048 и его acceptance; старые
+библиотеки Resume/Portfolio, GPS, фото проектов и dark UI не задают новые задачи.
+Незакрытые проверки применяются к современным screens без возврата удалённых
+capabilities. Это не отметка full Figma acceptance или завершения старых gates.
+
 **Поручение 2026-10-11:** [светлый web по Openship](web-openship.md) заменяет
 прежний web target R6. Главная, публичные страницы, Auth, кабинет и документы
 используют белые поверхности, чёрные CTA и русские тексты StackCard. Добавлены
@@ -53,7 +60,7 @@ R7 остаётся awaiting_review; DESIGN_READY/REDESIGN_DONE не устан�
 Последующий ответ «Да, выполнить визуальную проверку web/mobile» разрешает
 D048 preview/browser/native проверки; headless evidence не означает
 visual/device/live parity, actual результаты фиксируются отдельно. Deploy/billing/commit/push не запрошены.
-[Capabilities roadmap](../product/product-spec.md#актуальная-последовательность-2026-10-08)
+[Capabilities roadmap](../product/product-spec.md#актуальная-последовательность-2026-10-21)
 разделяет current source, открытую приёмку и следующие Inbox/FCM/QR/release задачи.
 
 Дальнейшие записи о состоянии 2026-10-05 — история переноса D040–D042.

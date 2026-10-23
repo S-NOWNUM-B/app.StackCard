@@ -29,6 +29,13 @@
 
 ## Правила выполнения
 
+**Актуализация 2026-10-21:** текущие задачи определяет
+[roadmap одного портфолио](../product/product-spec.md#актуальная-последовательность-2026-10-21)
+и ADR 0005. R0–R9/PR-* ниже сохраняют историю D048 и его acceptance; старые
+библиотеки Resume/Portfolio, GPS, фото проектов и dark UI не задают новые задачи.
+Незакрытые проверки применяются к современным screens без возврата удалённых
+capabilities. Это не отметка full Figma acceptance или завершения старых gates.
+
 **Действующее поручение 2026-10-08, D048:** «закончи перенос» и явный ответ
 «Также реализовать web и публикацию» разрешают mobile, Next.js web и publication
 независимых документов. Последовательная очередь фаз остаётся на паузе;
@@ -46,7 +53,7 @@ commit/push/deploy/billing не выполняются.
 
 Обновление roadmap 2026-10-08 (D047) связывает remaining mobile/settings,
 publication/URL/public reader, web owner editor и Phase 14–20 с multiple outputs.
-[Актуальная очередь](../product/product-spec.md#актуальная-последовательность-2026-10-08)
+[Актуальная очередь](../product/product-spec.md#актуальная-последовательность-2026-10-21)
 не требует full owner web editor до первого mobile→public документа.
 R7/native/user acceptance остаётся открытой; обновлённый план не устанавливает
 DESIGN_READY/REDESIGN_DONE и не запускает backend/web/deploy автоматически.

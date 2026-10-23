@@ -3,7 +3,11 @@
 Начало: [общие правила](AGENTS.md). Общие правила хранятся в репозитории;
 отдельные копии для разных AI-клиентов не требуются.
 
-Действующее поручение 2026-10-12 — [одно основное портфолио](../decisions/0005-single-main-portfolio.md):
+Текущее поручение 2026-10-21: Phase 17 Testing по обновлённому плану;
+незакрытые проверки Phase 15 и16 отдельно сохраняются в product spec.
+Native Share переиспользует существующий канал; новые root-вкладки не добавляются.
+
+Действующий продуктовый контракт 2026-10-12 — [одно основное портфолио](../decisions/0005-single-main-portfolio.md):
 3 roots, durable Home/PDF/Share, Library+Editor, optional4step onboarding,
 Firestore avatar и ручной город. Оно заменяет D048 UI и Phase12 GPS, сохраняя
 старые данные/URL. Исторические scopes ниже не возвращают старый интерфейс.
@@ -14,7 +18,7 @@ Firestore avatar и ручной город. Оно заменяет D048 UI и 
 и действующий scope. С 2026-10-07 очередь фаз поставлена на паузу прямым
 поручением пользователя: mobile capabilities по Figma/концепции разрешены
 в границах product status. Исторические задачи и открытые проверки сохраняются.
-Актуальная [последовательность capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-08)
+Актуальная [последовательность capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-21)
 обновлена 2026-10-08 под multiple documents/Figma. D048: ответ «Также реализовать
 web и публикацию» разрешает mobile/web/publication перенос без повторного phase
 approval. Minimal public reader не зависит от полного owner web editor;
@@ -29,6 +33,9 @@ deploy/billing/Git сохраняют отдельные ограничения.
 | Задача | Читать | Canonical source |
 | --- | --- | --- |
 | Commit, pull, rebase, push и исправление истории | [Git workflow](GIT_WORKFLOW.md) | [шаблон commit-msg](../../tools/git/commit-msg), [validator](../../tools/git/validate_commit_message.py), реальные status/diff, сохранённые commit objects/body, upstream и актуальные remote refs |
+| Testing / coverage / journeys | [Phase 17](../product/product-spec.md#phase-17--testing), [команды](../../CONTRIBUTING.md#testing--phase-17) | `tools/testing/check_coverage.py`, `tools/testing/native_journey.py`, mobile `main_portfolio_journey_test.dart` и `integration_test/main_portfolio_runtime_test.dart`, web `main-portfolio-journey.bridge.mjs`, `tool/testing/emulator-journey.cjs`, actual backend/Rules suites; evidence в `docs/product/evidence/phase17` |
+| Performance / measurements | [Phase 16](../product/product-spec.md#phase-16--performance), [команды](../../CONTRIBUTING.md#performance--phase-16), mobile/web scope | `apps/mobile/tool/performance`, `apps/web/tool/performance`; raw evidence в `docs/product/evidence/phase16`; native DevTools отдельно от host diagnostics |
+| Developer Card / QR / Share | [Phase 15](../product/product-spec.md#phase-15--developer-card-и-native-sharing), [architecture](../architecture/architecture.md#developer-card-и-qr--phase-15), mobile scope | `portfolio_draft/domain/developer_card.dart`, public codec/Firestore adapter, UID-bound providers и card screen; existing `stackcard/document_links` channel |
 | Contact form, private Inbox и native FCM | [ADR 0004](../decisions/0004-contact-inbox-notifications.md), [Contact contract](../architecture/architecture.md#contact-inbox-и-уведомления--phase-14), web/mobile/firebase scopes | `firebase/functions/src/server.mjs` (Spark Node runtime), shared `contact-*.mjs`, Rules/indexes; web contact contract/repository/form/Inbox; mobile `features/inbox`, `features/notifications`, LocalRuntime/router |
 | Разработка продукта: scope, capabilities, история фаз и сценарии | [План разработки](../product/product-spec.md#план-разработки), [Product spec](../product/product-spec.md), [правила фаз](AGENTS.md#разработка-по-плану) | Действующий scope и открытые критерии в product spec, последнее поручение пользователя и фактическая реализация |
 | Структура/зависимости mobile | [Mobile rules](scopes/mobile.md), [architecture](../architecture/architecture.md), [решения](../decisions/README.md) | `apps/mobile/pubspec.yaml`, `apps/mobile/pubspec.lock`, `apps/mobile/lib`, platform configs |

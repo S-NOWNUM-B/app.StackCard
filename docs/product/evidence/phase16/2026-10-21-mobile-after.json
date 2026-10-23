@@ -1,0 +1,104 @@
+{
+  "environment": "flutter_tester debug, macos, 3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"macos_arm64\"",
+  "fixture": {
+    "projects": 200,
+    "technologiesPerProject": 20,
+    "skills": 200,
+    "experience": 30,
+    "education": 20,
+    "links": 10,
+    "documents": 21
+  },
+  "qr60ParentRebuild": {
+    "samplesMs": [
+      19.196,
+      4.798,
+      3.614,
+      4.803,
+      3.883,
+      3.558,
+      3.157,
+      3.526,
+      2.711,
+      2.817,
+      3.008,
+      3.311,
+      3.07,
+      3.658,
+      3.159,
+      3.514,
+      2.619,
+      3.06,
+      2.586,
+      2.593,
+      3.137,
+      2.898,
+      4.5,
+      2.502,
+      3.018
+    ],
+    "medianMs": 3.157,
+    "p95Ms": 4.803,
+    "repaintsRequested": 0
+  },
+  "qr1024ParentRebuild": {
+    "samplesMs": [
+      5.792,
+      6.199,
+      6.613,
+      5.755,
+      4.636,
+      5.213,
+      4.755,
+      5.047,
+      4.535,
+      4.868,
+      4.53,
+      4.409,
+      4.472,
+      4.67,
+      5.778,
+      4.682,
+      4.306,
+      4.282,
+      4.528,
+      4.591,
+      4.67,
+      4.456,
+      4.307,
+      4.264,
+      4.259
+    ],
+    "medianMs": 4.636,
+    "p95Ms": 6.199,
+    "repaintsRequested": 0
+  },
+  "home": {
+    "mountWallMs": 1219.238,
+    "mountedElements": 36394,
+    "processRssBytes": 461488128
+  },
+  "library": {
+    "mountWallMs": 184.246,
+    "mountedElements": 1417,
+    "processRssBytes": 468680704
+  },
+  "editor": {
+    "mountWallMs": 535.031,
+    "mountedElements": 18093,
+    "processRssBytes": 442728448
+  },
+  "pdf": {
+    "samplesMs": [
+      580.485,
+      371.216,
+      393.34
+    ],
+    "medianMs": 393.34,
+    "p95Ms": 580.485,
+    "bytes": 256334,
+    "avatar": "512x512 JPEG"
+  },
+  "limitations": "Host debug wall clock; not native frame timing or retained heap. QR lengths are encoder stress cases, not live URLs.",
+  "fixtureSha256": "ccdb1341879f6568890354f9687f5657f6e5cde9d8a36c989ada06d41c6ac775"
+}

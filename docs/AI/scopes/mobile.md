@@ -15,6 +15,37 @@ Hive8/cloud7/public2 читают старые данные без read-time wri
 выбирается явно с точной backup. Новые аккаунты — explicit SDK isNewUser и
 4step persisted UID-bound onboarding, пустые поля не признак completion.
 
+Phase 16 Performance: baseline/after и status принадлежат product spec;
+`tool/performance` использует synthetic domain-valid workspace и Memory repository.
+Host debug timings/mounted elements/RSS не заменяют native profile frame/heap capture.
+Library строит карточки лениво, loading/refresh/error не показывает прежние данные;
+QR State переиспользует матрицу только для прежнего URL, без global cache.
+Команды — в CONTRIBUTING, открытые native/live/iOS проверки Phase 15 сохраняются.
+
+Phase 17 native journey: `integration_test/main_portfolio_runtime_test.dart`
+использует explicit opt-in, demo named Auth/Firestore apps, отдельный persistent
+Hive и seed/check в двух процессах. `tools/testing/native_journey.py` проверяет
+demo/loopback env, запускает standalone HTTP backend и валидирует checkpoints/PID.
+Controller onboarding/import и настоящий Card/Clipboard UI обозначаются раздельно;
+обычные app session/storage не открывать. `flutter test` требует `--no-uninstall`;
+`flutter drive` — `--keep-app-running --no-uninstall-first` и отдельный force-stop,
+поскольку default drive teardown удаляет APK/data. iOS,
+системные permissions и full touch journey требуют собственных результатов.
+
+Phase 15 Developer Card/QR: `portfolio_draft` владеет public read model,
+strict card projection и `FirestoreDeveloperCardRepository`. SDK `publishedAt`
+Timestamp преобразуется в ISO UTC в adapter; pure codec остаётся строгим wire parser. Только server-backed
+`publicDocuments/<publicId>` соответствующей inventory version; cache/pending,
+withdrawal, неизвестная операция и owner transition не оставляют прежний QR.
+`developerCardRepositoryFactoryProvider` собирается LocalRuntime/main; widgets
+не читают Firestore/private media напрямую. Inline JPEG проходит existing processor,
+legacy external avatar — existing bounded reader, old publicMedia — bounded Storage
+get. Share menu открывает standalone card без изменения трёх roots и двух Home CTA.
+Copy/Open/Share повторно проверяют публикацию; native канал остаётся прежним.
+После inventory refresh action ждёт server data до20s, пропуская лишь временный
+`unavailable` event; cache/pending данные не используются. Withdrawal/owner change
+прекращает ожидание, поздний server event не вызывает действие.
+
 Phase 14 Contact/Inbox/FCM — [ADR 0004](../../decisions/0004-contact-inbox-notifications.md).
 `features/inbox` владеет ContactRequest и UID-bound repository; `features/notifications`
 владеет pure messaging/device contracts и controller, SDK только в data adapters.

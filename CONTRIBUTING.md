@@ -324,6 +324,33 @@ generated project. Firebase billing upgrade не нужен для текуще�
 и автоматически не выполняется. Rules и native команды — в
 [разделе проверок](#firestore-rules-и-native-sync-acceptance).
 
+### Демо-аккаунт с заполненными данными
+
+Полностью заполненный аккаунт для ручной проверки живёт только в локальных
+emulators. Данные и учётные данные —
+[demo_account_fixture.dart](apps/mobile/test/support/demo_account_fixture.dart).
+macOS — zsh/bash, из корня репозитория; `.emulator-data` сохраняет аккаунт
+между перезапусками и не коммитится:
+
+```sh
+cd firebase
+firebase emulators:start --only auth,firestore --project stackcard-dev-snownumb --import .emulator-data --export-on-exit .emulator-data
+```
+
+В другом терминале из `apps/mobile` один раз заполни аккаунт (повтор сбрасывает
+его к исходным данным). `flutter test` переустанавливает и удаляет приложение
+на устройстве вместе с его локальными данными:
+
+```sh
+flutter test integration_test/demo_account_seed_test.dart -d "<android-id>" --dart-define=RUN_DEMO_ACCOUNT_SEED=true
+```
+
+Затем запусти приложение с обоими emulators и войди почтой из fixture:
+
+```sh
+flutter run -d "<android-id>" --dart-define=FIREBASE_AUTH_EMULATOR_HOST=10.0.2.2 --dart-define=FIREBASE_AUTH_EMULATOR_PORT=9099 --dart-define=FIRESTORE_EMULATOR_HOST=10.0.2.2 --dart-define=FIRESTORE_EMULATOR_PORT=8085
+```
+
 Android — доступный target текущей среды. iOS configuration сгенерирована, но
 native iOS build/приёмка недоступны при неполном Xcode и отсутствии CocoaPods;
 проверяй фактический toolchain через `flutter doctor -v`.
@@ -881,6 +908,188 @@ SHA256 с экспортом, затем нажать Back. `SAVE_PASS/CANCEL_PA
 окружении; дата исходников не доказательство rollout. Удаление неизвестного
 legacy account без bucket остаётся configuration error до lifecycle lock.
 Backend hosting по-прежнему отложен, env URLs не заменяются фиктивными.
+
+### Developer Card и QR — Phase 15
+
+macOS zsh/bash, cwd `apps/mobile`. Фикстуры опубликованных данных и заменяемый
+SDK проверяются локально, без Auth/Hive/пользовательских публикаций:
+
+```zsh
+# Проверить public projection, owner/withdrawal, layout и existing native bridge
+flutter test --no-pub test/developer_card_test.dart test/firestore_developer_card_repository_test.dart test/developer_card_widget_test.dart test/home_main_portfolio_widget_test.dart test/native_document_link_actions_test.dart
+# Экспортировать настоящий Flutter render для независимого чтения QR
+flutter test --no-pub test/developer_card_widget_test.dart --dart-define=EXPORT_DEVELOPER_CARD_PREVIEW=true
+```
+
+Preview пишется в `/private/tmp/stackcard-phase15-card.png` только с explicit
+export define. Это тестовая карточка и QR; image decode не подтверждает HTTPS
+hosting или native camera scan. Device acceptance отдельно: открыть реальный
+published main через Home → Поделиться → Developer Card/QR, проверить anonymous
+URL камерой второго устройства, exact Copy/Open и actual share sheet. Отмена
+системного меню не считается отправкой. Android/iOS результаты фиксируются
+раздельно; emulator не называется physical device, без backend фиктивный URL
+не подставляется. Новые permissions/production публикации для test не нужны.
+
+### Performance — Phase 16
+
+macOS zsh/bash, cwd `apps/mobile`. Большой синтетический workspace проходит
+существующую domain validation: 200 projects ×20 technologies, 200 skills,
+30 experience, 20 education, 10 links и21 документов (main +20 legacy).
+Benchmark не подключает Firebase/Hive и не читает пользовательские данные:
+
+```zsh
+# Снять host debug wall clock, mounted elements/RSS и настоящий PDF с JPEG512
+flutter test --no-pub tool/performance/benchmark.dart --dart-define=PERFORMANCE_OUTPUT=/private/tmp/stackcard-performance.json
+# Проверить lazy Library/search/refresh и QR URL change/resize
+flutter test --no-pub test/projects_di_test.dart test/developer_card_qr_test.dart
+# На подключённом Android/iOS запустить тот же workspace для Flutter DevTools
+flutter run --profile -d DEVICE_ID --target=tool/performance/main.dart
+```
+
+Output: указанный JSON, `.workspace.json` для web harness и `.pdf` для проверки
+настоящего saved output. QR60/1024 — encoder stress cases; они не подтверждают
+live URL. Нет clock-based CI assertions: p95 в debug зависит от host/JIT.
+Profile target использует Memory repository и обычные Home/Projects/Editor;
+Save живёт до закрытия процесса, native PDF запускается явной кнопкой.
+Card/QR/publication и GitHub network acceptance выполнять отдельно в обычном
+приложении с настроенным backend. Target не вызывает native LocalRuntime.
+
+В DevTools записать устройство/OS/Flutter/build mode, fixture, frames/build/raster,
+rebuilds и retained heap до/после одинаковой серии scroll/search/edit/drag.
+Сохранить traces/screenshots; RSS host-процесса не доказывает отсутствие утечек.
+Перед повторным замером остановить другие builds/benchmarks. Отдельно проверить
+keyboard/large text, порядок и autoscroll, поздний ввод/ACK и смену UID.
+
+Web: cwd `apps/web`. Harness использует установленные `esbuild` (dependency
+существующего tooling) и Playwright через `PLAYWRIGHT_MODULE`; новый package/lock
+не добавляется. Указать абсолютный module path доступного Playwright runtime и,
+если browser не установлен им, путь Chrome в `CHROME_PATH`:
+
+```zsh
+# Проверить реальные Editor/Attachments/DocumentView, fonts/SVG/avatar и deferred PDF
+PLAYWRIGHT_MODULE="$PLAYWRIGHT_MODULE" CHROME_PATH="$CHROME_PATH" node tool/performance/benchmark.cjs /private/tmp/stackcard-performance.json.workspace.json /private/tmp/stackcard-performance-web.json
+```
+
+Browser output — JSON и6 viewport screenshots, localhost server/browser закрываются
+после прогона. Width320/390/1440, memory после forced GC, input→two RAF и PDF timing
+относятся к изолированным production React components с синтетическими данными.
+Это не Next SSR/backend acceptance, field Core Web Vitals или native профилирование.
+Исходные результаты и открытые gates находятся в
+[Phase 16](docs/product/product-spec.md#phase-16--performance);
+[Phase 15](docs/product/product-spec.md#phase-15--developer-card-и-native-sharing)
+сохраняет отдельные native/live/iOS проверки.
+
+### Testing — Phase 17
+
+macOS zsh/bash. Зависимости `apps/web` уже должны быть установлены: mobile
+cross-client journeys запускают настоящий web parser и trusted projection через
+существующий `tsx`, без второго DTO mapper или network в core-тесте.
+
+```zsh
+# Из apps/mobile: полный suite и настоящий отчёт Flutter coverage
+flutter test --no-pub --coverage --reporter expanded
+# Проверить код без warnings/errors
+flutter analyze --no-pub
+# Из корня monorepo: строгий учебный порог больше40%, без фильтров
+python3 tools/testing/check_coverage.py apps/mobile/coverage/lcov.info --project apps/mobile --minimum 40 --output /private/tmp/stackcard-coverage.json
+# Проверить ошибки/denominator/порог самого coverage checker
+python3 -m unittest discover -s tools/testing -p 'test_*.py' -v
+```
+
+Checker объединяет повторные SF/DA по source/line, не меняет denominator ради
+порога, отклоняет пустой/повреждённый LCOV и source вне `lib`. JSON содержит
+числитель/знаменатель, source/LCOV SHA256 и unreported Dart files. Это coverage
+исполняемых строк LCOV, не процент всех строк репозитория и не device acceptance.
+Сохраняемые результаты — в [Phase 17](docs/product/product-spec.md#phase-17--testing).
+
+Focused mobile проверяет настоящее закрытие/reopen временного Hive, durable
+outbox, scoped saves при dirty Editor/notes, exact ACK через **fake transport**,
+cloud7 → actual web parser/trusted projection → public2 → Card и saved PDF:
+
+```zsh
+# Из apps/mobile: cross-client journey и настоящий SDK Timestamp в card adapter
+flutter test --no-pub test/main_portfolio_journey_test.dart test/firestore_developer_card_repository_test.dart
+```
+
+Остальные gates выполняются в своих директориях:
+
+```zsh
+# Из apps/web: contracts/helpers и TypeScript
+npm test
+npm run typecheck
+# Из firebase/functions: HTTP/domain и syntax checks; tests открывают localhost ports
+npm run check
+npm test
+# Из firebase: actual client/Admin SDK, Rules и service tests только demo emulators
+npm run test:all-rules
+```
+
+Для настоящего browser journey нужны свободные localhost ports3800/3810,
+9099/8085/9150 и установленный Playwright runtime/Chrome. `PLAYWRIGHT_MODULE`
+указывает абсолютный module path доступного runtime; `CHROME_PATH` — путь браузера,
+если Chromium не установлен самим runtime. Новые dependencies/lockfiles не нужны.
+Cwd `firebase`; команда не использует production target:
+
+```zsh
+# Собрать demo-only Next и проверить регистрацию/Save/PDF/Publish/public SSR/logout
+PLAYWRIGHT_MODULE="$PLAYWRIGHT_MODULE" CHROME_PATH="$CHROME_PATH" firebase emulators:exec --only auth,firestore --project demo-stackcard-test 'GCLOUD_PROJECT=demo-stackcard-test node ../apps/web/tool/testing/emulator-journey.cjs /private/tmp/stackcard-testing-browser.json'
+```
+
+Runner проверяет demo project/loopback emulator env, сам задаёт demo-only build
+config, запускает обычные Next production runtime и standalone Node HTTP API.
+Он отказывается занимать уже занятые3800/3810, блокирует внешние browser requests,
+использует disposable browser context/аккаунт эмулятора; токены остаются в памяти.
+Clipboard заменён **stub**: ссылки никому не отправляются. PDF/JSON/screenshot и
+локальные логи сохраняются рядом с output path; исходный `next-env.d.ts`
+восстанавливается, собственные серверы/browser закрываются. `.env` не переписывается.
+`--skip-build` допустим только после сборки с теми же demo env; default включает build.
+
+Сценарий: signed-out guard → регистрация →4 optional шага → manual project →
+attachment/Save → Escape/cancel/discard → reload → PDF → явный Publish → anonymous
+Next SSR → private Save без auto-Publish → authenticated HTTP Unpublish → public404
+→ logout/private deep-link guard. GitHub source/import/review, legacy migration,
+permissions failures и UID/late ACK проверяются соответствующими suites отдельно.
+Результат не подменяет native Android/iOS/live journey, системный QR scan/Share
+из Phase 15 или DevTools frame/memory gate из Phase 16.
+
+Связанный native SDK journey использует
+[main_portfolio_runtime_test.dart](apps/mobile/integration_test/main_portfolio_runtime_test.dart):
+два запуска `seed/check` на одном Android, настоящие named Auth/Firestore SDK,
+отдельный Hive/outbox и standalone HTTP backend. Нужны подключённый test device,
+свободный3810 и те же demo emulator ports. Обычные session/draft не открываются.
+Официальный `flutter drive --keep-app-running --no-uninstall-first` сохраняет
+test outbox: runner отдельно вызывает `adb shell am force-stop`, без uninstall/
+clear data. Без `--keep-app-running` drive удаляет APK при завершении.
+`flutter test` по-прежнему требует `--no-uninstall`. Cwd `firebase`:
+
+```zsh
+# Проверить native process restart → exact server ACK → Publish/Card/Copy → Unpublish/delete
+firebase emulators:exec --only auth,firestore --project demo-stackcard-test 'GCLOUD_PROJECT=demo-stackcard-test python3 ../tools/testing/native_journey.py --device emulator-5580 --output /private/tmp/stackcard-testing-native.json'
+```
+
+Device ID заменить на фактический `flutter devices`. `adb` выбирается из `--adb`, env `ADB`, PATH или Android `local.properties` (`sdk.dir`);
+его наличие/device readiness проверяются до backend и установки APK. Android emulator использует
+`10.0.2.2`; для USB device сначала настроить `adb reverse tcp:9099 tcp:9099`,
+аналогично8085/3810, и передать runner `--host 127.0.0.1`. Backend слушает только
+loopback. Runner проверяет exact demo env, все checkpoint names, exit codes и два
+разных PID, закрывает только собственный backend. Driver находится в
+`apps/mobile/test_driver/integration_test.dart`; `--no-dds` исключает сбой
+служебного golden/VM bridge установленного `flutter test`, assertions не меняются.
+SDK/HTTP проверки настоящие. JSON и логи сохраняются
+рядом с output. Password/token не записываются runner или приложением; Auth SDK
+сам восстанавливает изолированную session. После `check` Auth account и отдельный
+Hive directory удаляются; disposable Firestore данные исчезают при остановке
+этой demo emulator session. Direct draft delete после Publish запрещён Rules,
+cleanup их не обходит. Не удалять app data между фазами.
+После прерывания `--phase check --run-id <original-id>` допустим лишь на том же
+device с ещё работающими теми же Auth/Firestore emulators; новый emulator session
+не сохраняет disposable accounts автоматически.
+
+Onboarding/import здесь вызываются через настоящий controller с fixture GitHub
+source, а Card/QR/Copy — через настоящий native UI/Clipboard. Это не полный touch
+journey регистрации/import, не физический QR scan/Share/Open и не live hosting.
+Системные PDF Save/Cancel и notification permission denial проверяются отдельными
+существующими opt-in suites выше. iOS требует собственного запуска и evidence.
 
 ### Остальные focused и visual проверки
 

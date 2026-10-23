@@ -1,0 +1,27 @@
+{
+  "status": "failed",
+  "device": "emulator-5580",
+  "scope": "Android emulator native channels and local anonymous Next SSR",
+  "physicalCamera": "not available; screenshot independently decoded by Vision",
+  "recipientSelected": false,
+  "checkpoints": [
+    {
+      "stage": "card",
+      "decodedExactUrl": "http://127.0.0.1:3800/d/56af948432bf17da49720faf341ff912",
+      "anonymousHttp200": true,
+      "privateMarkersAbsent": true,
+      "screenshot": "android-system-card.png"
+    },
+    {
+      "stage": "share",
+      "exactPreviewText": "http://127.0.0.1:3800/d/56af948432bf17da49720faf341ff912",
+      "androidChooser": true,
+      "resumedActivity": [
+        "    topResumedActivity=ActivityRecord{fd59bb7 u0 com.android.intentresolver/.ChooserActivityLauncher t17}"
+      ],
+      "cancelledWithoutRecipient": true,
+      "screenshot": "android-system-share.png"
+    }
+  ],
+  "error": "Anonymous portfolio missing from Android browser"
+}

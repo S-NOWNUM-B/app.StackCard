@@ -93,6 +93,39 @@ plain logout расположены под разделителем. Location SD
 Контракты D048, Builder, Phase11/12 ниже описывают историю/совместимость;
 при конфликте современный ADR 0005 имеет приоритет.
 
+## Developer Card и QR — Phase 15
+
+Вход — Home → «Поделиться» → «Developer Card и QR». Корневых разделов по-прежнему
+три; Card — отдельный экран. `DeveloperCard` — узкая immutable public read model
+в существующем `portfolio_draft`, без отдельного write store/schema/collection.
+`developer_card_providers.dart` фиксирует UID/repository и подтверждённый inventory;
+`FirestoreDeveloperCardRepository` слушает один `publicDocuments/<publicId>`.
+Firestore adapter преобразует SDK `publishedAt: Timestamp` в ISO UTC до pure codec,
+не изменяя raw snapshot; неизвестные типы по-прежнему отклоняются.
+Cache/pending writes не подтверждают публикацию, withdrawal убирает QR/actions,
+несовпадающая version требует перечитать inventory. Private draft не читается.
+При revalidation Copy/Open/Share ждут новое server data не более20s: первый
+отвергнутый cache/pending event не завершает action раньше server event.
+Withdrawal, invalid data и смена owner прекращают ожидание; late data не запускают
+native action. Временная подписка закрывается при завершении/timeout.
+
+Codec выбирает published name/headline/username, skills/project technologies,
+public avatar и title. Вход проверяется по public1|2 и выбранному publicId/version;
+hidden profile/skills/projects, private paths и неизвестная schema отклоняются.
+Inline JPEG проходит существующую bounded validation; legacy publicMedia читается
+через bounded Storage get, external URL — через существующий bounded media reader.
+Декодированные bytes остаются в памяти owner session, persistent card cache нет.
+
+Локальный `qr` кодирует exact inventory URL, без credentials/query/private metadata;
+чёрные целые модули и white quiet zone4 не перекрываются логотипом. После замеров
+Phase 16 матрица хранится только в State QR widget: тот же URL не кодируется
+повторно и не требует repaint, смена URL обновляет матрицу, resize — layout.
+Глобального/public-session кэша нет. Card использует
+existing Brand A/Manrope/avatar/badges/buttons. Copy/Open/Share повторно читают
+inventory/public snapshot и проверяют captured owner/version. Android и iOS
+используют существующий `stackcard/document_links`, без второго share plugin.
+Source/widget/QR decode и native/live/iOS приёмка фиксируются отдельно в product spec.
+
 ## Текущее состояние — mobile capabilities
 
 Исторический обзор прежних capabilities; актуальный UI и schema — выше.
@@ -400,7 +433,7 @@ Resume/Portfolio. Минимальный public reader и document publication �
 заменяет public API. D019 требует стабильного document URL после rename/republish;
 новый route `/d/[publicId]`, `/u/[username]` остаётся legacy adapter без автоматической
 alias migration. Missing production endpoint/origin — явное configuration state.
-Подробная [очередь capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-08)
+Подробная [очередь capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-21)
 и [Phase 13](../product/product-spec.md#phase-13--website-и-web-editor) — в product spec.
 
 ---
@@ -1300,7 +1333,7 @@ Package, UseCase или DataSource выделяется под существу�
 - Contact form требует validation и spam/rate-limit strategy; FCM отправляется на
   доверенной стороне, server credentials не помещаются в клиент.
 - Native sharing Android: MethodChannel → Kotlin → `Intent.ACTION_SEND`.
-  Developer Card и QR — Phase 15.
+  Developer Card и QR реализуются в [Phase 15](#developer-card-и-qr--phase-15).
 
 ---
 

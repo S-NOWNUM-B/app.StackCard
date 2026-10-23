@@ -1,0 +1,16 @@
+{
+  "environment": "Next production + Chrome + disposable Auth/Firestore emulators + standalone Node API",
+  "browser": "155.0.8059.85",
+  "passed": [
+    "signed-out owner route redirects with returnTo",
+    "registration and four optional onboarding steps reach saved Home",
+    "scoped project Save, attachment, keyboard cancel/discard and page restart preserve saved main",
+    "saved Home exports a genuine PDF",
+    "explicit Publish verifies Auth token and anonymous Next SSR reads public schema2",
+    "later private Save leaves publication unchanged; authenticated withdrawal makes anonymous route 404",
+    "logout removes private access and deep-link guard remains active"
+  ],
+  "clipboard": "stub",
+  "github": "covered separately by Dart/controller and HTTP suites",
+  "limitations": "No native device, physical QR/share, live backend or device performance acceptance."
+}

@@ -111,6 +111,55 @@ test('invalid Firestore avatar fails before public snapshot or operation journal
   assert.equal((await database.doc('accounts/owner/publicationOperations/publish-operation').get()).exists, false);
 });
 
+test('single main client SDK Save, explicit Publish and withdrawal preserve versioned public isolation', async () => {
+  await saveModernAvatar();
+  const owner = environment.authenticatedContext('owner').firestore();
+  const anonymous = environment.unauthenticatedContext().firestore();
+  const path = 'accounts/owner/drafts/current';
+  const raw = (await database.doc(path).get()).data();
+  raw.content.profile.name = 'PRIVATE_BASE';
+  raw.content.documents[0].content.profile.name = 'Saved author';
+  raw.notes = 'PRIVATE_NOTES';
+  raw.mutationId = 'modern-saved';
+  raw.localRevision++;
+  await assertSucceeds(setDoc(doc(owner, path), { ...raw, updatedAt: serverTimestamp() }));
+  const publicId = permanentPublicId('owner', 'first');
+  const publicPath = `publicDocuments/${publicId}`;
+  assert.equal((await database.doc(publicPath).get()).exists, false);
+  const api = service({ bucket: null });
+  const published = await api.execute('owner', request('publish', {
+    operationId: 'modern-publish', expectedMutationId: 'modern-saved',
+  }));
+  const first = (await assertSucceeds(getDoc(doc(anonymous, publicPath)))).data();
+  assert.equal(first.schemaVersion, 2);
+  assert.equal(first.content.profile.name, 'Saved author');
+  assert.equal(typeof first.publishedAt.toDate, 'function');
+  assert.equal(Number.isFinite(first.publishedAt.toDate().getTime()), true);
+  assert.equal(JSON.stringify(first).includes('PRIVATE_'), false);
+  await assertFails(getDoc(doc(anonymous, path)));
+
+  raw.content.documents[0].content.profile.name = 'Newer saved author';
+  raw.mutationId = 'modern-newer';
+  raw.localRevision++;
+  await assertSucceeds(setDoc(doc(owner, path), { ...raw, updatedAt: serverTimestamp() }));
+  assert.equal((await getDoc(doc(anonymous, publicPath))).data().content.profile.name, 'Saved author');
+  await assert.rejects(api.execute('owner', request('publish', {
+    operationId: 'modern-stale', expectedMutationId: 'modern-saved',
+    expectedVersion: 1, expectedGeneration: 1,
+  })), rejected('conflict'));
+  const update = request('publish', { operationId: 'modern-update',
+    expectedMutationId: 'modern-newer', expectedVersion: 1, expectedGeneration: 1 });
+  const republished = await api.execute('owner', update);
+  assert.equal(republished.publication.url, published.publication.url);
+  assert.equal((await getDoc(doc(anonymous, publicPath))).data().content.profile.name, 'Newer saved author');
+  await api.execute('owner', request('unpublish', { operationId: 'modern-withdraw',
+    expectedVersion: 2, expectedGeneration: 2 }));
+  assert.equal((await getDoc(doc(anonymous, publicPath))).exists(), false);
+  const retried = await api.execute('owner', update);
+  assert.equal(retried.publication.state, 'unpublished');
+  assert.equal((await database.doc(publicPath).get()).exists, false);
+});
+
 test('Firestore-only account deletion requires explicit verified cutover and deletes Auth last', async () => {
   await saveModernAvatar();
   const api = service({ bucket: null, firestoreMediaOnlyAccountsSince: '2026-01-01T00:00:00.000Z', auth: fakeAuth(async () => {

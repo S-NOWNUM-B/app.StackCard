@@ -27,7 +27,7 @@
   [План](../product/product-spec.md#план-разработки) сохраняет историю, требования
   и открытые проверки; пауза очереди не запрещает этот разрешённый scope.
   Обновление roadmap 2026-10-08 —
-  [актуальные capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-08).
+  [актуальные capabilities](../product/product-spec.md#актуальная-последовательность-2026-10-21).
   D048 (2026-10-08): прямое поручение «закончи перенос» и явный ответ «Также
   реализовать web и публикацию» расширяют разрешённый scope на mobile, actual
   web и document publication. Старые singleton/public-username задачи не задают
@@ -76,9 +76,9 @@
   Последующее поручение 2026-10-11 переносит одобренный светлый web дизайн
   в mobile: ink/white controls, белые поверхности и русский интерфейс, через
   существующие core/theme/shared widgets без изменения asset bytes и data schema.
-  Runtime использует четыре stateful roots: Home / Resumes / Projects / Portfolios;
-  Home — mixed library, Resume/Portfolio — независимые private documents.
-  Legacy Builder остаётся редактором общей базы. Полную Figma parity и live
+  Текущий runtime по ADR 0005 использует три roots: Home / Projects / Editor;
+  Home — сохранённое основное портфолио, Library и Editor buffer разделены.
+  Legacy Builder/независимые documents сохраняются для совместимости. Полную Figma parity и live
   publication acceptance не считать выполненными из screens/headless checks.
   При UI-переносе сверять target и реальный source.
   Экраны получают demo/mock и GitHub source data через Repository и Riverpod DI; widgets
@@ -138,6 +138,17 @@
 - Имена кода/файлов — английские; комментарии и объяснения — русские.
 
 ## Разработка по плану
+
+Прямой переход пользователя 2026-10-21 разрешает Phase 17 Testing по
+обновлённому плану ADR 0005: одно main и три roots. Незакрытые проверки
+Phase 15 и16 сохраняются отдельно в product spec; local tests/emulators не
+заменяют native QR/Share, device profile и iOS/live приёмку. Coverage считать
+по настоящему LCOV без фильтров, сохранять denominator и список unreported files.
+Core fake transport, SDK emulators и настоящий browser journey обозначать отдельно.
+Native SDK на Android с локальными emulators/backend также отделять от live
+публикации и iOS. Для process pair сохранять app data: `flutter test --no-uninstall`
+либо documented `flutter drive --keep-app-running` с отдельным force-stop.
+Phase 18–20 и Contact hosting/deploy/billing/Git этим переходом не разрешаются.
 
 Прямое поручение пользователя 2026-10-09 разрешает Phase 14 Contact/Inbox/FCM
 по [ADR 0004](../decisions/0004-contact-inbox-notifications.md). Scope и фактическая

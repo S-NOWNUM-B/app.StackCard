@@ -1,0 +1,104 @@
+{
+  "environment": "flutter_tester debug, macos, 3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"macos_arm64\"",
+  "fixture": {
+    "projects": 200,
+    "technologiesPerProject": 20,
+    "skills": 200,
+    "experience": 30,
+    "education": 20,
+    "links": 10,
+    "documents": 21
+  },
+  "qr60ParentRebuild": {
+    "samplesMs": [
+      22.203,
+      5.415,
+      4.998,
+      6.165,
+      5.088,
+      4.878,
+      4.779,
+      5.01,
+      4.533,
+      4.322,
+      4.211,
+      4.731,
+      4.91,
+      4.661,
+      4.257,
+      5.093,
+      4.207,
+      4.391,
+      4.905,
+      5.329,
+      4.705,
+      5.402,
+      4.893,
+      5.196,
+      4.141
+    ],
+    "medianMs": 4.893,
+    "p95Ms": 6.165,
+    "repaintsRequested": 25
+  },
+  "qr1024ParentRebuild": {
+    "samplesMs": [
+      23.346,
+      23.133,
+      23.085,
+      22.516,
+      22.369,
+      23.009,
+      23.523,
+      23.085,
+      23.145,
+      21.845,
+      21.94,
+      22.861,
+      22.249,
+      22.314,
+      22.594,
+      22.305,
+      21.952,
+      23.044,
+      23.272,
+      23.62,
+      22.755,
+      22.083,
+      22.591,
+      22.516,
+      22.253
+    ],
+    "medianMs": 22.594,
+    "p95Ms": 23.523,
+    "repaintsRequested": 25
+  },
+  "home": {
+    "mountWallMs": 1163.995,
+    "mountedElements": 36394,
+    "processRssBytes": 458883072
+  },
+  "library": {
+    "mountWallMs": 878.395,
+    "mountedElements": 32990,
+    "processRssBytes": 460062720
+  },
+  "editor": {
+    "mountWallMs": 449.264,
+    "mountedElements": 18093,
+    "processRssBytes": 479084544
+  },
+  "pdf": {
+    "samplesMs": [
+      600.457,
+      348.069,
+      372.233
+    ],
+    "medianMs": 372.233,
+    "p95Ms": 600.457,
+    "bytes": 256334,
+    "avatar": "512x512 JPEG"
+  },
+  "limitations": "Host debug wall clock; not native frame timing or retained heap. QR lengths are encoder stress cases, not live URLs.",
+  "fixtureSha256": "ccdb1341879f6568890354f9687f5657f6e5cde9d8a36c989ada06d41c6ac775"
+}
