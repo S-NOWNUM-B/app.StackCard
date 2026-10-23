@@ -93,9 +93,11 @@ jobs:
         run: npm run test:all-rules
 
   mobile:
-    name: Flutter and Android APK
-    runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    name: Flutter tests and coverage
+    # Пиксельный WCAG matcher чувствителен к FreeType AA Manrope на Linux.
+    # Весь suite остаётся обязательным на CoreText, APK собирается отдельно.
+    runs-on: macos-15
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: apps/mobile
@@ -113,14 +115,6 @@ jobs:
         run: npm install --global "$(node --print 'require("./package.json").packageManager')"
       - name: Install actual web codecs for cross-client tests
         run: npm ci --prefix ../web --no-audit --no-fund
-      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
-        with:
-          distribution: temurin
-          java-version-file: .java-version
-          cache: gradle
-          cache-dependency-path: |
-            apps/mobile/android/**/*.gradle.kts
-            apps/mobile/android/gradle/wrapper/gradle-wrapper.properties
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version-file: .fvmrc
@@ -141,6 +135,33 @@ jobs:
             apps/mobile/coverage/summary.json
           if-no-files-found: error
           retention-days: 7
+
+  android:
+    name: Android APK
+    needs: [assets, web, firebase, mobile]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+          cache: gradle
+          cache-dependency-path: |
+            apps/mobile/android/**/*.gradle.kts
+            apps/mobile/android/gradle/wrapper/gradle-wrapper.properties
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version-file: .fvmrc
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
       - run: flutter build apk --debug --no-pub
       - name: Upload development APK only
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -153,7 +174,7 @@ jobs:
   required:
     name: All checks
     if: always()
-    needs: [assets, web, firebase, mobile]
+    needs: [assets, web, firebase, mobile, android]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -163,7 +184,8 @@ jobs:
           WEB: ${{ needs.web.result }}
           FIREBASE: ${{ needs.firebase.result }}
           MOBILE: ${{ needs.mobile.result }}
+          ANDROID: ${{ needs.android.result }}
         run: |
-          for result in "$ASSETS" "$WEB" "$FIREBASE" "$MOBILE"; do
+          for result in "$ASSETS" "$WEB" "$FIREBASE" "$MOBILE" "$ANDROID"; do
             test "$result" = success
           done
