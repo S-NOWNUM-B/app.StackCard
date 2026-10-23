@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_stackcard/core/localization/app_strings.dart';
 import 'package:app_stackcard/core/theme/stackcard_theme.dart';
+import 'package:app_stackcard/core/theme/stackcard_tokens.dart';
 import 'package:app_stackcard/features/auth/auth.dart';
 import 'package:app_stackcard/features/home/home_screen.dart';
 import 'package:app_stackcard/features/media/media.dart';
@@ -86,9 +87,12 @@ void main() {
         lessThan(tester.getTopLeft(bio).dy),
       );
       expect(tester.widget<Text>(bio).textAlign, TextAlign.left);
+      // Описание выровнено по внутреннему отступу карточки раздела (с рамкой 1px).
       expect(
         tester.getRect(bio).left,
-        tester.getRect(find.byKey(const Key('main.portfolio.content'))).left,
+        tester.getRect(find.byKey(const Key('main.section.bio'))).left +
+            StackCardSpacing.cardPadding +
+            1,
       );
       if (const bool.fromEnvironment('UPDATE_SINGLE_PORTFOLIO_PREVIEWS')) {
         await expectLater(
@@ -1027,6 +1031,22 @@ void main() {
       contacts.map((contact) => Uri.parse(contact.url)).toList(),
     );
   });
+  testWidgets(
+    'share menu opens Developer Card without publishing or adding a Home action',
+    (tester) async {
+      final publication = _PublicationController(published: true);
+      await _open(tester, saved: _workspace('Saved'), publication: publication);
+      expect(find.byType(StackCardButton), findsNWidgets(2));
+      await tester.tap(find.byKey(const Key('home.share')));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Developer Card и QR'), findsOneWidget);
+      await tester.tap(find.text('Developer Card и QR'));
+      await tester.pumpAndSettle();
+      expect(find.byType(DeveloperCardScreen), findsOneWidget);
+      expect(publication.actions, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 final _publicUrl = Uri.parse('https://portfolio.example/d/public-id');
@@ -1227,6 +1247,10 @@ Future<void> _tap(WidgetTester tester, String key, {bool settle = true}) async {
   final finder = find.byKey(ValueKey(key));
   await tester.ensureVisible(finder);
   await tester.tap(finder);
+  if (key == 'home.share') {
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Отправить ссылку'));
+  }
   if (settle) {
     await tester.pumpAndSettle();
   } else {

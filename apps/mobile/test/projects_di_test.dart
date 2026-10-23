@@ -111,6 +111,75 @@ void main() {
   );
 
   testWidgets(
+    'large Library builds visible cards, reaches last item and keeps search after scroll',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 844);
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final projects = List.generate(200, (index) => _project('Case $index'));
+      await tester.pumpWidget(
+        StackCardApp(
+          initialLocation: '/projects',
+          providerOverrides: [
+            projectsRepositoryProvider.overrideWithValue(
+              _FakeProjectsRepository(() async => projects),
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(ProjectLibraryCard).evaluate().length, lessThan(20));
+      expect(
+        find.descendant(
+          of: find.byType(ProjectLibraryCard),
+          matching: find.text('Case 199'),
+        ),
+        findsNothing,
+      );
+      final scrollable = find
+          .descendant(
+            of: find.byType(ProjectsScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      await tester.scrollUntilVisible(
+        find.descendant(
+          of: find.byType(ProjectLibraryCard),
+          matching: find.text('Case 199'),
+        ),
+        600,
+        scrollable: scrollable,
+        maxScrolls: 100,
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(ProjectLibraryCard),
+          matching: find.text('Case 199'),
+        ),
+        findsOneWidget,
+      );
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(ProjectsScreen)),
+      );
+      container.read(projectFiltersProvider.notifier).setQuery('Case 199');
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(ProjectLibraryCard),
+          matching: find.text('Case 199'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Case 0'), findsNothing);
+      container.read(projectFiltersProvider.notifier).setQuery('');
+      await tester.pumpAndSettle();
+      expect(find.text('Case 0'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'Loading, failure and explicit retry use the same repository contract',
     (tester) async {
       var requests = 0;
@@ -149,6 +218,17 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Recovered case'), findsOneWidget);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(ProjectsScreen)),
+      );
+      pending = Completer<List<Project>>();
+      container.invalidate(projectsProvider);
+      await tester.pump();
+      expect(find.text('Загрузка данных'), findsOneWidget);
+      expect(find.text('Recovered case'), findsNothing);
+      pending.complete([_project('Refreshed case')]);
+      await tester.pumpAndSettle();
+      expect(find.text('Refreshed case'), findsOneWidget);
       expect(
         find.byWidgetPredicate(
           (widget) =>

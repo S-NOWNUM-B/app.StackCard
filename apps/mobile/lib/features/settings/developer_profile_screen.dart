@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/stackcard_tokens.dart';
 import '../../shared/widgets/stackcard_button.dart';
+import '../../shared/widgets/stackcard_dialog_actions.dart';
 import '../portfolio_draft/portfolio_draft.dart';
 
 class DeveloperProfileScreen extends ConsumerStatefulWidget {
@@ -50,23 +51,14 @@ class _DeveloperProfileScreenState
     final answer = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(context.strings.tr('builder.unsaved')),
-        content: Text(context.strings.tr('workspace.profileHint')),
+        title: Text(context.strings.tr('documentEditor.leaveTitle')),
+        content: Text(context.strings.tr('documentEditor.leaveHint')),
         actions: [
-          StackCardButton(
-            onPressed: () => Navigator.pop(context, 'stay'),
-            label: context.strings.tr('common.cancel'),
-            role: StackCardButtonRole.outlined,
-          ),
-          StackCardButton(
-            onPressed: () => Navigator.pop(context, 'discard'),
-            label: context.strings.tr('documentEditor.discard'),
-            role: StackCardButtonRole.outlined,
-          ),
-          StackCardButton(
-            onPressed: () => Navigator.pop(context, 'save'),
-            label: context.strings.tr('common.save'),
-            primary: true,
+          StackCardDialogActions(
+            cancelLabel: context.strings.tr('documentEditor.discard'),
+            confirmLabel: context.strings.tr('common.save'),
+            onCancel: () => Navigator.pop(context, 'discard'),
+            onConfirm: () => Navigator.pop(context, 'save'),
           ),
         ],
       ),

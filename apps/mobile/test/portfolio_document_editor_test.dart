@@ -136,7 +136,9 @@ void main() {
     await _enter(tester, 'title', 'Unsaved CV');
     await _tap(tester, 'document.back');
     expect(find.text('Сохранить изменения?'), findsOneWidget);
-    await _tap(tester, 'document.leave.stay');
+    // Тап вне окна закрывает диалог и оставляет редактор.
+    await tester.tapAt(const Offset(4, 4));
+    await tester.pumpAndSettle();
     expect(_value(tester, 'title'), 'Unsaved CV');
     await _tap(tester, 'document.back');
     await _tap(tester, 'document.leave.discard');

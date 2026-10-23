@@ -22,6 +22,8 @@ import '../features/portfolio_draft/domain/portfolio_draft_repository.dart';
 import '../features/portfolio_draft/domain/portfolio_draft.dart';
 import '../features/portfolio_draft/domain/portfolio_sync.dart';
 import '../features/portfolio_draft/domain/document_publication.dart';
+import '../features/portfolio_draft/domain/developer_card.dart';
+import '../features/portfolio_draft/data/firestore_developer_card_repository.dart';
 import '../features/portfolio_draft/data/http_document_publication_repository.dart';
 import '../features/portfolio_draft/data/shared_preferences_document_publication_operation_store.dart';
 import '../features/settings/settings_providers.dart';
@@ -93,6 +95,26 @@ final class LocalRuntime {
     await draftAccounts.clearConfirmedDeletedUser(uid);
     await publicationOperationStoreForUser(uid).clear();
     await accountDeletionJournalForUser(uid).clear();
+  }
+
+  DeveloperCardRepository? developerCardRepositoryForUser(
+    String uid, {
+    required PortfolioLegacyAvatarReader legacyAvatarReader,
+  }) {
+    final database = firestore, auth = accountAuth;
+    if (database == null || auth == null || auth.currentUser?.uid != uid) {
+      return null;
+    }
+    return FirestoreDeveloperCardRepository(
+      firestore: database,
+      ownerUid: uid,
+      storage: mediaStorage,
+      legacyAvatarReader: legacyAvatarReader,
+      isActive: () =>
+          storage.portfolioDraft.isOpen &&
+          !_deletedAccountUids.contains(uid) &&
+          auth.currentUser?.uid == uid,
+    );
   }
 
   DocumentPublicationRepository? publicationRepositoryForUser(String uid) {

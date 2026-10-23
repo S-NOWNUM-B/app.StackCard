@@ -18,7 +18,10 @@ void main() {
           home: Scaffold(
             body: Center(
               child: MediaQuery(
-                data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                data: MediaQueryData(
+                  size: Size(width, 800),
+                  textScaler: TextScaler.linear(scale),
+                ),
                 child: SizedBox(
                   width: width,
                   child: StackCardDialogActions(
@@ -44,6 +47,7 @@ void main() {
       if (scale == 1) {
         expect(cancelRect.top, confirmRect.top);
         expect(cancelRect.right, lessThan(confirmRect.left));
+        expect(cancelRect.width, closeTo(confirmRect.width, 0.01));
       } else {
         expect(cancelRect.bottom, lessThan(confirmRect.top));
         expect(cancelRect.right, closeTo(confirmRect.right, 0.01));

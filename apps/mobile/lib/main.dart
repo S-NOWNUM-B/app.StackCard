@@ -97,6 +97,13 @@ class _StackCardBootstrapState extends State<StackCardBootstrap> {
             documentPublicationOperationStoreFactoryProvider.overrideWithValue(
               runtime.publicationOperationStoreForUser,
             ),
+            developerCardRepositoryFactoryProvider.overrideWith((ref) {
+              final avatars = ref.watch(portfolioLegacyAvatarReaderProvider);
+              return (uid) => runtime.developerCardRepositoryForUser(
+                uid,
+                legacyAvatarReader: avatars,
+              );
+            }),
             documentLinkActionsProvider.overrideWithValue(
               const NativeDocumentLinkActions(),
             ),

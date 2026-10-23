@@ -110,24 +110,52 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
             onCancel: () => Navigator.pop(context),
             onConfirm: () => Navigator.pop(context, choices.single.value),
           )
-        else ...[
-          StackCardButton(
-            label: context.strings.tr('common.cancel'),
-            role: StackCardButtonRole.outlined,
-            onPressed: () => Navigator.pop(context),
+        else
+          // Несколько вариантов: ровный столбец во всю ширину, отмена внизу.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final (index, choice) in choices.indexed)
+                StackCardButton(
+                  label: choice.label,
+                  role: index == choices.length - 1
+                      ? StackCardButtonRole.primary
+                      : StackCardButtonRole.outlined,
+                  onPressed: () => Navigator.pop(context, choice.value),
+                ),
+              StackCardButton(
+                label: context.strings.tr('common.cancel'),
+                role: StackCardButtonRole.quiet,
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
           ),
-          for (final (index, choice) in choices.indexed)
-            StackCardButton(
-              label: choice.label,
-              role: index == choices.length - 1
-                  ? StackCardButtonRole.primary
-                  : StackCardButtonRole.outlined,
-              onPressed: () => Navigator.pop(context, choice.value),
-            ),
-        ],
       ],
     ),
   );
+
+  Future<void> _shareOptions(String documentId) async {
+    final repository = ref.read(portfolioDraftRepositoryProvider);
+    final uid = ref.read(accountSessionProvider).value?.uid;
+    final choice = await _choice(
+      'Поделиться портфолио',
+      'Отправьте публичную ссылку или покажите карточку с QR-кодом.',
+      [
+        (value: 'share', label: 'Отправить ссылку'),
+        (value: 'card', label: 'Developer Card и QR'),
+      ],
+    );
+    if (!mounted || !_active(repository, uid)) return;
+    if (choice == 'share') {
+      await _share(documentId);
+    } else if (choice == 'card') {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => DeveloperCardScreen(documentId: documentId),
+        ),
+      );
+    }
+  }
 
   Future<void> _share(String documentId) async {
     final repository = ref.read(portfolioDraftRepositoryProvider);
@@ -279,7 +307,7 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
         primary: true,
         loading: _sharing,
         onPressed: nonempty && !_sharing && document != null
-            ? () => _share(document.id)
+            ? () => _shareOptions(document.id)
             : null,
       );
       return ListView(

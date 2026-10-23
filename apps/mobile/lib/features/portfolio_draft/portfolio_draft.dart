@@ -34,3 +34,7 @@ export 'presentation/portfolio_resume_editor_screen.dart';
 export 'presentation/portfolio_project_editor_screen.dart';
 export 'presentation/portfolio_document_editor_screen.dart';
 export 'presentation/portfolio_document_library_screen.dart';
+
+export 'domain/developer_card.dart';
+export 'developer_card_providers.dart';
+export 'presentation/developer_card_screen.dart';
