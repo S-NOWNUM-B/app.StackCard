@@ -28,6 +28,7 @@ export function GitHubImporter({
     [selected, setSelected] = useState(new Set<number>()),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
+    [failedLoad, setFailedLoad] = useState<{ page: number; replace: boolean } | null>(null),
     [cached, setCached] = useState(false);
   const controller = useRef<AbortController | null>(null),
     generation = useRef(0);
@@ -49,6 +50,7 @@ export function GitHubImporter({
     const timeout = setTimeout(() => request.abort(), 15000);
     setBusy(true);
     setError('');
+    setFailedLoad(null);
     try {
       const loaded = await loadGitHubPage(username, page, request.signal);
       if (token !== generation.current) return;
@@ -63,8 +65,10 @@ export function GitHubImporter({
       });
       setCached(false);
     } catch (e) {
-      if (token === generation.current)
+      if (token === generation.current) {
+        setFailedLoad({ page, replace });
         setError(e instanceof Error ? e.message : 'Не удалось загрузить GitHub.');
+      }
     } finally {
       clearTimeout(timeout);
       if (token === generation.current) setBusy(false);
@@ -73,6 +77,7 @@ export function GitHubImporter({
   async function importSelected() {
     setBusy(true);
     setError('');
+    setFailedLoad(null);
     try {
       await onImport(repositories.filter((r) => selected.has(r.repositoryId)));
       setSelected(new Set());
@@ -157,7 +162,11 @@ export function GitHubImporter({
             </p>
           )}
           {pages.at(-1)?.hasNext && (
-            <Button variant="secondary" disabled={busy} onClick={() => void load(pages.length + 1)}>
+            <Button
+              variant="secondary"
+              disabled={busy || failedLoad !== null}
+              onClick={() => void load(pages.length + 1)}
+            >
               Загрузить ещё
             </Button>
           )}
@@ -170,16 +179,11 @@ export function GitHubImporter({
       {error && (
         <>
           <Notice error>{error}</Notice>
-          {username && (
+          {username && failedLoad && (
             <Button
               variant="secondary"
               disabled={busy}
-              onClick={() =>
-                void load(
-                  pages.length > 0 && pages.at(-1)?.hasNext ? pages.length + 1 : 1,
-                  pages.length === 0 || !pages.at(-1)?.hasNext,
-                )
-              }
+              onClick={() => void load(failedLoad.page, failedLoad.replace)}
             >
               Повторить загрузку
             </Button>
