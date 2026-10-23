@@ -54,128 +54,25 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets(
-    'section handles reorder both ways, retry failed Save and reopen saved order',
-    (tester) async {
-      tester.view.physicalSize = const Size(390, 1500);
-      final memory = await _repository(
-        name: 'Стас',
-        skills: const [Skill(id: 'dart', name: 'Dart')],
-      );
-      final before = (await memory.read())!;
-      final repository = _FailsOnce(memory);
-      final container = await _open(tester, repository);
-      await _enter(tester, 'headline', 'Разработчик');
-      final skills = find.byKey(const Key('main.editor.section.drag.skills'));
-      final contacts = find.byKey(const Key('main.editor.section.drag.links'));
-      await _ensureVisible(tester, skills);
-      final gesture = await tester.startGesture(tester.getCenter(skills));
-      await tester.pump(const Duration(milliseconds: 600));
-      await gesture.moveTo(tester.getCenter(contacts) + const Offset(0, 10));
-      await tester.pump(const Duration(milliseconds: 500));
-      await gesture.up();
-      await tester.pumpAndSettle();
-      const chosen = [
-        PortfolioBlockKind.skills,
-        PortfolioBlockKind.links,
-        PortfolioBlockKind.featuredProjects,
-        PortfolioBlockKind.experience,
-        PortfolioBlockKind.education,
-      ];
+  testWidgets('sections keep a fixed order without drag handles in headers', (
+    tester,
+  ) async {
+    final repository = await _repository(
+      name: 'Стас',
+      skills: const [Skill(id: 'dart', name: 'Dart')],
+    );
+    await _open(tester, repository);
+    for (final kind in mainPortfolioSectionKinds) {
+      final section = find.byKey(ValueKey('main.editor.section.${kind.name}'));
+      await _ensureVisible(tester, section);
       expect(
-        mainPortfolioSectionOrder(
-          mainPortfolioDocument(
-            container.read(portfolioDraftControllerProvider).content!,
-          )!.content,
-        ),
-        chosen,
+        find.byKey(ValueKey('main.editor.section.drag.${kind.name}')),
+        findsNothing,
       );
-      expect((await memory.read())!.revision, before.revision);
-      await _tap(tester, 'main.editor.save');
-      expect(find.byKey(const Key('main.editor.error')), findsOneWidget);
-      expect((await memory.read())!.revision, before.revision);
-      await _tap(tester, 'main.editor.save');
-      final saved = mainPortfolioDocument((await memory.read())!.content!)!;
-      expect(mainPortfolioSectionOrder(saved.content), chosen);
-      expect(
-        saved.content.blocks.map((block) => block.kind),
-        mainPortfolioBlocks(saved.content).map((block) => block.kind),
-      );
-      expect(saved.content.profile.headline, 'Разработчик');
-      expect(saved.content.skills.single.name, 'Dart');
-      await tester.pumpWidget(const SizedBox.shrink());
-      final reopened = await _open(tester, repository);
-      await _ensureVisible(tester, skills);
-      expect(
-        tester.getTopLeft(skills).dy,
-        lessThan(tester.getTopLeft(contacts).dy),
-      );
-      final reverse = await tester.startGesture(tester.getCenter(skills));
-      await tester.pump(const Duration(milliseconds: 600));
-      await reverse.moveTo(
-        tester.getCenter(
-              find.byKey(
-                const Key('main.editor.section.drag.featuredProjects'),
-              ),
-            ) +
-            const Offset(0, 10),
-      );
-      await tester.pump(const Duration(milliseconds: 500));
-      await reverse.up();
-      await tester.pumpAndSettle();
-      expect(
-        mainPortfolioSectionOrder(
-          mainPortfolioDocument(
-            reopened.read(portfolioDraftControllerProvider).content!,
-          )!.content,
-        ),
-        mainPortfolioSectionKinds,
-      );
-      expect(
-        mainPortfolioSectionOrder(
-          mainPortfolioDocument((await memory.read())!.content!)!.content,
-        ),
-        chosen,
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets(
-    'held section drag scrolls through the list to the last position',
-    (tester) async {
-      tester.view.physicalSize = const Size(390, 640);
-      final repository = await _repository();
-      final container = await _open(tester, repository, shell: true);
-      final handle = find.byKey(const Key('main.editor.section.drag.links'));
-      await _ensureVisible(tester, handle);
-      final viewport = tester.getRect(_editorScrollable());
-      final gesture = await tester.startGesture(tester.getCenter(handle));
-      await tester.pump(const Duration(milliseconds: 650));
-      final edge = Offset(viewport.center.dx, viewport.bottom - 8);
-      for (var index = 0; index < 20; index++) {
-        await gesture.moveTo(edge + Offset(index.isEven ? 1 : -1, 0));
-        await tester.pump(const Duration(milliseconds: 300));
-      }
-      await gesture.up();
-      await tester.pumpAndSettle();
-      expect(
-        mainPortfolioSectionOrder(
-          mainPortfolioDocument(
-            container.read(portfolioDraftControllerProvider).content!,
-          )!.content,
-        ),
-        const [
-          PortfolioBlockKind.skills,
-          PortfolioBlockKind.featuredProjects,
-          PortfolioBlockKind.experience,
-          PortfolioBlockKind.education,
-          PortfolioBlockKind.links,
-        ],
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
+    }
+    expect(find.bySemanticsLabel('Изменить порядок раздела'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'experience and education modal changes persist only with main Save',
@@ -310,6 +207,48 @@ void main() {
       expect(skills.first.id, 'raw');
       expect(skills.map((skill) => skill.id).toSet(), hasLength(2));
       expect(saved.skills, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'skill dialog suggests catalog technologies and skills reorder in place',
+    (tester) async {
+      final repository = await _repository(
+        name: 'Автор',
+        skills: const [
+          Skill(id: 'dart', name: 'Dart'),
+          Skill(id: 'react', name: 'React'),
+        ],
+      );
+      await _open(tester, repository);
+      await _tap(tester, 'main.editor.addSkill');
+      await _enterKey(tester, 'main.editor.skill.name', 'ko');
+      // Уже добавленный Dart не предлагается повторно.
+      await _enterKey(tester, 'main.editor.skill.name', 'da');
+      expect(
+        find.byKey(const ValueKey('main.editor.skill.suggestion.Dart')),
+        findsNothing,
+      );
+      await _enterKey(tester, 'main.editor.skill.name', 'ko');
+      await _tap(tester, 'main.editor.skill.suggestion.Kotlin');
+      expect(find.byKey(const Key('main.editor.skill.name')), findsNothing);
+      // Строка навыка перетаскивается только внутри своего раздела.
+      final handle = find.byKey(const ValueKey('main.editor.skill.drag.2'));
+      await _ensureVisible(tester, handle);
+      final gesture = await tester.startGesture(tester.getCenter(handle));
+      await tester.pump(const Duration(milliseconds: 700));
+      for (var step = 0; step < 10; step++) {
+        await gesture.moveBy(const Offset(0, -20));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+      await _tap(tester, 'main.editor.save');
+      final skills = mainPortfolioDocument((await repository.read())!.content!)!
+          .content
+          .skills;
+      expect(skills.map((skill) => skill.name), ['Kotlin', 'Dart', 'React']);
       expect(tester.takeException(), isNull);
     },
   );
@@ -755,7 +694,9 @@ void main() {
       await _enter(tester, 'name', 'Новое имя');
       var operation = container.read(mainPortfolioEditorNavigationProvider)!();
       await tester.pumpAndSettle();
-      await _tap(tester, 'main.editor.leave.stay');
+      // Тап вне окна закрывает диалог и оставляет редактор.
+      await tester.tapAt(const Offset(4, 4));
+      await tester.pumpAndSettle();
       expect(await operation, isFalse);
       expect(_value(tester, 'main.editor.name'), 'Новое имя');
       operation = container.read(mainPortfolioEditorNavigationProvider)!();

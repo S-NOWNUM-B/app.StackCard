@@ -48,6 +48,7 @@ dependencies:
   image_picker: ^1.2.4
   image: ^4.10.1
   cached_network_image: ^4.0.4
+  qr: ^3.0.2
 
 dev_dependencies:
   flutter_test:
@@ -124,6 +125,7 @@ flutter:
     - assets/icons/technology/flutter.svg
     - assets/icons/technology/flutter.render.svg
     - assets/icons/technology/dart.svg
+    - assets/icons/technology/simple-icons/
     - assets/icons/LICENSE-LUCIDE.txt
     - assets/icons/LICENSE-FEATHER.txt
     - assets/icons/LICENSE-SIMPLE-ICONS.txt

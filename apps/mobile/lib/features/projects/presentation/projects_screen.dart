@@ -114,117 +114,138 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       primary: true,
       onPressed: state.saving ? null : () => context.push('/projects/new'),
     );
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(StackCardSpacing.lg),
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: StackCardSize.contentMaxWidth,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              LayoutBuilder(
-                builder: (context, constraints) =>
-                    constraints.maxWidth >= 360 &&
-                        MediaQuery.textScalerOf(context).scale(1) <= 1.3
-                    ? Row(
-                        children: [
-                          Expanded(child: importButton),
-                          const SizedBox(width: StackCardSpacing.sm),
-                          Expanded(child: createButton),
-                        ],
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          importButton,
-                          const SizedBox(height: StackCardSpacing.sm),
-                          createButton,
-                        ],
+    final projects = projectsState.when<List<Project>?>(
+      skipLoadingOnRefresh: false,
+      skipLoadingOnReload: false,
+      data: (projects) => projects,
+      error: (_, _) => null,
+      loading: () => null,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final inset =
+            ((constraints.maxWidth - StackCardSize.contentMaxWidth) / 2).clamp(
+              StackCardSpacing.lg,
+              double.infinity,
+            );
+        return Semantics(
+          container: true,
+          explicitChildNodes: true,
+          liveRegion: true,
+          label: projects == null
+              ? null
+              : context.strings.tr('projects.count', {
+                  'count': projects.length,
+                }),
+          child: ListView.builder(
+            padding: EdgeInsets.symmetric(
+              horizontal: inset,
+              vertical: StackCardSpacing.lg,
+            ),
+            itemCount: 1 + (projects?.length ?? 0),
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    LayoutBuilder(
+                      builder: (context, constraints) =>
+                          constraints.maxWidth >= 360 &&
+                              MediaQuery.textScalerOf(context).scale(1) <= 1.3
+                          ? Row(
+                              children: [
+                                Expanded(child: importButton),
+                                const SizedBox(width: StackCardSpacing.sm),
+                                Expanded(child: createButton),
+                              ],
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                importButton,
+                                const SizedBox(height: StackCardSpacing.sm),
+                                createButton,
+                              ],
+                            ),
+                    ),
+                    const SizedBox(height: StackCardSpacing.lg),
+                    StackCardInput(
+                      key: const ValueKey('project_search'),
+                      label: context.strings.tr('projects.search'),
+                      hint: context.strings.tr('projects.search'),
+                      showLabel: false,
+                      controller: _searchController,
+                      prefixIconWidget: const StackCardIcon(
+                        name: 'search',
+                        size: 24,
                       ),
-              ),
-              const SizedBox(height: StackCardSpacing.lg),
-              StackCardInput(
-                key: const ValueKey('project_search'),
-                label: context.strings.tr('projects.search'),
-                hint: context.strings.tr('projects.search'),
-                showLabel: false,
-                controller: _searchController,
-                prefixIconWidget: const StackCardIcon(name: 'search', size: 24),
-                prefixIconSize: 24,
-                textInputAction: TextInputAction.search,
-                onChanged: (value) =>
-                    ref.read(projectFiltersProvider.notifier).setQuery(value),
-              ),
-              const SizedBox(height: StackCardSpacing.lg),
-              StackCardAsyncView<List<Project>>(
-                state: projectsState,
-                onRetry: () {
-                  ref.read(portfolioDraftControllerProvider.notifier).load();
-                  ref.invalidate(projectsProvider);
-                },
-                data: (projects) => Semantics(
-                  container: true,
-                  explicitChildNodes: true,
-                  liveRegion: true,
-                  label: context.strings.tr('projects.count', {
-                    'count': projects.length,
-                  }),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (projects.isEmpty) ...[
-                        StackCardStateView(
-                          kind: filters.query.trim().isEmpty
-                              ? StackCardViewState.empty
-                              : StackCardViewState.noResults,
-                          title: filters.query.trim().isEmpty
-                              ? 'Проектов пока нет'
-                              : context.strings.tr('project.noResultsTitle'),
-                        ),
-                      ] else
-                        for (final project in projects) ...[
-                          ProjectLibraryCard(
-                            key: ValueKey(
-                              'projects.card.${project.id ?? project.title}',
-                            ),
-                            openKey: ValueKey(
-                              'project_preview_${project.id ?? project.title}',
-                            ),
-                            title: project.title,
-                            description: project.description,
-                            iconId: project.iconId,
-                            onEdit: project.id == null || state.saving
-                                ? null
-                                : () => context.push(
-                                    '/projects/${Uri.encodeComponent(project.id!)}/edit',
-                                  ),
-                            onDelete:
-                                state.saving ||
-                                    state.content == null ||
-                                    project.id == null ||
-                                    !state.content!.projects.any(
-                                      (item) => item.id == project.id,
-                                    )
-                                ? null
-                                : () => _delete(
-                                    state.content!.projects.firstWhere(
-                                      (item) => item.id == project.id,
+                      prefixIconSize: 24,
+                      textInputAction: TextInputAction.search,
+                      onChanged: (value) => ref
+                          .read(projectFiltersProvider.notifier)
+                          .setQuery(value),
+                    ),
+                    const SizedBox(height: StackCardSpacing.lg),
+                    StackCardAsyncView<List<Project>>(
+                      state: projectsState,
+                      onRetry: () {
+                        ref
+                            .read(portfolioDraftControllerProvider.notifier)
+                            .load();
+                        ref.invalidate(projectsProvider);
+                      },
+                      data: (projects) => projects.isEmpty
+                          ? StackCardStateView(
+                              kind: filters.query.trim().isEmpty
+                                  ? StackCardViewState.empty
+                                  : StackCardViewState.noResults,
+                              title: filters.query.trim().isEmpty
+                                  ? 'Проектов пока нет'
+                                  : context.strings.tr(
+                                      'project.noResultsTitle',
                                     ),
-                                  ),
-                          ),
-                          const SizedBox(height: StackCardSpacing.sm),
-                        ],
-                    ],
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                );
+              }
+              final project = projects![index - 1];
+              return Padding(
+                key: ValueKey('projects.row.${project.id ?? project.title}'),
+                padding: const EdgeInsets.only(bottom: StackCardSpacing.sm),
+                child: ProjectLibraryCard(
+                  key: ValueKey('projects.card.${project.id ?? project.title}'),
+                  openKey: ValueKey(
+                    'project_preview_${project.id ?? project.title}',
                   ),
+                  title: project.title,
+                  description: project.description,
+                  iconId: project.iconId,
+                  onEdit: project.id == null || state.saving
+                      ? null
+                      : () => context.push(
+                          '/projects/${Uri.encodeComponent(project.id!)}/edit',
+                        ),
+                  onDelete:
+                      state.saving ||
+                          state.content == null ||
+                          project.id == null ||
+                          !state.content!.projects.any(
+                            (item) => item.id == project.id,
+                          )
+                      ? null
+                      : () => _delete(
+                          state.content!.projects.firstWhere(
+                            (item) => item.id == project.id,
+                          ),
+                        ),
                 ),
-              ),
-            ],
+              );
+            },
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_avatar.dart';
 import '../../../shared/widgets/stackcard_button.dart';
+import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
 import '../../../shared/widgets/stackcard_technology_badge.dart';
 import '../../media/media.dart';
@@ -27,10 +29,12 @@ class MainPortfolioContentView extends ConsumerWidget {
     final links = content.links.where(
       (link) => link.visible && link.publishAllowed,
     );
+    final colors = context.colors;
     final sections = <Widget>[];
     final orderedSections = <PortfolioBlockKind, Widget>{};
+    final header = <Widget>[];
     if (profile.avatarPath.isNotEmpty || profile.avatarUrl.isNotEmpty) {
-      sections.add(
+      header.add(
         Center(
           child: StackCardAvatar(
             size: 128,
@@ -46,23 +50,75 @@ class MainPortfolioContentView extends ConsumerWidget {
         ),
       );
     }
-    for (final (value, style) in [
-      (profile.name, text.headlineSmall),
-      (profile.headline, text.titleMedium),
-      (profile.locationText, text.bodyMedium),
-    ]) {
-      if (value.trim().isNotEmpty) {
-        sections.add(Text(value, textAlign: TextAlign.center, style: style));
-      }
+    if (profile.name.trim().isNotEmpty) {
+      header.add(
+        Text(
+          profile.name,
+          textAlign: TextAlign.center,
+          style: text.headlineSmall,
+        ),
+      );
+    }
+    if (profile.headline.trim().isNotEmpty) {
+      header.add(
+        Text(
+          profile.headline,
+          textAlign: TextAlign.center,
+          style: text.titleMedium?.copyWith(color: colors.textSecondary),
+        ),
+      );
+    }
+    if (profile.locationText.trim().isNotEmpty) {
+      header.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.location_on_outlined,
+              size: 16,
+              color: colors.textSecondary,
+            ),
+            const SizedBox(width: StackCardSpacing.xs),
+            Flexible(
+              child: Text(
+                profile.locationText,
+                textAlign: TextAlign.center,
+                style: text.bodyMedium?.copyWith(color: colors.textSecondary),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (header.isNotEmpty) {
+      // Шапка профиля отделена от разделов отдельной карточкой.
+      sections.add(
+        StackCardCard(
+          key: const Key('main.portfolio.header'),
+          elevated: true,
+          padding: const EdgeInsets.all(StackCardSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var index = 0; index < header.length; index++) ...[
+                if (index != 0) const SizedBox(height: StackCardSpacing.sm),
+                header[index],
+              ],
+            ],
+          ),
+        ),
+      );
     }
     if (profile.bio.trim().isNotEmpty) {
       sections.add(
-        Text(
-          profile.bio,
-          key: const Key('main.portfolio.bio'),
-          textAlign: TextAlign.left,
-          style: text.bodyLarge,
-        ),
+        _section(context, 'О себе', [
+          Text(
+            profile.bio,
+            key: const Key('main.portfolio.bio'),
+            textAlign: TextAlign.left,
+            style: text.bodyLarge,
+          ),
+        ], key: 'bio'),
       );
     }
     if (links.isNotEmpty) {
@@ -74,7 +130,7 @@ class MainPortfolioContentView extends ConsumerWidget {
             builder: (context, constraints) {
               final columns =
                   (constraints.maxWidth /
-                          (160 * MediaQuery.textScalerOf(context).scale(1)))
+                          (136 * MediaQuery.textScalerOf(context).scale(1)))
                       .floor()
                       .clamp(1, 4);
               final width =
@@ -113,7 +169,9 @@ class MainPortfolioContentView extends ConsumerWidget {
       orderedSections[PortfolioBlockKind.featuredProjects] = _section(
         context,
         'Реализованные проекты',
-        [for (final project in projects) _MainProjectRow(project: project)],
+        _separated(context, [
+          for (final project in projects) _MainProjectRow(project: project),
+        ]),
         key: 'projects',
       );
     }
@@ -121,14 +179,14 @@ class MainPortfolioContentView extends ConsumerWidget {
       orderedSections[PortfolioBlockKind.experience] = _section(
         context,
         'Опыт работы',
-        [
+        _separated(context, [
           for (final entry in content.experience)
             _entry(context, entry.role, [
               entry.organization,
               entry.period,
               entry.description,
             ]),
-        ],
+        ]),
         key: 'experience',
       );
     }
@@ -136,14 +194,14 @@ class MainPortfolioContentView extends ConsumerWidget {
       orderedSections[PortfolioBlockKind.education] = _section(
         context,
         'Образование',
-        [
+        _separated(context, [
           for (final entry in content.education)
             _entry(context, entry.institution, [
               entry.qualification,
               entry.period,
               entry.description,
             ]),
-        ],
+        ]),
         key: 'education',
       );
     }
@@ -192,39 +250,72 @@ class MainPortfolioContentView extends ConsumerWidget {
     );
   }
 
+  /// Раздел — отдельная карточка с маркером и линией под заголовком.
   Widget _section(
     BuildContext context,
     String title,
     List<Widget> children, {
     required String key,
-  }) => Padding(
-    key: ValueKey('main.section.$key'),
-    padding: const EdgeInsets.only(top: StackCardSpacing.sm),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: StackCardSpacing.md),
-        ...children,
-      ],
-    ),
-  );
+  }) {
+    final colors = context.colors;
+    return StackCardCard(
+      key: ValueKey('main.section.$key'),
+      outlined: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  borderRadius: BorderRadius.circular(StackCardRadius.capsule),
+                ),
+              ),
+              const SizedBox(width: StackCardSpacing.sm),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.md),
+            child: Divider(height: 1, thickness: 1, color: colors.borderSubtle),
+          ),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  /// Тонкая линия между записями одного раздела.
+  List<Widget> _separated(BuildContext context, List<Widget> items) => [
+    for (var index = 0; index < items.length; index++) ...[
+      if (index != 0)
+        Divider(
+          height: StackCardSpacing.lg,
+          thickness: 1,
+          color: context.colors.borderSubtle,
+        ),
+      items[index],
+    ],
+  ];
 
   Widget _entry(BuildContext context, String title, List<String> details) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: StackCardSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            for (final detail in details.where(
-              (value) => value.isNotEmpty,
-            )) ...[
-              const SizedBox(height: StackCardSpacing.xs),
-              Text(detail, style: Theme.of(context).textTheme.bodyMedium),
-            ],
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          for (final detail in details.where((value) => value.isNotEmpty)) ...[
+            const SizedBox(height: StackCardSpacing.xs),
+            Text(detail, style: Theme.of(context).textTheme.bodyMedium),
           ],
-        ),
+        ],
       );
 }
 

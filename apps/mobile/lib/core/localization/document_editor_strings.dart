@@ -62,7 +62,7 @@ const russianDocumentEditorStrings = <String, String>{
   'documentEditor.publish': 'К публикации',
   'documentEditor.publishUnavailable': 'Публикация недоступна.',
   'documentEditor.leaveTitle': 'Сохранить изменения?',
-  'documentEditor.leaveHint': 'Вы можете сохранить этот документ, выйти без сохранения или продолжить редактирование.',
+  'documentEditor.leaveHint': 'Без сохранения изменения будут потеряны.',
   'documentEditor.discard': 'Не сохранять',
   'documentEditor.stay': 'Продолжить',
   'documentEditor.ownerChanged':
@@ -140,8 +140,7 @@ const englishDocumentEditorStrings = <String, String>{
   'documentEditor.publish': 'Publish',
   'documentEditor.publishUnavailable': 'Publication unavailable.',
   'documentEditor.leaveTitle': 'Save changes?',
-  'documentEditor.leaveHint':
-      'Save this document, leave without saving, or continue editing.',
+  'documentEditor.leaveHint': 'Unsaved changes will be lost.',
   'documentEditor.discard': 'Discard',
   'documentEditor.stay': 'Continue editing',
   'documentEditor.ownerChanged':

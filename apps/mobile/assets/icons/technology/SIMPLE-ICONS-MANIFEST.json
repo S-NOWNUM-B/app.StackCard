@@ -1,0 +1,1280 @@
+{
+  "project": "Simple Icons",
+  "commit": "98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d",
+  "license": "CC0-1.0 (assets/icons/LICENSE-SIMPLE-ICONS.txt); CC0 does not grant trademark rights",
+  "brandColorSource": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/data/simple-icons.json",
+  "icons": [
+    {
+      "title": "Kotlin",
+      "slug": "kotlin",
+      "hex": "7F52FF",
+      "bytes": 130,
+      "sha256": "909d1ba63b4bea5843be4579fa68a398c310c3d4748e8e6ba9ea295403984b3b",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/kotlin.svg"
+    },
+    {
+      "title": "Spring Boot",
+      "slug": "springboot",
+      "hex": "6DB33F",
+      "bytes": 986,
+      "sha256": "1b4bb8d7522fa0742a9fc40685b3efe3e089c5d07e4d3eebf4b4dbb28f827ad3",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/springboot.svg"
+    },
+    {
+      "title": "Next.js",
+      "slug": "nextdotjs",
+      "hex": "000000",
+      "bytes": 322,
+      "sha256": "593e14da3ddb65be4c8fa6a178f2f48a01a8bd39ea384f679cd7182b520da502",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/nextdotjs.svg"
+    },
+    {
+      "title": "PostgreSQL",
+      "slug": "postgresql",
+      "hex": "4169E1",
+      "bytes": 5205,
+      "sha256": "c8ccadbd88c9312c2ad3734c4861b31d3485ce179ee91d64793143f83cfa745c",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/postgresql.svg"
+    },
+    {
+      "title": "MongoDB",
+      "slug": "mongodb",
+      "hex": "47A248",
+      "bytes": 527,
+      "sha256": "6698757ee85997e8167b2eacaff8395d6987954185488f2e90b88ef387fec6c7",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/mongodb.svg"
+    },
+    {
+      "title": "Firebase",
+      "slug": "firebase",
+      "hex": "DD2C00",
+      "bytes": 1927,
+      "sha256": "3f46d84a41479d7789cc36b82c2b6852e6bbbfd30ebee5b7a3aef7d49758295a",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/firebase.svg"
+    },
+    {
+      "title": "Docker",
+      "slug": "docker",
+      "hex": "2496ED",
+      "bytes": 1765,
+      "sha256": "65571291c261ef869c31540a38f3ca0f0ee3bb73f179c172211c8860f19a6359",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/docker.svg"
+    },
+    {
+      "title": "GitHub Actions",
+      "slug": "githubactions",
+      "hex": "2088FF",
+      "bytes": 1727,
+      "sha256": "e8b23379b4d89e96731ae354ea9cd3d8ceddf67f411bde39853f215138843777",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/githubactions.svg"
+    },
+    {
+      "title": "JavaScript",
+      "slug": "javascript",
+      "hex": "F7DF1E",
+      "bytes": 974,
+      "sha256": "c9be35a7a861ebe80ae4ee706d05004b99ee59fc63db69da6dcc10776718434b",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/javascript.svg"
+    },
+    {
+      "title": "Node.js",
+      "slug": "nodedotjs",
+      "hex": "5FA04E",
+      "bytes": 1608,
+      "sha256": "021851b758cde7d3e04819c3ac02047d0ff281c712e8387afa0c76a6dac6db6c",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/nodedotjs.svg"
+    },
+    {
+      "title": "Python",
+      "slug": "python",
+      "hex": "3776AB",
+      "bytes": 1518,
+      "sha256": "ad9468e1c4903f73ae7eebfbe980f0f727a10db695be3d914e7d8bd25356a862",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/python.svg"
+    },
+    {
+      "title": "Swift",
+      "slug": "swift",
+      "hex": "F05138",
+      "bytes": 1690,
+      "sha256": "b3d5f49cc459b7a3417db134ec70052c30305c3799d0f854796544c52c18a4bc",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/swift.svg"
+    },
+    {
+      "title": "Go",
+      "slug": "go",
+      "hex": "00ADD8",
+      "bytes": 1636,
+      "sha256": "36a745fe15584bf138d02ae6abcbdd155bc1cd4f4976634ad34861b2059db559",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/go.svg"
+    },
+    {
+      "title": "Rust",
+      "slug": "rust",
+      "hex": "000000",
+      "bytes": 4244,
+      "sha256": "95a291d8887610d103704adcc5c5f2cbfa4c80a96f8e72b00531d5691beb67a8",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/rust.svg"
+    },
+    {
+      "title": "C++",
+      "slug": "cplusplus",
+      "hex": "00599C",
+      "bytes": 764,
+      "sha256": "adf33f5026f3f70d54f1068cb5d1a790c37b2105cbe728edd170251759d13f18",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/cplusplus.svg"
+    },
+    {
+      "title": "PHP",
+      "slug": "php",
+      "hex": "777BB4",
+      "bytes": 1127,
+      "sha256": "cd1beaa0dde7e765b5d2cbae786c1f6db967f72073eb7b9f9bbc63da55b9d0f6",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/php.svg"
+    },
+    {
+      "title": "Ruby",
+      "slug": "ruby",
+      "hex": "CC342D",
+      "bytes": 535,
+      "sha256": "956992a81b988b916efdd6f7a78b9f19fe352b5c04f2019af2ce1a89e390ac9d",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/ruby.svg"
+    },
+    {
+      "title": "Angular",
+      "slug": "angular",
+      "hex": "0F0F11",
+      "bytes": 298,
+      "sha256": "385c7d047cc4d48d8359003b57ce4df7d1271b6d9e7840c128628ac582c90456",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/angular.svg"
+    },
+    {
+      "title": "Vue.js",
+      "slug": "vuedotjs",
+      "hex": "4FC08D",
+      "bytes": 202,
+      "sha256": "2a57b59bd3ff2880f971f7f6cce2378d20bdfb1a54150a0a7ca9fd2fe1bfa781",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/vuedotjs.svg"
+    },
+    {
+      "title": "Svelte",
+      "slug": "svelte",
+      "hex": "FF3E00",
+      "bytes": 1496,
+      "sha256": "a38cef0f4fc36bc63519ce34d24a91022f19ec6998ea402c5e155c7479a46f4c",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/svelte.svg"
+    },
+    {
+      "title": "Tailwind CSS",
+      "slug": "tailwindcss",
+      "hex": "06B6D4",
+      "bytes": 602,
+      "sha256": "5d4ede3c95da824f543c6eefbe7c78b45ecce6796f6633de196dd712a7841140",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/tailwindcss.svg"
+    },
+    {
+      "title": "Redux",
+      "slug": "redux",
+      "hex": "764ABC",
+      "bytes": 1429,
+      "sha256": "deb8a2ce3bca057d0f9b94c3a0d30f2e5f7d637e5369e08ddbc6c5dd4205569b",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/redux.svg"
+    },
+    {
+      "title": "GraphQL",
+      "slug": "graphql",
+      "hex": "E10098",
+      "bytes": 666,
+      "sha256": "fc8ca4d195a8a79470540edf33677e24f6113b8b8d9b442acc5f62b57a2951cb",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/graphql.svg"
+    },
+    {
+      "title": "MySQL",
+      "slug": "mysql",
+      "hex": "4479A1",
+      "bytes": 3625,
+      "sha256": "67c144cc3e44ad14062a3f20ebe29c5e7eeb2c2c9c0f43cf48d87fe6291a8b2d",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/mysql.svg"
+    },
+    {
+      "title": "Redis",
+      "slug": "redis",
+      "hex": "FF4438",
+      "bytes": 738,
+      "sha256": "428b86deb14c8bdacdcdf75987fe454f367bcd078a7e4ae3f84de29aa5bdf136",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/redis.svg"
+    },
+    {
+      "title": "SQLite",
+      "slug": "sqlite",
+      "hex": "003B57",
+      "bytes": 1420,
+      "sha256": "71d4153bc9661dfe6b92dad70f737ec2b6c7c839311e502b4ca66fe664fe12b6",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/sqlite.svg"
+    },
+    {
+      "title": "Kubernetes",
+      "slug": "kubernetes",
+      "hex": "326CE5",
+      "bytes": 3565,
+      "sha256": "ceee2f4e87fa1533600672190c156194039f744fa9b5da10e83f002178e84b47",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/kubernetes.svg"
+    },
+    {
+      "title": "Git",
+      "slug": "git",
+      "hex": "F03C2E",
+      "bytes": 426,
+      "sha256": "95724d436215d483de82288610c3c144854138f49945424697fcdf8be66e17d6",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/git.svg"
+    },
+    {
+      "title": "GitHub",
+      "slug": "github",
+      "hex": "181717",
+      "bytes": 822,
+      "sha256": "3bf8cceead820aec50d4ee825a3fd02c5a1cd6665cc9cf4cbf3d9c8861a204bb",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/github.svg"
+    },
+    {
+      "title": "GitLab",
+      "slug": "gitlab",
+      "hex": "FC6D26",
+      "bytes": 573,
+      "sha256": "c7c39058bd1b6f9f40334383bd5136bb8c5ba5e6a24200f2d1f18365e2526e28",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/gitlab.svg"
+    },
+    {
+      "title": "Figma",
+      "slug": "figma",
+      "hex": "F24E1E",
+      "bytes": 1093,
+      "sha256": "2f86fca501dfed321a62f28743f29d9dd738dac91668eac5260ab746d1ef8840",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/figma.svg"
+    },
+    {
+      "title": "Android",
+      "slug": "android",
+      "hex": "3DDC84",
+      "bytes": 1084,
+      "sha256": "ff571c5e21163f07dd7176d4670411344f55409d36eb6346b402210ad7c02c4b",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/android.svg"
+    },
+    {
+      "title": "iOS",
+      "slug": "ios",
+      "hex": "000000",
+      "bytes": 963,
+      "sha256": "99bb1807a71a6c89ce385348e59fb31988b6ee1f9d32cd4da7d72e97abd6e53d",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/ios.svg"
+    },
+    {
+      "title": "Linux",
+      "slug": "linux",
+      "hex": "FCC624",
+      "bytes": 5463,
+      "sha256": "7e55f2779ae11a83c9dad2d0414a65d8ca7867d0716ce58bfe41ed299ae1447f",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/linux.svg"
+    },
+    {
+      "title": "NestJS",
+      "slug": "nestjs",
+      "hex": "E0234E",
+      "bytes": 6317,
+      "sha256": "903a08f64eedd64fb3f65fb733628353d3d42f9e7525ca9d989936f3e38322ef",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/nestjs.svg"
+    },
+    {
+      "title": "Express",
+      "slug": "express",
+      "hex": "0A0A0A",
+      "bytes": 959,
+      "sha256": "7f2cc8797a53da60e11e0d06e75e57d4d5f15965e1ad57e42f9d9711c40dbed5",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/express.svg"
+    },
+    {
+      "title": "Django",
+      "slug": "django",
+      "hex": "092E20",
+      "bytes": 581,
+      "sha256": "2dd3c936adb3683b01c3d35fe389da97813ed9782b9d01a924212d2e21ce8816",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/django.svg"
+    },
+    {
+      "title": "Flask",
+      "slug": "flask",
+      "hex": "3BABC3",
+      "bytes": 851,
+      "sha256": "645c60732f945289a00d0640d8d682b7160a44b21b527633cab72175e919aeab",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/flask.svg"
+    },
+    {
+      "title": "FastAPI",
+      "slug": "fastapi",
+      "hex": "009688",
+      "bytes": 347,
+      "sha256": "af0bdd5fd3f16a49e341089049418af7b02a04eefdc088b2e26c4524fa8b75d1",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/fastapi.svg"
+    },
+    {
+      "title": "Laravel",
+      "slug": "laravel",
+      "hex": "FF2D20",
+      "bytes": 1860,
+      "sha256": "9d0bb8aa3a9fc069dcc3d92c398a90be3a75fd1b0167b91f56939a18109e9796",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/laravel.svg"
+    },
+    {
+      "title": "HTML5",
+      "slug": "html5",
+      "hex": "E34F26",
+      "bytes": 327,
+      "sha256": "dfd65fdd7e4f997c6b163e48793de5ad18c4c99e191807a61752ea702f123d1d",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/html5.svg"
+    },
+    {
+      "title": "CSS",
+      "slug": "css",
+      "hex": "663399",
+      "bytes": 1479,
+      "sha256": "9a97b95e3207aa4a6545dbb862e22450a01f37201c00e6b7d9c2958b59ca9ff9",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/css.svg"
+    },
+    {
+      "title": "Sass",
+      "slug": "sass",
+      "hex": "CC6699",
+      "bytes": 1223,
+      "sha256": "0859123cfea9b1d4aa60714ebf5c758be760e2efa1b3944085fb105feeece9db",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/sass.svg"
+    },
+    {
+      "title": "Webpack",
+      "slug": "webpack",
+      "hex": "8DD6F9",
+      "bytes": 613,
+      "sha256": "008cdbfc39bf3658a8d69d941361917023e93b45e7a87769009dee4e4b014b16",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/webpack.svg"
+    },
+    {
+      "title": "Vite",
+      "slug": "vite",
+      "hex": "9135FF",
+      "bytes": 447,
+      "sha256": "642bb261d6476ddf326b8ed7757543b3443a93a77fef1e434021fc201defa21c",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/vite.svg"
+    },
+    {
+      "title": "Jest",
+      "slug": "jest",
+      "hex": "C21325",
+      "bytes": 2700,
+      "sha256": "531ee43921c1895fbe6a6554bb774fc07f077ec122b734c1452af8ec77141954",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/jest.svg"
+    },
+    {
+      "title": "Prisma",
+      "slug": "prisma",
+      "hex": "2D3748",
+      "bytes": 568,
+      "sha256": "5715775538af3789425a7d0a9231473429f065ec9f1bf8bec589e906af65d7be",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/prisma.svg"
+    },
+    {
+      "title": "Supabase",
+      "slug": "supabase",
+      "hex": "3FCF8E",
+      "bytes": 303,
+      "sha256": "61bf16d93be418f723ae1e137e57afdad4f185352fbc6dea9482af1e0a89ccf7",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/supabase.svg"
+    },
+    {
+      "title": "Google Cloud",
+      "slug": "googlecloud",
+      "hex": "4285F4",
+      "bytes": 683,
+      "sha256": "534a0359c2784e152f5c88ce64a56976036d7336c7831775c995977fd3432713",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/googlecloud.svg"
+    },
+    {
+      "title": "Vercel",
+      "slug": "vercel",
+      "hex": "000000",
+      "bytes": 132,
+      "sha256": "57f1e4135486c566e9878fddd259f7f6bf8ec43f31e7e6e38a36d9e814a1c0e0",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/vercel.svg"
+    },
+    {
+      "title": "NGINX",
+      "slug": "nginx",
+      "hex": "009639",
+      "bytes": 413,
+      "sha256": "236d53b2b746706df75e2a01668cb84e6f3fc7c8923a9ce824f8534db007a438",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/nginx.svg"
+    },
+    {
+      "title": "RabbitMQ",
+      "slug": "rabbitmq",
+      "hex": "FF6600",
+      "bytes": 560,
+      "sha256": "f4669bdce6518e330b7430501e07df8d7d01dc60fdd9a52b2bc6dd1cbd975263",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/rabbitmq.svg"
+    },
+    {
+      "title": "Apache Kafka",
+      "slug": "apachekafka",
+      "hex": "231F20",
+      "bytes": 2724,
+      "sha256": "659f015de2ae3aebdf75cf8b16ecff44026fee6031a4e98bc8102a19eef34c26",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/apachekafka.svg"
+    },
+    {
+      "title": "Elasticsearch",
+      "slug": "elasticsearch",
+      "hex": "005571",
+      "bytes": 477,
+      "sha256": "f866863bb80c3f1e22cb49541442c9db2112bba74b8c1210328bd3536984e6a3",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/elasticsearch.svg"
+    },
+    {
+      "title": "Gradle",
+      "slug": "gradle",
+      "hex": "02303A",
+      "bytes": 911,
+      "sha256": "1ae785093daee910b4bc6ee351742976e441dfcd9bdb13e82a88c0c0ef37022e",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/gradle.svg"
+    },
+    {
+      "title": ".NET",
+      "slug": "dotnet",
+      "hex": "512BD4",
+      "bytes": 534,
+      "sha256": "3b7e1243fb2389116b0a5237c9f07e82f6d2eb18ee40bd232f28abccd7956993",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/dotnet.svg"
+    },
+    {
+      "title": "Unity",
+      "slug": "unity",
+      "hex": "FFFFFF",
+      "bytes": 654,
+      "sha256": "b5b66fda997db7445483ff2917b1c17abb8da607d43905835551991aeb940753",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/unity.svg"
+    },
+    {
+      "title": "Jira",
+      "slug": "jira",
+      "hex": "0052CC",
+      "bytes": 478,
+      "sha256": "68f8703698538ee7863bf69b72bf9f0d78a72d218e7eb7e0617237ae43ae5ade",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/jira.svg"
+    },
+    {
+      "title": "OpenJDK",
+      "slug": "openjdk",
+      "hex": "000000",
+      "bytes": 1774,
+      "sha256": "31c94bd8f864b018d9733c251df186f36e9a0036e43f78d0656895108d438bb3",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/openjdk.svg"
+    },
+    {
+      "title": "Swagger",
+      "slug": "swagger",
+      "hex": "85EA2D",
+      "bytes": 1872,
+      "sha256": "590a6d0b4781cafbf63bb4ddafe35aea2527911e8130a0ac25398db366639ffb",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/swagger.svg"
+    },
+    {
+      "title": "Postman",
+      "slug": "postman",
+      "hex": "FF6C37",
+      "bytes": 1368,
+      "sha256": "ffa713180d8a0dc42d69fb219fda548293b25438288b6abc5ccb4e381463778f",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/postman.svg"
+    },
+    {
+      "title": "Terraform",
+      "slug": "terraform",
+      "hex": "844FBA",
+      "bytes": 253,
+      "sha256": "9c3737d360a174afec8fa0208332a3991f087ea0b7bacb1eea16598883e1a730",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/terraform.svg"
+    },
+    {
+      "title": "Jenkins",
+      "slug": "jenkins",
+      "hex": "D24939",
+      "bytes": 4668,
+      "sha256": "95ab5d541710c116d939f44e4e72c8b1503e78d04a1c298ad257c4e26d3a1873",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/jenkins.svg"
+    },
+    {
+      "title": "Bootstrap",
+      "slug": "bootstrap",
+      "hex": "7952B3",
+      "bytes": 854,
+      "sha256": "6a86e8f3f371e6d24b52e5280b164198fb3e56f6b5a28ddb7780dc1eaa812d07",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/bootstrap.svg"
+    },
+    {
+      "title": "jQuery",
+      "slug": "jquery",
+      "hex": "0769AD",
+      "bytes": 3349,
+      "sha256": "a2eda71cd3e61835fc8ddadad59096089cb41761f341ea05a1aca3718966a932",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/jquery.svg"
+    },
+    {
+      "title": "Electron",
+      "slug": "electron",
+      "hex": "47848F",
+      "bytes": 2516,
+      "sha256": "fdf1b8ce32ada155bd490c9da008974af47fa808177e219d449d1d091f0f1d4e",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/electron.svg"
+    },
+    {
+      "title": "Deno",
+      "slug": "deno",
+      "hex": "000000",
+      "bytes": 1037,
+      "sha256": "cc9065552101a5e8662ff0d380ab81dc9135de13930a6a2c536b5577931adef7",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/deno.svg"
+    },
+    {
+      "title": "Bun",
+      "slug": "bun",
+      "hex": "000000",
+      "bytes": 1707,
+      "sha256": "f356fc1ec5659e73e9b1e881ef2785a4fc4e0e3d82b446e6484f55303546dc6d",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/bun.svg"
+    },
+    {
+      "title": "Expo",
+      "slug": "expo",
+      "hex": "1C2024",
+      "bytes": 451,
+      "sha256": "fe31b54a038878735a20ff497c6b250221707047785a324c4f7ef83228f40c6a",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/expo.svg"
+    },
+    {
+      "title": "Ionic",
+      "slug": "ionic",
+      "hex": "3880FF",
+      "bytes": 704,
+      "sha256": "a934879327e8f70d615dfba976de872fc09414d0a1fbddba9e8dc85b6abfff56",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/ionic.svg"
+    },
+    {
+      "title": "Hibernate",
+      "slug": "hibernate",
+      "hex": "59666C",
+      "bytes": 327,
+      "sha256": "95dfbe5d7cac1bd313a2a2f3a4437f5494b13c355570d1a9e0f16200f96f01b0",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/hibernate.svg"
+    },
+    {
+      "title": "Apache Maven",
+      "slug": "apachemaven",
+      "hex": "C71A36",
+      "bytes": 5674,
+      "sha256": "3f2a621ee513d6ec090aa65708e45f1bf80bb2a087aa73b8677fbfb97c6fddae",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/apachemaven.svg"
+    },
+    {
+      "title": "Storybook",
+      "slug": "storybook",
+      "hex": "FF4785",
+      "bytes": 651,
+      "sha256": "2529655d47de7de698f24dae9d60110099eed456c64eac63d3cc866cd773c9c6",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/storybook.svg"
+    },
+    {
+      "title": "Cypress",
+      "slug": "cypress",
+      "hex": "69D3A7",
+      "bytes": 1490,
+      "sha256": "108ddd6eb4dbf3ac4c0e9d172be30b33128c078a1f1719b422f3c590a205b216",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/cypress.svg"
+    },
+    {
+      "title": "Selenium",
+      "slug": "selenium",
+      "hex": "43B02A",
+      "bytes": 1221,
+      "sha256": "6d90c907424762e335d06b878087e8db84cbd8a4dbd48c627f877cae63f605a0",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/selenium.svg"
+    },
+    {
+      "title": "Nuxt",
+      "slug": "nuxt",
+      "hex": "00DC82",
+      "bytes": 876,
+      "sha256": "7058584a5afd4eb2a71938f0401d02ab0f4b993919471c4f2ce588a9cc854e50",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/nuxt.svg"
+    },
+    {
+      "title": "Remix",
+      "slug": "remix",
+      "hex": "000000",
+      "bytes": 492,
+      "sha256": "ab1174e86a6cfa3eaa6f1d6b43421032743c9046715cfc386f96b3f73238e319",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/remix.svg"
+    },
+    {
+      "title": "Astro",
+      "slug": "astro",
+      "hex": "BC52EE",
+      "bytes": 779,
+      "sha256": "fe8e943b26bf966824341377875056270af186e500bdf4732c803b51c0b4f674",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/astro.svg"
+    },
+    {
+      "title": "Three.js",
+      "slug": "threedotjs",
+      "hex": "000000",
+      "bytes": 897,
+      "sha256": "813981f4cc6a24d82d9aba0af0ac5f3678b249dc035b519d8dc3759fa5b360ec",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/threedotjs.svg"
+    },
+    {
+      "title": "Xcode",
+      "slug": "xcode",
+      "hex": "147EFB",
+      "bytes": 2618,
+      "sha256": "20f03ce67d3bf01bbc95aef5cb6b6af1ed833bcf83337d499ab07caf7085553f",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/xcode.svg"
+    },
+    {
+      "title": "Android Studio",
+      "slug": "androidstudio",
+      "hex": "3DDC84",
+      "bytes": 2914,
+      "sha256": "465dda2b9f94726978d67e98922ecce2425e0ea3d839949c6657c62f3265024d",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/androidstudio.svg"
+    },
+    {
+      "title": "IntelliJ IDEA",
+      "slug": "intellijidea",
+      "hex": "000000",
+      "bytes": 519,
+      "sha256": "cdd95162d68d893ce8023371e1f02c78b64f9bae37802d1bab12093bf24405f7",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/intellijidea.svg"
+    },
+    {
+      "title": "Ubuntu",
+      "slug": "ubuntu",
+      "hex": "E95420",
+      "bytes": 948,
+      "sha256": "b0aca674c881a07bb60b26afbcee07093ae419e29ee38e376f938817fa66ae03",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/ubuntu.svg"
+    },
+    {
+      "title": "Cloudflare",
+      "slug": "cloudflare",
+      "hex": "F38020",
+      "bytes": 1178,
+      "sha256": "408096d99907fd99e0863cb5d73f77a72537c6a85fd8d5e2704178a83a891f08",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/cloudflare.svg"
+    },
+    {
+      "title": "Netlify",
+      "slug": "netlify",
+      "hex": "00C7B7",
+      "bytes": 656,
+      "sha256": "adbe4ef3579ca1ef95e1903ff8599a5a55e5c6531fab3f7edaf2b4adee0f4ef9",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/netlify.svg"
+    },
+    {
+      "title": "Socket.io",
+      "slug": "socketdotio",
+      "hex": "010101",
+      "bytes": 864,
+      "sha256": "0d7bf5517b3d783a6f9c6ce3575efe238981747f52dc72b3c4360c9c64b8e63b",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/socketdotio.svg"
+    },
+    {
+      "title": "Zod",
+      "slug": "zod",
+      "hex": "408AFF",
+      "bytes": 515,
+      "sha256": "e8808a8b34a76aa064ca1b5b378d4f73cbc7690303f1e4a1c864d2ad08b712b3",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/zod.svg"
+    },
+    {
+      "title": "tRPC",
+      "slug": "trpc",
+      "hex": "2596BE",
+      "bytes": 1433,
+      "sha256": "ae396c5bca7875128f50ebf6fef959eb70c3b09d15037c98c8c97ad36e1b7ad5",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/trpc.svg"
+    },
+    {
+      "title": "TanStack",
+      "slug": "tanstack",
+      "hex": "ECE8D1",
+      "bytes": 1666,
+      "sha256": "3aa4e670b7f4fc7b097809c7057c962a8d447d816c80a105cf45bcd0b7f7143b",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/tanstack.svg"
+    },
+    {
+      "title": "React Query",
+      "slug": "reactquery",
+      "hex": "FF4154",
+      "bytes": 4226,
+      "sha256": "7c3c0f366bce9b96037de80b8d767b2fc67ff1807946a9087e6aae7aae342b7a",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/reactquery.svg"
+    },
+    {
+      "title": "Ant Design",
+      "slug": "antdesign",
+      "hex": "0170FE",
+      "bytes": 962,
+      "sha256": "138a1648a7fe0fde3ca4e51de732585c785a28f582b647b1fe3df1c869b2814c",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/antdesign.svg"
+    },
+    {
+      "title": "Chakra UI",
+      "slug": "chakraui",
+      "hex": "1BB2A9",
+      "bytes": 554,
+      "sha256": "f9321188e229dc2defd9d375475796204f805a3402ba46a620cc40c7a4ececb2",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/chakraui.svg"
+    },
+    {
+      "title": "shadcn/ui",
+      "slug": "shadcnui",
+      "hex": "000000",
+      "bytes": 415,
+      "sha256": "98a31714a77c83225520bc1b4c7301c354787b0998205ce3c19e885d81ea77cf",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/shadcnui.svg"
+    },
+    {
+      "title": "MobX",
+      "slug": "mobx",
+      "hex": "FF9955",
+      "bytes": 709,
+      "sha256": "5147e24c366edbddb3d16789958f5a0bc43f4bca5f6df26a7827d0f01f773979",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/mobx.svg"
+    },
+    {
+      "title": "Celery",
+      "slug": "celery",
+      "hex": "37814A",
+      "bytes": 534,
+      "sha256": "10deb22e3e052358ab1722b2e41619bdef863b2aeaf81475bd14d2031b236c67",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/celery.svg"
+    },
+    {
+      "title": "pandas",
+      "slug": "pandas",
+      "hex": "150458",
+      "bytes": 339,
+      "sha256": "0246b1e34e3760b719bac711184671df5a2cb7a332d3091d49c2a383a2b72b2e",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/pandas.svg"
+    },
+    {
+      "title": "NumPy",
+      "slug": "numpy",
+      "hex": "013243",
+      "bytes": 775,
+      "sha256": "ddbd7d92ab879ceba54f5428f49a703ba8d05d54b93808b7178f5e0afc8373a3",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/numpy.svg"
+    },
+    {
+      "title": "TensorFlow",
+      "slug": "tensorflow",
+      "hex": "FF6F00",
+      "bytes": 285,
+      "sha256": "4c828afb17cd35786d7dd336f78d3111a7c730af54011cc2b20988866bdd8665",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/tensorflow.svg"
+    },
+    {
+      "title": "PyTorch",
+      "slug": "pytorch",
+      "hex": "EE4C2C",
+      "bytes": 451,
+      "sha256": "4dd3f3d3e4102f3bee391fcb3d8ac960a14c48e6655d43b23f7b386d5da36d01",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/pytorch.svg"
+    },
+    {
+      "title": "Keras",
+      "slug": "keras",
+      "hex": "D00000",
+      "bytes": 256,
+      "sha256": "76eb6f2c567ec9e122ba93b3e1a6c378868c9d93814878b2841af21493d7a2bc",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/keras.svg"
+    },
+    {
+      "title": "scikit-learn",
+      "slug": "scikitlearn",
+      "hex": "F7931E",
+      "bytes": 4940,
+      "sha256": "ebaf97475ff5e6af3d6a4799a164a3a385e902e442d012cc19c47237cecb2be8",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/scikitlearn.svg"
+    },
+    {
+      "title": "Jupyter",
+      "slug": "jupyter",
+      "hex": "F37626",
+      "bytes": 899,
+      "sha256": "46e1e4fe83ba623803dfbfe8714a31ea902178421624dc3de427aae8325b9dba",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/jupyter.svg"
+    },
+    {
+      "title": "Kibana",
+      "slug": "kibana",
+      "hex": "005571",
+      "bytes": 196,
+      "sha256": "eac3cd50862291d418991d6f05aae14bf795f6653d6bbcf814ec8240f58b8c9c",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/kibana.svg"
+    },
+    {
+      "title": "Grafana",
+      "slug": "grafana",
+      "hex": "F46800",
+      "bytes": 3817,
+      "sha256": "e6da4ab998d25d509e27ce8a1f1afcb2d549907569b6fb1e4065890877cffefa",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/grafana.svg"
+    },
+    {
+      "title": "Prometheus",
+      "slug": "prometheus",
+      "hex": "E6522C",
+      "bytes": 847,
+      "sha256": "6dd2480e57936b879f7626b7c71dcd51163da700d8510843516a66316bf8f379",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/prometheus.svg"
+    },
+    {
+      "title": "Sentry",
+      "slug": "sentry",
+      "hex": "362D59",
+      "bytes": 686,
+      "sha256": "8ba32902ffbac503784607374f57df5e3cbcf57a99d0adff03e735575500adc6",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/sentry.svg"
+    },
+    {
+      "title": "Datadog",
+      "slug": "datadog",
+      "hex": "632CA6",
+      "bytes": 2998,
+      "sha256": "2dae0a9ddf090ec01626d9d0f73b1740a70ad280de92e2c27136bc81151fd1ff",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/datadog.svg"
+    },
+    {
+      "title": "Apollo GraphQL",
+      "slug": "apollographql",
+      "hex": "311C87",
+      "bytes": 673,
+      "sha256": "dbe14dea0e3f935d44a56deb085cf4264d2a2d02563cd24947374ffd2478dbae",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/apollographql.svg"
+    },
+    {
+      "title": "Hasura",
+      "slug": "hasura",
+      "hex": "1EB4D4",
+      "bytes": 1092,
+      "sha256": "ac8e798ab9b5a2aa3e33af26b309f6f50a0e224399d4fc5bafe28f7ca1a3f401",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/hasura.svg"
+    },
+    {
+      "title": "Strapi",
+      "slug": "strapi",
+      "hex": "4945FF",
+      "bytes": 613,
+      "sha256": "7ace74e62d71799f2f9fe8b2f9398a3365cc52448792bc9361f03407b266b22f",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/strapi.svg"
+    },
+    {
+      "title": "WordPress",
+      "slug": "wordpress",
+      "hex": "21759B",
+      "bytes": 1059,
+      "sha256": "8877151b8978c3c961d16659ba28603a4015872e79fbbb770d09b68b0da8a4ff",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/wordpress.svg"
+    },
+    {
+      "title": "Shopify",
+      "slug": "shopify",
+      "hex": "7AB55C",
+      "bytes": 1234,
+      "sha256": "a5ea31f53511bb0b3663cb73ff96eaa8d0451fe9cad586625adfc02b729e4d4d",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/shopify.svg"
+    },
+    {
+      "title": "Stripe",
+      "slug": "stripe",
+      "hex": "635BFF",
+      "bytes": 588,
+      "sha256": "130c6d957b8977f5eda2928267b9df531ca038a400a801765d263801bb1bd870",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/stripe.svg"
+    },
+    {
+      "title": "Auth0",
+      "slug": "auth0",
+      "hex": "EB5424",
+      "bytes": 349,
+      "sha256": "cad263a6fac5f35ed2eab436051c09ea48254994bdd708fce5f87500bd29f09b",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/auth0.svg"
+    },
+    {
+      "title": "Okta",
+      "slug": "okta",
+      "hex": "007DC1",
+      "bytes": 239,
+      "sha256": "1e743aa55a6f3ad93fcf49f47fc8c3366f2c23ed0552e613a4e8fd1690c7633b",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/okta.svg"
+    },
+    {
+      "title": "Clerk",
+      "slug": "clerk",
+      "hex": "6C47FF",
+      "bytes": 695,
+      "sha256": "b7d1fd4e6fd82c09d4028660eb9b08d152aed5776320128b08b6c2424cc8143f",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/clerk.svg"
+    },
+    {
+      "title": "Notion",
+      "slug": "notion",
+      "hex": "000000",
+      "bytes": 978,
+      "sha256": "b17d2a2b592a06252efef522d5205f0c7a958f748d40df1011ed081417e42f85",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/notion.svg"
+    },
+    {
+      "title": "Trello",
+      "slug": "trello",
+      "hex": "0052CC",
+      "bytes": 469,
+      "sha256": "d1069cc5fc0174978356b5deb34c732dda5812875ea79d90d4a834169db55f04",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/trello.svg"
+    },
+    {
+      "title": "Confluence",
+      "slug": "confluence",
+      "hex": "172B4D",
+      "bytes": 731,
+      "sha256": "b9f1e0ae738e22ca281af813e8cc53e808a4c71d41adfa44bdc1a8d2c8134be3",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/confluence.svg"
+    },
+    {
+      "title": "Bitbucket",
+      "slug": "bitbucket",
+      "hex": "0052CC",
+      "bytes": 284,
+      "sha256": "887f3bbce5d63f56958fb3dbe3c1b850314ef71a1f21dd5f2099637f01e4b241",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/bitbucket.svg"
+    },
+    {
+      "title": "Ansible",
+      "slug": "ansible",
+      "hex": "EE0000",
+      "bytes": 440,
+      "sha256": "dde263ada8ced6d3ce092f9046fba6224eac3afae87274d912cef45210f8fff6",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/ansible.svg"
+    },
+    {
+      "title": "Vagrant",
+      "slug": "vagrant",
+      "hex": "1868F2",
+      "bytes": 275,
+      "sha256": "9bde1c213070effa1f4c613c5c10335f9a4bdf2972898c112b518f04e98c1f34",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/vagrant.svg"
+    },
+    {
+      "title": "Helm",
+      "slug": "helm",
+      "hex": "0F1689",
+      "bytes": 1519,
+      "sha256": "966f1f065a68819418daf146f4ef1acf20f96c3d33ea9ec8bb92ecdb553dac4e",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/helm.svg"
+    },
+    {
+      "title": "Argo",
+      "slug": "argo",
+      "hex": "EF7B4D",
+      "bytes": 5010,
+      "sha256": "82f01ed1da4aa8f87d0d88bbd6c86c45c051bdd0c513262d48022018dfad8259",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/argo.svg"
+    },
+    {
+      "title": "Podman",
+      "slug": "podman",
+      "hex": "892CA0",
+      "bytes": 9936,
+      "sha256": "676f0e895fed6e004e2fbf55f364ba900ff1a6a6de26b78fb5066dde421e4e00",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/podman.svg"
+    },
+    {
+      "title": "Nx",
+      "slug": "nx",
+      "hex": "143055",
+      "bytes": 1122,
+      "sha256": "3ac2492f1298f2e0a82f13517a79e0e60f5c13934d30dd5d5c29dd5223b133bd",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/nx.svg"
+    },
+    {
+      "title": "Turborepo",
+      "slug": "turborepo",
+      "hex": "FF1E56",
+      "bytes": 753,
+      "sha256": "ac2ca04b129601cb94809ef788778dd4ae1ade4123d7dcfb0810dc4a4d068519",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/turborepo.svg"
+    },
+    {
+      "title": "pnpm",
+      "slug": "pnpm",
+      "hex": "F69220",
+      "bytes": 343,
+      "sha256": "c6285a2d1fa28b8d6c42cd7f7edf360434371ff6f15744425c4444e41fed812b",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/pnpm.svg"
+    },
+    {
+      "title": "npm",
+      "slug": "npm",
+      "hex": "CB3837",
+      "bytes": 317,
+      "sha256": "00b410dc2c839cfa62910a065eaf28a48cbdb4babe503cf34d475cc94ba03be1",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/npm.svg"
+    },
+    {
+      "title": "Yarn",
+      "slug": "yarn",
+      "hex": "2C8EBB",
+      "bytes": 1933,
+      "sha256": "c2addf3dc035d6d2ddeb4b8b828a0bdc2ed358b48e7e50725aa7bbdc08466904",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/yarn.svg"
+    },
+    {
+      "title": "Babel",
+      "slug": "babel",
+      "hex": "F9DC3E",
+      "bytes": 3935,
+      "sha256": "14272cc15d2c2b4df0767dd95b6017efc674ee32d3a37c65379350682d0cbf96",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/babel.svg"
+    },
+    {
+      "title": "ESLint",
+      "slug": "eslint",
+      "hex": "4B32C3",
+      "bytes": 743,
+      "sha256": "6da8751e228367945e707607d0818db23848fa52e2992d22aecffd66f7124bbe",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/eslint.svg"
+    },
+    {
+      "title": "Prettier",
+      "slug": "prettier",
+      "hex": "F7B93E",
+      "bytes": 1816,
+      "sha256": "f415af9c09c4a2088938405b8537081a440fe2f881f6e6d16b0365c6aeaf8c1d",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/prettier.svg"
+    },
+    {
+      "title": "Lua",
+      "slug": "lua",
+      "hex": "000080",
+      "bytes": 4109,
+      "sha256": "ea6e362187dd07d589930f3bb12e5c624253c60767a554d9ecbea4585cc29a60",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/lua.svg"
+    },
+    {
+      "title": "Haskell",
+      "slug": "haskell",
+      "hex": "5D4F85",
+      "bytes": 310,
+      "sha256": "46f753c4116bdbfd1e478c5c3101b969e5a8b9f472969b74346d67c6f2975847",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/haskell.svg"
+    },
+    {
+      "title": "Scala",
+      "slug": "scala",
+      "hex": "DC322F",
+      "bytes": 376,
+      "sha256": "5202637eaff2e7362af3743313c21f6c074d4ff80ab6335ca5e87608b7a12a21",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/scala.svg"
+    },
+    {
+      "title": "Elixir",
+      "slug": "elixir",
+      "hex": "4B275F",
+      "bytes": 370,
+      "sha256": "d660279eaad792683d6e8cee70b225935e856f6b7aae4327d30f4a7f69e71c34",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/elixir.svg"
+    },
+    {
+      "title": "Erlang",
+      "slug": "erlang",
+      "hex": "A90533",
+      "bytes": 508,
+      "sha256": "8aa34d684fef95c935babd5e2f3d2713093c49218f346005d234c76c395d73a8",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/erlang.svg"
+    },
+    {
+      "title": "Clojure",
+      "slug": "clojure",
+      "hex": "5881D8",
+      "bytes": 1422,
+      "sha256": "f23b610b539189e4dd680473a1fe73f20a1e5e3ad1d93400b987abde9ba571d7",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/clojure.svg"
+    },
+    {
+      "title": "R",
+      "slug": "r",
+      "hex": "276DC3",
+      "bytes": 894,
+      "sha256": "3f2e47349d136c4a75cf081318b72c08ecf816c70c99d08a694a43ed5e10bf81",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/r.svg"
+    },
+    {
+      "title": "Julia",
+      "slug": "julia",
+      "hex": "9558B2",
+      "bytes": 311,
+      "sha256": "d7471ddca5a25f72c43f433726b00c324175f0fe1b80011ff3e77e750f273f9d",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/julia.svg"
+    },
+    {
+      "title": "Ktor",
+      "slug": "ktor",
+      "hex": "087CFA",
+      "bytes": 142,
+      "sha256": "183d799dd1c0382363d175e1c7ed1aa660c9d2285426e4dee4f82b12a0022521",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/ktor.svg"
+    },
+    {
+      "title": "Quarkus",
+      "slug": "quarkus",
+      "hex": "4695EB",
+      "bytes": 726,
+      "sha256": "7087ee2d38bdcc08ca265b7d930d93f6337e50ac0f6c2f0ffe15366ee61b9519",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/quarkus.svg"
+    },
+    {
+      "title": "Gin",
+      "slug": "gin",
+      "hex": "008ECF",
+      "bytes": 11231,
+      "sha256": "5353206a278c46f47a36e8352d29f0d9ef4bf00b4284ccd310490bf1fa10dd39",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/gin.svg"
+    },
+    {
+      "title": "Spring Security",
+      "slug": "springsecurity",
+      "hex": "6DB33F",
+      "bytes": 545,
+      "sha256": "f0edc06da3c6e66fad53089f3d60f372125c6e7746f29c2730068b8f0e5dea04",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/springsecurity.svg"
+    },
+    {
+      "title": "MariaDB",
+      "slug": "mariadb",
+      "hex": "003545",
+      "bytes": 1373,
+      "sha256": "477435746bb2024048c7b71529f615fb70d7e679618f37bac49f78fd07e67dfe",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/mariadb.svg"
+    },
+    {
+      "title": "Neo4j",
+      "slug": "neo4j",
+      "hex": "4581C3",
+      "bytes": 797,
+      "sha256": "4e30e210a3afe36c2dfa1baa929b1f7a33046bfea2829ba1ded94d07c3162c96",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/neo4j.svg"
+    },
+    {
+      "title": "InfluxDB",
+      "slug": "influxdb",
+      "hex": "22ADF6",
+      "bytes": 1365,
+      "sha256": "a36a5a68c12e3bf5b7507b0a1165cf04aff12d24a28f14ba95839f964d924d5a",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/influxdb.svg"
+    },
+    {
+      "title": "ClickHouse",
+      "slug": "clickhouse",
+      "hex": "FFCC01",
+      "bytes": 246,
+      "sha256": "9fa7c12613763111ca26bbc1fe10994960028bc3da9faf47247de231a0b27589",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/clickhouse.svg"
+    },
+    {
+      "title": "Snowflake",
+      "slug": "snowflake",
+      "hex": "29B5E8",
+      "bytes": 2459,
+      "sha256": "75690c4c666a406278286284f89896e8ef55dd0bfbc791acb910ce40e4a46aa9",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/snowflake.svg"
+    },
+    {
+      "title": "Databricks",
+      "slug": "databricks",
+      "hex": "FF3621",
+      "bytes": 422,
+      "sha256": "454aa3efdb318c655e3da2ea844e3577a9c47a20e24d20fff6489362176e5fe4",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/databricks.svg"
+    },
+    {
+      "title": "Apache Spark",
+      "slug": "apachespark",
+      "hex": "E25A1C",
+      "bytes": 1842,
+      "sha256": "3d7bc046bb2d203cc667c1e2ff9460e082dafe2505c60885a60ac8cff5821bac",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/apachespark.svg"
+    },
+    {
+      "title": "Apache Airflow",
+      "slug": "apacheairflow",
+      "hex": "017CEE",
+      "bytes": 2253,
+      "sha256": "6c3d96863141cf36871ea51fad9a26690f1ae2168c980abd132c80a11a9f0d2c",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/apacheairflow.svg"
+    },
+    {
+      "title": "Looker",
+      "slug": "looker",
+      "hex": "4285F4",
+      "bytes": 1094,
+      "sha256": "a31264d446cb6b7bd628b3c26676be070f65abdc5a659a4ae699fb658c8fd7e0",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/looker.svg"
+    },
+    {
+      "title": "Unreal Engine",
+      "slug": "unrealengine",
+      "hex": "0E1128",
+      "bytes": 817,
+      "sha256": "06bbd4833c91e4ad085dd8203b26739538a881e38755a3efc9ed8d57cfadbb73",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/unrealengine.svg"
+    },
+    {
+      "title": "Godot Engine",
+      "slug": "godotengine",
+      "hex": "478CBF",
+      "bytes": 2071,
+      "sha256": "95757647fedf1440fd24cc32a00f592ead4b050f8a63fdfcc46fbcd3a2952ffb",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/godotengine.svg"
+    },
+    {
+      "title": "Blender",
+      "slug": "blender",
+      "hex": "E87D0D",
+      "bytes": 1294,
+      "sha256": "ec86e2c9cf9fc25f5c8d3bf2e8d201c0dce6683137f37a1e61f992da6566bff5",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/blender.svg"
+    },
+    {
+      "title": "Arduino",
+      "slug": "arduino",
+      "hex": "00878F",
+      "bytes": 964,
+      "sha256": "e3e0b836d682159a1d0660e3081527fca03bf767202dff3bdebea3593fd7e77a",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/arduino.svg"
+    },
+    {
+      "title": "Raspberry Pi",
+      "slug": "raspberrypi",
+      "hex": "A22846",
+      "bytes": 5936,
+      "sha256": "ab35cdb6cfd69779dfa54c8f15f0ed3c514ff6c07f1c941dd47a61115a208c59",
+      "sourceUrl": "https://raw.githubusercontent.com/simple-icons/simple-icons/98820a4dc8c363ca72fa2c0d294ea4a0a9bba75d/icons/raspberrypi.svg"
+    }
+  ]
+}

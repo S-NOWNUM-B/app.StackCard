@@ -9,6 +9,7 @@ import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
 import '../../../shared/widgets/stackcard_input.dart';
 import '../../../shared/widgets/stackcard_technology_badge.dart';
+import '../../../shared/widgets/technology_catalog.dart';
 import '../portfolio_draft_providers.dart';
 
 /// Одинаковые теги для навыков портфолио и технологий проекта.
@@ -293,11 +294,19 @@ class BuilderTagDialog extends ConsumerStatefulWidget {
     required this.title,
     required this.keyPrefix,
     required this.validate,
+    this.suggestTechnologies = false,
+    this.existing = const [],
   });
 
   final String title;
   final String keyPrefix;
   final String? Function(BuildContext, String) validate;
+
+  /// Подсказки из каталога технологий с иконками по мере ввода.
+  final bool suggestTechnologies;
+
+  /// Уже добавленные значения не предлагаются повторно.
+  final List<String> existing;
 
   @override
   ConsumerState<BuilderTagDialog> createState() => _BuilderTagDialogState();
@@ -331,6 +340,31 @@ class _BuilderTagDialogState extends ConsumerState<BuilderTagDialog> {
     }
   }
 
+  /// Выбор подсказки подставляет каноничное название и сразу добавляет его.
+  Widget _suggestion(TechnologyInfo info) => InkWell(
+    key: ValueKey('${widget.keyPrefix}.suggestion.${info.title}'),
+    onTap: () {
+      _controller.text = info.title;
+      _submit();
+    },
+    borderRadius: BorderRadius.circular(StackCardRadius.small),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: StackCardSize.touchTarget),
+      child: Row(
+        children: [
+          StackCardTechnologyIcon(label: info.title),
+          const SizedBox(width: StackCardSpacing.md),
+          Expanded(
+            child: Text(
+              info.title,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     ref.listen(portfolioDraftRepositoryProvider, (_, next) {
@@ -349,15 +383,41 @@ class _BuilderTagDialogState extends ConsumerState<BuilderTagDialog> {
       title: Text(widget.title),
       content: Form(
         key: _formKey,
-        child: StackCardInput(
-          key: ValueKey('${widget.keyPrefix}.name'),
-          label: context.strings.tr('builderForm.name'),
-          controller: _controller,
-          autofocus: true,
-          validator: (raw) => widget.validate(context, (raw ?? '').trim()),
-          textInputAction: TextInputAction.done,
-          onFieldSubmitted: (_) => _submit(),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            StackCardInput(
+              key: ValueKey('${widget.keyPrefix}.name'),
+              label: context.strings.tr('builderForm.name'),
+              controller: _controller,
+              autofocus: true,
+              validator: (raw) => widget.validate(context, (raw ?? '').trim()),
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _submit(),
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+            ),
+            if (widget.suggestTechnologies)
+              ValueListenableBuilder(
+                valueListenable: _controller,
+                builder: (context, value, _) {
+                  final suggestions = technologySuggestions(
+                    value.text,
+                    exclude: widget.existing,
+                  );
+                  // Точное совпадение уже введено — подсказка не нужна.
+                  final exact = findTechnology(value.text);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final info in suggestions)
+                        if (info != exact || info.title != value.text.trim())
+                          _suggestion(info),
+                    ],
+                  );
+                },
+              ),
+          ],
         ),
       ),
       actions: [

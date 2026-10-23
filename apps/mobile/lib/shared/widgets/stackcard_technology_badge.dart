@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
-import 'stackcard_icon.dart';
+import 'technology_catalog.dart';
 
-/// Информационный badge: текст остаётся полным, неизвестный label не изменяется.
+/// Информационный badge: текст остаётся полным, неизвестный label — с нейтральной иконкой.
 class StackCardTechnologyBadge extends StatelessWidget {
   const StackCardTechnologyBadge({super.key, required this.label});
 
@@ -13,8 +13,6 @@ class StackCardTechnologyBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final normalized = label.trim().toLowerCase();
-    final known = StackCardIcon.technologyNames.contains(normalized);
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 32),
       child: DecoratedBox(
@@ -27,22 +25,7 @@ class StackCardTechnologyBadge extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.ink,
-                  borderRadius: BorderRadius.circular(StackCardSpacing.xs),
-                ),
-                child: SizedBox.square(
-                  dimension: 24,
-                  child: Center(
-                    child: StackCardIcon(
-                      name: known ? normalized : 'folder',
-                      size: 18,
-                      color: known ? null : colors.paper,
-                    ),
-                  ),
-                ),
-              ),
+              StackCardTechnologyIcon(label: label),
               const SizedBox(width: StackCardSpacing.sm),
               Flexible(
                 child: Text(

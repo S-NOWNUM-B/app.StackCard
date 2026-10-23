@@ -370,6 +370,8 @@ class _PortfolioProjectEditorScreenState
       builder: (_) => BuilderTagDialog(
         title: context.strings.tr('mobileParity.technology'),
         keyPrefix: 'project.technology',
+        suggestTechnologies: true,
+        existing: existing,
         validate: (context, name) {
           final issue = validatePortfolioText(
             name,
