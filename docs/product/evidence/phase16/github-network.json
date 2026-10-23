@@ -1,0 +1,408 @@
+{
+  "startedAtUtc": "2026-10-21T12:48:12.105513Z",
+  "environment": {
+    "runtime": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"macos_arm64\"",
+    "os": "macos",
+    "mode": "Dart VM host CLI; actual GitHub REST + production DTO/cache code",
+    "credentials": "none; request header allowlist; no user account/session",
+    "storage": "disposable temporary directory; ordinary app data untouched",
+    "command": "/opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart /Users/stanislavmamaev/Documents/development/app.StackCard/apps/mobile/tool/performance/github_network.dart ../../docs/product/evidence/phase16/github-network.json dart-lang"
+  },
+  "account": "dart-lang",
+  "requests": [
+    {
+      "stage": "cold-online-pagination",
+      "uri": "https://api.github.com/users/dart-lang",
+      "method": "GET",
+      "requestHeaders": {
+        "accept": "application/vnd.github+json",
+        "x-github-api-version": "2026-03-10",
+        "user-agent": "StackCard"
+      },
+      "transport": "real-dart-io-https",
+      "status": 200,
+      "decodedResponseBodyBytes": 1396,
+      "responseHeaders": {
+        "etag": "W/\"8bed1972069feb08d56463f00fdaa89ec213bd13f58f964c23f8f06db1b53eed\"",
+        "x-ratelimit-limit": "60",
+        "x-ratelimit-remaining": "44",
+        "x-ratelimit-reset": "1792589842",
+        "x-github-api-version-selected": "2026-03-10",
+        "date": "Wed, 21 Oct 2026 12:47:45 GMT",
+        "content-length": "597"
+      },
+      "elapsedMs": 403.718
+    },
+    {
+      "stage": "cold-online-pagination",
+      "uri": "https://api.github.com/users/dart-lang/repos?type=owner&sort=updated&direction=desc&per_page=30",
+      "method": "GET",
+      "requestHeaders": {
+        "accept": "application/vnd.github+json",
+        "x-github-api-version": "2026-03-10",
+        "user-agent": "StackCard"
+      },
+      "transport": "real-dart-io-https",
+      "publicRepositories": 30,
+      "status": 200,
+      "decodedResponseBodyBytes": 154856,
+      "responseHeaders": {
+        "etag": "W/\"c5601724e7b314d03003af869bfe0a85196361eec46d4f257acc6dac5bd4698c\"",
+        "link": "<https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2>; rel=\"next\", <https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2>; rel=\"last\"",
+        "x-ratelimit-limit": "60",
+        "x-ratelimit-remaining": "43",
+        "x-ratelimit-reset": "1792589842",
+        "x-github-api-version-selected": "2026-03-10",
+        "date": "Wed, 21 Oct 2026 12:47:45 GMT",
+        "content-length": "13212"
+      },
+      "elapsedMs": 184.024
+    },
+    {
+      "stage": "cold-online-pagination",
+      "uri": "https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2",
+      "method": "GET",
+      "requestHeaders": {
+        "accept": "application/vnd.github+json",
+        "x-github-api-version": "2026-03-10",
+        "user-agent": "StackCard"
+      },
+      "transport": "real-dart-io-https",
+      "publicRepositories": 11,
+      "status": 200,
+      "decodedResponseBodyBytes": 58854,
+      "responseHeaders": {
+        "etag": "W/\"3bab60da2e1e64db302c3214531315543c2066716318b7c33cc71c5c3f0dbe3d\"",
+        "link": "<https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=1>; rel=\"prev\", <https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=1>; rel=\"first\"",
+        "x-ratelimit-limit": "60",
+        "x-ratelimit-remaining": "42",
+        "x-ratelimit-reset": "1792589842",
+        "x-github-api-version-selected": "2026-03-10",
+        "date": "Wed, 21 Oct 2026 12:47:46 GMT",
+        "content-length": "5500"
+      },
+      "elapsedMs": 90.509
+    },
+    {
+      "stage": "offline-injected-transport-failure",
+      "uri": "https://api.github.com/users/dart-lang",
+      "method": "GET",
+      "requestHeaders": {
+        "accept": "application/vnd.github+json",
+        "x-github-api-version": "2026-03-10",
+        "user-agent": "StackCard",
+        "if-none-match": "W/\"8bed1972069feb08d56463f00fdaa89ec213bd13f58f964c23f8f06db1b53eed\""
+      },
+      "transport": "injected-offline-failure",
+      "failureType": "connectionError",
+      "elapsedMs": 0.432
+    },
+    {
+      "stage": "offline-injected-transport-failure",
+      "uri": "https://api.github.com/users/dart-lang/repos?type=owner&sort=updated&direction=desc&per_page=30",
+      "method": "GET",
+      "requestHeaders": {
+        "accept": "application/vnd.github+json",
+        "x-github-api-version": "2026-03-10",
+        "user-agent": "StackCard",
+        "if-none-match": "W/\"c5601724e7b314d03003af869bfe0a85196361eec46d4f257acc6dac5bd4698c\""
+      },
+      "transport": "injected-offline-failure",
+      "failureType": "connectionError",
+      "elapsedMs": 0.028
+    },
+    {
+      "stage": "offline-injected-transport-failure",
+      "uri": "https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2",
+      "method": "GET",
+      "requestHeaders": {
+        "accept": "application/vnd.github+json",
+        "x-github-api-version": "2026-03-10",
+        "user-agent": "StackCard",
+        "if-none-match": "W/\"3bab60da2e1e64db302c3214531315543c2066716318b7c33cc71c5c3f0dbe3d\""
+      },
+      "transport": "injected-offline-failure",
+      "failureType": "connectionError",
+      "elapsedMs": 0.032
+    },
+    {
+      "stage": "reconnect-conditional",
+      "uri": "https://api.github.com/users/dart-lang",
+      "method": "GET",
+      "requestHeaders": {
+        "accept": "application/vnd.github+json",
+        "x-github-api-version": "2026-03-10",
+        "user-agent": "StackCard",
+        "if-none-match": "W/\"8bed1972069feb08d56463f00fdaa89ec213bd13f58f964c23f8f06db1b53eed\""
+      },
+      "transport": "real-dart-io-https",
+      "status": 304,
+      "decodedResponseBodyBytes": 0,
+      "responseHeaders": {
+        "etag": "\"8bed1972069feb08d56463f00fdaa89ec213bd13f58f964c23f8f06db1b53eed\"",
+        "x-ratelimit-limit": "60",
+        "x-ratelimit-remaining": "41",
+        "x-ratelimit-reset": "1792589842",
+        "x-github-api-version-selected": "2026-03-10",
+        "date": "Wed, 21 Oct 2026 12:48:12 GMT"
+      },
+      "elapsedMs": 117.147
+    },
+    {
+      "stage": "reconnect-conditional",
+      "uri": "https://api.github.com/users/dart-lang/repos?type=owner&sort=updated&direction=desc&per_page=30",
+      "method": "GET",
+      "requestHeaders": {
+        "accept": "application/vnd.github+json",
+        "x-github-api-version": "2026-03-10",
+        "user-agent": "StackCard",
+        "if-none-match": "W/\"c5601724e7b314d03003af869bfe0a85196361eec46d4f257acc6dac5bd4698c\""
+      },
+      "transport": "real-dart-io-https",
+      "status": 304,
+      "decodedResponseBodyBytes": 0,
+      "responseHeaders": {
+        "etag": "\"c5601724e7b314d03003af869bfe0a85196361eec46d4f257acc6dac5bd4698c\"",
+        "link": "<https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2>; rel=\"next\", <https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2>; rel=\"last\"",
+        "x-ratelimit-limit": "60",
+        "x-ratelimit-remaining": "40",
+        "x-ratelimit-reset": "1792589842",
+        "x-github-api-version-selected": "2026-03-10",
+        "date": "Wed, 21 Oct 2026 12:48:13 GMT"
+      },
+      "elapsedMs": 87.783
+    },
+    {
+      "stage": "reconnect-conditional",
+      "uri": "https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2",
+      "method": "GET",
+      "requestHeaders": {
+        "accept": "application/vnd.github+json",
+        "x-github-api-version": "2026-03-10",
+        "user-agent": "StackCard",
+        "if-none-match": "W/\"3bab60da2e1e64db302c3214531315543c2066716318b7c33cc71c5c3f0dbe3d\""
+      },
+      "transport": "real-dart-io-https",
+      "status": 304,
+      "decodedResponseBodyBytes": 0,
+      "responseHeaders": {
+        "etag": "\"3bab60da2e1e64db302c3214531315543c2066716318b7c33cc71c5c3f0dbe3d\"",
+        "link": "<https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=1>; rel=\"prev\", <https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=1>; rel=\"first\"",
+        "x-ratelimit-limit": "60",
+        "x-ratelimit-remaining": "39",
+        "x-ratelimit-reset": "1792589842",
+        "x-github-api-version-selected": "2026-03-10",
+        "date": "Wed, 21 Oct 2026 12:48:13 GMT"
+      },
+      "elapsedMs": 87.328
+    }
+  ],
+  "stages": {
+    "coldOnline": {
+      "elapsedMs": 720.056,
+      "profileId": 1609975,
+      "profileLogin": "dart-lang",
+      "profilePublicRepositories": 41,
+      "pages": [
+        {
+          "uri": "https://api.github.com/users/dart-lang/repos?type=owner&sort=updated&direction=desc&per_page=30",
+          "count": 30,
+          "repositoryIds": [
+            50053618,
+            26507037,
+            35726310,
+            1167064333,
+            600195838,
+            30086445,
+            28158642,
+            28200583,
+            952074980,
+            63089994,
+            36041640,
+            28035756,
+            813178365,
+            28887852,
+            360911169,
+            23471389,
+            35700184,
+            137279731,
+            588356655,
+            541826506,
+            531357927,
+            28247713,
+            43093613,
+            114925690,
+            24516823,
+            617108693,
+            852933726,
+            6117789,
+            206279381,
+            607278430
+          ],
+          "nextPage": "https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2",
+          "metadata": {
+            "fromCache": false,
+            "validatedAtUtc": "2026-10-21T12:48:13.071623Z",
+            "fallbackFailure": null,
+            "cacheUnavailable": false,
+            "cacheWriteFailed": false
+          }
+        },
+        {
+          "uri": "https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2",
+          "count": 11,
+          "repositoryIds": [
+            320563763,
+            322363344,
+            5534021,
+            172643159,
+            239581347,
+            6476961,
+            178217502,
+            512036700,
+            129239771,
+            46509206,
+            68653599
+          ],
+          "nextPage": null,
+          "metadata": {
+            "fromCache": false,
+            "validatedAtUtc": "2026-10-21T12:48:13.172086Z",
+            "fallbackFailure": null,
+            "cacheUnavailable": false,
+            "cacheWriteFailed": false
+          }
+        }
+      ],
+      "uniqueRepositories": 41,
+      "totalMatchesProfileCount": true
+    },
+    "persistentReopen": {
+      "elapsedMs": 14.302,
+      "entries": [
+        {
+          "uri": "https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2",
+          "envelopeUtf8Bytes": 63164,
+          "bodyUtf8Bytes": 58854,
+          "etag": "W/\"3bab60da2e1e64db302c3214531315543c2066716318b7c33cc71c5c3f0dbe3d\"",
+          "link": "<https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=1>; rel=\"prev\", <https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=1>; rel=\"first\"",
+          "validatedAt": 1792586893172
+        },
+        {
+          "uri": "https://api.github.com/users/dart-lang",
+          "envelopeUtf8Bytes": 1659,
+          "bodyUtf8Bytes": 1396,
+          "etag": "W/\"8bed1972069feb08d56463f00fdaa89ec213bd13f58f964c23f8f06db1b53eed\"",
+          "link": null,
+          "validatedAt": 1792586892879
+        },
+        {
+          "uri": "https://api.github.com/users/dart-lang/repos?type=owner&sort=updated&direction=desc&per_page=30",
+          "envelopeUtf8Bytes": 166255,
+          "bodyUtf8Bytes": 154856,
+          "etag": "W/\"c5601724e7b314d03003af869bfe0a85196361eec46d4f257acc6dac5bd4698c\"",
+          "link": "<https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2>; rel=\"next\", <https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2>; rel=\"last\"",
+          "validatedAt": 1792586893071
+        }
+      ],
+      "allEnvelopesIdentical": true,
+      "draftBytesIdentical": true
+    },
+    "offlineFallback": {
+      "failureInjection": "HttpClientAdapter throws DioException.connectionError before IO",
+      "elapsedMs": 14.323,
+      "uniqueRepositories": 41,
+      "sameRepositoryIds": true,
+      "cacheBytesAndTimestampsIdentical": true,
+      "profileMetadata": {
+        "fromCache": true,
+        "validatedAtUtc": "2026-10-21T12:48:12.879Z",
+        "fallbackFailure": "network",
+        "cacheUnavailable": false,
+        "cacheWriteFailed": false
+      }
+    },
+    "reconnectConditional": {
+      "elapsedMs": 308.763,
+      "requests": 3,
+      "ifNoneMatchSentForAll": true,
+      "observed304Responses": 3,
+      "observed200Responses": 0,
+      "pages": [
+        {
+          "uri": "https://api.github.com/users/dart-lang/repos?type=owner&sort=updated&direction=desc&per_page=30",
+          "count": 30,
+          "metadata": {
+            "fromCache": false,
+            "validatedAtUtc": "2026-10-21T12:48:13.477536Z",
+            "fallbackFailure": null,
+            "cacheUnavailable": false,
+            "cacheWriteFailed": false
+          }
+        },
+        {
+          "uri": "https://api.github.com/user/1609975/repos?type=owner&sort=updated&direction=desc&per_page=30&page=2",
+          "count": 11,
+          "metadata": {
+            "fromCache": false,
+            "validatedAtUtc": "2026-10-21T12:48:13.572438Z",
+            "fallbackFailure": null,
+            "cacheUnavailable": false,
+            "cacheWriteFailed": false
+          }
+        }
+      ]
+    },
+    "draftIsolation": {
+      "fixture": "Synthetic valid aggregate: 200 projects, main +20 legacy documents, private notes",
+      "draftEnvelopeUtf8Bytes": 399360,
+      "exactEnvelopePreserved": true,
+      "repositoryReadRevision": 1,
+      "corruptCacheEntryEvicted": true,
+      "cacheClearAndReopenEmpty": true
+    }
+  },
+  "limitations": [
+    "Host wall-clock includes response observation/JSON/Hive; not Android frames or retained heap.",
+    "Offline is a deliberate transport failure, not a physical network disconnect.",
+    "Unauthenticated public API cannot inspect private repositories.",
+    "A real HTTP 304 is claimed only if observed in request status; upstream may return 200.",
+    "No UI pagination, publication, UID transition or device acceptance is implied."
+  ],
+  "source": {
+    "gitHead": "ed6e2a999079de9c78a87839e40fe40da0e79829",
+    "branch": "dev",
+    "workingTree": "Existing uncommitted work preserved; SHA256 identifies actual run sources",
+    "sha256": {
+      "tool/performance/github_network.dart": "aedf5adf6285e2da9361a862358495b97ad260b559dd6f14bbaef414b62be779",
+      "tool/performance/fixture.dart": "55ad651d412cb10d7284a7c575c78e6fd590491fb1bf0496b4022b1044f2aaf3",
+      "lib/features/github_import/data/dio_github_import_repository.dart": "496be6c8e6df4e17280a23c4530a44ad1b74ba85682281421c612da4f0212d81",
+      "lib/features/github_import/data/github_profile_dto.dart": "0f2468194a1b460238114fa3ed85b3c426a98e2d1b81007dc568b4bfce8437dc",
+      "lib/features/github_import/data/github_repository_dto.dart": "6d0adf553331ee14ea7f02403bd3a740dced864a340b9b3c7570a0bb9a01c1e8",
+      "lib/features/github_import/data/github_response_cache.dart": "dd3c0375843031c3114ead4619e95502bb1c89028dc594a0a5431cf47f76e35c",
+      "lib/features/github_import/data/hive_github_response_cache.dart": "891ff3927f53bbf3275d071f3bea0d3f66d1d6673ce24a719951c6541ef6169a",
+      "lib/features/portfolio_draft/data/hive_portfolio_draft_repository.dart": "e36278217114e40ceb7453a19dcd1020f50dfb66a4916d53e897a2b5672445c7",
+      "lib/features/portfolio_draft/data/portfolio_content_codec.dart": "2322c307a80f193fdd2db1aa493395b548cf2b4ada68f0bb15479dd56292f350",
+      "lib/features/portfolio_draft/domain/portfolio_github_sync.dart": "5c61e9a99665aa446eea46c6d6858cfdfa2cf1eca60194f5bbec9a49e14221b6",
+      "pubspec.yaml": "0666c395d39178e80528e0e19be1d27ad6163ae760cc08736d14a7d51c6fc518",
+      "pubspec.lock": "e133ec6ba6e197ab426cee0464e9b0c946d8f4d2a9a38a21d52032da155c342b"
+    },
+    "dio": "5.11.1",
+    "hive": "2.2.3"
+  },
+  "exportedWorkspace": {
+    "path": "/Users/stanislavmamaev/Documents/development/app.StackCard/apps/mobile/../../docs/product/evidence/phase16/github-network.json.workspace.json",
+    "sha256": "d0ccca4d1b5ead7eb0e22c52e3fe00ac425dea3f55354d8f0129d5364e808376",
+    "utf8Bytes": 39447,
+    "publicProfile": "https://github.com/dart-lang",
+    "projects": 41,
+    "mainAttachments": 41,
+    "source": "Actual profile and complete repositories from the cold-online run; domain addGitHubProject matches the importSelected loop",
+    "syntheticContent": "none; IDs/document title/timestamps/attachment selection are generated presentation structure",
+    "notesIncluded": false,
+    "privateIsolationFixtureIncluded": false,
+    "browserAvatarLimitation": "Existing web benchmark explicitly supplies local demo-portrait bytes instead of GitHub profile avatar"
+  },
+  "status": "passed",
+  "finishedAtUtc": "2026-10-21T12:48:13.605075Z"
+}

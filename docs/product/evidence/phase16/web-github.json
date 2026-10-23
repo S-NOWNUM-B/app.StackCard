@@ -1,0 +1,222 @@
+{
+  "environment": {
+    "browser": "155.0.8059.85",
+    "mode": "isolated production React component harness",
+    "platform": "darwin arm64",
+    "cpu": "Apple M1 Pro"
+  },
+  "scenarios": [
+    {
+      "width": 320,
+      "kind": "editor",
+      "mountWallMs": 170.111042,
+      "overflowPx": 0,
+      "nodes": 751,
+      "fontLoaded": true,
+      "avatarLoaded": true,
+      "inputToTwoRafMs": [
+        12.600000001490116,
+        2.399999998509884,
+        28.600000001490116,
+        24.899999998509884,
+        20.700000002980232,
+        16.200000002980232,
+        13.199999995529652,
+        9,
+        4.399999998509884,
+        18.30000000447035,
+        11,
+        6.899999998509884,
+        2.5,
+        32.5
+      ],
+      "resourceBytes": 2986998,
+      "jsHeapUsedBytes": 3946928,
+      "localFontRequests": 3,
+      "localSvgRequests": 3,
+      "pdfRequestsBeforeExport": 0
+    },
+    {
+      "width": 320,
+      "kind": "public",
+      "mountWallMs": 114.84279100000003,
+      "overflowPx": 0,
+      "nodes": 394,
+      "fontLoaded": true,
+      "avatarLoaded": true,
+      "inputToTwoRafMs": [],
+      "resourceBytes": 2840067,
+      "jsHeapUsedBytes": 2600052,
+      "localFontRequests": 2,
+      "localSvgRequests": 2,
+      "pdfRequestsBeforeExport": 0
+    },
+    {
+      "width": 390,
+      "kind": "editor",
+      "mountWallMs": 103.02762499999972,
+      "overflowPx": 0,
+      "nodes": 751,
+      "fontLoaded": true,
+      "avatarLoaded": true,
+      "inputToTwoRafMs": [
+        24.30000000447035,
+        16.299999997019768,
+        10.700000002980232,
+        7.399999998509884,
+        3,
+        32.20000000298023,
+        28,
+        23.799999997019768,
+        18.700000002980232,
+        17.19999999552965,
+        10.899999998509884,
+        5.799999997019768,
+        19.5,
+        15.299999997019768,
+        10.5
+      ],
+      "resourceBytes": 2986698,
+      "jsHeapUsedBytes": 3948340,
+      "localFontRequests": 3,
+      "localSvgRequests": 3,
+      "pdfRequestsBeforeExport": 0
+    },
+    {
+      "width": 390,
+      "kind": "public",
+      "mountWallMs": 86.37929099999928,
+      "overflowPx": 0,
+      "nodes": 394,
+      "fontLoaded": true,
+      "avatarLoaded": true,
+      "inputToTwoRafMs": [],
+      "resourceBytes": 2840067,
+      "jsHeapUsedBytes": 2599868,
+      "localFontRequests": 2,
+      "localSvgRequests": 2,
+      "pdfRequestsBeforeExport": 0
+    },
+    {
+      "width": 1440,
+      "kind": "editor",
+      "mountWallMs": 102.53233400000136,
+      "overflowPx": 0,
+      "nodes": 751,
+      "fontLoaded": true,
+      "avatarLoaded": true,
+      "inputToTwoRafMs": [
+        20.80000000447035,
+        29.600000001490116,
+        26.19999999552965,
+        21.200000002980232,
+        16.799999997019768,
+        11.900000005960464,
+        7.800000004470348,
+        3.6999999955296516,
+        15.899999998509884,
+        30.900000005960464,
+        23.599999994039536,
+        19.700000002980232,
+        17.69999999552965,
+        13.600000001490116,
+        10.5
+      ],
+      "resourceBytes": 2986698,
+      "jsHeapUsedBytes": 3945492,
+      "localFontRequests": 3,
+      "localSvgRequests": 3,
+      "pdfRequestsBeforeExport": 0
+    },
+    {
+      "width": 1440,
+      "kind": "public",
+      "mountWallMs": 83.50708400000076,
+      "overflowPx": 0,
+      "nodes": 394,
+      "fontLoaded": true,
+      "avatarLoaded": true,
+      "inputToTwoRafMs": [],
+      "resourceBytes": 2840067,
+      "jsHeapUsedBytes": 2599956,
+      "localFontRequests": 2,
+      "localSvgRequests": 2,
+      "pdfRequestsBeforeExport": 0
+    }
+  ],
+  "pdf": {
+    "wallMs": 448,
+    "bytes": 77410,
+    "type": "application/pdf"
+  },
+  "acceptance": {
+    "status": "passed",
+    "responsiveScenarios": 6,
+    "observedAtUtc": "2026-10-21T12:49:21.344656+00:00",
+    "input": {
+      "workspace": "github-network.json.workspace.json",
+      "sha256": "d0ccca4d1b5ead7eb0e22c52e3fe00ac425dea3f55354d8f0129d5364e808376",
+      "utf8Bytes": 39447,
+      "sourceEvidence": "github-network.json",
+      "publicProfile": "https://github.com/dart-lang",
+      "realRepositoryCount": 41,
+      "mainAttachments": 41,
+      "actualFields": "Public profile name/bio/location/avatar URL; repository title/description/URL/language via addGitHubProject",
+      "syntheticFields": "Generated document and attachment structure only; no fabricated profile/repository text; no private notes or maxfixture"
+    },
+    "limitations": [
+      "Existing benchmark renders local demo-portrait and supplies those synthetic avatar bytes to PDF instead of fetching GitHub avatar.",
+      "Editor interaction inserts the explicit test text \" проверка ввода\" into the name buffer; it is not persisted or exported.",
+      "Production React component harness with real public text and repositories; not Next SSR, live public hosting, Firebase or native/device acceptance.",
+      "PDF generated and measured in browser via existing generatePortfolioPdf; blob was not saved as a standalone file.",
+      "Wall-clock/input-to-two-RAF/forced-GC JS heap are host diagnostics; no field INP or retained-memory leak claim."
+    ],
+    "sourceSha256": {
+      "apps/web/tool/performance/benchmark.cjs": "8a3b3c64ed4127ca0dd646c11f1c319a344101883cd42149d48b6fde900e85dc",
+      "apps/web/src/components/content-editor.tsx": "f0cf1551183f890ccad425f41ae63ee32de45b33251446998b305856d082d48b",
+      "apps/web/src/components/project-editor.tsx": "1bc2602cb7ed3b191406c534a1068ced50fa43fc38bb446f93d7aa65955bc7e9",
+      "apps/web/src/components/document-view.tsx": "33d376093619c558ceac11b2e6575af57f5186c1819288b0c085d4e3fb46bf51",
+      "apps/web/src/lib/model.ts": "1116f806b84a497a63882baa9066f6557048ca90d74bf6d35235781568d7d68c",
+      "apps/web/src/lib/preview.ts": "246254562413973e3fb7c5beb2ff8b162a724bca7390c881f3ac1b7fd5a7707f",
+      "apps/web/src/lib/portfolio-pdf.ts": "daa078949f8269c2bbed1b52815dddc31853305d680b0ab59464a4dbc5149143",
+      "apps/web/src/lib/portfolio-pdf-renderer.tsx": "7ce61c9e8237c28f3be07044e493f3f25233de372f35757ac3bc383656a4a92a",
+      "apps/web/src/app/globals.css": "514586b0631dba5377c8a2209af8b183200998d5491887c21b082efb8482092d",
+      "apps/web/package.json": "e5428cbf10966817fba536a1420d6b9061326da32ffed8c02ed96403d036cf9d",
+      "apps/web/package-lock.json": "4edf46c0244ef161f530c1460001081609fe6bb7ed9d1c19b2228610cc0315b6"
+    },
+    "screenshots": [
+      {
+        "path": "web-github.json.editor-1440.png",
+        "sha256": "344cbdcada19517a35fcda6bd02a9fe8041da1bf14321ba2aafcfd6a1b712008",
+        "bytes": 50946
+      },
+      {
+        "path": "web-github.json.editor-320.png",
+        "sha256": "47158f750abf1666b56478cb6f72c008993ddea34390ab3981ae477edd0468ac",
+        "bytes": 46419
+      },
+      {
+        "path": "web-github.json.editor-390.png",
+        "sha256": "d4b12716b441ab16d6306785bf8a2c4b691b9ce39b5296d40e2477070d4c18cf",
+        "bytes": 47180
+      },
+      {
+        "path": "web-github.json.public-1440.png",
+        "sha256": "f6029470e51c3f5b4e9da984593ef801dff598aed2e4ba5adcc039b4123a493f",
+        "bytes": 71526
+      },
+      {
+        "path": "web-github.json.public-320.png",
+        "sha256": "887a9580a123c554ce692c49c995c53520dca5844bb38a62b67f555e9f4b40bb",
+        "bytes": 62940
+      },
+      {
+        "path": "web-github.json.public-390.png",
+        "sha256": "0de72480e94b5b18f8788e343152107fbf1d8de2b8166533cc7a34498ef142f6",
+        "bytes": 63706
+      }
+    ],
+    "command": "PLAYWRIGHT_MODULE=/Users/stanislavmamaev/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright CHROME_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' node tool/performance/benchmark.cjs ../../docs/product/evidence/phase16/github-network.json.workspace.json ../../docs/product/evidence/phase16/web-github.json",
+    "cwd": "apps/web"
+  }
+}

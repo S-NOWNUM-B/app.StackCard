@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-21",
+  "scope": "ADR0005 single main portfolio; source/local testing",
+  "mobile": {
+    "command": "flutter test --no-pub --coverage --reporter expanded",
+    "passed": 1372,
+    "failed": 0,
+    "analyzeIssues": 0,
+    "coverageReport": "mobile-coverage.json"
+  },
+  "web": {
+    "testsPassed": 163,
+    "failed": 0,
+    "typecheck": "PASS",
+    "productionBuild": "PASS",
+    "config": "explicit demo emulator build"
+  },
+  "backend": {
+    "syntax": "PASS",
+    "unitPassed": 42,
+    "unitFailed": 0
+  },
+  "emulators": {
+    "command": "npm run test:all-rules",
+    "project": "demo-stackcard-test",
+    "services": [
+      "auth",
+      "firestore",
+      "storage"
+    ],
+    "passed": 82,
+    "failed": 0
+  },
+  "browser": {
+    "checkpoints": 7,
+    "passed": true,
+    "evidence": "web-emulator-journey.json",
+    "clipboard": "stub",
+    "inventoryWait": "actual successful API response after reload, no fixed sleep",
+    "runnerBuild": "default demo-only build/start/cleanup verified",
+    "pdfSha256": "c86d71385c2cd02c04640bf8d24d7d0a0c355fa399e5d3491cede9d12ab77b3b",
+    "screenshotSha256": "cdff40f57dabe4f957fd2014716f04f4387ca25f6653557d12e29ea177e47417"
+  },
+  "coverageTool": {
+    "pythonTestsPassed": 4,
+    "threshold": "strictly greater than 40%; no filters"
+  },
+  "limitations": {
+    "phase15": [
+      "native QR scan/Share/Open",
+      "live public URL",
+      "iOS"
+    ],
+    "phase16": [
+      "native DevTools frame/raster/rebuild/retained-memory traces",
+      "device Editor drag",
+      "real GitHub pagination/cache/network"
+    ],
+    "phase17": [
+      "iOS deferred by explicit user reply",
+      "full native touch onboarding/import not run; native controller/SDK and Card UI verified"
+    ]
+  },
+  "mutations": "No production credentials/data, deploy, billing, commit or push. Existing next-env.d.ts restored after demo build.",
+  "nodeVersion": "24.22.0",
+  "nativeRunnerGuardTestsPassed": 4,
+  "pythonTestsPassed": 8,
+  "androidNative": {
+    "passed": true,
+    "checkpoints": 11,
+    "evidence": "android-native-checks.json",
+    "permissionDenied": true,
+    "pdfSaveCancel": true
+  },
+  "copyRegression": {
+    "red": "valid widget regression before fix",
+    "green": "full 1372-test suite and native Clipboard",
+    "lateDataGuards": [
+      "withdrawal",
+      "owner transition"
+    ]
+  }
+}

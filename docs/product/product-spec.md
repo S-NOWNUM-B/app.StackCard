@@ -36,6 +36,16 @@
 
 ## Статус и границы текущей работы
 
+**2026-10-21: разрешена Phase 17 — Testing.** После source/local результатов
+Phase 15–16 пользователь явно разрешил следующий этап по обновлённому плану.
+ADR 0005, одно основное портфолио, «Главная / Проекты / Редактор», светлый русский
+UI, Manrope и Brand A сохраняются. Незакрытые native/live/iOS проверки Phase 15
+и native DevTools gate Phase 16 остаются отдельно в своих разделах.
+Phase 18–20, commit/push/deploy и billing этим переходом не запускаются.
+Постоянный hosting Contact/Inbox/FCM остаётся отложенным.
+Продолжение «доделай незаконченное»: source/local и Android SDK/controller/Card
+journey проверены; iOS 2026-10-21 явно оставлен отдельно по ответу пользователя.
+
 **2026-10-12: функциональный редизайн одного основного портфолио** разрешён
 прямым заданием пользователя. [ADR 0005](../decisions/0005-single-main-portfolio.md)
 заменяет повседневный сценарий общей базы/независимых Resume/Portfolio:
@@ -49,7 +59,8 @@
 Перенос выбирает прежнюю основу явно и сохраняет неизменяемую копию. Старые
 документы, Library overrides и постоянные опубликованные URL не удаляются;
 Save/импорт/перенос не публикуют автоматически. Hive8/cloud7 и public schema2
-читают прежние версии. Deploy, billing, commit/push и Phase15 не запрошены.
+читают прежние версии. На дату этой реализации Phase15 ещё не была запрошена;
+её разрешение 2026-10-21 указано выше. Deploy, billing и commit/push не запрошены.
 Результаты этой реализации фиксируются ниже отдельно от старых gates и live hosting.
 
 **2026-10-11: светлый web и mobile redesign** по прямому поручению адаптировать
@@ -170,6 +181,32 @@ visual/native проверок фиксируются отдельно. Android 
 Наличие кода не подтверждает проверку нового сценария. Итоговые проверки этой
 работы фиксируются здесь по фактам; прежние 950/1068 PASS относятся к своим
 историческим версиям и не доказывают новую document модель.
+
+### Продолжение единого портфолио — 2026-10-21
+
+Актуальная остановка — завершённая локальная реализация ADR 0005 и последующие
+правки редактора/порядка секций. Продолжена проверка разрешённого mobile/web
+scope; Phase 15 и постоянный hosting остаются отдельными задачами.
+
+Исправлен retry web GitHub Import: после ошибки обновления кешированного списка
+повторяются исходные page/replace, а не следующая страница по длине кеша.
+До восстановления запроса пагинация заблокирована; успешное обновление заменяет
+старый список. Ошибка scoped сохранения выбранных проектов сохраняет выбор
+и больше не предлагает постороннее действие «Повторить загрузку».
+
+Изолированный browser harness воспроизвёл ошибку до правки: запросы **[1, 2]**
+вместо **[1, 1]**. После правки — PASS: повтор refresh, сохранность кеша/выбора,
+замена кеша после успеха и retry пагинации **[1, 1, 2, 2]** без дублей.
+GitHub HTTP и ошибка сохранения подменены; реальные аккаунты/workspace не менялись.
+Стенд: `/private/tmp/stackcard-github-retry/check.cjs`, результат — `verified.log`
+в той же папке. Это отдельная browser-проверка, не часть `npm test`.
+
+Текущие полные проверки: Flutter — **1344/1344 PASS**, analyze — **0 issues**;
+web — **163/163 PASS**, typecheck, production build, формат изменённого TSX
+и `git diff --check` — PASS. Логи — `/private/tmp/stackcard-resume-mobile-tests.log`,
+`stackcard-resume-web-final-tests.log`, `stackcard-resume-web-build.log`.
+Новых native/live/iOS проверок, commit/push и deploy нет; прежние открытые gates
+сохраняются.
 
 ### Проверки единого портфолио — 2026-10-12
 
@@ -293,10 +330,11 @@ Home/Editor widget suites — **53/53 PASS**, `flutter analyze --no-pub` —
 Лог: `/private/tmp/stackcard-project-order-tests.log`; это локальные проверки,
 без новой native/live приёмки.
 
-Управляемый порядок разделов 2026-10-12: удержание точек в заголовках mobile
-Editor переставляет контакты, навыки, проекты, опыт и образование. Порядок
-сохраняется в существующем `document.content.blocks`; Home, web outputs и PDF
-его учитывают. Профиль остаётся первым, GitHub следует рядом с контактами.
+Управляемый порядок разделов 2026-10-12 отменён пользователем 2026-10-21:
+точки у заголовков mobile Editor и перестановка разделов удалены. Записи
+(контакты, навыки, проекты, опыт, образование) переставляются только внутри
+своего раздела. Ранее сохранённый порядок в `document.content.blocks` по-прежнему
+читается; Home, web outputs и PDF его учитывают. Профиль остаётся первым, GitHub следует рядом с контактами.
 Технологии внутри редактора проекта переставляются отдельно за точки слева;
 единый sliver scroll позволяет переносить элемент до конца длинного списка.
 Общий Save портфолио и scoped Save проекта сохраняют соответствующие изменения;
@@ -773,38 +811,32 @@ web design, multiple-output migration и Flutter/web implementation остают
 
 ## Концепция и аудитория
 
-**StackCard** — приложение для управления developer identity: базовый профиль,
-глобальная библиотека проектов, несколько резюме и портфолио под разные роли.
-Flutter-приложение и будущий web-кабинет используют общие данные владельца и
-явную публикацию документов. В mobile уже есть один private aggregate с общей
-базой, Library и несколькими независимыми Resume/Portfolio. Общий aggregate
-хранения не означает единственное выходное портфолио. Сайт объясняет проект,
-предлагает скачать приложение и показывает опубликованные документы;
-web runtime и новый public lifecycle ещё предстоит реализовать.
+**StackCard** — mobile/web-конструктор одного developer-портфолио. Владелец
+ведёт Projects Library, выбирает работы в редакторе, сохраняет результат и явно
+публикует его по постоянной ссылке. Home показывает сохранённую версию;
+PDF строится из неё, Developer Card/QR — из опубликованной версии.
 
-Платформы продукта — Android, iOS и web. Mobile реализуется на Flutter в
-`apps/mobile`, сайт — отдельно на Next.js в `apps/web`. Каталог сайта уже подготовлен
-с README; приложение появится на Phase 13. Desktop-приложения
-и Flutter web не входят в scope. Android выпускается первым; iOS остаётся
-целевой мобильной платформой.
+Платформы — Android/iOS через Flutter в `apps/mobile` и отдельный Next.js web
+в `apps/web`. Оба клиента используют один UID-bound workspace. Старые независимые
+Resume/Portfolio сохранены как совместимый архив с прежними URL; их библиотеки
+не входят в современный пользовательский путь. Desktop и Flutter web исключены.
 
-Целевая аудитория — разработчики, особенно студенты и начинающие специалисты,
-которым нужно представить проекты работодателю или заказчику. GitHub содержит
-полезные технические данные, но сам по себе не даёт отобранного рассказа о навыках
-и результатах работы. StackCard помогает выбрать проекты, дополнить их понятным
-описанием, изображениями и demo, а затем поделиться одной ссылкой.
+Аудитория — разработчики, студенты и начинающие специалисты, которым нужно
+показать работодателю или заказчику выбранные проекты, навыки и свой вклад.
+GitHub — необязательный источник публичных metadata; ручные проекты равноправны.
+Пользователь выбирает описание, технологии и repository/product ссылки.
+Единственная пользовательская картинка — avatar; проекты используют catalog icons.
 
-Прежний singleton-план публичного профиля использовал `/u/[username]`.
-Актуальный Design v2 принял D019: постоянный адрес каждого Resume/Portfolio,
-независимый от названия и username. Это target-политика; новая route scheme
-и миграция прежнего adapter ещё не реализованы.
+Современный адрес — `/d/<publicId>`, независимо от имени и username. Rename и
+republish сохраняют URL. Локальный source/runtime реализован; постоянный hosting,
+iOS/store release и live availability не следуют из наличия кода.
 
 ---
 
 ## Living Portfolio: данные и контроль пользователя
 
-Основная ценность — **одна профессиональная база → несколько целевых резюме
-и портфолио без повторного заполнения**. **Living Portfolio / Smart GitHub Sync**
+Основная ценность — **одна Library → одно основное портфолио → saved PDF и
+явная публичная версия с постоянной ссылкой**. **Living Portfolio / Smart GitHub Sync**
 помогает наполнять и поддерживать общую Library. GitHub поставляет
 публичные профиль, avatar, bio, repositories, descriptions, repository URLs,
 languages, topics, stars, forks и сведения об активности. Это источник данных,
@@ -818,13 +850,13 @@ Firestore schema:
 | **Состояние** | **Назначение и управление** |
 |:---|:---|
 | GitHub source data | Полученные metadata и их кэш. Обновление источника не означает одобрение публикации. |
-| Curated workspace / document draft | Общая база/Library и независимые документы, отобранные и отредактированные владельцем. Ручные проекты равноправны импортированным. |
-| Published document | Одобренная пользователем публичная версия отдельного Resume/Portfolio. Сайт читает только её; private база, notes и черновики доступны владельцу. |
+| Curated workspace / document draft | Projects Library, основное портфолио и отдельный Editor buffer, отобранные и отредактированные владельцем. Ручные проекты равноправны импортированным. |
+| Published document | Одобренный пользователем public snapshot основного портфолио. Сайт читает только её; private база, notes и черновики доступны владельцу. |
 
 </div>
 
 При импорте пользователь выбирает репозиторий и может изменить описание и
-технологии, добавить screenshot и live/demo URL. В документе отдельно выбираются
+технологии и live/product URL. В основном портфолио отдельно выбираются
 порядок, featured и видимость attachment; удаление связи сохраняет Project в
 Library. Проект имеет происхождение `manual | github`;
 для импортированного проекта нужны связь с GitHub repository и сведения о sync.
@@ -834,7 +866,7 @@ Library. Проект имеет происхождение `manual | github`;
 Smart Sync обнаруживает новый репозиторий или изменения существующего и предлагает
 действия: **Ignore**, **Preview / Review changes**, **Add to Library**. Исторический
 UI может сохранять прежнюю подпись Add to portfolio; target — одна Library запись,
-которую пользователь отдельно включает в нужные документы.
+которую пользователь отдельно включает в основное портфолио.
 Пользователь видит изменения до их принятия. Ручные правки сохраняют смысл и не
 должны молча заменяться новыми данными GitHub.
 
@@ -853,7 +885,7 @@ UI может сохранять прежнюю подпись Add to portfolio;
 новый репозиторий, недавнее известное обновление или длительный простой,
 отсутствующие description/demo и кандидат для featured. UI объясняет причину
 и открывает Preview или редактор; владелец выбирает и сохраняет изменения сам.
-Screenshot относится к Media Phase 11; новые технологии и другие сигналы могут
+Фото проектов исключены ADR 0005; новые технологии и другие сигналы могут
 расширить правила позже при отдельном scope.
 
 `ProjectScore` не вводится: для текущих действий достаточно конкретных условий.
@@ -867,88 +899,69 @@ Screenshot относится к Media Phase 11; новые технологии
 
 ### Мобильное приложение
 
-Принятые экраны и переходы — в [Design v2](../redesign/screens.md), требования —
-в [requirements](../redesign/requirements.md). Основной путь:
-
-`Вход или local guest → общая база и Library → выбор Resume/Portfolio →
-содержимое → оформление → preview → Save → явный Publish → ссылка/Share`.
-
-GitHub import необязателен; ручные Projects поддерживают закрытые и командные
-работы. Guest сохраняет local draft; sync и будущая публикация требуют аккаунта.
-Publish/Share в этом пути — план до проверяемого public lifecycle.
+`Вход / явный local guest → optional onboarding → Projects Library / Editor →
+Save → сохранённая Home / PDF → sync ACK → явный Publish → public URL / Card / QR`.
 
 <div align="center">
 
 | **Раздел** | **Содержимое и границы** |
 |:---|:---|
-| Authentication | Splash, Onboarding, Sign In, Sign Up, Forgot Password; готовность реальных способов входа проверяется отдельно. |
-| Home | Лента Resume/Project/Portfolio по изменению, ровно Все/Резюме/Проекты; без приветствия, completion, dashboard и глобального поиска. |
-| Resumes | Библиотека CV, пять шагов создания, прямая правка секций, preview, duplicate/delete; Publish/Copy/Open/Share требуют public lifecycle. |
-| Projects | Единая Library: import, manual create, query-only поиск, фото и technology badges; featured/visible задаются в attachment документа. |
-| Portfolios | Независимые визитки, content/appearance/preview, выбор Library projects и Resume; постоянный адрес после публикации. |
-| Settings через gear | DeveloperProfile, контакты/ссылки, аккаунт/безопасность, приложение, приватность, sign out/delete; группы реализованы частично. |
-| Inbox | Phase 14: owner-only обращения по published документу, standalone из Settings; не дополнительная root-вкладка. |
+| Главная | Durable main: профиль, только непустые разделы в сохранённом порядке. Два постоянных действия: скачать PDF и поделиться. |
+| Проекты | Единая Library: выборочный GitHub import, ручное создание, поиск, contribution, technologies и catalog icon; без фото проектов. |
+| Редактор | Необязательные профиль/контакты/навыки/опыт/образование и ordered attachments. Явный Save и защита выхода; GitHub identity меняется в Settings. |
+| Settings через gear | GitHub identity, reduced motion, account/security, Inbox/notifications и delete/sign out; отдельной root-вкладки нет. |
+| Персонализация | Четыре необязательных UID-bound шага: GitHub; имя/должность/город; о себе; avatar. Next/Back/Finish сохраняют progress. |
+| Share / Developer Card | Постоянная public ссылка и QR после подтверждения публикации; карточка не берёт private/несохранённый текст. |
 
 </div>
 
-Четыре root-вкладки остаются на телефоне и планшете. Settings, focused editors,
-GitHub Import, location picker, base review, Share и Inbox открываются
-отдельно. Назад возвращает к исходному разделу; private state изолирован по UID.
+Три roots сохраняются на телефоне/планшете. Card, Import и Settings открываются
+отдельно; Back возвращает origin. Светлый русский UI использует Manrope, Brand A,
+existing theme/shared controls; dark/language/GPS controls не возвращаются.
+Все поля optional, пустой Save допустим. Legacy backup и прежние public URLs
+сохраняются при явном выборе основы, без автоматической публикации.
 
 ### Сайт и web-редактор
 
-Web имеет три назначения: маркетинг/download, защищённый кабинет/редактор,
-анонимные публичные Resume/Portfolio. Mobile и web используют один аккаунт,
-общую базу/Library и независимые документы. Ниже **целевые области маршрутов**,
-а не созданное приложение или окончательная URL-схема.
+Next.js runtime уже содержит маркетинг/download, Firebase-вход, owner workspace
+и anonymous published-only reader. Web online-first; mobile сохраняет local draft
+и durable outbox. Оба клиента используют совместимый aggregate и LWW/CAS policy.
 
 <div align="center">
 
-| **Область** | **Доступ и назначение** |
+| **Область** | **Назначение** |
 |:---|:---|
-| `/`, `/download` | Landing с пользой общей базы, примерами Resume/Portfolio и реальными действиями/download links. |
-| `/sign-in`, `/sign-up`, password recovery | Auth общего Firebase backend; поля входа не становятся публичными контактами. |
-| Private кабинет и библиотеки | Resume/Project/Portfolio, общая база, Library и те же смысловые действия, что mobile. |
-| Private editor выбранного document ID | Content/appearance/preview, scoped Save, base review и отдельный Publish/Unpublish. |
-| Settings/Inbox | Данные своего владельца; обращения появляются с Phase 14. |
-| Permanent public document route | Published-only Resume/Portfolio по постоянному public ID; photo/no-photo, metadata/SEO/OpenGraph и missing/unpublished states. |
+| `/`, `/features`, `/use-cases`, `/examples`, `/help`, `/about`, `/download` | Русский сайт StackCard, реальные возможности и статус релизов без фиктивных download buttons. |
+| `/sign-in`, `/sign-up`, `/reset-password` | Auth, восстановление и безопасный returnTo. Login email не становится public contact. |
+| `/workspace` | Home/Projects/Editor, Settings, optional onboarding и saved PDF. Legacy owner links ведут в современный Editor. |
+| `/d/[publicId]` | Только опубликованный snapshot. Missing/withdrawn — unavailable/404 без private lookup; public1/2 совместимы. |
 
 </div>
 
-Точные вложенные paths и public route фиксируются в контракте Phase 13 до
-реализации. D019: URL документа сохраняется после rename/смены username и
-unpublish→republish; дубликат получает отдельную идентичность. Legacy
-`/u/[username]` остаётся вопросом совместимости прежнего prepared adapter.
-Ни production host, ни рабочая ссылка этим планом не объявляются выбранными.
-
-Wide web editor допускает параметры рядом с preview; narrow использует
-самостоятельные Edit/Preview modes. Web v1 online-first, mobile сохраняет offline
-draft. Обмен правками требует общих JSON fixtures и явно принятой conflict policy;
-нынешний whole-aggregate LWW не обещает слияние двух параллельных версий.
-
----
+Publish/Update/Unpublish — отдельные действия trusted runtime. Draft/Library/Settings
+изменения не меняют public snapshot; более поздний ввод не теряется после ACK.
+Permanent HTTPS origin и доступность hosting требуют отдельного разрешённого
+запуска и проверки. Старые public URLs не удаляются ради нового UI.
 
 ## Portfolio Builder и Developer Card
 
-Portfolio editor использует секции Profile, About, Skills, Featured Projects,
-Experience, Education, GitHub, Links, Resume, Location. Resume имеет собственную
-структурированную документную подачу. Content → Appearance → Preview → Publish —
-разные действия; Save не публикует. В документе задаются порядок/видимость секций,
-ограниченное Figma оформление и фото. Legacy Builder сохраняет старые данные,
-но не заменяет библиотеки. Свободный canvas и редактор уровня Figma/Webflow
-не входят в v1.
+Современный Editor управляет одним main: профиль, контакты, навыки, проекты,
+опыт и образование. Порядок секций/проектов сохраняется явно; Home/PDF используют
+saved snapshot. GitHub identity — Settings/персонализация. Legacy Builder,
+независимые documents и base snapshots остаются для чтения и совместимости.
 
-Developer Card строится из выбранного Portfolio: фото, имя, роль, technologies
-и логотип. URL/QR принадлежат этому опубликованному документу. Обычный Share
-поддерживает также выбранное Resume; черновик не получает фиктивную ссылку.
-Android sharing планируется через MethodChannel/Kotlin/native share sheet;
-iOS проверяется отдельно. Полная Card/QR относится к Phase 15.
+Developer Card содержит опубликованные avatar/name/role/technologies/username,
+Brand A и permanent URL. QR кодирует exact URL этого snapshot; private draft,
+неизвестная операция и неподключённый сервер не дают фиктивного QR. Android
+использует existing MethodChannel/Kotlin `ACTION_SEND`, iOS — отдельную
+UIActivityViewController проверку. Показ системного меню не доказывает отправку.
+
 
 ---
 
 ## MVP и полный scope v1
 
-MVP соответствует общей базе и нескольким документам. Таблица — критерии
+MVP соответствует одному основному портфолио и общей Projects Library. Таблица — критерии
 продукта, а не объявление всех возможностей готовыми. Actual scope/evidence —
 [в статусе](#статус-и-границы-текущей-работы).
 
@@ -958,11 +971,11 @@ MVP соответствует общей базе и нескольким до�
 |:---|:---|
 | Authentication | Email/password и Google, восстановление доступа; реальные native flows и UID isolation. |
 | DeveloperProfile | Имя/ник/роль/фото, навыки, опыт, образование, location и public contacts; login email отдельно. |
-| Projects Library | Manual и GitHub работы, описание/вклад, изображения, technologies, repository/demo; одна запись на работу. |
-| Resume / Portfolio | Независимые title/role/секции/оформление, attachments order/visible/featured, base review с сохранением local overrides. |
+| Projects Library | Manual/GitHub работы, описание/вклад, catalog icon, technologies, repository/product; одна запись на работу. |
+| Основное портфолио | Один main, необязательные поля, ordered секции/attachments, явный Save, durable Home и настоящий PDF; legacy архив сохранён. |
 | Living Portfolio | Явный import/review/ignore и ручные overrides; без тихой перепубликации. |
 | Publication | Publish/Update/Unpublish выбранного документа, постоянный URL, public renderer и безопасные delete/republish последствия. |
-| Website | Landing/download, защищённый кабинет с базой/Library/документами, anonymous Resume/Portfolio. |
+| Website | Светлый русский marketing/download, Home/Projects/Editor, Settings/onboarding и anonymous published main. |
 | Inbox / Notifications | ContactRequest по published документу и owner Inbox в обоих клиентах; FCM после подключения настоящего сервиса. |
 | Offline | Mobile local draft/cache/outbox; web online-first с настоящими saving/error/retry и conflict states. |
 | Settings / Sharing | Mobile и web только light и русский; legacy preferences/schema совместимы. Reduced motion, account/privacy, native share и Card/QR по возможностям платформы. |
@@ -973,7 +986,7 @@ Public projection включает только выбранные секции,
 private notes, login/provider data, baseSnapshot и скрытые поля не передаются
 посетителю. Contact me появляется вместе с validation/anti-spam/owner Inbox на
 Phase 14; отсутствие push не теряет само обращение. Карта/Google Maps исключены,
-город/страна и permission states сохраняют контракт Phase 12.
+город/страна вводятся вручную без GPS permissions.
 
 ---
 
@@ -996,17 +1009,14 @@ Phase 14; отсутствие push не теряет само обращени�
   портфолио доступно только для чтения. Firestore и Storage Rules должны проверять
   ownership; draft, account data, contact requests и device tokens не становятся
   публичными вместе с портфолио.
-- Location — подтверждённый город и страна, например «Almaty, Kazakhstan».
-  Ручной ввод доступен без разрешений; опциональное определение города запрашивает
-  геопозицию только по нажатию. Точные coordinates и адрес не сохраняются и не
-  передаются в public snapshot. Denied, permanently denied, service disabled
-  и ошибка определения города оставляют ручной ввод доступным.
-- Camera/gallery используются для avatar и project images. До upload нужны
-  validation, compression/resize; для Storage — ограничения размера, разрешённые
-  MIME types, access rules и стратегия очистки старых файлов.
-- Camera, location permissions и sharing реализуются с учётом конкретной платформы.
-  Web поддержит загрузку файлов и подходящий browser UX; MethodChannel и Kotlin
-  относятся к Android. Полное равенство нативных возможностей клиентов не обещается.
+- Location — необязательный ручной город/страна. GPS/geocoding/Maps и location
+  permissions исключены; ранее запрещённая legacy location не раскрывается.
+- Camera/gallery используются только для avatar: MIME/dimensions/byte limits,
+  JPEG512/256KiB и удаление EXIF до owner-only Firestore upload. Новые Storage
+  uploads/фото проектов не включаются; legacy paths читаются без удаления данных.
+- Native permissions относятся к camera/gallery/notifications. Web использует
+  browser file input и свой UX; Android MethodChannel/Kotlin и iOS native actions
+  проверяются отдельно, их возможности не объявляются идентичными по одному test.
 - Входящие данные, URL и contact form требуют validation. Защита от contact spam
   и rate limiting проектируется до публичного запуска соответствующего сценария.
 - Secrets не входят в репозиторий. Environment contract и handling Firebase
@@ -1064,8 +1074,10 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 
 ## План разработки
 
-**Актуальное поручение 2026-10-07:** поставить последовательную разработку
-по фазам на паузу и развивать mobile функциональность по Figma/концепции.
+**Актуальное поручение 2026-10-21:** перейти к Phase 17 Testing по обновлённому
+плану одного портфолио; незакрытые проверки Phase 15 и16 оставить отдельно.
+Прежняя пауза очереди 2026-10-07 не блокирует явно разрешённый этап;
+Phase 18–20 не запускаются.
 Разрешённый capability scope и оставшаяся работа перечислены
 [в текущем статусе](#статус-и-границы-текущей-работы). Phase 11/12 и R0–R9 ниже
 сохраняют историю реализации и evidence; новые mobile changes не считаются
@@ -1073,35 +1085,30 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 
 План объединяет исходное описание StackCard, требования учебного задания
 `individual_project_flutter_ru.docx` и актуальный scope выше: mobile, полноценный
-web-редактор и публичные Resume/Portfolio. Этот раздел владеет roadmap; технические решения
+web-редактор и публичное основное портфолио с совместимым архивом. Этот раздел
+владеет roadmap; технические решения
 подробно фиксируются в architecture и ADR, команды — в CONTRIBUTING.
 
-### Актуальная последовательность 2026-10-08
+### Актуальная последовательность 2026-10-21
 
-План обновлён под Figma и концепцию общей базы. Полный перенос не завершён:
-D045/D046 private core сохранён, D048 явно разрешает mobile/web/publication.
-Contacts/privacy/Project overrides, actual Next.js owner/public runtime и trusted
-publication source используют Hive7/cloud6. Mobile1323/1323/analyze0, backend51/
-projection14, web62/typecheck/production build/format/audit0 PASS; actual browser
-publication, Android build/Home/Resume/native Share локально проверены.
-R7 user acceptance и full native/browser/Figma parity остаются открытыми.
-Ожидание REDESIGN_DONE не блокирует разрешённые capabilities; новая source
-реализация не означает deployment или запуск всех будущих сервисов.
+Действующий контракт — ADR 0005, а не прежние библиотеки Resume/Portfolio.
+Один UID-bound aggregate содержит Projects Library, основное портфолио и
+совместимый архив. Hive8/cloud7/public2 читают прежние версии без перезаписи
+при чтении. Новые задачи используют текущие shared controls и светлые tokens;
+старые Figma frames и D048 source/evidence сохраняются как история.
 
-| **Очередь / capability** | **Что уже есть → что осталось** | **Готово, когда / зависимость** |
+| **Этап** | **Действующий результат и оставшаяся работа** | **Критерий приёмки** |
 | --- | --- | --- |
-| База и private документы; PR-DATA-01/02/03 | D045/D046 core сохранён; D048 добавляет отдельный contribution и per-document title/description/contribution overrides с Hive7/cloud6. Figma/native варианты и final acceptance открыты. | Выборочные overrides не меняют Library/соседние документы, Save/Discard/reopen/UID и schema compatibility проверены; реализованное ядро повторно не строится. |
-| Ближайший mobile блок; PR-CONTACT-01, PR-PREF-01, PR-AUTH-01, PR-ACCOUNT-01/02 | D048 source: typed Contacts/selection/privacy, reduced motion и Account actions/deletion lifecycle. Native media/location/Google/iOS и visual acceptance остаются отдельными проверками. | Login/providers отделены от public contacts; изменение базы не переписывает документы; unsupported действие не показывает success. Account deletion требует public withdrawal/cleanup contract и выполняется после него. |
-| Публикация; PR-PUB-01/02/03, PR-URL-01 | D048 trusted Functions, permanent /d/<publicId>, inventory/version/unknown recovery, public media/current-version access и delete tombstones/account lock. Deployment/live reader ещё не подтверждены. | Выбранный документ доступен по настоящему URL, draft/Library/base edits не меняют public snapshot; rename/republish сохраняют URL, duplicate его не наследует, delete не воскресает после позднего retry. |
-| Web; PR-WEB-13A/B/C | D048 actual Next.js landing/download/Auth, owner база/Library/document editors и anonymous /d/[publicId]. Headless checks и browser/live acceptance фиксируются отдельно. | Full owner editor не является предпосылкой первого public документа: source сначала mobile. После расширения оба клиента используют совместимую базу/Library/документы и owner guards. |
-| Связь и распространение; Phase 14/15 | Phase14 ContactRequest/Inbox/FCM source реализован; Android live acceptance 5/5 PASS, постоянный запуск отложен пользователем, iOS/APNs открыты. D048 confirmed URL Copy/Open/native Share actions сохранены; Developer Card/QR — следующая отдельная capability. | Контактная форма следует выбранному published документу и privacy; notifications не подменяются локальным toggle. QR/Share никогда не передают фиктивную ссылку. |
-| Качество и выпуск; Phase 16–20 | Tests/security/CI идут вместе с capabilities; профилирование, полная native/live приёмка и release — отдельные результаты. | Есть воспроизводимые измерения/checks, приёмка критических journeys Android/iOS/web и разрешённый пользователем выпуск. |
+| Совместимость и общая модель | Основное портфолио, точный backup legacy, optional onboarding и scoped Library уже реализованы. Сохранять regression coverage и завершить открытые native/live проверки. | Старые данные/URL сохранны; Save, импорт и перенос не публикуют, соседний ввод не записывается. |
+| Phase 7/11/12/13: открытая приёмка | Android/iOS Auth, avatar camera/gallery и restart, ручной город, web/mobile обмен и публичный reader. Новые фото проектов, GPS и отдельные Resume libraries не требуются. | Проверен действующий путь с одним main, тремя roots и private/public границей; local evidence отделён от live/iOS. |
+| Phase 14: сохранённая capability | Contact/Inbox/FCM реализованы, Android live принят ранее. Постоянный hosting отложен; iOS/APNs открыт. Inbox доступен из Settings. | Новый запуск только по отдельному поручению; push не заменяет durable Inbox и не создаёт root-вкладку. |
+| Phase 15: source/local результат, отдельная приёмка | Developer Card из опубликованного основного портфолио, QR permanent URL и existing native Share. Вход через «Поделиться», без новой root-вкладки. | Карточка соответствует public snapshot; unpublished/unknown/unavailable не дают фиктивного QR или успеха. |
+| Phase 16–17: измерения и качество | Профилирование saved Home/PDF/Card, Library/GitHub import и Editor; сквозные Save/sync/Publish/QR/UID journeys и coverage. | Измерения воспроизводимы; миграция, offline/retry и поздние ACK не теряют данные и не публикуют автоматически. |
+| Phase 18–20: доставка и выпуск | CI по actual configs, бесплатное окружение, hardening, release artifacts и материалы нового UI. Каждая следующая фаза требует отдельного перехода. | Проверки блокируют дефекты; signing безопасен, live rollout и распространение выполняются только по разрешению. |
 
-Детальные PR-* контракты и Figma/task mappings остаются в
-[prerequisites](../redesign/prerequisites.md#product-tasks-gap-и-владельцы-источников)
-и [R8/R9 plan](../redesign/plan.md#r8--перенос-согласованного-ui). Эта таблица задаёт
-актуальные приоритеты; Phase 0–12 ниже сохраняют историю/учебную прослеживаемость,
-Phase13/14 описывают source и открытую приёмку, Phase15–20 — будущие результаты.
+Чекбоксы исходных фаз ниже сохраняют историю. Их оставшиеся задачи и критерии
+обновлены под действующий контракт; удалённые возможности не возвращаются ради
+старой приёмки. Источники текущего UI — design guide, ADR 0005 и actual runtime.
 
 ### История фаз до функционального mobile scope 2026-10-07
 
@@ -1281,14 +1288,14 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 9 — Living Portfolio / Smart GitHub Sync | Завершена; импорт/review/ignore, overrides, совместимость draft и Android restart проверены |
 | Phase 10 — Portfolio Suggestions | Завершена; pure rules, объяснения ru/en, явные Preview/editor actions и Android-запуск проверены |
 | Phase 11 — Media | Реализована; 1013 Flutter/40 Rules/Android SDK PASS; полная device/live приёмка открыта |
-| Phase 12 — Location | Реализована без карты; 1068 Flutter/2 native cases PASS; device geolocation/iOS приёмка открыта |
+| Phase 12 — Location | ADR 0005: только ручной город/страна; GPS удалён, прежняя геолокационная приёмка снята со scope |
 | Phase 13a — Public shell | D048 source реализован: Next.js shell/landing/download; browser runtime и production build PASS; full Figma/release acceptance отдельно |
-| Phase 13b — Auth и редактор | D048 source реализован: Auth/UID owner база/Library/document editors; mobile fixture/web CAS browser flow PASS, full cross-client/live acceptance отдельно |
-| Phase 13c — Public Resume/Portfolio | D048 source реализован: trusted publication/permanent URL/public media/reader; backend51/projection14 и browser Publish/Unpublish/republish/Copy PASS, live acceptance отдельно |
+| Phase 13b — Auth и редактор | ADR 0005: три roots, одно main, Projects Library, optional onboarding и cloud7; full cross-client/live/iOS acceptance открыта |
+| Phase 13c — Public Resume/Portfolio | Современный public2 main и legacy reader1; explicit Publish/permanent URL реализованы, live acceptance открыта |
 | Phase 14 — Contact / Inbox / FCM | Реализована; Android live 5/5 PASS 2026-10-10, постоянный запуск отложен пользователем; iOS/APNs и production readiness открыты |
-| Phase 15 — Developer Card и native sharing | Запланирована |
-| Phase 16 — Performance | Запланирована |
-| Phase 17 — Testing | Запланирована |
+| Phase 15 — Developer Card и native sharing | Source/local gate реализованы:1365 tests, QR decode и APK PASS; native/live/iOS приёмка открыта |
+| Phase 16 — Performance | В работе: локальные baseline/after и две оптимизации; native DevTools gate открыт |
+| Phase 17 — Testing | Source/local и Android QA PASS:1372 mobile tests, coverage86,92%, browser journey и11 native checkpoints; iOS отложен отдельно |
 | Phase 18 — CI/CD | Запланирована |
 | Phase 19 — Production hardening | Запланирована |
 | Phase 20 — Release | Запланирована |
@@ -1296,6 +1303,11 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 </div>
 
 ### Как выполнять план
+
+Прямое поручение 2026-10-21 разрешает Phase 17 после source/local результатов
+Phase 15–16. Источник — ADR 0005; выполненные x-задачи прошлых фаз остаются
+историей, оставшаяся приёмка относится к текущему UI. Проверки Phase 15 и16
+сохраняются отдельно; следующий переход требует поручения.
 
 С 2026-10-07 последовательная очередь на паузе. Для разрешённого D048
 mobile/web/publication scope
@@ -2085,6 +2097,10 @@ Phase 11 разрешена отдельным поручением 2026-10-07; 
 
 ### Phase 11 — Media
 
+**Актуализация ADR 0005:** единственная новая картинка — avatar в Firestore на Spark.
+Отмеченные исходные задачи и результаты ниже исторические: новые Storage uploads,
+фото проектов и файлы Resume не возвращаются. Legacy paths сохраняются для чтения.
+
 **Задачи**
 
 - [x] Подключить Firebase Storage для avatar и project images, camera/gallery.
@@ -2097,10 +2113,10 @@ Phase 11 разрешена отдельным поручением 2026-10-07; 
 
 **Проверки и приёмка**
 
-- [ ] Avatar и project images выбираются через camera/gallery,
-  проходят MIME/size validation, compression/resize и отображаются после upload.
-- [ ] Progress, retry, caching, отказ в permissions и отмена выбора проверены
-  на устройстве; выбранный файловый Resume обрабатывается, если он предусмотрен.
+- [ ] Avatar выбирается через camera/gallery, проходит JPEG512/256KiB validation
+  и сохраняется в owner-only Firestore; после Save/restart читается тем же UID.
+- [ ] На Android/iOS проверены progress, retry, отказ permissions, отмена и смена UID.
+  Фото проектов и загрузка Resume исключены; PDF генерируется из saved main.
 - [x] Storage Rules tests подтверждают ownership и public/private доступ;
   чужие/private файлы недоступны, очистка заменённых файлов определена.
 
@@ -2159,6 +2175,11 @@ Phase 11 разрешена отдельным поручением 2026-10-07; 
 
 ### Phase 12 — Location
 
+**Актуальный scope ADR 0005:** только необязательный ручной город/страна.
+GPS, reverse geocoding, picker и их permissions удалены. Исходные выполненные
+задачи/измерения ниже сохранены как история; их незакрытая GPS-приёмка снята
+со scope, iOS и сохранность ручного ввода проверяются в действующем сценарии.
+
 **Изменение scope 2026-10-07:** по прямому решению пользователя карта, marker,
 Google Maps SDK и настройка Maps API исключены из проекта. Location остаётся
 обычным выбором города/страны с опциональным определением по геопозиции.
@@ -2179,10 +2200,10 @@ Google Maps SDK и настройка Maps API исключены из прое�
 - [x] Ручной выбор и отмена работают без геолокации и без запросов разрешений:
   widget checks подтверждают нулевой запрос при открытии/manual/cancel;
   Android manual picker → confirm → Hive reopen/public payload —1 PASS.
-- [ ] Геопозиция запрашивается только по действию пользователя;
-  город/страна подтверждаются, Apply меняет форму/draft, Save сохраняет результат.
-- [ ] Denied, permanently denied и service disabled проверены;
-  отказ не блокирует editor.
+- [ ] Ручной город/страна сохраняется из персонализации и Editor, переживает
+  restart и mobile↔web sync; Cancel не меняет durable snapshot.
+- [ ] Современный runtime не запрашивает GPS permissions, не содержит Maps/
+  geocoding SDK и не переносит ранее запрещённую legacy location автоматически.
 - [x] Public представление содержит только выбранный город/страну;
   точные GPS coordinates и адрес не раскрываются; скрытый Location исключён.
 
@@ -2230,8 +2251,10 @@ Google Maps SDK и настройка Maps API исключены из прое�
 
 ### Phase 13 — Website и web editor
 
-Обновлённый scope: общая база/Library, разные Resume/Portfolio и постоянный URL
-каждого опубликованного документа. Legacy `publish(username, content)` и
+Актуальный scope ADR 0005: три roots, одно основное портфолио, Projects Library,
+optional onboarding, saved Home/PDF и явная публикация с постоянным URL.
+Отдельные Resume/Portfolio остаются совместимым архивом; их библиотеки,
+дублирование и base review не возвращаются в повседневный интерфейс. Legacy `publish(username, content)` и
 `/u/[username]` не определяют новый public API; их совместимость и миграция
 решаются до переключения. D048 (2026-10-08) явно разрешает web и публикацию:
 actual Next.js/Functions и mobile clients реализованы в source. Итоговые
@@ -2263,7 +2286,7 @@ R6 задачи сохраняют историю реализации; новы
 **Проверки и приёмка**
 
 - [ ] Реальный browser runtime/build работает; layout, keyboard/focus и UI states
-  проверены, screenshots сопоставлены с согласованными Figma frames.
+  проверены в действующем white-only/ru UI; screenshot review учитывает ADR 0005.
 - [ ] Пустые/unavailable/download состояния не обещают отсутствующих функций.
 - [ ] В public shell отсутствуют private data/owner controls; интеграция с
   published reader принимается по 13c, не по наличию статического макета.
@@ -2293,12 +2316,13 @@ R6 задачи сохраняют историю реализации; новы
 
 - [ ] Anonymous/foreign access к private базе, документам и media отклоняется
   на стороне данных; routing guard сам по себе не считается защитой.
-- [ ] Frontend Resume и Backend Resume одного владельца остаются независимыми;
-  один Project выбирается в оба без копирования Library записи.
-- [ ] Base review сохраняет local overrides; правка базы/Library не публикует
-  ничего автоматически, изменение одного scope не захватывает соседний ввод.
-- [ ] Wide editor показывает параметры/preview рядом, narrow — отдельные modes;
-  Save/Cancel и ошибки доступны с keyboard/увеличенным текстом.
+- [ ] Home показывает durable main, Editor сохраняет явным Save и защищает выход;
+  scoped импорт/удаление/Settings Save не записывают соседний несохранённый ввод.
+- [ ] Legacy backup/documents/public URLs переживают явный перенос; Library хранит
+  одну запись проекта, attachment order и overrides сохраняются.
+- [ ] Светлый русский UI с Brand A/Manrope проверен на phone/tablet/wide,
+  width320/text2/keyboard: три roots, Settings, необязательные поля/персонализация,
+  scroll/drag/autoscroll, focus, targets и loading/error/empty/retry без overflow.
 - [ ] Совместимость двух клиентов и явно выбранная conflict policy подтверждены
   contract/integration tests; online-first ограничения web объяснены.
 
@@ -2330,19 +2354,20 @@ R6 задачи сохраняют историю реализации; новы
 
 **Проверки и приёмка**
 
-- [ ] Изменение draft, базы или Library не меняет published snapshot до отдельного
-  Update/Publish. Save local, sync ACK и publication — различимые состояния.
+- [ ] Изменение основного портфолио/Library/Settings не меняет public snapshot
+  до отдельного Publish/Update; local Save, server sync ACK и publication различимы.
 - [ ] Anonymous получает только allowlisted published данные; malicious nested
   payload, foreign UID, hidden contacts/media и listing отклонены.
 - [ ] Rename/republish сохраняют URL, duplicate получает новую идентичность;
   unknown operation перечитывает подтверждённое состояние вместо ложного success.
-- [ ] Unpublish закрывает доступ, delete не воскресает после delayed Save/ACK/retry;
-  соседние документы и Library остаются доступны владельцу.
+- [ ] Unpublish закрывает public main и его QR/Card; delete не воскресает после
+  delayed Save/ACK/retry. Library и совместимый архив не теряются.
 - [ ] URL действительно открывается без login на телефоне/desktop; Copy/Open
   используют подтверждённый адрес, private attachment не становится ссылкой.
 
-**Готово, когда:** владелец публикует выбранный Resume/Portfolio из mobile и web;
+**Готово, когда:** владелец публикует основное портфолио из mobile и web;
 посетитель открывает именно опубликованный snapshot по постоянному адресу.
+Public2 исключает attached Resume/project images; reader1 и старые URL совместимы.
 Первые mobile→public сценарии допустимы до полного 13b; Phase 13 целиком закрывается
 после приёмки всех трёх частей. Contact me/Inbox подключаются на Phase 14.
 
@@ -2354,7 +2379,7 @@ R6 задачи сохраняют историю реализации; новы
   anti-spam/rate limiting до публичного открытия формы. Форма относится к выбранному
   published документу и учитывает его contact/privacy selection.
 - [x] Создать ContactRequest и Inbox в mobile/web; обращения читает только владелец.
-  Проверить переход к обращению без добавления пятой root-вкладки и передачу
+  Проверить переход к обращению без добавления новой root-вкладки и передачу
   только разрешённых полей; private owner identity не раскрывать отправителю.
 - [x] Настроить Android FCM: device tokens, permissions и переход из уведомления
   к обращению. Trusted Node sender работает без платного Cloud Functions.
@@ -2391,7 +2416,7 @@ registrations находятся в отдельных owner-only collections.
   published документа. Trusted submit проверяет exact payload, privacy, active
   owner, honeypot и quotas; отправитель получает только receipt без owner UID/email.
   Повтор accepted payload с тем же requestId не дублирует обращение или notification.
-- Mobile/web Inbox доступны из Settings, без пятой root-вкладки. Server pagination
+- Mobile/web Inbox доступны из Settings, без новой root-вкладки. Server pagination
   ограничена 50 записями; клиент меняет только readAt. UID transition и поздние
   ответы не раскрывают прежний Inbox. UI отмечает неподтверждённые sender name/email.
 - Mobile FCM runtime и trusted sender реализованы: явный permission, token refresh,
@@ -2534,157 +2559,391 @@ iOS/APNs, полная production/Figma/user acceptance и release не объя
 
 ### Phase 15 — Developer Card и native sharing
 
+**Переход разрешён 2026-10-21.** Один main по ADR 0005; native open/share канал
+уже реализован, его следует расширять только при необходимом поведении.
+
 **Задачи**
 
-- [ ] Создать карточку с avatar, name, role, technologies, username, logo и public URL.
-  Источник — выбранное опубликованное Portfolio, с его title/role/выбранным содержимым.
-- [ ] Добавить QR-код этого permanent public URL; для Copy/Open/Share поддержать
-  выбранное Resume или Portfolio, draft/unpublished/unknown обработать отдельно.
-- [ ] Реализовать собственный MethodChannel → Android/Kotlin → `Intent.ACTION_SEND`.
-  Поведение sharing для iOS определить и проверить отдельно.
+- [x] Создать Developer Card из опубликованного snapshot основного портфолио:
+  avatar/no-photo, name, role, technologies, username, Brand A и permanent URL.
+  Несохранённый Editor и более новый private draft не являются источником карточки.
+- [x] Построить QR локально из подтверждённого `/d/<publicId>`, сохранить quiet zone
+  и читаемый контраст. QR не содержит UID, notes, private media paths или mock URL.
+- [x] Открывать карточку из «Поделиться», без четвёртой root-вкладки и без третьего
+  постоянного действия Home. Сохранить действующий светлый русский UI/Manrope,
+  shared controls и white/ink Brand A; width320/text2/keyboard/scroll доступны.
+- [x] Использовать existing MethodChannel → Kotlin → `Intent.ACTION_SEND`
+  для Share, existing Open и Copy подтверждённой ссылки. Показ share sheet
+  не означает фактическую отправку. Для iOS сохранить отдельную проверку.
+- [x] Разделить unpublished/deleted, loading, unknown/pending, unavailable и
+  изменённую public version; повтор не публикует автоматически. Смена UID,
+  поздние ответы и withdrawal не оставляют активными старые QR/actions.
 
 **Проверки и приёмка**
 
-- [ ] Developer Card содержит avatar, name, role, technologies, username,
-  logo и корректный public URL; unpublished состояние обработано.
-- [ ] QR открывает выбранное опубликованное Portfolio; rename и republish не
-  ломают ссылку, дубликат не использует public ID исходника.
-- [ ] Собственный Kotlin MethodChannel и Android share sheet передают ссылку
-  на реальном устройстве; результат проверки iOS sharing указан отдельно.
+Отметки ниже подтверждают local unit/widget/adapter/decoder evidence;
+настоящие system/device/live/iOS проверки остаются отдельным открытым пунктом.
 
-**Готово, когда:** QR открывает public portfolio, native Android share sheet
-передаёт корректную ссылку, Platform Channel работает на реальном устройстве.
+- [x] Карточка соответствует published main, включая необязательные/скрытые поля
+  и avatar; private правки до Publish не меняют её. Legacy архив не выбирается
+  пользователем как второе современное портфолио.
+- [x] QR декодируется в exact permanent URL; rename/republish сохраняют URL,
+  чужой publicId/несовпадающая version отклоняются, старые mappings не теряются.
+- [x] Draft/unpublished/unknown/unavailable/смена UID не дают фиктивной ссылки;
+  Copy/Open/Share используют выбранную подтверждённую публикацию.
+- [ ] Реальный Android share sheet через собственный Kotlin channel передаёт
+  exact URL; результат emulator/physical device указан явно. iOS sharing
+  проверяется отдельно; отсутствие live hosting не выдаётся за доступность страницы.
+
+**Готово, когда:** карточка/QR читаются и соответствуют public snapshot,
+Android channel и share sheet проверены на устройстве, QR открывает anonymous
+public portfolio в разрешённом окружении. Source/widget/emulator evidence и
+незакрытая physical/live/iOS приёмка записываются отдельно.
+
+**Фактический результат — 2026-10-21**
+
+- Реализованы public read model/codec, UID-bound Firestore listener и standalone
+  white-only Card/QR. Новой schema/collection/write store нет; private buffer
+  не читается. Avatar использует existing image validation/bounded legacy reader.
+- Home → «Поделиться» предлагает ссылку либо Card/QR. Root-вкладок три,
+  постоянных Home CTA два; auto-Publish при открытии карточки отсутствует.
+  Copy/Open/Share повторно сверяют inventory/version и owner перед native action.
+- Полный `flutter test --no-pub --reporter expanded` — **1365/1365 PASS**,
+  включая21 новых cases; `flutter analyze --no-pub` — **0 issues**.
+  Формат15 затронутых Dart-файлов, asset integrity, docs links и diff — PASS.
+- QR из actual Flutter render независимо декодирован macOS Vision в exact
+  `https://portfolio.example/d/0123456789abcdef0123456789abcdef`.
+  Это synthetic published fixture: проверен image decoder, не доступность сайта.
+  Width320/text2, landscape, scroll/targets, avatar, cache/pending/withdrawal,
+  stale version/publicId, owner transition и Home Share regressions — PASS.
+- Android `flutter build apk --debug --no-pub` — PASS; APK собран с обычным
+  `main.dart`, без установки/очистки пользовательского приложения. Kotlin/iOS
+  Share channel переиспользован; настоящий share sheet в этой проверке не открывался.
+- **Открыто:** native QR scan/Share/Open и iOS/live public URL. На момент Phase15
+  подключённых устройств не было; запуск `main_phone` завершился `No initial system image for this
+  configuration` из-за отсутствующего образа. SDK images/AVD/user data не изменялись.
+  Отложенный hosting не запускался; Phase15 целиком не закрыта. На момент этой
+  проверки Phase16 ещё не начиналась; следующий переход разрешён отдельно ниже.
+  Позже Phase17 подтвердил Android Card/Copy на отдельном AVD из другого
+  установленного SDK; оставшиеся QR scan/Share/Open/live/iOS gates этим не закрыты.
+
+Логи: `/private/tmp/stackcard-phase15-all-tests.log`,
+`stackcard-phase15-final-analyze.log`, `stackcard-phase15-build.log`;
+preview — `/private/tmp/stackcard-phase15-card.png`. Commit/push/deploy не выполнялись.
 
 ### Phase 16 — Performance
 
+**Переход разрешён 2026-10-21.** Открытая приёмка Phase 15 сохраняется
+[в её разделе](#phase-15--developer-card-и-native-sharing); результаты ниже
+не закрывают native QR scan/Share/Open, iOS или live public URL.
+
 **Задачи**
 
-- [ ] Проверить большие списки, pagination, изображения, rebuilds, memory и frames
-  в Flutter DevTools: mixed Home, обе document libraries, project attachments,
-  wizard/base review и media; учитывать реальные limits private aggregate.
-- [ ] Сохранить исходные измерения и screenshots, исправить обнаруженные проблемы
-  и повторить тот же сценарий на том же устройстве.
-- [ ] Проверить public web/editor после появления реальных данных и изображений.
+- [x] Добавить воспроизводимый локальный benchmark на валидном большом workspace,
+  сохранить CPU/mounted elements/RSS/PDF и before/after для найденных проблем.
+- [x] Убрать построение невидимых Library cards и повторное кодирование/paint QR
+  при прежнем URL; проверить поиск/прокрутку, смену URL и существующий Editor drag.
+
+- [ ] Измерить в Flutter DevTools saved Home, длинный Editor с drag/autoscroll,
+  Projects Library/GitHub pagination, avatar, PDF и Developer Card/QR. Использовать
+  реальные aggregate limits и указать устройство/build mode/fixture.
+- [ ] Сохранить frames/rebuilds/memory и время PDF/QR до изменений; исправлять
+  только обнаруженные проблемы и повторять тот же сценарий на том же устройстве.
+- [x] Проверить responsive web Editor/public main с длинным текстом и avatar,
+  local fonts/SVG и отсутствие PDF кода до экспорта в изолированном browser harness.
+  Настоящий Next SSR/live route и пользовательские данные остаются отдельной приёмкой.
 
 **Проверки и приёмка**
 
-- [ ] Большие списки, pagination, изображения, rebuilds, memory и frames
-  измерены в Flutter DevTools на указанном устройстве.
-- [ ] Сохранены сопоставимые measurements/screenshots до и после;
-  один сценарий повторён на том же устройстве, каждая оптимизация объяснена.
-- [ ] Public web/editor проверены с реальными данными и изображениями;
-  ненужные микрооптимизации не добавлены.
+- [ ] Есть воспроизводимые измерения больших Library/Editor и saved outputs;
+  legacy архив не строится в скрытых библиотеках и не меняется ради ускорения.
+- [ ] Сопоставимые before/after measurements/screenshots подтверждают улучшение
+  без потери scroll/keyboard/UID/privacy, порядка секций и late input.
+- [ ] PDF/QR и web с реальными данными проверены; микрооптимизации без выявленной
+  проблемы не добавляются.
 
-**Готово, когда:** есть сопоставимые результаты до/после и объяснение каждой
-оптимизации. Микрооптимизация без измеренной проблемы не требуется.
+**Готово, когда:** сохранены исходные и повторные измерения; каждая оптимизация
+имеет наблюдаемую причину и не меняет продуктовый контракт.
+
+**Локальный результат — 2026-10-21**
+
+Fixture: 200 Library projects ×20 technologies, 200 skills, 30 experience,
+20 education, 10 links, main +20 legacy documents (лимит21); domain validation
+PASS. Saved main разрешается прежним API; legacy документы не появляются в UI.
+Измерения выполнены одним `flutter_tester` debug на macOS arm64, Dart3.13.5,
+viewport390×844; это wall clock CPU diagnostics, не native кадры и не FPS.
+
+<div align="center">
+
+| Сценарий | До | После |
+| :---: | :---: | :---: |
+| Library, первый mount | 878,4 мс / 32 990 elements | 184,2 мс / 1 417 elements |
+| QR60, parent rebuild median / p95, 25 samples | 4,89 / 6,17 мс | 3,16 / 4,80 мс |
+| QR1024, parent rebuild median / p95, 25 samples | 22,59 / 23,52 мс | 4,64 / 6,20 мс |
+| QR repaint requests, прежний URL | 25 из25 | 0 из25 |
+| PDF с JPEG512, median из3 | 372,2 мс | 393,3 мс |
+
+</div>
+
+Library теперь использует `ListView.builder` с прежними controls/spacing/max width,
+loading/error/empty/retry и стабильными card keys. QR хранит матрицу в widget State,
+пересчитывает при смене URL, при resize повторно размещается; глобального кэша нет.
+QR60/1024 — стрессовые encoder inputs, не live publication URLs. PDF не менялся;
+разница его времени не заявляется улучшением. Raw evidence:
+[baseline](evidence/phase16/2026-10-21-mobile-before.json) и
+[повтор](evidence/phase16/2026-10-21-mobile-after.json), один fixture SHA256.
+
+- `flutter analyze --no-pub` — **0 issues**; полный mobile suite — **1367/1367 PASS**.
+  Новые regressions: lazy Library/последний элемент/search после scroll;
+  QR same URL/change URL/resize. Существующие UID/privacy/Save/late ACK и
+  Editor drag/autoscroll tests проходят.
+- Home: 36 394 mounted elements, первый mount 1164–1219 мс; Editor:18 093,
+  449–535 мс. Это оставшиеся кандидаты для native профилирования, а не
+  доказательство достигнутого frame budget. RSS записан как process-wide snapshot;
+  снижение retained heap или отсутствие утечек не заявляется.
+- Для native DevTools подготовлен изолированный `tool/performance/main.dart`
+  с Memory repository: Home/Projects/Editor и настоящий PDF, без LocalRuntime,
+  Auth/Firebase или изменения сохранённых данных пользователя. Android AOT profile
+  APK этого target собран успешно; сборка не означает device runtime acceptance.
+- Browser harness настоящих ContentEditor/AttachmentsEditor/DocumentView,
+  production React, Chrome155, Apple M1 Pro, ширины320/390/1440: **6/6 PASS**,
+  horizontal overflow0, local Manrope/SVG/avatar загружены, PDF renderer не
+  запрашивается до экспорта. После экспорта настоящий PDF298500bytes за3508,7мс.
+  Editor mount162–239мс, public133–137мс; JS heap после forced GC7,4/4,3MB.
+  Input→two RAF4,2–32,1мс — diagnostic, не field INP. Данные синтетические;
+  это проверка компонентов и existing PDF API, не Next SSR/live route.
+  [Raw browser evidence](evidence/phase16/2026-10-21-web.json),
+  [mobile public layout](evidence/phase16/2026-10-21-web-public-320.png) и
+  [desktop Editor](evidence/phase16/2026-10-21-web-editor-1440.png).
+- **Открыто Phase 16:** native profile frame/raster/rebuild/retained-memory
+  capture, длинный Editor drag/autoscroll, реальная GitHub pagination/cache/network,
+  avatar/PDF/Card и сопоставимые device traces/screenshots. В момент замеров `adb devices -l` пуст,
+  `xcrun simctl` недоступен; существующий AVD без system image. Полная приёмка
+  Phase16 не объявляется. Команды повторения — в CONTRIBUTING.
+  В Phase17 использован отдельный Android15 AVD для функциональных SDK checks;
+  profile frame/heap captures на нём не выполнялись, performance gates остаются открыты.
 
 ### Phase 17 — Testing
 
+**Переход разрешён 2026-10-21.** Отдельные открытые проверки
+[Phase 15](#phase-15--developer-card-и-native-sharing) и
+[Phase 16](#phase-16--performance) не закрываются результатами этой фазы.
+
 **Задачи**
 
-- [ ] Довести unit tests repositories, validation, completion, sync и suggestions;
-  widget tests auth, project card, builder и loading/error/empty states.
-- [ ] Добавить integration journeys: общая база → Library → два разных Resume →
-  Portfolio с выбранными projects/Resume → preview → scoped Save → Publish → public URL.
-  Проверить base review, duplicate/rename, Unpublish/delete, offline/reconnect
-  и private/public границу в обоих клиентах.
-- [ ] Получить `flutter test --coverage` с coverage **более 40%**, clean analyze
-  и отчёт о покрытии. Проверить web auth guards, публикацию и обмен draft с mobile.
+- [x] Довести unit/widget coverage Auth, scoped saves, migration/backup,
+  Library/import/review, необязательных полей, public projection, PDF/Card/QR
+  и loading/error/empty/retry; сохранить legacy compatibility regressions.
+- [x] Проверить core/browser и связанный Android SDK/controller journeys: новый аккаунт → optional4step onboarding → Project import/
+  create → attachment в Editor → Save → durable Home/PDF → sync ACK → явный Publish
+  → public URL/Card/QR. Добавить изменение private draft без публикации,
+  Unpublish/delete, offline/reconnect, process restart и смену UID.
+- [x] Проверить совместимость mobile↔web на Hive8/cloud7/public1|2 и выбранную
+  LWW/CAS policy, неизвестные schemas и сохранность архива/старых URL.
+- [x] Получить `flutter test --coverage` с coverage **более 40%**, clean analyze
+  и сохранённый отчёт; выполнить actual web/backend/Rules commands.
 
 **Проверки и приёмка**
 
-- [ ] Unit и widget tests для repositories, validation, completion, sync,
-  suggestions, auth, project card, builder и UI states проходят.
-- [ ] Journeys подтверждают независимость документов, сохранность Library и
-  local overrides, постоянство URL и явную публикацию; offline/reconnect,
-  delayed retries/UID transitions и private/public граница проверены.
-- [ ] Coverage по flutter test --coverage превышает 40%, analyze чистый;
-  отчёт сохранён, web auth guards, publication и обмен draft с mobile проверены.
+- [x] Локальные unit/widget/contract suites проходят; width320/text2/landscape,
+  keyboard/focus, scroll/drag, contrast/targets и reduced motion проверены.
+- [x] Journeys подтверждают одно main, отдельный Editor buffer, scoped Library,
+  точный backup, server ACK и явную публикацию без смешения состояний.
+- [x] Отказы permissions/network, late ACK/retry и owner transition не раскрывают
+  предыдущий аккаунт и не теряют saved данные; Android/iOS/live evidence разделён.
+- [ ] iOS native journey и системные проверки — отдельно отложены пользователем
+  2026-10-21: доступного Xcode/iOS окружения нет.
+- [x] Coverage превышает учебный порог40%; web auth guards, public reader,
+  publication и двусторонний codec/SDK обмен проверены подходящими suites.
 
-**Готово, когда:** tests проходят, coverage превышает учебный порог, сквозной
-сценарий подтверждён. Tests предыдущих фаз сохраняются и дополняются.
+**Готово, когда:** tests/coverage/analyze проходят и сквозной действующий путь
+подтверждён. Исторические tests сохраняют совместимость, но не возвращают старый UI.
+
+**Фактический source/local результат — 2026-10-21**
+
+- Полный `flutter test --no-pub --coverage --reporter expanded` — **1372/1372 PASS**,
+  `flutter analyze --no-pub` — **0 issues**. LCOV: **13303/15305 =86,92%**
+  исполняемых DA-строк, 171 reported source files из203 Dart runtime files.
+  Все32 unreported files перечислены в отчёте (exports/interfaces/const catalogs
+  и wrapper); они не названы покрытыми. Фильтры/исключения ради порога не добавлялись.
+  [Coverage JSON](evidence/phase17/mobile-coverage.json) хранит source/LCOV SHA256,
+  denominator и список файлов; [полный LCOV](evidence/phase17/mobile-coverage.lcov).
+- `tools/testing/check_coverage.py` проверяет строгий порог **>40%**, не считает
+  повторные SF/DA дважды, отклоняет пустой/повреждённый отчёт и source вне `lib`;
+  **4/4 Python regressions PASS**. Автоматизация CI остаётся Phase 18.
+- Добавлен `main_portfolio_journey_test.dart`: новый main, четыре optional шага,
+  manual project + GitHub import, scoped Library Save при dirty Editor/notes,
+  attachment + main Save, offline outbox, настоящий close/reopen Hive,
+  восстановление exact mutation ACK, изоляция другого UID, cloud7 roundtrip через
+  actual web parser и trusted backend projection, public schema2 → Dart Card,
+  настоящий saved PDF. Transport здесь **fake**; это core/codec journey,
+  не native Firestore SDK acceptance и не сетевой Publish.
+- Найден и исправлен воспроизводимый дефект: backend пишет `publishedAt` через
+  `serverTimestamp()`, а Card adapter передавал SDK Timestamp в string-only codec.
+  Regression сначала RED с `DeveloperCardFailure`, после нормализации Timestamp
+  в ISO UTC только на SDK boundary — GREEN; raw snapshot не мутируется.
+  Pure domain/public parser и cache/pending/UID ограничения не ослаблены.
+- Второй дефект подтверждён RED regression: после inventory refresh первый
+  SDK cache/pending error преждевременно завершал Copy/Open/Share через `.future`.
+  Action теперь ждёт только server data до20s; cache не используется, withdrawal,
+  invalid data и смена owner прекращают ожидание. Три regressions проверяют
+  cache→server Copy и late data после withdrawal/owner change; Card suite
+  **11/11 PASS**, полный suite **1372/1372 PASS**, настоящий Android Clipboard PASS.
+- Web: **163/163 PASS**, typecheck и production build PASS. Backend:
+  syntax check и **42/42 PASS**. Полный `npm run test:all-rules`:
+  **82/82 PASS** на disposable `demo-stackcard-test` Auth/Firestore/Storage.
+  Новый SDK journey проверяет schema2 main Save → explicit Publish → реальный
+  public Timestamp → private Save без auto-Publish → stale mutation conflict →
+  republish с прежним URL → Unpublish → поздний retry без воскрешения публикации.
+  Существующие migration/legacy URL/delete/Rules/Contact/UID tests сохранены.
+- Настоящий browser journey: production Next16.4 + Chrome155 + Auth/Firestore
+  emulators + standalone Node HTTP API, **7/7 checkpoints PASS**. Проверены
+  registration/4step onboarding → manual project → attachment/Save → keyboard
+  Escape/cancel/discard → page reload → PDF download → явный Publish с Auth token →
+  anonymous Next SSR public reader → private Save без auto-Publish → withdrawal
+  через authenticated HTTP → public404 → logout/deep-link guard. Width320/1440
+  без overflow, reduced-motion preference включён. Clipboard **stub**, отправки
+  кому-либо нет; GitHub import отдельно покрыт core/HTTP suites.
+  [Browser evidence](evidence/phase17/web-emulator-journey.json),
+  [скриншот actual Editor](evidence/phase17/web-emulator-journey.png),
+  [скачанный PDF](evidence/phase17/web-journey.pdf), `%PDF-` signature PASS.
+- Responsive suite покрывает7 viewport ×2 text scale ×5 routes, отдельные
+  Editor keyboard/drag/autoscroll, Library width320/text2/search/refresh и Card
+  narrow/landscape проверки. Theme light/ru сохранена; focus/targets/contrast и
+  reduced motion проверяются существующими widget/browser tests. Это не полный
+  accessibility audit и не Figma/native visual parity.
+
+**Дополнительно подтверждено на Android — 2026-10-21**
+
+- Изолированный AOSP Android15/API35 arm64 AVD, Flutter3.47.7/Dart3.13.5,
+  debug/SwiftShader. Существующий `main_phone` не менялся. На этом Mac найден
+  исправный образ в другом установленном SDK; скачивание/ремонт SDK не потребовались.
+- `main_portfolio_runtime_test.dart` + `tools/testing/native_journey.py`:
+  **11/11 checkpoints PASS**, разные PID **4693/4810**. Настоящие named native
+  Auth/Firestore SDK, отдельный Hive/outbox, два процесса, exact server ACK/cloud7,
+  HTTP Publish с этим ACK, anonymous public Timestamp → Card, QR/Clipboard,
+  private Save без auto-Publish, настоящий переход на другой UID с исчезновением
+  QR и Rules denial прежнего private draft, возврат owner, Unpublish и delete.
+  [Связанный native отчёт](evidence/phase17/android-emulator-journey.json).
+- Registration/onboarding/import здесь исполняются SDK/controller с fixture
+  GitHub source; Card/Copy и публикация после смены UID — mounted native UI/
+  controller. Это не полный touch journey регистрации/import и не production
+  hosting/live public URL. Session restore проверяется до нового sign-in;
+  subsequent disposable credential rotation/reauth нужна для UID-switch, пароли/
+  токены не сохраняются тестом. Demo account/Hive очищены, emulators остановлены.
+- Existing `notification_permission_runtime_test.dart`: настоящий Android
+  `POST_NOTIFICATIONS=denied` прочитан дважды, FCM auto-init выключен, token не
+  запрашивался; permission flags после проверки побайтно совпадают с исходными.
+- Existing `pdf_runtime_test.dart`: настоящий системный Save **PASS**, второй
+  picker отменён Android Back — **PASS**. Сохранённые **30884 bytes** идентичны
+  generated bytes; pypdf проверил **3 страницы**, кириллицу и ссылки, все страницы
+  отрендерены Poppler и просмотрены без обрезки/потери текста.
+  [Native checks](evidence/phase17/android-native-checks.json),
+  [сохранённый PDF](evidence/phase17/android-saved.pdf),
+  render [1](evidence/phase17/android-pdf-page-1.png),
+  [2](evidence/phase17/android-pdf-page-2.png), [3](evidence/phase17/android-pdf-page-3.png).
+- Runner использует официальный `flutter drive` и сохраняет app data через
+  `--keep-app-running --no-uninstall-first` + отдельный force-stop. SDK приложения/
+  Rules не ослаблялись ради test tooling; **4/4 native runner guard tests PASS**,
+  вместе с coverage tool — **8/8 Python tests PASS**.
+
+**Отложено в Phase 17:** iOS native journey и системная приёмка — по прямому
+ответу пользователя, пока iOS окружение недоступно. Полный native touch smoke
+регистрации/import не исполнялся; эти экраны отдельно покрыты widget/browser
+suites. Core fake ACK, client SDK emulators, browser и Android SDK/UI перечислены
+раздельно. Phase 17 целиком с iOS не объявляется закрытой.
+
+**Незакрытые проверки прошлых фаз сохранены отдельно:** Phase 15 — native
+QR scan/Share/Open, live public URL и iOS; Phase 16 — device DevTools frame/raster/
+rebuild/retained-memory traces, длинный Editor drag и реальные GitHub network/cache
+сценарии. Эти gates не перенесены в выполненные checkbox и не смешаны с coverage.
+Команды повторения — в CONTRIBUTING. Commit/push/deploy не выполнялись.
 
 ### Phase 18 — CI/CD
 
 **Задачи**
 
-- [ ] Добавить GitHub Actions для каждого push/PR: dependency resolution, format check,
-  analyze, tests с coverage, APK build и сохранение artifact.
-- [ ] Настроить проверку порога coverage, воспроизводимое окружение и отдельные
-  проверки web по его реальным configs. Добавить Rules/Storage, общие JSON fixtures,
-  private migration/public projection и Figma source asset integrity checks.
-- [ ] Проверить, что ошибка проверки делает pipeline неуспешным; signing secrets
-  не хранить в коде. Release AAB подключить на фазе выпуска.
+- [ ] Добавить GitHub Actions на push/PR: locked dependency resolution, format,
+  analyze, tests/coverage>40%, Android APK build и artifact по actual manifests.
+- [ ] Добавить actual web typecheck/tests/build/format, backend tests/check,
+  demo Firestore/Storage Rules, mobile↔web fixtures и pinned asset integrity.
+  Проверять основной portfolio/public2, Firestore avatar и legacy read compatibility.
+- [ ] Подтвердить failed pipeline при ошибке проверки; исключить secrets/private
+  fixtures из логов/artifacts. Signing и release AAB остаются в Phase20.
 
 **Проверки и приёмка**
 
-- [ ] Pipeline запускается на push/PR, проходит dependency resolution,
-  format, analyze, tests, coverage и APK build; artifact доступен.
-- [ ] Ошибка format/analyze/tests или недостаточное coverage делает
-  pipeline неуспешным; негативный сценарий проверен.
-- [ ] Окружение воспроизводимо, web checks соответствуют реальным configs;
-  signing secrets отсутствуют в коде, release AAB остаётся задачей выпуска.
+- [ ] Pipeline воспроизводим, запускается на push/PR и отдаёт APK artifact;
+  SDK/package-manager versions берутся из текущих configs.
+- [ ] Ошибка format/analyze/tests/coverage/build делает pipeline неуспешным;
+  негативный сценарий проверен.
+- [ ] Web/backend/Rules и asset checks работают без production credentials,
+  billing и автоматического deployment.
 
-**Готово, когда:** pipeline проходит на рабочей версии, APK artifact доступен,
-нарушение format/analyze/tests/coverage блокирует успешный результат.
+**Готово, когда:** проверки проходят на рабочей версии и блокируют дефектную;
+APK artifact доступен, release signing/deploy не выполняются без разрешения.
 
 ### Phase 19 — Production hardening
 
 **Задачи**
 
-- [ ] Подключить Crashlytics и подтвердить доставку тестового отчёта; настроить
-  безопасное error logging без private данных.
-- [ ] Провести audit Firestore/Storage Rules и public/private границ, проверить
-  nested projection/media, стабильные public IDs, unknown outcomes, поздние retry,
-  account deletion/withdrawal, permission descriptions и обработку сбоев.
-- [ ] Завершить onboarding, loading/error/empty UX, app icon, splash, versioning
-  и privacy policy; проверить оба мобильных targets и responsive web.
+- [ ] Настроить разрешённую бесплатную диагностику/Crashlytics и подтвердить
+  тестовый отчёт без UID/contact text/token/private content в error logging.
+- [ ] Проверить Rules/public projection, bounded avatar/PDF/QR inputs, permanent
+  IDs/version, unknown outcomes, late retry, account deletion/withdrawal и
+  UID isolation. Новые Storage uploads/TTL/billing не включать.
+- [ ] Завершить review действующего UI: optional onboarding, три roots,
+  saved Home/dirty Editor guard, Library, public Card/QR и unavailable states;
+  русский светлый дизайн, Brand A, icon/splash/versioning и privacy policy.
+- [ ] Перед возможным live запуском отдельно проверить HTTPS origins/CORS/
+  App Check, конфигурацию endpoints и recovery. Отложенный hosting не запускать
+  автоматически; отсутствие backend не превращать в mock success.
 
 **Проверки и приёмка**
 
-- [ ] Тестовый Crashlytics report доставлен; error logging не содержит
-  private данных.
-- [ ] Firestore/Storage Rules, validation, account deletion, permission
-  descriptions и обработка сбоев проверены; значимые дефекты устранены.
-- [ ] Onboarding, loading/error/empty UX, icon, splash, versioning и privacy
-  policy готовы; Android, iOS и responsive web проверены.
+- [ ] Диагностический отчёт доставлен, sensitive data отсутствуют в логах.
+- [ ] Значимые security/validation/lifecycle дефекты устранены; permissions
+  относятся только к реальным camera/gallery/notifications возможностям, без GPS.
+- [ ] Android/iOS и responsive web проверены по одному main и светлому UI;
+  privacy policy объясняет публикацию контактов/фото и сохранение private draft.
+- [ ] Live preconditions/recovery проверены только в разрешённом окружении;
+  граница source, emulator и production evidence явно сохранена.
 
-**Готово, когда:** диагностический отчёт доставлен, значимые security/UX дефекты
-устранены, разрешения и работа с данными объяснены пользователю.
+**Готово, когда:** диагностика подтверждена, значимые security/UX дефекты устранены,
+реальное обращение с данными/permissions описано без обещания неподключённого hosting.
 
 ### Phase 20 — Release
 
 **Задачи**
 
-- [ ] Утвердить application IDs и signing configuration, создать и безопасно хранить
-  Android keystore; собрать подписанный release AAB с obfuscation и сохранить symbols.
-- [ ] Проверить release на устройстве, подготовить screenshots, описание и privacy policy.
-  Материалы отражают четыре вкладки и base→multiple Resume/Portfolio, а не старый
-  singleton dashboard; критические сценарии проверены на release build.
-- [ ] Подготовить Google Play internal testing; при отсутствии developer account —
-  подписанный AAB и пакет материалов, раздачу через Firebase App Distribution.
-- [ ] Опубликовать реальные download links после появления релиза; отдельно описать
-  шаги iOS/App Store и подготовить демонстрацию проекта.
+- [ ] Утвердить application IDs/signing, безопасно сохранить Android keystore,
+  собрать подписанный release AAB с obfuscation и сохранить symbols.
+- [ ] Проверить release на устройстве: optional onboarding, Home/Projects/Editor,
+  avatar/manual city, saved PDF, явный Publish/Card/QR и отказ недоступного сервиса.
+- [ ] Подготовить screenshots/описание/privacy policy нового white-only/ru UI:
+  одно портфолио и три roots, без старых libraries/wizard/GPS/project photos.
+- [ ] Подготовить Google Play internal testing либо AAB/материалы при отсутствии
+  developer account. Распространение/App Distribution выполнять только по запросу.
+- [ ] Добавить настоящие download links после появления релиза; отдельно проверить
+  iOS build/document picker/sharing/APNs и описать шаги App Store/демонстрации.
 
 **Проверки и приёмка**
 
-- [ ] Подписанный Android release AAB с obfuscation собран и проверен
-  на устройстве; signing configuration, keystore и symbols хранятся безопасно.
-- [ ] Screenshots, описание, privacy policy и демонстрация готовы;
-  Google Play internal testing либо пакет AAB/App Distribution подготовлен.
-- [ ] Выполнен только разрешённый пользователем способ распространения;
-  download links ведут к реальному release.
-- [ ] Шаги iOS/App Store описаны отдельно; Android release не выдаётся
-  за выполненную iOS-публикацию.
+- [ ] Подписанный Android release проверен на устройстве; signing и symbols
+  сохранены безопасно, секретов в repo/artifacts нет.
+- [ ] Материалы соответствуют одному main, текущим screens и реальной
+  доступности backend/public URL; неподключённые возможности не обещаны.
+- [ ] Выполнен только разрешённый способ распространения; download links ведут
+  к настоящему release, web/API deployment разрешён и проверен отдельно.
+- [ ] iOS результат указан отдельно; Android AAB не доказывает iOS/App Store release.
 
-**Готово, когда:** подписанный Android release проверен, материалы для магазина
-готовы, выполнен разрешённый способ распространения. Загрузка в Google Play,
-App Distribution или deploy web требует запроса пользователя; iOS-публикация
-не заявляется выполненной по одному Android release.
+**Готово, когда:** release проверен, материалы готовы, разрешённый канал
+распространения работает. Новая платная инфраструктура, публикация в store и
+постоянный web/API hosting требуют отдельного поручения.
 
-**История Phase 0–6/8–10 и результаты Phase 11/12 сохранены; открытые native/live
-сценарии остаются открытыми. Действующий режим — mobile capabilities при паузе
-последовательной очереди. Web/publication/release readiness не подтверждены.**
+**История Phase 0–14 сохранена. Действующая реализация — ADR 0005, source/local
+Phase 15–16 и разрешённая 2026-10-21 Phase 17; Phase 18–20 остаются планом. Новые local checks
+не закрывают прежние live/iOS/Figma/release gates.**
 
 ---
 

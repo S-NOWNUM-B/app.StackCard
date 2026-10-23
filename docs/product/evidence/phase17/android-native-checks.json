@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-21",
+  "status": "passed",
+  "platform": "isolated Android 15 API35 AOSP arm64 emulator; SwiftShader; debug",
+  "flutter": "3.47.7",
+  "dart": "3.13.5",
+  "journey": {
+    "evidence": "android-emulator-journey.json",
+    "checkpoints": 11,
+    "distinctProcesses": 2,
+    "backend": "local demo Auth/Firestore + standalone HTTP"
+  },
+  "permission": {
+    "test": "notification_permission_runtime_test.dart",
+    "expected": "denied",
+    "passed": true,
+    "autoInit": false,
+    "tokenRequested": false,
+    "flagsRestored": true
+  },
+  "pdf": {
+    "test": "pdf_runtime_test.dart",
+    "savePassed": true,
+    "cancelPassed": true,
+    "identicalToGenerated": true,
+    "bytes": 30884,
+    "pages": 3,
+    "sha256": "5eb590d4d4b230218bdaa0bf9e893de40089eee9066733ac155429772ee0c92d",
+    "cyrillicTextChecked": true,
+    "visualPagesChecked": [
+      1,
+      2,
+      3
+    ],
+    "renderer": "bundled pdftoppm",
+    "parser": "pypdf 6.10.0",
+    "clickableUrisChecked": 15
+  },
+  "limitations": [
+    "iOS explicitly deferred by user",
+    "onboarding/import through controller with fixture GitHub source; full native touch journey not run",
+    "physical QR scan, Share/Open, live URL are separate Phase15 gates",
+    "device performance traces remain Phase16"
+  ],
+  "temporaryAvdRemoved": true,
+  "mainPhoneModified": false
+}
