@@ -1,0 +1,215 @@
+{
+  "date": "2026-10-24",
+  "phase": 19,
+  "status": "completed",
+  "scope": "Spark-only hardening; no hosting rollout, billing, release or Git publication",
+  "diagnostics": {
+    "provider": "Firebase Crashlytics",
+    "androidDelivery": "PASS final5.4.0 Console event Oct24 00:39:06 reviewed",
+    "issueUrl": "https://console.firebase.google.com/project/stackcard-dev-snownumb/crashlytics/app/android:com.example.app_stackcard/issues/533f2296ef2164ec662b23b8790f2b43",
+    "event": "StackCard.acceptance",
+    "stack": "StackCard.redacted",
+    "keys": {
+      "flutter_error_exception": "StackCard.acceptance"
+    },
+    "logsAndBreadcrumbs": "empty; Analytics not enabled",
+    "data": "device/OS/app version; no app UID/contact/token/private content",
+    "androidReportFlutterPlugin": "5.4.0",
+    "currentCompatibleFlutterPlugin": "5.4.0",
+    "collectionDefault": false,
+    "consent": "explicit device-wide; delete unsent before enabling and when disabling; sent reports retained by provider",
+    "androidFinalSdkTest": "PASS5.4.0; transport HTTP200 and Console event Oct24 00:39:06 reviewed",
+    "iosDelivery": "PASS Console event Oct24 00:50:27 reviewed after matching dSYM upload",
+    "iosMissingDsymUuid": "E371B022-F1B3-3ADA-B005-B4A91926758B",
+    "iosSymbolsConsent": "User explicitly approved current dSYM and automatic uploads of future iOS builds to existing Firebase project",
+    "iosSymbolsUpload": "PASS ordinary and integration builds with foreground whole-bundle auto-upload; required integration UUID Uploaded in Console",
+    "iosIntegrationDsymUuid": "E371B022-F1B3-3ADA-B005-B4A91926758B",
+    "iosIssueUrl": "https://console.firebase.google.com/project/stackcard-dev-snownumb/crashlytics/app/ios:com.example.appStackcard/issues/053e5a3192e3e02df7b81355cc8877d9",
+    "iosPayload": {
+      "exception": "StackCard.acceptance",
+      "stack": "StackCard.redacted",
+      "keys": {
+        "flutter_error_exception": "StackCard.acceptance"
+      },
+      "logsAndBreadcrumbs": "empty; Analytics not enabled",
+      "data": "iOS Simulator/iOS27.0.0/app1.0.0(1), technical SDK metadata only; no app UID/contact/token/private content"
+    }
+  },
+  "checks": {
+    "mobileTests": 1386,
+    "mobileAnalyze": "PASS final code and iOS harness",
+    "webTests": 163,
+    "webBuild": "PASS Next.js16.4.3",
+    "backendTests": 42,
+    "rulesAndServiceTests": 82,
+    "pythonCoverageAndJourneyGuards": 11,
+    "coverage": {
+      "coveredLines": 13492,
+      "executableLines": 15530,
+      "linePercent": 86.87701223438506,
+      "reportedFiles": 175,
+      "runtimeDartFiles": 207,
+      "unreportedFiles": [
+        "lib/core/localization/auth_strings.dart",
+        "lib/core/localization/builder_form_strings.dart",
+        "lib/core/localization/builder_integration_strings.dart",
+        "lib/core/localization/builder_strings.dart",
+        "lib/core/localization/document_editor_strings.dart",
+        "lib/core/localization/document_publication_strings.dart",
+        "lib/core/localization/draft_strings.dart",
+        "lib/core/localization/github_strings.dart",
+        "lib/core/localization/github_sync_strings.dart",
+        "lib/core/localization/inbox_strings.dart",
+        "lib/core/localization/location_strings.dart",
+        "lib/core/localization/media_strings.dart",
+        "lib/core/localization/mobile_parity_strings.dart",
+        "lib/core/localization/settings_management_strings.dart",
+        "lib/core/localization/suggestion_strings.dart",
+        "lib/core/localization/sync_strings.dart",
+        "lib/core/localization/workspace_strings.dart",
+        "lib/core/theme/stackcard_tokens.dart",
+        "lib/features/auth/auth.dart",
+        "lib/features/auth/domain/auth_repository.dart",
+        "lib/features/github_import/domain/github_import_repository.dart",
+        "lib/features/github_import/github_import.dart",
+        "lib/features/inbox/inbox.dart",
+        "lib/features/media/media.dart",
+        "lib/features/notifications/notifications.dart",
+        "lib/features/portfolio/portfolio.dart",
+        "lib/features/portfolio_draft/portfolio_draft.dart",
+        "lib/features/profile/domain/profile_repository.dart",
+        "lib/features/profile/profile.dart",
+        "lib/features/projects/domain/projects_repository.dart",
+        "lib/features/projects/projects.dart",
+        "lib/features/settings/developer_profile_screen.dart"
+      ],
+      "runtimeSourceSha256": "1617e52320adcc530413897fbed576b4b1ae71c9f258075f34213243f31c51d6",
+      "lcovSha256": "4af5073bd5ff2a18874ee929fe5d1c552de1b7e971cd7393a60daf8da9f3191b",
+      "scope": "Executable DA lines reported by Flutter; no filters. Unreported files listed separately.",
+      "minimumExclusive": 40,
+      "passed": true
+    },
+    "productionAudit": {
+      "web": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "backend": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      }
+    },
+    "androidDebugBuild": "PASS final Flutter Crashlytics5.4.0",
+    "iosSimulatorBuild": "PASS final ordinary app with foreground symbols upload, Xcode27.1/Firebase iOS12.19.0",
+    "pythonToolingScope": "11 tests: coverage, native guards, symbols uploader paths and failure propagation"
+  },
+  "remediation": [
+    {
+      "area": "publication HTTP",
+      "finding": "loopback HTTP accepted without explicit demo flag; URL query/fragment accepted",
+      "result": "HTTPS default; demo-only loopback opt-in; no credentials/query/fragment/redirects; fail before token read",
+      "regression": "red before fix; green after"
+    },
+    {
+      "area": "Developer Card UX",
+      "finding": "Copy feedback below viewport after long card",
+      "result": "visible bottom SafeArea outside lazy ListView",
+      "regression": "360x640 test failed with bottom645 before fix; 11 card tests pass after; actual native journey passes"
+    },
+    {
+      "area": "web dependencies",
+      "finding": "Next.js16.4.0 affected by two critical and one high upstream advisories",
+      "result": "16.4.3 exact; npm and existing pnpm locks synced; production audit0",
+      "advisories": [
+        "GHSA-2464-fhr4-w9xw",
+        "GHSA-673q-mjm6-r5xr",
+        "GHSA-p3m5-59mp-jv5r"
+      ]
+    },
+    {
+      "area": "iOS SDK resolution",
+      "finding": "Crashlytics5.4.1/core4.15.1 require Firebase iOS12.19.3 while existing plugins require12.19.0",
+      "result": "Crashlytics5.4.0/core4.15.0; SPM graph and native Simulator build PASS with Firebase iOS12.19.0"
+    },
+    {
+      "area": "iOS dSYM delivery",
+      "finding": "Console received report but lacked Runner.debug.dylib symbols; standard asynchronous run script hid upload result",
+      "result": "PASS whole-bundle foreground upload in ordinary/integration iOS builds; matching integration UUID Uploaded, delivered report processed and reviewed",
+      "regression": "Python tests validate both SPM locations, quoted paths and failure propagation; missing SDK fails before upload"
+    }
+  ],
+  "securityReview": {
+    "projection": "allowlist and recursive validation; hidden fields, notes, owner paths and attached resumes excluded",
+    "avatars": "JPEG512/256KiB, decode dimension/size limits and reencode strips metadata",
+    "pdf": "bounded media resolver, saved basis, 20MiB output; no raw SVG/URL assets",
+    "qr": "confirmed public ID/version; exact /d/id URL <=1024, no credentials/query/fragment",
+    "lifecycle": "unknown retry/CAS, late resurrection denial, tombstone/account lock, scoped deletion receipt and UID isolation covered by actual Rules/service suites",
+    "permissions": "Final APK: INTERNET/POST_NOTIFICATIONS plus normal network/wake/FCM/Auth SDK permissions; USE_BIOMETRIC/USE_FINGERPRINT traced to Firebase Auth -> AndroidX Credentials -> Biometric. No GPS, camera/storage runtime permission requested by package. Final iOS plist: camera/photo usage; Flutter Bonjour/local network debug-only. No location or Face ID usage strings."
+  },
+  "native": {
+    "android": "PASS android-native-journey.json; local demo SDK/HTTP, two PIDs and11 checkpoints; not physical QR/native Share/Open/live hosting",
+    "ios": "PASS final Flutter plugin5.4.0/Firebase iOS12.19.0; Xcode27.1/iOS27.0 Simulator, two processes and11 checkpoints; UI and live diagnostic delivery/payload PASS",
+    "iosUi": {
+      "status": "passed",
+      "fixture": "synthetic memory repository and diagnostics sink; actual iOS Simulator UI",
+      "checks": [
+        "light Russian UI and three roots",
+        "saved Home and dirty Editor discard",
+        "Library project",
+        "unavailable publication",
+        "explicit diagnostics opt-in/out and privacy help"
+      ],
+      "test": "integration_test/hardening_ui_runtime_test.dart",
+      "screenshot": "ios-privacy.png"
+    },
+    "androidUi": {
+      "status": "passed",
+      "flutterCrashlytics": "5.4.0",
+      "fixture": "synthetic memory repository and diagnostics sink; actual Android emulator UI",
+      "checkpoints": [
+        {
+          "checkpoint": "light_ru_three_roots_saved_home_dirty_discard"
+        },
+        {
+          "checkpoint": "library_and_unavailable_publication_no_mock_success"
+        },
+        {
+          "checkpoint": "explicit_diagnostics_opt_in_out_and_privacy_help"
+        }
+      ]
+    },
+    "androidJourneyFlutterPlugin": "5.4.1 at original SDK journey; final5.4.0 separately verified by normal APK, UI smoke, diagnostics and Console payload",
+    "iosNormalLaunch": "PASS ordinary Firebase/bootstrap build starts on sign-in screen; guest continuation offered, screenshot ios-normal-launch.png",
+    "postAcceptanceCleanup": "Ordinary Android APK restored with adb install -r (Success); ordinary iOS app restored and launched, Firebase debug logging disabled; app data preserved"
+  },
+  "webVisual": {
+    "widths": [
+      390,
+      1440
+    ],
+    "horizontalOverflow": false,
+    "colorScheme": "light",
+    "contract": "one saved main, three roots, real PDF, explicit publish; existing shared styles/Brand A preserved"
+  },
+  "livePreconditions": {
+    "scope": "source/demo acceptance only",
+    "serverConfiguration": "explicit HTTPS origin, strict CORS and verified Auth; consumed intended-app App Check for anonymous contact; local bypass only demo/loopback",
+    "recovery": "unknown operation and account deletion receipt covered by service/Rules tests",
+    "hosting": "still deferred; API env defaults remain empty; unavailable is not mock success",
+    "billing": "Spark unchanged; no Storage uploads/TTL/Functions/App Hosting enabled"
+  },
+  "openGates": [
+    "Prior physical QR/system Share/Open/PDF picker, iOS APNs/live Google flow, production hosting and native DevTools/Figma/release gates remain separate; no Phase19 gate remains"
+  ],
+  "warnings": [
+    "Pinned Flutter Android build succeeds; upstream Firebase plugins still emit future Built-in Kotlin migration warning."
+  ]
+}

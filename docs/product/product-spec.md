@@ -36,6 +36,18 @@
 
 ## Статус и границы текущей работы
 
+**2026-10-24: Phase19 — Production hardening завершена.** Бесплатная opt-in
+диагностика доставлена и проверена в Android/iOS Crashlytics Console: фиксированный
+код, очищенный stack, без app UID/contact/token/private content. Исправлены HTTP
+граница, видимость Copy feedback и iOS symbols delivery; обновлены privacy/help
+и Next16.4.3 с production audit0. По требованию пользователя установлен Xcode27.1:
+обычный iOS Simulator build, SDK journey11 checkpoints в двух процессах и native
+UI smoke PASS на iOS27.0. Android build/SDK/UI и responsive web PASS.
+Пользователь отдельно разрешил iOS dSYM upload/автозагрузку; matching symbols
+приняты Console, foreground upload failure завершает build ошибкой.
+Phase20/hosting/billing/Git этим переходом не запускаются; прежние физические,
+system/live/profile/Figma/release gates сохраняются отдельно.
+
 **2026-10-23: Phase 18 — CI/CD завершена и проверена на GitHub.** Пользователь попросил проверить
 остановку продукта и продолжить следующий этап. Phase17 source/local и Android
 проверки сохранены; iOS отложен. Незакрытые Phase15 QR/system/live и Phase16
@@ -1083,9 +1095,10 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 
 ## План разработки
 
-**Актуальное поручение 2026-10-23:** продолжить Phase 18 CI/CD после source/local
-и Android результатов Phase17. Отложенный iOS и незакрытые Phase15–16 проверки
-сохраняются отдельно. Phase19–20, deployment и billing не запускаются.
+**Результат поручения 2026-10-23:** Phase19 production hardening завершена2026-10-24
+после принятой Phase18, включая настройку Xcode и обязательную iOS проверку.
+Незакрытые system/live/profile/Figma/release проверки сохраняются отдельно.
+Phase20, deployment и billing не запускаются.
 Разрешённый capability scope и оставшаяся работа перечислены
 [в текущем статусе](#статус-и-границы-текущей-работы). Phase 11/12 и R0–R9 ниже
 сохраняют историю реализации и evidence; новые mobile changes не считаются
@@ -1303,9 +1316,9 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 14 — Contact / Inbox / FCM | Реализована; Android live 5/5 PASS 2026-10-10, постоянный запуск отложен пользователем; iOS/APNs и production readiness открыты |
 | Phase 15 — Developer Card и native sharing | Source/local gate реализованы:1365 tests, QR decode и APK PASS; native/live/iOS приёмка открыта |
 | Phase 16 — Performance | В работе: локальные baseline/after и две оптимизации; native DevTools gate открыт |
-| Phase 17 — Testing | Source/local и Android QA PASS:1372 mobile tests, coverage86,92%, browser journey и11 native checkpoints; iOS отложен отдельно |
+| Phase 17 — Testing | Source/local и Android QA PASS; iOS SDK journey11 checkpoints дополнительно PASS в Phase19; system/touch/live gates отдельно |
 | Phase 18 — CI/CD | Завершена: GitHub green/red runs, полный suite/coverage и скачанные APK/LCOV artifacts проверены |
-| Phase 19 — Production hardening | Запланирована |
+| Phase 19 — Production hardening | Завершена2026-10-24: Android/iOS build/SDK/UI и Crashlytics delivery/payload PASS; security/privacy review выполнен |
 | Phase 20 — Release | Запланирована |
 
 </div>
@@ -2759,8 +2772,10 @@ QR60/1024 — стрессовые encoder inputs, не live publication URLs. P
   точный backup, server ACK и явную публикацию без смешения состояний.
 - [x] Отказы permissions/network, late ACK/retry и owner transition не раскрывают
   предыдущий аккаунт и не теряют saved данные; Android/iOS/live evidence разделён.
-- [ ] iOS native journey и системные проверки — отдельно отложены пользователем
-  2026-10-21: доступного Xcode/iOS окружения нет.
+- [x] iOS native SDK journey — первоначально отложен2026-10-21; после установки
+  Xcode в Phase19 проверен2026-10-24:11 checkpoints в двух процессах.
+- [ ] iOS system picker/permissions, full native onboarding/import touch и
+  live/APNs приёмка остаются отдельными открытыми проверками.
 - [x] Coverage превышает учебный порог40%; web auth guards, public reader,
   publication и двусторонний codec/SDK обмен проверены подходящими suites.
 
@@ -2855,11 +2870,12 @@ QR60/1024 — стрессовые encoder inputs, не live publication URLs. P
   Rules не ослаблялись ради test tooling; **4/4 native runner guard tests PASS**,
   вместе с coverage tool — **8/8 Python tests PASS**.
 
-**Отложено в Phase 17:** iOS native journey и системная приёмка — по прямому
-ответу пользователя, пока iOS окружение недоступно. Полный native touch smoke
+**Исторически отложено в Phase17:** iOS native journey и системная приёмка — по
+ответу пользователя2026-10-21. В Phase19 Xcode установлен и iOS SDK journey
+прошёл2026-10-24; system/live gates сохраняются. Полный native touch smoke
 регистрации/import не исполнялся; эти экраны отдельно покрыты widget/browser
 suites. Core fake ACK, client SDK emulators, browser и Android SDK/UI перечислены
-раздельно. Phase 17 целиком с iOS не объявляется закрытой.
+раздельно. Phase17 целиком с system/live/touch gates не объявляется закрытой.
 
 **Незакрытые проверки прошлых фаз сохранены отдельно:** Phase 15 — native
 QR scan/Share/Open, live public URL и iOS; Phase 16 — device DevTools frame/raster/
@@ -2976,30 +2992,51 @@ APK artifact доступен, release signing/deploy не выполняютс�
 
 **Задачи**
 
-- [ ] Настроить разрешённую бесплатную диагностику/Crashlytics и подтвердить
+- [x] Настроить разрешённую бесплатную диагностику/Crashlytics и подтвердить
   тестовый отчёт без UID/contact text/token/private content в error logging.
-- [ ] Проверить Rules/public projection, bounded avatar/PDF/QR inputs, permanent
+- [x] Проверить Rules/public projection, bounded avatar/PDF/QR inputs, permanent
   IDs/version, unknown outcomes, late retry, account deletion/withdrawal и
   UID isolation. Новые Storage uploads/TTL/billing не включать.
-- [ ] Завершить review действующего UI: optional onboarding, три roots,
+- [x] Завершить review действующего UI: optional onboarding, три roots,
   saved Home/dirty Editor guard, Library, public Card/QR и unavailable states;
   русский светлый дизайн, Brand A, icon/splash/versioning и privacy policy.
-- [ ] Перед возможным live запуском отдельно проверить HTTPS origins/CORS/
+- [x] Перед возможным live запуском отдельно проверить HTTPS origins/CORS/
   App Check, конфигурацию endpoints и recovery. Отложенный hosting не запускать
   автоматически; отсутствие backend не превращать в mock success.
 
 **Проверки и приёмка**
 
-- [ ] Диагностический отчёт доставлен, sensitive data отсутствуют в логах.
-- [ ] Значимые security/validation/lifecycle дефекты устранены; permissions
-  относятся только к реальным camera/gallery/notifications возможностям, без GPS.
-- [ ] Android/iOS и responsive web проверены по одному main и светлому UI;
+- [x] Диагностический отчёт доставлен, sensitive data отсутствуют в app error payload.
+- [x] Значимые security/validation/lifecycle дефекты устранены; permissions
+  проверены в final APK/iOS plist: реальные media/notifications сценарии и
+  normal network/FCM/Auth SDK permissions, без GPS. Android biometric declarations
+  приходят из Firebase Auth → AndroidX Credentials; отдельной biometric функции нет.
+- [x] Android/iOS и responsive web проверены по одному main и светлому UI;
   privacy policy объясняет публикацию контактов/фото и сохранение private draft.
-- [ ] Live preconditions/recovery проверены только в разрешённом окружении;
+- [x] Live preconditions/recovery проверены только в разрешённом окружении;
   граница source, emulator и production evidence явно сохранена.
 
 **Готово, когда:** диагностика подтверждена, значимые security/UX дефекты устранены,
 реальное обращение с данными/permissions описано без обещания неподключённого hosting.
+
+**Проверено2026-10-24:** Flutter analyze/format,1386 tests, LCOV13492/15530
+(86,88%), web163 tests/typecheck/Next16.4.3 build, backend42 и Rules/service82,
+Python tooling11; production audit web/backend0. Final Android APK и обычная iOS
+Simulator сборка PASS. Xcode27.1/iOS27.0: native SDK seed/check в двух процессах,
+11 checkpoints; Android/iOS UI smoke проверяет три roots, saved/dirty guard,
+Library, unavailable publication, diagnostics opt-in/out и privacy help.
+Source/SDK/runtime результаты и screenshots — [evidence](evidence/phase19/checks.json).
+
+**iOS диагностика принята:** [Console issue](https://console.firebase.google.com/project/stackcard-dev-snownumb/crashlytics/app/ios:com.example.appStackcard/issues/053e5a3192e3e02df7b81355cc8877d9)
+содержит `StackCard.acceptance`, stack `StackCard.redacted` и только
+`flutter_error_exception=StackCard.acceptance`; logs/breadcrumbs пусты, Analytics
+выключен, Data содержит только технические device/OS/app metadata.
+Matching dSYM UUID `E371B022-F1B3-3ADA-B005-B4A91926758B` (`Runner.debug.dylib`)
+имеет статус Uploaded. Пользователь отдельно разрешил текущую загрузку и
+следующие auto-uploads; full bundle передаётся в foreground, upload error
+останавливает build. Обычная iOS Simulator сборка с этим script тоже PASS.
+Physical QR scan, system Share/Open/PDF picker, iOS/APNs, live hosting и
+DevTools/Figma/release gates прежних фаз этим не объявляются закрытыми.
 
 ### Phase 20 — Release
 
@@ -3032,7 +3069,7 @@ APK artifact доступен, release signing/deploy не выполняютс�
 
 **История Phase 0–14 сохранена. Действующая реализация — ADR 0005, source/local
 Phase 15–16 и source/local результаты Phase17; Phase18 CI/CD завершена и проверена2026-10-23.
-Phase19–20 остаются планом. Новые local checks
+Phase19 завершена2026-10-24, Phase20 остаётся планом. Новые local checks
 не закрывают прежние live/iOS/Figma/release gates.**
 
 ---

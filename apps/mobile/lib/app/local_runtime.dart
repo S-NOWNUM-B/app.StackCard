@@ -8,7 +8,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
+import '../core/diagnostics/app_diagnostics.dart';
+import '../core/diagnostics/firebase_diagnostics_sink.dart';
 import '../core/state/app_settings.dart';
 import '../core/state/settings_repository.dart';
 import '../core/storage/local_storage.dart';
@@ -49,6 +52,7 @@ final class LocalRuntime {
     this.mediaStorage,
     this.pendingDeletionOwner,
     this.notifications,
+    this.diagnostics,
   });
 
   final AppSettings settings;
@@ -60,6 +64,7 @@ final class LocalRuntime {
   final FirebaseStorage? mediaStorage;
   final String? pendingDeletionOwner;
   final NotificationsController? notifications;
+  final AppDiagnostics? diagnostics;
 
   late final _publicationPreferences = SharedPreferencesAsync();
   final Set<String> _deletedAccountUids = {};
@@ -80,6 +85,7 @@ final class LocalRuntime {
   }
 
   Future<void> close() async {
+    diagnostics?.dispose();
     await notifications?.dispose();
     await storage.close();
   }
@@ -133,6 +139,10 @@ final class LocalRuntime {
       ),
       endpoint: endpoint,
       ownerUid: uid,
+      allowDemoHttp:
+          accountAuth?.app.options.projectId.startsWith('demo-') == true &&
+          const String.fromEnvironment('FIREBASE_AUTH_EMULATOR_HOST')
+              .isNotEmpty,
       token: (ownerUid) async {
         final user = auth?.currentUser;
         if (user == null || user.uid != ownerUid) return null;
@@ -283,6 +293,7 @@ final class LocalRuntime {
       FirebaseAuth? accountAuth;
       FirebaseStorage? mediaStorage;
       NotificationsController? notifications;
+      AppDiagnostics? diagnostics;
       if (configureAuth) {
         final app = Firebase.apps.isEmpty
             ? await Firebase.initializeApp(
@@ -290,6 +301,23 @@ final class LocalRuntime {
               )
             : Firebase.app();
         final auth = FirebaseAuth.instanceFor(app: app);
+        // Emulator/preview runtimes не отправляют настоящую диагностику.
+        const diagnosticEmulatorHost = String.fromEnvironment(
+          'FIREBASE_AUTH_EMULATOR_HOST',
+        );
+        if (!app.options.projectId.startsWith('demo-') &&
+            diagnosticEmulatorHost.isEmpty) {
+          final preferences = SharedPreferencesAsync();
+          diagnostics = AppDiagnostics(
+            sink: FirebaseDiagnosticsSink(FirebaseCrashlytics.instance),
+            readConsent: () async =>
+                await preferences.getBool('stackcard.diagnostics.enabled') ??
+                false,
+            writeConsent: (value) =>
+                preferences.setBool('stackcard.diagnostics.enabled', value),
+          );
+          await diagnostics.initialize();
+        }
         accountAuth = auth;
         const emulatorHost = String.fromEnvironment(
           'FIREBASE_AUTH_EMULATOR_HOST',
@@ -365,6 +393,7 @@ final class LocalRuntime {
         mediaStorage: mediaStorage,
         pendingDeletionOwner: pendingDeletionOwner,
         notifications: notifications,
+        diagnostics: diagnostics,
       );
     } catch (_) {
       await storage.close();

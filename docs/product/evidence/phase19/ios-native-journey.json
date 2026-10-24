@@ -1,0 +1,83 @@
+{
+  "status": "passed",
+  "project": "demo-stackcard-test",
+  "device": "E165C52B-76A3-4961-8730-2F5C12236CBC",
+  "platform": "ios",
+  "runId": "0c8c249e675daa6f5dc3d80bb14bdce2",
+  "scope": "native SDK/controller/Card UI with local Auth/Firestore and HTTP backend",
+  "phases": [
+    {
+      "phase": "seed",
+      "exitCode": 0
+    },
+    {
+      "phase": "check",
+      "exitCode": 0
+    }
+  ],
+  "checkpoints": [
+    {
+      "phase": "seed",
+      "pid": 79455,
+      "checkpoint": "registration_optional4steps_scoped_save_offline_outbox"
+    },
+    {
+      "phase": "check",
+      "pid": 80243,
+      "checkpoint": "new_process_auth_hive_exact_outbox_restore"
+    },
+    {
+      "phase": "check",
+      "pid": 80243,
+      "checkpoint": "reconnect_actual_sdk_server_ack_cloud7"
+    },
+    {
+      "phase": "check",
+      "pid": 80243,
+      "checkpoint": "saved_basis_actual_pdf"
+    },
+    {
+      "phase": "check",
+      "pid": 80243,
+      "checkpoint": "authenticated_http_publish_anonymous_sdk_timestamp_card"
+    },
+    {
+      "phase": "check",
+      "pid": 80243,
+      "checkpoint": "native_card_render_qr_copy_bridge"
+    },
+    {
+      "phase": "check",
+      "pid": 80243,
+      "checkpoint": "private_save_does_not_republish"
+    },
+    {
+      "phase": "check",
+      "pid": 80243,
+      "checkpoint": "native_uid_switch_hides_card_and_denies_previous_owner"
+    },
+    {
+      "phase": "check",
+      "pid": 80243,
+      "checkpoint": "anonymous_private_denial_uid_local_isolation"
+    },
+    {
+      "phase": "check",
+      "pid": 80243,
+      "checkpoint": "http_unpublish_removes_public_snapshot_and_open_qr"
+    },
+    {
+      "phase": "check",
+      "pid": 80243,
+      "checkpoint": "trusted_delete_reconciles_saved_workspace"
+    }
+  ],
+  "excluded": [
+    "Android acceptance",
+    "physical camera QR scan",
+    "native Share/Open",
+    "production hosting",
+    "system picker permission denial",
+    "full UI onboarding/import"
+  ]
+}

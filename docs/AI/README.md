@@ -4,9 +4,10 @@
 отдельные копии для разных AI-клиентов не требуются.
 
 Phase18 CI/CD завершена2026-10-23: GitHub green/red runs и artifacts проверены.
-Переход к Phase19 требует отдельного поручения.
-Source/local и Android Phase 17 проверены; отложенный iOS и незакрытые
-проверки Phase 15–16 отдельно сохраняются в product spec.
+Phase19 завершена2026-10-24, включая Xcode/iOS SDK/UI и проверенный Crashlytics
+report с разрешённой автозагрузкой dSYM; фактическая приёмка — в product spec.
+Source/local и Android Phase17 проверены; iOS SDK journey дополнительно PASS
+в Phase19. Незакрытые system/live/profile/Figma/release gates сохраняются отдельно.
 Native Share переиспользует существующий канал; новые root-вкладки не добавляются.
 
 Действующий продуктовый контракт 2026-10-12 — [одно основное портфолио](../decisions/0005-single-main-portfolio.md):
@@ -34,6 +35,7 @@ deploy/billing/Git сохраняют отдельные ограничения.
 
 | Задача | Читать | Canonical source |
 | --- | --- | --- |
+| Diagnostics, privacy и production hardening | [Phase19](../product/product-spec.md#phase-19--production-hardening), [mobile scope](scopes/mobile.md), [команды](../../CONTRIBUTING.md#production-hardening--phase-19) | `core/diagnostics`, LocalRuntime/main, отдельное consent preference; native Crashlytics configs, opt-in `diagnostics_runtime_test.dart` / `hardening_ui_runtime_test.dart`, `Runner/upload_crashlytics_symbols.sh`, `tools/testing/test_crashlytics_symbols.py`, existing Rules/service suites |
 | Commit, pull, rebase, push и исправление истории | [Git workflow](GIT_WORKFLOW.md) | [шаблон commit-msg](../../tools/git/commit-msg), [validator](../../tools/git/validate_commit_message.py), реальные status/diff, сохранённые commit objects/body, upstream и актуальные remote refs |
 | CI/CD, checks, APK и coverage artifacts | [CI scope](scopes/ci.md), [Phase 18](../product/product-spec.md#phase-18--cicd), [команды](../../CONTRIBUTING.md#cicd--phase-18) | `.github/workflows/ci.yml`, `.fvmrc`, `.node-version`, `.java-version`, actual manifests/lockfiles, `tools/redesign/check_imports.py`, `tools/testing/check_coverage.py` |
 | Testing / coverage / journeys | [Phase 17](../product/product-spec.md#phase-17--testing), [команды](../../CONTRIBUTING.md#testing--phase-17) | `tools/testing/check_coverage.py`, `tools/testing/native_journey.py`, mobile `main_portfolio_journey_test.dart` и `integration_test/main_portfolio_runtime_test.dart`, web `main-portfolio-journey.bridge.mjs`, `tool/testing/emulator-journey.cjs`, actual backend/Rules suites; evidence в `docs/product/evidence/phase17` |

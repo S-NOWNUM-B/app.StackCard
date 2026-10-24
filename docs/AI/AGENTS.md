@@ -139,6 +139,17 @@
 
 ## Разработка по плану
 
+Прямой переход пользователя 2026-10-23 разрешает Phase19 production hardening:
+бесплатную opt-in диагностику, security/lifecycle/UI/privacy review и проверки.
+Crashlytics остаётся на Spark, без Analytics и private error payloads. Hosting,
+billing и Phase20 этим поручением не разрешены. Результаты и iOS gate принадлежат
+product spec; не считать source configuration проверкой на iOS.
+Последующий ответ пользователя требует сначала настроить Xcode и проверить iOS;
+прежний перенос iOS не служит исключением для завершения Phase19.
+2026-10-24 пользователь отдельно разрешил загрузить текущий iOS dSYM и настроить
+автозагрузку символов следующих iOS builds в существующий Firebase project.
+Это symbols delivery для Crashlytics; release/distribution этим не разрешены.
+
 Прямое поручение 2026-10-23 продолжить разработку с Phase 18 разрешает
 CI/CD по actual manifests: проверки, coverage и debug APK artifacts.
 Правила — [CI scope](scopes/ci.md). Прежние iOS/live/profile gates остаются
@@ -146,7 +157,7 @@ CI/CD по actual manifests: проверки, coverage и debug APK artifacts.
 Последующий запрос 2026-10-23 явно разрешает commit/push в dev, проверку GitHub
 Actions и завершение Phase18, включая отдельную ветку негативной проверки.
 Phase18 принята2026-10-23 по фактическим GitHub green/red runs и скачанным
-artifacts; подробности в product spec. Phase19 требует нового перехода.
+artifacts; подробности в product spec. Переход к Phase19 получен отдельным поручением.
 
 Прямой переход пользователя 2026-10-21 разрешает Phase 17 Testing по
 обновлённому плану ADR 0005: одно main и три roots. Незакрытые проверки

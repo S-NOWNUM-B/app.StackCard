@@ -10,12 +10,14 @@ final class HttpDocumentPublicationRepository
     required this.endpoint,
     required this.ownerUid,
     required this.token,
+    this.allowDemoHttp = false,
   });
 
   final Dio dio;
   final Uri endpoint;
   final String ownerUid;
   final Future<String?> Function(String uid) token;
+  final bool allowDemoHttp;
 
   @override
   Future<DocumentPublicationInventory> inventory() async {
@@ -253,11 +255,14 @@ final class HttpDocumentPublicationRepository
     );
   }
 
-  static bool _allowedUrl(Uri url) =>
+  bool _allowedUrl(Uri url) =>
       url.host.isNotEmpty &&
       url.userInfo.isEmpty &&
+      !url.hasQuery &&
+      !url.hasFragment &&
       (url.scheme == 'https' ||
-          (url.scheme == 'http' &&
+          (allowDemoHttp &&
+              url.scheme == 'http' &&
               {
                 'localhost',
                 '127.0.0.1',

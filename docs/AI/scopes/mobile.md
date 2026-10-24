@@ -31,8 +31,12 @@ demo/loopback env, запускает standalone HTTP backend и валидир�
 Controller onboarding/import и настоящий Card/Clipboard UI обозначаются раздельно;
 обычные app session/storage не открывать. `flutter test` требует `--no-uninstall`;
 `flutter drive` — `--keep-app-running --no-uninstall-first` и отдельный force-stop,
-поскольку default drive teardown удаляет APK/data. iOS,
-системные permissions и full touch journey требуют собственных результатов.
+поскольку default drive teardown удаляет приложение/data. iOS Simulator запускается
+через `--platform ios` с booted UUID/loopback и `simctl terminate`; синтетический
+ключ должен проходить format validation iOS Installations. Android evidence не
+заменяет iOS; системные permissions и full touch journey требуют своих результатов.
+`integration_test/hardening_ui_runtime_test.dart` проверяет native UI с memory
+fixture отдельно от SDK journey и не открывает ordinary storage/session.
 
 Phase 15 Developer Card/QR: `portfolio_draft` владеет public read model,
 strict card projection и `FirestoreDeveloperCardRepository`. SDK `publishedAt`
@@ -72,6 +76,25 @@ Flutter pin берётся из корневого `.fvmrc`, формат вкл
 guides. Этот файл дополняет их только для Flutter-приложения.
 
 ## Источники
+
+Phase19 diagnostics: `core/diagnostics/AppDiagnostics` владеет отдельным device-wide
+opt-in preference, не UID/AppSettings. LocalRuntime создаёт Firebase sink только
+в native non-demo runtime без Auth emulator; main устанавливает handlers после
+успешного bootstrap и восстанавливает прежние при close. Collection default false
+задан также в Android manifest/iOS Info.plist. Перед новым opt-in и при opt-out
+удалять unsent reports; ошибки preferences/SDK не включают Dart reporting.
+Не передавать raw exception/context/information, UID, contacts, tokens, content,
+arbitrary paths/custom keys/logs/user identifiers. Только enum code и bounded
+allowlist source positions; неизвестный stack — redacted marker, чтобы SDK не
+подставил исходный текущий stack. Debug console сохраняет Flutter debug handler;
+release не вызывает raw presenter. Analytics не добавлять. SDK installation/device
+metadata не считать анонимными — они описаны в помощи. Для iOS настроен последний
+SPM dSYM build phase; source/plist lint не заменяет Xcode build/device acceptance.
+Разрешённый пользователем iOS symbols upload передаёт whole dSYM bundle через
+official SPM `upload-symbols` в foreground: `Runner.debug.dylib` тоже нужен,
+upload failure завершает build ошибкой. UUID сравнивать с точной integration/normal
+сборкой, не подменять символами другой сборки. dSYM/source paths не хранить в repo
+или CI artifacts; команды и согласованный scope — в CONTRIBUTING.
 
 Ниже описан действующий Flutter runtime. [Design v2](../../redesign/README.md)
 задаёт target; [product status](../../product/product-spec.md#статус-и-границы-текущей-работы)

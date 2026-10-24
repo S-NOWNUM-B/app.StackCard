@@ -37,9 +37,13 @@ void main() {
     'MAIN_PORTFOLIO_EMULATOR_HOST',
     defaultValue: '10.0.2.2',
   );
-  const options = FirebaseOptions(
-    apiKey: 'emulator-only-key',
-    appId: '1:123456789:android:0123456789abcdef',
+  final options = FirebaseOptions(
+    // Синтетический ключ нужной формы: iOS Installations проверяет длину до Emulator API.
+    apiKey: 'A00000000000000000000000000000000000000',
+    appId: Platform.isIOS
+        ? '1:123456789:ios:0123456789abcdef'
+        : '1:123456789:android:0123456789abcdef',
+    iosBundleId: Platform.isIOS ? 'com.example.appStackcard' : null,
     messagingSenderId: '123456789',
     projectId: 'demo-stackcard-test',
   );
@@ -132,6 +136,7 @@ void main() {
         final publicationApi = HttpDocumentPublicationRepository(
           dio: dio,
           endpoint: Uri.parse('http://$host:3810/documentPublication'),
+          allowDemoHttp: true,
           ownerUid: uid,
           token: (expectedUid) async {
             final user = auth.currentUser;
@@ -423,7 +428,20 @@ void main() {
         await tester.tap(copy);
         await _pumpUntil(
           tester,
-          () => find.text('Ссылка скопирована.').evaluate().isNotEmpty,
+          () =>
+              find.text('Ссылка скопирована.').evaluate().isNotEmpty ||
+              find
+                  .text(
+                    'Действие недоступно. Проверьте публикацию и повторите.',
+                  )
+                  .evaluate()
+                  .isNotEmpty,
+        );
+        expect(
+          find.text('Ссылка скопирована.'),
+          findsOneWidget,
+          reason:
+              'Card copy must succeed after inventory revalidation; failure=${container.read(documentPublicationControllerProvider).failure?.kind.name}',
         );
         expect(
           (await Clipboard.getData('text/plain'))?.text,
