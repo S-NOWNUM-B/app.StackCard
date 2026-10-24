@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-24",
+  "status": "passed",
+  "android": {
+    "status": "passed",
+    "target": "lib/main.dart",
+    "debugBuildSeconds": 25.73,
+    "installedAndLaunched": true,
+    "foregroundMainActivity": true,
+    "dataCleared": false,
+    "oldPackageRemoved": false
+  },
+  "ios": {
+    "status": "passed",
+    "target": "lib/main.dart",
+    "debugBuildSeconds": 105.94,
+    "installedAndLaunched": true,
+    "processAliveAfterLaunch": true,
+    "dataCleared": false,
+    "simulatorRestoredToOriginalShutdown": true,
+    "ownedAuditSimulatorDeleted": true
+  },
+  "web": {
+    "status": "passed",
+    "normalProductionBuildRestored": true,
+    "elapsedSeconds": 14.787,
+    "demoProjectAndApiUrlsAbsentFromCompiledJavaScript": true,
+    "compiledJavaScriptFilesChecked": 174,
+    "environmentFilesChanged": false
+  },
+  "ordinaryApplicationDataCleared": false,
+  "scope": "Normal main.dart debug apps and normal Next production build; only task-owned Simulator deleted"
+}

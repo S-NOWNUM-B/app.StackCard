@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-24",
+  "status": "passed",
+  "platform": "iOS27.0 Simulator",
+  "device": "E165C52B-76A3-4961-8730-2F5C12236CBC",
+  "scope": "Actual UIDocumentPicker Save/cancel through separate XCTest; isolated PDF fixture without Auth/Hive",
+  "flutterDriveExitCode": 0,
+  "xctestExitCode": 0,
+  "savedFilename": "stackcard-native-acceptance.pdf",
+  "bytes": 30884,
+  "pages": 3,
+  "sha256": "b238b58487ff2f3583619665adfe951ba4ad8832422dcafbb1ebde0423566a1d",
+  "fileProviderBytesMatchSource": true,
+  "cancelReturnedFalse": true,
+  "cancelExportAbsent": true,
+  "fixtureDeletedAfterComparison": true,
+  "sourceVerifiedBeforeUITest": true,
+  "note": "iOS27 hides filename in accessibility. Known source verified by phase bridge; actual export checked by exact filename and bytes after real Save. No Replace action."
+}

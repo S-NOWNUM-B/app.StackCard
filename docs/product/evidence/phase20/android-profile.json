@@ -1,0 +1,1676 @@
+{
+  "status": "passed",
+  "platform": "Android17 emulator",
+  "mode": "profile",
+  "dart": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"android_arm64\"",
+  "screenPixels": [
+    1080,
+    2400
+  ],
+  "densityDpi": 420,
+  "fixture": {
+    "projects": 200,
+    "technologiesPerProject": 20,
+    "skills": 200,
+    "experience": 30,
+    "education": 20,
+    "links": 10,
+    "documents": 21
+  },
+  "scope": "Existing performance_runtime_test.dart, isolated Memory repository, actual frame timings and VM post-GC allocation profile; actual public GitHub HTTP pagination",
+  "cases": {
+    "library.before.0": {
+      "wallMs": 2000.427,
+      "mountedElements": 32991,
+      "frames": [
+        {
+          "buildUs": 21075,
+          "rasterUs": 16642,
+          "totalUs": 39584
+        },
+        {
+          "buildUs": 266031,
+          "rasterUs": 18368,
+          "totalUs": 285652
+        },
+        {
+          "buildUs": 17152,
+          "rasterUs": 7701,
+          "totalUs": 27059
+        },
+        {
+          "buildUs": 11598,
+          "rasterUs": 4150,
+          "totalUs": 27073
+        },
+        {
+          "buildUs": 134,
+          "rasterUs": 2363,
+          "totalUs": 4543
+        },
+        {
+          "buildUs": 19915,
+          "rasterUs": 3984,
+          "totalUs": 25932
+        },
+        {
+          "buildUs": 207,
+          "rasterUs": 2280,
+          "totalUs": 3380
+        },
+        {
+          "buildUs": 13105,
+          "rasterUs": 3769,
+          "totalUs": 23662
+        },
+        {
+          "buildUs": 246,
+          "rasterUs": 2256,
+          "totalUs": 4856
+        },
+        {
+          "buildUs": 19350,
+          "rasterUs": 10809,
+          "totalUs": 34888
+        },
+        {
+          "buildUs": 134,
+          "rasterUs": 2216,
+          "totalUs": 4282
+        },
+        {
+          "buildUs": 18857,
+          "rasterUs": 2703,
+          "totalUs": 38186
+        },
+        {
+          "buildUs": 263,
+          "rasterUs": 2715,
+          "totalUs": 4637
+        },
+        {
+          "buildUs": 9044,
+          "rasterUs": 2838,
+          "totalUs": 14257
+        },
+        {
+          "buildUs": 253,
+          "rasterUs": 2960,
+          "totalUs": 47979
+        },
+        {
+          "buildUs": 13032,
+          "rasterUs": 5747,
+          "totalUs": 27679
+        },
+        {
+          "buildUs": 199,
+          "rasterUs": 2543,
+          "totalUs": 3873
+        },
+        {
+          "buildUs": 10252,
+          "rasterUs": 3008,
+          "totalUs": 31860
+        },
+        {
+          "buildUs": 155,
+          "rasterUs": 42157,
+          "totalUs": 44143
+        }
+      ],
+      "buildP95Ms": 266.031,
+      "rasterP95Ms": 42.157,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 50226144,
+        "heapCapacity": 95404032,
+        "externalUsage": 130144,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 1,
+            "bytesCurrent": 32
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 200,
+            "bytesCurrent": 9600
+          }
+        ]
+      }
+    },
+    "library.after.0": {
+      "wallMs": 1622.72,
+      "mountedElements": 1902,
+      "frames": [
+        {
+          "buildUs": 3892,
+          "rasterUs": 4145,
+          "totalUs": 9447
+        },
+        {
+          "buildUs": 23207,
+          "rasterUs": 5197,
+          "totalUs": 31677
+        },
+        {
+          "buildUs": 89,
+          "rasterUs": 2871,
+          "totalUs": 4515
+        },
+        {
+          "buildUs": 23485,
+          "rasterUs": 24109,
+          "totalUs": 55358
+        },
+        {
+          "buildUs": 648,
+          "rasterUs": 3032,
+          "totalUs": 32868
+        },
+        {
+          "buildUs": 4264,
+          "rasterUs": 65561,
+          "totalUs": 74190
+        },
+        {
+          "buildUs": 80,
+          "rasterUs": 36073,
+          "totalUs": 44798
+        },
+        {
+          "buildUs": 18563,
+          "rasterUs": 46556,
+          "totalUs": 74932
+        },
+        {
+          "buildUs": 99,
+          "rasterUs": 58628,
+          "totalUs": 62100
+        },
+        {
+          "buildUs": 23918,
+          "rasterUs": 64732,
+          "totalUs": 110477
+        },
+        {
+          "buildUs": 136,
+          "rasterUs": 78874,
+          "totalUs": 106626
+        },
+        {
+          "buildUs": 3990,
+          "rasterUs": 95879,
+          "totalUs": 169299
+        },
+        {
+          "buildUs": 115,
+          "rasterUs": 57882,
+          "totalUs": 145926
+        },
+        {
+          "buildUs": 37603,
+          "rasterUs": 68291,
+          "totalUs": 132115
+        },
+        {
+          "buildUs": 175,
+          "rasterUs": 110654,
+          "totalUs": 176236
+        },
+        {
+          "buildUs": 13177,
+          "rasterUs": 34080,
+          "totalUs": 145286
+        },
+        {
+          "buildUs": 252,
+          "rasterUs": 65478,
+          "totalUs": 95630
+        },
+        {
+          "buildUs": 9545,
+          "rasterUs": 82851,
+          "totalUs": 97198
+        },
+        {
+          "buildUs": 517,
+          "rasterUs": 58450,
+          "totalUs": 67163
+        }
+      ],
+      "buildP95Ms": 37.603,
+      "rasterP95Ms": 110.654,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 20731776,
+        "heapCapacity": 47464448,
+        "externalUsage": 7872,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 10,
+            "bytesCurrent": 480
+          }
+        ]
+      }
+    },
+    "library.before.1": {
+      "wallMs": 1889.758,
+      "mountedElements": 32991,
+      "frames": [
+        {
+          "buildUs": 3315,
+          "rasterUs": 1911,
+          "totalUs": 6450
+        },
+        {
+          "buildUs": 229903,
+          "rasterUs": 2744,
+          "totalUs": 234376
+        },
+        {
+          "buildUs": 133,
+          "rasterUs": 2269,
+          "totalUs": 4776
+        },
+        {
+          "buildUs": 10816,
+          "rasterUs": 4426,
+          "totalUs": 33601
+        },
+        {
+          "buildUs": 117,
+          "rasterUs": 2617,
+          "totalUs": 3748
+        },
+        {
+          "buildUs": 8537,
+          "rasterUs": 27410,
+          "totalUs": 40075
+        },
+        {
+          "buildUs": 76,
+          "rasterUs": 2892,
+          "totalUs": 9071
+        },
+        {
+          "buildUs": 11751,
+          "rasterUs": 3203,
+          "totalUs": 21893
+        },
+        {
+          "buildUs": 283,
+          "rasterUs": 2811,
+          "totalUs": 5476
+        },
+        {
+          "buildUs": 16331,
+          "rasterUs": 3229,
+          "totalUs": 29118
+        },
+        {
+          "buildUs": 103,
+          "rasterUs": 4812,
+          "totalUs": 7879
+        },
+        {
+          "buildUs": 9878,
+          "rasterUs": 3766,
+          "totalUs": 19385
+        },
+        {
+          "buildUs": 229,
+          "rasterUs": 2333,
+          "totalUs": 4390
+        },
+        {
+          "buildUs": 11437,
+          "rasterUs": 11758,
+          "totalUs": 24589
+        },
+        {
+          "buildUs": 219,
+          "rasterUs": 2949,
+          "totalUs": 5600
+        },
+        {
+          "buildUs": 11915,
+          "rasterUs": 24369,
+          "totalUs": 40792
+        },
+        {
+          "buildUs": 85,
+          "rasterUs": 3956,
+          "totalUs": 7801
+        },
+        {
+          "buildUs": 16209,
+          "rasterUs": 4633,
+          "totalUs": 34439
+        },
+        {
+          "buildUs": 143,
+          "rasterUs": 41011,
+          "totalUs": 44705
+        }
+      ],
+      "buildP95Ms": 229.903,
+      "rasterP95Ms": 41.011,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 50286864,
+        "heapCapacity": 96059392,
+        "externalUsage": 130144,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 1,
+            "bytesCurrent": 32
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 200,
+            "bytesCurrent": 9600
+          }
+        ]
+      }
+    },
+    "library.after.1": {
+      "wallMs": 1405.537,
+      "mountedElements": 1902,
+      "frames": [
+        {
+          "buildUs": 3636,
+          "rasterUs": 2372,
+          "totalUs": 6980
+        },
+        {
+          "buildUs": 10458,
+          "rasterUs": 3066,
+          "totalUs": 16443
+        },
+        {
+          "buildUs": 71,
+          "rasterUs": 2219,
+          "totalUs": 3840
+        },
+        {
+          "buildUs": 15977,
+          "rasterUs": 7240,
+          "totalUs": 33519
+        },
+        {
+          "buildUs": 118,
+          "rasterUs": 2256,
+          "totalUs": 4272
+        },
+        {
+          "buildUs": 7088,
+          "rasterUs": 26204,
+          "totalUs": 35547
+        },
+        {
+          "buildUs": 77,
+          "rasterUs": 2167,
+          "totalUs": 4095
+        },
+        {
+          "buildUs": 5392,
+          "rasterUs": 27153,
+          "totalUs": 34063
+        },
+        {
+          "buildUs": 223,
+          "rasterUs": 1901,
+          "totalUs": 5128
+        },
+        {
+          "buildUs": 18808,
+          "rasterUs": 4584,
+          "totalUs": 40382
+        },
+        {
+          "buildUs": 299,
+          "rasterUs": 2004,
+          "totalUs": 3937
+        },
+        {
+          "buildUs": 5914,
+          "rasterUs": 23881,
+          "totalUs": 33298
+        },
+        {
+          "buildUs": 86,
+          "rasterUs": 1866,
+          "totalUs": 3937
+        },
+        {
+          "buildUs": 11944,
+          "rasterUs": 21598,
+          "totalUs": 38656
+        },
+        {
+          "buildUs": 141,
+          "rasterUs": 2825,
+          "totalUs": 6120
+        },
+        {
+          "buildUs": 7295,
+          "rasterUs": 51368,
+          "totalUs": 64064
+        },
+        {
+          "buildUs": 155,
+          "rasterUs": 9349,
+          "totalUs": 23928
+        },
+        {
+          "buildUs": 16354,
+          "rasterUs": 33492,
+          "totalUs": 56819
+        },
+        {
+          "buildUs": 94,
+          "rasterUs": 2735,
+          "totalUs": 23796
+        }
+      ],
+      "buildP95Ms": 18.808,
+      "rasterP95Ms": 51.368,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 20746768,
+        "heapCapacity": 55230464,
+        "externalUsage": 7872,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 10,
+            "bytesCurrent": 480
+          }
+        ]
+      }
+    },
+    "home": {
+      "wallMs": 418.135,
+      "mountedElements": 5356,
+      "frames": [
+        {
+          "buildUs": 2682,
+          "rasterUs": 3477,
+          "totalUs": 7888
+        },
+        {
+          "buildUs": 37012,
+          "rasterUs": 8990,
+          "totalUs": 48025
+        },
+        {
+          "buildUs": 822,
+          "rasterUs": 1695,
+          "totalUs": 3757
+        }
+      ],
+      "buildP95Ms": 37.012,
+      "rasterP95Ms": 8.99,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 24092560,
+        "heapCapacity": 69976064,
+        "externalUsage": 9920,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          }
+        ]
+      }
+    },
+    "editor.mount": {
+      "wallMs": 681.605,
+      "mountedElements": 23324,
+      "frames": [
+        {
+          "buildUs": 3241,
+          "rasterUs": 1656,
+          "totalUs": 5993
+        },
+        {
+          "buildUs": 126829,
+          "rasterUs": 13395,
+          "totalUs": 141871
+        },
+        {
+          "buildUs": 5434,
+          "rasterUs": 4973,
+          "totalUs": 12295
+        }
+      ],
+      "buildP95Ms": 126.829,
+      "rasterP95Ms": 13.395,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 41252976,
+        "heapCapacity": 56426496,
+        "externalUsage": 74816,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 1,
+            "bytesCurrent": 112
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          }
+        ]
+      }
+    },
+    "editor.scroll": {
+      "wallMs": 299.759,
+      "mountedElements": 23324,
+      "frames": [
+        {
+          "buildUs": 21908,
+          "rasterUs": 24454,
+          "totalUs": 50977
+        },
+        {
+          "buildUs": 111,
+          "rasterUs": 6787,
+          "totalUs": 9156
+        }
+      ],
+      "buildP95Ms": 21.908,
+      "rasterP95Ms": 24.454,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 41570800,
+        "heapCapacity": 51986432,
+        "externalUsage": 94176,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 1,
+            "bytesCurrent": 112
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          }
+        ]
+      }
+    },
+    "qr.before": {
+      "wallMs": 2606.424,
+      "mountedElements": 147,
+      "frames": [
+        {
+          "buildUs": 6980,
+          "rasterUs": 4604,
+          "totalUs": 13142
+        },
+        {
+          "buildUs": 251,
+          "rasterUs": 4571,
+          "totalUs": 10146
+        },
+        {
+          "buildUs": 3807,
+          "rasterUs": 30962,
+          "totalUs": 38981
+        },
+        {
+          "buildUs": 95,
+          "rasterUs": 53336,
+          "totalUs": 60676
+        },
+        {
+          "buildUs": 4495,
+          "rasterUs": 39477,
+          "totalUs": 67673
+        },
+        {
+          "buildUs": 908,
+          "rasterUs": 71286,
+          "totalUs": 89721
+        },
+        {
+          "buildUs": 3770,
+          "rasterUs": 58333,
+          "totalUs": 131571
+        },
+        {
+          "buildUs": 101,
+          "rasterUs": 42600,
+          "totalUs": 107914
+        },
+        {
+          "buildUs": 5825,
+          "rasterUs": 44937,
+          "totalUs": 86466
+        },
+        {
+          "buildUs": 89,
+          "rasterUs": 42934,
+          "totalUs": 80511
+        },
+        {
+          "buildUs": 3069,
+          "rasterUs": 51456,
+          "totalUs": 99115
+        },
+        {
+          "buildUs": 107,
+          "rasterUs": 88670,
+          "totalUs": 139613
+        },
+        {
+          "buildUs": 5015,
+          "rasterUs": 72886,
+          "totalUs": 165282
+        },
+        {
+          "buildUs": 269,
+          "rasterUs": 54951,
+          "totalUs": 120467
+        },
+        {
+          "buildUs": 4554,
+          "rasterUs": 49897,
+          "totalUs": 104434
+        },
+        {
+          "buildUs": 119,
+          "rasterUs": 47313,
+          "totalUs": 85313
+        },
+        {
+          "buildUs": 13569,
+          "rasterUs": 46192,
+          "totalUs": 83207
+        },
+        {
+          "buildUs": 122,
+          "rasterUs": 40974,
+          "totalUs": 43421
+        },
+        {
+          "buildUs": 3223,
+          "rasterUs": 76807,
+          "totalUs": 105876
+        },
+        {
+          "buildUs": 144,
+          "rasterUs": 43104,
+          "totalUs": 82615
+        },
+        {
+          "buildUs": 3332,
+          "rasterUs": 46221,
+          "totalUs": 79416
+        },
+        {
+          "buildUs": 81,
+          "rasterUs": 42720,
+          "totalUs": 89251
+        },
+        {
+          "buildUs": 3530,
+          "rasterUs": 58203,
+          "totalUs": 97591
+        },
+        {
+          "buildUs": 612,
+          "rasterUs": 54720,
+          "totalUs": 102939
+        },
+        {
+          "buildUs": 4364,
+          "rasterUs": 48975,
+          "totalUs": 103015
+        },
+        {
+          "buildUs": 103,
+          "rasterUs": 43072,
+          "totalUs": 79745
+        },
+        {
+          "buildUs": 3483,
+          "rasterUs": 50483,
+          "totalUs": 80960
+        },
+        {
+          "buildUs": 107,
+          "rasterUs": 39897,
+          "totalUs": 89035
+        },
+        {
+          "buildUs": 14815,
+          "rasterUs": 41919,
+          "totalUs": 81526
+        },
+        {
+          "buildUs": 645,
+          "rasterUs": 43965,
+          "totalUs": 76218
+        },
+        {
+          "buildUs": 6265,
+          "rasterUs": 44443,
+          "totalUs": 87458
+        },
+        {
+          "buildUs": 80,
+          "rasterUs": 46206,
+          "totalUs": 84113
+        },
+        {
+          "buildUs": 23564,
+          "rasterUs": 44696,
+          "totalUs": 79485
+        },
+        {
+          "buildUs": 110,
+          "rasterUs": 47645,
+          "totalUs": 60800
+        },
+        {
+          "buildUs": 4489,
+          "rasterUs": 52700,
+          "totalUs": 97165
+        },
+        {
+          "buildUs": 124,
+          "rasterUs": 53881,
+          "totalUs": 101370
+        },
+        {
+          "buildUs": 4973,
+          "rasterUs": 44738,
+          "totalUs": 100756
+        },
+        {
+          "buildUs": 76,
+          "rasterUs": 47838,
+          "totalUs": 98943
+        },
+        {
+          "buildUs": 27867,
+          "rasterUs": 44957,
+          "totalUs": 79802
+        },
+        {
+          "buildUs": 113,
+          "rasterUs": 33995,
+          "totalUs": 40524
+        },
+        {
+          "buildUs": 5269,
+          "rasterUs": 41816,
+          "totalUs": 65899
+        },
+        {
+          "buildUs": 284,
+          "rasterUs": 31534,
+          "totalUs": 52572
+        },
+        {
+          "buildUs": 2589,
+          "rasterUs": 49921,
+          "totalUs": 69438
+        },
+        {
+          "buildUs": 104,
+          "rasterUs": 44690,
+          "totalUs": 81691
+        },
+        {
+          "buildUs": 4041,
+          "rasterUs": 55613,
+          "totalUs": 87502
+        },
+        {
+          "buildUs": 125,
+          "rasterUs": 43663,
+          "totalUs": 67705
+        },
+        {
+          "buildUs": 30888,
+          "rasterUs": 50996,
+          "totalUs": 88831
+        },
+        {
+          "buildUs": 315,
+          "rasterUs": 28453,
+          "totalUs": 37298
+        },
+        {
+          "buildUs": 4364,
+          "rasterUs": 50901,
+          "totalUs": 72798
+        },
+        {
+          "buildUs": 126,
+          "rasterUs": 21660,
+          "totalUs": 58944
+        }
+      ],
+      "buildP95Ms": 23.564,
+      "rasterP95Ms": 72.886,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 19145904,
+        "heapCapacity": 33177600,
+        "externalUsage": 832,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          }
+        ]
+      }
+    },
+    "qr.after": {
+      "wallMs": 2527.301,
+      "mountedElements": 151,
+      "frames": [
+        {
+          "buildUs": 3273,
+          "rasterUs": 3997,
+          "totalUs": 9894
+        },
+        {
+          "buildUs": 138,
+          "rasterUs": 4394,
+          "totalUs": 27148
+        },
+        {
+          "buildUs": 2265,
+          "rasterUs": 39713,
+          "totalUs": 43765
+        },
+        {
+          "buildUs": 137,
+          "rasterUs": 47756,
+          "totalUs": 58315
+        },
+        {
+          "buildUs": 2314,
+          "rasterUs": 44558,
+          "totalUs": 87092
+        },
+        {
+          "buildUs": 119,
+          "rasterUs": 47924,
+          "totalUs": 85239
+        },
+        {
+          "buildUs": 950,
+          "rasterUs": 50467,
+          "totalUs": 86080
+        },
+        {
+          "buildUs": 125,
+          "rasterUs": 50421,
+          "totalUs": 70238
+        },
+        {
+          "buildUs": 2648,
+          "rasterUs": 48635,
+          "totalUs": 102609
+        },
+        {
+          "buildUs": 143,
+          "rasterUs": 51440,
+          "totalUs": 87739
+        },
+        {
+          "buildUs": 844,
+          "rasterUs": 51676,
+          "totalUs": 89578
+        },
+        {
+          "buildUs": 104,
+          "rasterUs": 51305,
+          "totalUs": 91191
+        },
+        {
+          "buildUs": 1105,
+          "rasterUs": 51079,
+          "totalUs": 92509
+        },
+        {
+          "buildUs": 1104,
+          "rasterUs": 47961,
+          "totalUs": 91195
+        },
+        {
+          "buildUs": 2115,
+          "rasterUs": 50460,
+          "totalUs": 91971
+        },
+        {
+          "buildUs": 666,
+          "rasterUs": 48930,
+          "totalUs": 91260
+        },
+        {
+          "buildUs": 1186,
+          "rasterUs": 47966,
+          "totalUs": 89626
+        },
+        {
+          "buildUs": 130,
+          "rasterUs": 47740,
+          "totalUs": 87546
+        },
+        {
+          "buildUs": 808,
+          "rasterUs": 46207,
+          "totalUs": 84125
+        },
+        {
+          "buildUs": 157,
+          "rasterUs": 53138,
+          "totalUs": 71019
+        },
+        {
+          "buildUs": 22789,
+          "rasterUs": 47838,
+          "totalUs": 85969
+        },
+        {
+          "buildUs": 101,
+          "rasterUs": 49291,
+          "totalUs": 69357
+        },
+        {
+          "buildUs": 1156,
+          "rasterUs": 52683,
+          "totalUs": 88843
+        },
+        {
+          "buildUs": 198,
+          "rasterUs": 47504,
+          "totalUs": 86473
+        },
+        {
+          "buildUs": 1154,
+          "rasterUs": 44512,
+          "totalUs": 81657
+        },
+        {
+          "buildUs": 109,
+          "rasterUs": 47484,
+          "totalUs": 79602
+        },
+        {
+          "buildUs": 3021,
+          "rasterUs": 47262,
+          "totalUs": 111101
+        },
+        {
+          "buildUs": 145,
+          "rasterUs": 48420,
+          "totalUs": 92976
+        },
+        {
+          "buildUs": 864,
+          "rasterUs": 55635,
+          "totalUs": 99335
+        },
+        {
+          "buildUs": 234,
+          "rasterUs": 49484,
+          "totalUs": 99192
+        },
+        {
+          "buildUs": 1341,
+          "rasterUs": 48515,
+          "totalUs": 99062
+        },
+        {
+          "buildUs": 104,
+          "rasterUs": 52525,
+          "totalUs": 102118
+        },
+        {
+          "buildUs": 1990,
+          "rasterUs": 43333,
+          "totalUs": 97940
+        },
+        {
+          "buildUs": 105,
+          "rasterUs": 46622,
+          "totalUs": 78162
+        },
+        {
+          "buildUs": 3343,
+          "rasterUs": 45208,
+          "totalUs": 90305
+        },
+        {
+          "buildUs": 130,
+          "rasterUs": 48853,
+          "totalUs": 89576
+        },
+        {
+          "buildUs": 1758,
+          "rasterUs": 53464,
+          "totalUs": 93598
+        },
+        {
+          "buildUs": 141,
+          "rasterUs": 46024,
+          "totalUs": 92533
+        },
+        {
+          "buildUs": 1010,
+          "rasterUs": 51468,
+          "totalUs": 94149
+        },
+        {
+          "buildUs": 134,
+          "rasterUs": 48489,
+          "totalUs": 93018
+        },
+        {
+          "buildUs": 968,
+          "rasterUs": 49664,
+          "totalUs": 93049
+        },
+        {
+          "buildUs": 397,
+          "rasterUs": 23857,
+          "totalUs": 96089
+        },
+        {
+          "buildUs": 793,
+          "rasterUs": 50488,
+          "totalUs": 63419
+        },
+        {
+          "buildUs": 176,
+          "rasterUs": 47897,
+          "totalUs": 78116
+        },
+        {
+          "buildUs": 2383,
+          "rasterUs": 52105,
+          "totalUs": 97190
+        },
+        {
+          "buildUs": 137,
+          "rasterUs": 50771,
+          "totalUs": 98356
+        },
+        {
+          "buildUs": 1154,
+          "rasterUs": 49181,
+          "totalUs": 97725
+        },
+        {
+          "buildUs": 102,
+          "rasterUs": 45502,
+          "totalUs": 94299
+        },
+        {
+          "buildUs": 837,
+          "rasterUs": 59490,
+          "totalUs": 104253
+        },
+        {
+          "buildUs": 195,
+          "rasterUs": 53966,
+          "totalUs": 109885
+        }
+      ],
+      "buildP95Ms": 3.273,
+      "rasterP95Ms": 53.966,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 19161296,
+        "heapCapacity": 38486016,
+        "externalUsage": 864,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 1,
+            "bytesCurrent": 32
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          }
+        ]
+      }
+    },
+    "github.real.pagination": {
+      "wallMs": 4287.274,
+      "mountedElements": 1446,
+      "frames": [
+        {
+          "buildUs": 3386,
+          "rasterUs": 5404,
+          "totalUs": 9824
+        },
+        {
+          "buildUs": 2526,
+          "rasterUs": 19842,
+          "totalUs": 31123
+        },
+        {
+          "buildUs": 11835,
+          "rasterUs": 11865,
+          "totalUs": 26012
+        },
+        {
+          "buildUs": 523,
+          "rasterUs": 1327,
+          "totalUs": 3133
+        },
+        {
+          "buildUs": 460,
+          "rasterUs": 1293,
+          "totalUs": 4469
+        },
+        {
+          "buildUs": 817,
+          "rasterUs": 1471,
+          "totalUs": 3688
+        },
+        {
+          "buildUs": 572,
+          "rasterUs": 1528,
+          "totalUs": 5183
+        },
+        {
+          "buildUs": 431,
+          "rasterUs": 1715,
+          "totalUs": 5303
+        },
+        {
+          "buildUs": 576,
+          "rasterUs": 2291,
+          "totalUs": 4815
+        },
+        {
+          "buildUs": 506,
+          "rasterUs": 1209,
+          "totalUs": 5220
+        },
+        {
+          "buildUs": 384,
+          "rasterUs": 1807,
+          "totalUs": 3653
+        },
+        {
+          "buildUs": 823,
+          "rasterUs": 2884,
+          "totalUs": 6778
+        },
+        {
+          "buildUs": 478,
+          "rasterUs": 1164,
+          "totalUs": 3034
+        },
+        {
+          "buildUs": 579,
+          "rasterUs": 1450,
+          "totalUs": 4699
+        },
+        {
+          "buildUs": 880,
+          "rasterUs": 2045,
+          "totalUs": 4328
+        },
+        {
+          "buildUs": 560,
+          "rasterUs": 1469,
+          "totalUs": 3767
+        },
+        {
+          "buildUs": 543,
+          "rasterUs": 1490,
+          "totalUs": 5250
+        },
+        {
+          "buildUs": 605,
+          "rasterUs": 1416,
+          "totalUs": 3266
+        },
+        {
+          "buildUs": 546,
+          "rasterUs": 1227,
+          "totalUs": 3599
+        },
+        {
+          "buildUs": 563,
+          "rasterUs": 1485,
+          "totalUs": 5977
+        },
+        {
+          "buildUs": 458,
+          "rasterUs": 1363,
+          "totalUs": 3146
+        },
+        {
+          "buildUs": 581,
+          "rasterUs": 1790,
+          "totalUs": 4341
+        },
+        {
+          "buildUs": 6697,
+          "rasterUs": 18926,
+          "totalUs": 28628
+        },
+        {
+          "buildUs": 834,
+          "rasterUs": 2171,
+          "totalUs": 4202
+        },
+        {
+          "buildUs": 5658,
+          "rasterUs": 29209,
+          "totalUs": 37881
+        },
+        {
+          "buildUs": 256,
+          "rasterUs": 23944,
+          "totalUs": 27286
+        },
+        {
+          "buildUs": 3657,
+          "rasterUs": 43168,
+          "totalUs": 55596
+        },
+        {
+          "buildUs": 111,
+          "rasterUs": 37903,
+          "totalUs": 44245
+        },
+        {
+          "buildUs": 14256,
+          "rasterUs": 37181,
+          "totalUs": 65295
+        },
+        {
+          "buildUs": 148,
+          "rasterUs": 44318,
+          "totalUs": 59895
+        },
+        {
+          "buildUs": 2111,
+          "rasterUs": 43072,
+          "totalUs": 70480
+        },
+        {
+          "buildUs": 1041,
+          "rasterUs": 42361,
+          "totalUs": 63141
+        },
+        {
+          "buildUs": 268,
+          "rasterUs": 4077,
+          "totalUs": 7665
+        },
+        {
+          "buildUs": 271,
+          "rasterUs": 2119,
+          "totalUs": 5213
+        },
+        {
+          "buildUs": 18103,
+          "rasterUs": 3752,
+          "totalUs": 35658
+        },
+        {
+          "buildUs": 649,
+          "rasterUs": 2343,
+          "totalUs": 4465
+        },
+        {
+          "buildUs": 504,
+          "rasterUs": 2545,
+          "totalUs": 4507
+        },
+        {
+          "buildUs": 777,
+          "rasterUs": 2908,
+          "totalUs": 6786
+        },
+        {
+          "buildUs": 411,
+          "rasterUs": 2278,
+          "totalUs": 5752
+        },
+        {
+          "buildUs": 459,
+          "rasterUs": 2169,
+          "totalUs": 4501
+        },
+        {
+          "buildUs": 4396,
+          "rasterUs": 4418,
+          "totalUs": 10760
+        },
+        {
+          "buildUs": 376,
+          "rasterUs": 2736,
+          "totalUs": 4459
+        }
+      ],
+      "buildP95Ms": 11.835,
+      "rasterP95Ms": 43.072,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 20693984,
+        "heapCapacity": 60047360,
+        "externalUsage": 29504,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          }
+        ]
+      }
+    },
+    "card.avatar": {
+      "wallMs": 793.578,
+      "mountedElements": 604,
+      "frames": [
+        {
+          "buildUs": 68733,
+          "rasterUs": 3236,
+          "totalUs": 73115
+        },
+        {
+          "buildUs": 6604,
+          "rasterUs": 11824,
+          "totalUs": 20584
+        },
+        {
+          "buildUs": 1076,
+          "rasterUs": 11348,
+          "totalUs": 13421
+        },
+        {
+          "buildUs": 867,
+          "rasterUs": 69220,
+          "totalUs": 73632
+        },
+        {
+          "buildUs": 439,
+          "rasterUs": 53702,
+          "totalUs": 56151
+        },
+        {
+          "buildUs": 5035,
+          "rasterUs": 20884,
+          "totalUs": 33221
+        },
+        {
+          "buildUs": 421,
+          "rasterUs": 5517,
+          "totalUs": 7292
+        },
+        {
+          "buildUs": 407,
+          "rasterUs": 10217,
+          "totalUs": 12942
+        }
+      ],
+      "buildP95Ms": 68.733,
+      "rasterP95Ms": 69.22,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 19672768,
+        "heapCapacity": 34455552,
+        "externalUsage": 3088,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 1,
+            "bytesCurrent": 32
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          }
+        ]
+      }
+    },
+    "pdf.avatar": {
+      "wallMs": 515.496,
+      "mountedElements": 604,
+      "frames": [
+        {
+          "buildUs": 162,
+          "rasterUs": 5796,
+          "totalUs": 6900
+        }
+      ],
+      "buildP95Ms": 0.162,
+      "rasterP95Ms": 5.796,
+      "postGcHeap": {
+        "type": "MemoryUsage",
+        "heapUsage": 19942704,
+        "heapCapacity": 26558464,
+        "externalUsage": 3088,
+        "classes": [
+          {
+            "name": "_DeveloperCardQrState",
+            "instancesCurrent": 1,
+            "bytesCurrent": 32
+          },
+          {
+            "name": "_MainPortfolioEditorScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "_BaselineProjectsScreenState",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          },
+          {
+            "name": "ProjectLibraryCard",
+            "instancesCurrent": 0,
+            "bytesCurrent": 0
+          }
+        ]
+      }
+    }
+  },
+  "githubActualRepositories": 41,
+  "pdf": {
+    "bytes": 256334,
+    "wallMs": 433.472,
+    "avatar": "JPEG512"
+  },
+  "unmountedPostGcHeap": {
+    "type": "MemoryUsage",
+    "heapUsage": 19500816,
+    "heapCapacity": 42598400,
+    "externalUsage": 912,
+    "classes": [
+      {
+        "name": "_DeveloperCardQrState",
+        "instancesCurrent": 0,
+        "bytesCurrent": 0
+      },
+      {
+        "name": "_MainPortfolioEditorScreenState",
+        "instancesCurrent": 0,
+        "bytesCurrent": 0
+      },
+      {
+        "name": "_BaselineProjectsScreenState",
+        "instancesCurrent": 0,
+        "bytesCurrent": 0
+      },
+      {
+        "name": "ProjectLibraryCard",
+        "instancesCurrent": 0,
+        "bytesCurrent": 0
+      }
+    ]
+  },
+  "measurementFix": {
+    "issue": "Cached editor Finder held an Element tree after unmount in the test harness",
+    "beforeTrackedEditorInstances": 1,
+    "fix": "Clear contacts/scroll Finder caches in finally, no product runtime change",
+    "afterTrackedEditorInstances": 0
+  },
+  "limitations": [
+    "Emulator virtual GPU; does not establish physical-device FPS or a60Hz budget",
+    "Library/QR before variants are existing historical baselines, not new changes in this audit",
+    "Only selected UI classes measured after unmount; zero counts do not prove absence of every possible leak",
+    "Raw VM timelines contain code paths and remain outside Git; only numeric measurements copied"
+  ]
+}

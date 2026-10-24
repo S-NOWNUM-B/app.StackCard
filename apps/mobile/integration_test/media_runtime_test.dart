@@ -8,6 +8,7 @@ import 'package:app_stackcard/features/portfolio_draft/domain/portfolio_sync.dar
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as image;
 import 'package:integration_test/integration_test.dart';
@@ -30,11 +31,112 @@ void main() {
     'FIRESTORE_EMULATOR_PORT',
     defaultValue: 8085,
   );
-  const options = FirebaseOptions(
-    apiKey: 'emulator-only-key',
-    appId: '1:123456789:android:0123456789abcdef',
+  final options = FirebaseOptions(
+    // iOS Installations валидирует форму synthetic options ещё до Emulator API.
+    apiKey: 'A00000000000000000000000000000000000000',
+    appId: Platform.isIOS
+        ? '1:123456789:ios:0123456789abcdef'
+        : '1:123456789:android:0123456789abcdef',
+    iosBundleId: Platform.isIOS ? 'com.example.appStackcard' : null,
     messagingSenderId: '123456789',
     projectId: 'demo-stackcard-test',
+  );
+  const pickerEnabled = bool.fromEnvironment('RUN_MEDIA_PICKER_ACCEPTANCE');
+  testWidgets(
+    'native camera or gallery returns the expected system selection outcome',
+    (tester) async {
+      expect(Platform.isAndroid || Platform.isIOS, isTrue);
+      final semantics = tester.ensureSemantics();
+      try {
+        const sourceName = String.fromEnvironment('MEDIA_PICKER_SOURCE');
+        const expected = String.fromEnvironment('MEDIA_PICKER_EXPECTED');
+        expect(['camera', 'gallery'], contains(sourceName));
+        expect([
+          'cancel',
+          'permissionDenied',
+          'unavailable',
+          'selected',
+        ], contains(expected));
+        final source = sourceName == 'camera'
+            ? PortfolioImageSource.camera
+            : PortfolioImageSource.gallery;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              appBar: AppBar(title: const Text('StackCard media acceptance')),
+              body: Center(
+                child: Text('MEDIA_PICKER_READY:$sourceName:$expected'),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        debugPrint(
+          'STACKCARD_MEDIA_ACCEPTANCE:READY source=$sourceName expected=$expected',
+        );
+        // Только настоящий picker: без Firebase/Auth/Hive и без записи в portfolio.
+        final outcome = await tester
+            .runAsync<(PreparedPortfolioImage?, PortfolioMediaFailure?)>(
+              () async {
+                try {
+                  return (
+                    await NativePortfolioImagePicker()
+                        .pick(source)
+                        .timeout(const Duration(minutes: 3)),
+                    null,
+                  );
+                } on PortfolioMediaFailure catch (error) {
+                  return (null, error);
+                }
+              },
+            );
+        expect(outcome, isNotNull);
+        final (selected, failure) = outcome!;
+        if (expected == 'permissionDenied' || expected == 'unavailable') {
+          expect(selected, isNull);
+          expect(failure?.kind.name, expected);
+        } else {
+          expect(failure, isNull);
+          if (expected == 'cancel') {
+            expect(selected, isNull);
+          } else {
+            expect(selected, isNotNull);
+            final decoded = image.decodeJpg(selected!.bytes);
+            expect(decoded, isNotNull);
+            expect(decoded!.width, lessThanOrEqualTo(512));
+            expect(decoded.height, lessThanOrEqualTo(512));
+            expect(decoded.exif.isEmpty, isTrue);
+            expect(
+              selected.bytes.length,
+              lessThanOrEqualTo(portfolioAvatarMaxBytes),
+            );
+          }
+        }
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              appBar: AppBar(title: const Text('StackCard media acceptance')),
+              body: Center(
+                child: Text('MEDIA_PICKER_PASS:$sourceName:$expected'),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        debugPrint(
+          'STACKCARD_MEDIA_ACCEPTANCE:PASS source=$sourceName expected=$expected',
+        );
+        // XCTest читает marker в открытом accessibility tree; handle закрываем до конца test body.
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(seconds: 2)),
+        );
+      } finally {
+        semantics.dispose();
+      }
+    },
+    skip: !pickerEnabled,
+    timeout: const Timeout(Duration(minutes: 4)),
   );
   testWidgets(
     'native Spark avatar upload/read/reopen and SDK ownership/lifecycle',

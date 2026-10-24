@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-24",
+  "platform": "iOS27.0 Simulator",
+  "device": "FE7113A2-ED30-4881-895A-BD010AA2C411",
+  "status": "passed",
+  "scope": "Actual native UI with isolated synthetic memory repository after final lazy Editor and deleted-project fix; no ordinary Auth/Hive/preferences",
+  "checkpoints": [
+    {
+      "checkpoint": "light_ru_three_roots_saved_home_dirty_discard"
+    },
+    {
+      "checkpoint": "library_and_unavailable_publication_no_mock_success"
+    },
+    {
+      "checkpoint": "explicit_diagnostics_opt_in_out_and_privacy_help"
+    }
+  ],
+  "flutterDriveExitCode": 0,
+  "afterEditorOptimizationAndLibraryDeleteFix": true
+}

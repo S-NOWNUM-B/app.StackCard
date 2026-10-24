@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-24",
+  "status": "passed",
+  "platform": "iOS27.0 Simulator",
+  "device": "FE7113A2-ED30-4881-895A-BD010AA2C411",
+  "checkpoints": [
+    {
+      "permission": "denied",
+      "initialPermission": "notDetermined",
+      "actualSpringBoardPrompt": true,
+      "flutterDriveExitCode": 0,
+      "xctestExitCode": 0,
+      "sdkReadbacks": 2,
+      "autoInitBeforeAndAfter": false
+    },
+    {
+      "permission": "authorized",
+      "initialPermission": "notDetermined",
+      "actualSpringBoardPrompt": true,
+      "flutterDriveExitCode": 0,
+      "xctestExitCode": 0,
+      "sdkReadbacks": 2,
+      "autoInitBeforeAndAfter": false
+    }
+  ],
+  "isolation": "Created for audit; only this owned Simulator reset between denial and authorization",
+  "tokensRequested": false,
+  "authHiveOrConsentStoreUsed": false,
+  "deliveryAccepted": false,
+  "note": "Actual notification permission only; no APNs/FCM delivery, physical device or Apple Developer team. Cold fresh-Simulator notification daemon first settings call took about61s; returned normally and complete XCTest/Flutter passed.",
+  "taskOwnedSimulatorDeletedAfterAcceptance": true
+}

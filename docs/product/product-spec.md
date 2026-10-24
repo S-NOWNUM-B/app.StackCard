@@ -36,6 +36,21 @@
 
 ## Статус и границы текущей работы
 
+**2026-10-24: Phase20 заменена на полный аудит проекта по прямому поручению пользователя.**
+Релиз отложен. Текущая работа: функциональность web/mobile/backend, сохранность
+данных и смена аккаунта, публикация/ошибки, доказанный cleanup неиспользуемых
+исходников/файлов, измеримая оптимизация и актуализация документации.
+Субагенты работают по независимым областям; ведущий интегрирует и проверяет результат.
+Матрица сценариев и результаты — [аудит](audit.md). «100%» означает выполненные
+критерии сценариев; coverage сам по себе не доказывает полную работоспособность.
+Внешние/native/live ограничения остаются явно открытыми. Deploy/billing/Git не разрешены.
+
+Подготовленная signing configuration и согласованный Android ID
+`dev.snownumb.stackcard` сохраняются; приватный ключ находится вне репозитория.
+AAB/store/App Distribution и материалы выпуска больше не продолжаются.
+Предыдущие результаты, включая failed native-symbol stripping и manual iOS PDF
+Save/cancel, сохранены как [отложенная подготовка релиза](evidence/release-preparation-2026-10-24/checks.json).
+
 **2026-10-24: дополнительный аудит Flutter coverage завершён по запросу пользователя.**
 Проверены все32 файла вне LCOV:17 constant translation catalogs,9 export-only
 barrels,4 abstract repository contracts,1 constant token file и1 неиспользуемый
@@ -48,7 +63,9 @@ status recovery без повторного POST, чужие ACK IDs и Delete �
 Focused63 и полный1399 tests PASS, analyze/format PASS. LCOV13495/15530 =86,90%
 (было13492/15530 =86,88%); runtime source hash, denominator и список32 unreported
 не изменились. [Пофайловый аудит и результаты](evidence/phase19/coverage-audit.json).
-Runtime/dependencies/CI threshold не менялись; native/live suites повторно не запускались.
+В этом отдельном coverage-аудите runtime/dependencies/CI threshold не менялись;
+native/live suites не запускались. Последующий Phase20 удалил подтверждённый
+unused UI и добавил регрессии; его новый denominator и native результаты указаны отдельно.
 
 **2026-10-24: Phase19 — Production hardening завершена.** Бесплатная opt-in
 диагностика доставлена и проверена в Android/iOS Crashlytics Console: фиксированный
@@ -1109,14 +1126,14 @@ paid subscriptions, full GitHub client, private GitHub repositories,
 
 ## План разработки
 
-**Результат поручения 2026-10-23:** Phase19 production hardening завершена2026-10-24
-после принятой Phase18, включая настройку Xcode и обязательную iOS проверку.
-Незакрытые system/live/profile/Figma/release проверки сохраняются отдельно.
-Phase20, deployment и billing не запускаются.
+**Актуальное поручение2026-10-24:** заменить последнюю Phase20 Release на
+полный аудит web/mobile/backend после принятой Phase19. Разрешены исправления,
+доказанный cleanup, измеримая оптимизация, тесты, документация и субагенты.
+Релиз отложен; distribution/deployment/billing и commit/push требуют отдельного
+поручения. Незакрытые system/live/profile/Figma проверки сохраняются отдельно.
 Разрешённый capability scope и оставшаяся работа перечислены
-[в текущем статусе](#статус-и-границы-текущей-работы). Phase 11/12 и R0–R9 ниже
-сохраняют историю реализации и evidence; новые mobile changes не считаются
-автоматическим завершением этих фаз или full Design v2 acceptance.
+[в текущем статусе](#статус-и-границы-текущей-работы). Phase11/12 и R0–R9 ниже
+сохраняют историю реализации и evidence, не переопределяя текущий контракт.
 
 План объединяет исходное описание StackCard, требования учебного задания
 `individual_project_flutter_ru.docx` и актуальный scope выше: mobile, полноценный
@@ -1139,7 +1156,7 @@ web-редактор и публичное основное портфолио �
 | Phase 14: сохранённая capability | Contact/Inbox/FCM реализованы, Android live принят ранее. Постоянный hosting отложен; iOS/APNs открыт. Inbox доступен из Settings. | Новый запуск только по отдельному поручению; push не заменяет durable Inbox и не создаёт root-вкладку. |
 | Phase 15: source/local результат, отдельная приёмка | Developer Card из опубликованного основного портфолио, QR permanent URL и existing native Share. Вход через «Поделиться», без новой root-вкладки. | Карточка соответствует public snapshot; unpublished/unknown/unavailable не дают фиктивного QR или успеха. |
 | Phase 16–17: измерения и качество | Профилирование saved Home/PDF/Card, Library/GitHub import и Editor; сквозные Save/sync/Publish/QR/UID journeys и coverage. | Измерения воспроизводимы; миграция, offline/retry и поздние ACK не теряют данные и не публикуют автоматически. |
-| Phase 18–20: доставка и выпуск | CI по actual configs, бесплатное окружение, hardening, release artifacts и материалы нового UI. Каждая следующая фаза требует отдельного перехода. | Проверки блокируют дефекты; signing безопасен, live rollout и распространение выполняются только по разрешению. |
+| Phase18–19: CI и hardening; Phase20: полный аудит | CI и hardening приняты; проверить web/mobile/backend по сценариям, исправить дефекты, убрать доказанный dead code и измерить оптимизации. Релиз отложен. | Проверки покрывают сохранность данных, ошибки, privacy и UID isolation; результаты и незакрытые native/live gates явно указаны. |
 
 Чекбоксы исходных фаз ниже сохраняют историю. Их оставшиеся задачи и критерии
 обновлены под действующий контракт; удалённые возможности не возвращаются ради
@@ -1333,7 +1350,7 @@ audit, IA, design system и ключевые экраны по [redesign plan](.
 | Phase 17 — Testing | Source/local и Android QA PASS; iOS SDK journey11 checkpoints дополнительно PASS в Phase19; system/touch/live gates отдельно |
 | Phase 18 — CI/CD | Завершена: GitHub green/red runs, полный suite/coverage и скачанные APK/LCOV artifacts проверены |
 | Phase 19 — Production hardening | Завершена2026-10-24: Android/iOS build/SDK/UI и Crashlytics delivery/payload PASS; security/privacy review выполнен |
-| Phase 20 — Release | Запланирована |
+| Phase 20 — Полный аудит проекта | В работе по новому поручению2026-10-24: web/mobile/backend, cleanup, performance и документация. Релиз отложен |
 
 </div>
 
@@ -2921,7 +2938,7 @@ rebuild/retained-memory traces, длинный Editor drag и реальные G
   demo Firestore/Storage Rules, mobile↔web fixtures и pinned asset integrity.
   Проверять основной portfolio/public2, Firestore avatar и legacy read compatibility.
 - [x] Подтвердить failed pipeline при ошибке проверки; исключить secrets/private
-  fixtures из логов/artifacts. Signing и release AAB остаются в Phase20.
+  fixtures из логов/artifacts. Signing и release AAB отложены до отдельного поручения.
 
 **Проверки и приёмка**
 
@@ -3052,39 +3069,88 @@ Matching dSYM UUID `E371B022-F1B3-3ADA-B005-B4A91926758B` (`Runner.debug.dylib`)
 Physical QR scan, system Share/Open/PDF picker, iOS/APNs, live hosting и
 DevTools/Figma/release gates прежних фаз этим не объявляются закрытыми.
 
-### Phase 20 — Release
+### Phase 20 — Полный аудит проекта
+
+**Разрешение2026-10-24:** пользователь заменил выпуск на полный аудит web/mobile,
+потребовал исправления, cleanup, оптимизацию и документацию с приоритетной работой
+субагентов. Phase19 сохраняет свою приёмку; её tests не заменяют новый прогон.
+Релиз отложен. Подготовленные ID/signing и история проверок сохранены в
+[release guide](../release/README.md), без продолжения AAB/store distribution.
+
+**Проверено2026-10-24:** исправлены avatar/menu/retry races, web storage/Share/HTTP
+boundaries, backend cleanup и HIGH body-parser; безопасный cleanup и документация
+обновлены. Последующий прогон: Flutter1398/LCOV87,30%, web167,
+backend43/Rules89 PASS; дополнительные browser reset/Contact/Inbox/privacy/Account10 PASS.
+Android/iOS SDK process-pair по11 и UI по3 checkpoints PASS; native PDF
+Save/cancel/30884bytes exact comparison PASS на Android и iOS Simulator.
+Home39216→5355 mounted elements на одном fixture. Большой Editor дополнительно
+переведён на lazy reorderable slivers: Android profile23324→2606 elements,
+mount681,605→347,008ms, build p95126,829→12,575ms. Stress tests сохраняют
+field identity/Save и длинный drag/drop/cancel. Android/iOS native QR decode,
+Share и Open anonymous reader в Chrome/Safari PASS; Inbox/avatar actual SDK
+на Android/iOS PASS. Android gallery/camera, iOS gallery/camera denial,
+Android grant/revoke и iOS notification Deny/Allow PASS; APNs этим не проверен. Android native profile/VM post-GC/GitHub pagination PASS, retained Finder в
+измерительном harness исправлен; physical/APNs/live gates
+остаются открытыми. Владелец подтвердил отсутствие iPhone/Developer team.
 
 **Задачи**
 
-- [ ] Утвердить application IDs/signing, безопасно сохранить Android keystore,
-  собрать подписанный release AAB с obfuscation и сохранить symbols.
-- [ ] Проверить release на устройстве: optional onboarding, Home/Projects/Editor,
-  avatar/manual city, saved PDF, явный Publish/Card/QR и отказ недоступного сервиса.
-- [ ] Подготовить screenshots/описание/privacy policy нового white-only/ru UI:
-  одно портфолио и три roots, без старых libraries/wizard/GPS/project photos.
-- [ ] Подготовить Google Play internal testing либо AAB/материалы при отсутствии
-  developer account. Распространение/App Distribution выполнять только по запросу.
-- [ ] Добавить настоящие download links после появления релиза; отдельно проверить
-  iOS build/document picker/sharing/APNs и описать шаги App Store/демонстрации.
+- [x] Инвентаризировать действующие функции web/mobile/backend, входные точки,
+  зависимости и открытые проверки; составить матрицу сценариев и ошибок.
+- [x] Проверить guest/Auth/смену UID, optional onboarding, Projects/import/review,
+  Editor Save/discard/restart/offline/sync; убедиться, что поздние ACK не теряют
+  ввод и не записывают данные в другой аккаунт.
+- [x] Проверить в доступных browser/emulator/Simulator окружениях avatar/manual
+  city/PDF, explicit Publish/Update/Unpublish, public reader/Card/QR/Share,
+  account deletion/recovery, Inbox/permissions, privacy/diagnostics и честную
+  недоступность неподключённого backend. Live delivery остаётся отдельной проверкой.
+- [x] Исправить найденные дефекты с регрессионными тестами. Проверить security
+  Rules/public projection, HTTP boundaries, compatibility и cross-client payloads.
+- [x] Удалить доказанно неиспользуемые строки/файлы/папки/зависимости после проверки
+  imports, runtime/CLI/glob entries, generators, assets/provenance и compatibility.
+  Низкий LCOV сам по себе не означает dead code; пользовательские данные не удалять.
+- [x] Найти и измерить bottlenecks, выполнить оправданные оптимизации без новых
+  абстракций/кэшей ради метрики; проверить скорость, запросы и ресурсы до/после.
+- [x] Обновить описания архитектуры, запуск, ограничения, AI routing и недостающие
+  инструкции в существующих владельцах документации; проверить ссылки и команды.
+- [x] Выполнить итоговые assets/tooling, web format/type/tests/build, Flutter
+  format/analyze/tests/реальный LCOV, backend/Rules и доступные browser/native journeys.
 
 **Проверки и приёмка**
 
-- [ ] Подписанный Android release проверен на устройстве; signing и symbols
-  сохранены безопасно, секретов в repo/artifacts нет.
-- [ ] Материалы соответствуют одному main, текущим screens и реальной
-  доступности backend/public URL; неподключённые возможности не обещаны.
-- [ ] Выполнен только разрешённый способ распространения; download links ведут
-  к настоящему release, web/API deployment разрешён и проверен отдельно.
-- [ ] iOS результат указан отдельно; Android AAB не доказывает iOS/App Store release.
+- [x] У каждого сценария указаны конкретная проверка, результат и платформа;
+  source/unit/emulator/browser/native/live evidence различаются.
+- [x] Найденные функциональные и security дефекты исправлены; новые регрессии проходят
+  вместе с существующими gates без bypass, потери данных и ослабления privacy.
+- [x] Cleanup обоснован references/entry points, оставшиеся compatibility files
+  объяснены; оптимизация Home/Editor сохранила функциональность, результаты и
+  незакрытые performance budgets явно указаны.
+- [x] Документация соответствует итоговой реализации; нерешённые внешние/native
+  gates перечислены явно, «100% функций работает» без доказательств не заявляется.
+- [ ] Завершить внешнюю приёмку: physical iPhone/APNs и performance, real Google
+  account/mailbox, permanent hosting/App Check/FCM после предоставления окружения
+  и отдельного разрешения на отложенный rollout.
 
-**Готово, когда:** release проверен, материалы готовы, разрешённый канал
-распространения работает. Новая платная инфраструктура, публикация в store и
-постоянный web/API hosting требуют отдельного поручения.
+**Доступная часть аудита завершена:** Android emulator, iOS Simulator, local
+browser/SDK/backend checks прошли; обычные сборки восстановлены, временный
+Simulator удалён без очистки ordinary app data.
 
-**История Phase 0–14 сохранена. Действующая реализация — ADR 0005, source/local
-Phase 15–16 и source/local результаты Phase17; Phase18 CI/CD завершена и проверена2026-10-23.
-Phase19 завершена2026-10-24, Phase20 остаётся планом. Новые local checks
-не закрывают прежние live/iOS/Figma/release gates.**
+**Остаётся открытым:** физический iPhone/APNs, отложенный live hosting,
+неперепроверенные live сценарии и physical-device performance. Editor bottleneck
+исправлен и измерен на Android emulator, virtual GPU raster зависит от окружения;
+physical60FPS budget не принят. Flutter поддерживает на iOS Simulator только
+debug mode; его замеры не заменяют physical iOS profile. Доступные system checks
+фиксируются в матрице аудита; фаза целиком не объявлена завершённой.
+
+**Готово, когда:** вся матрица текущего контракта проверена на заявленных платформах,
+исправлены найденные значимые дефекты, безопасный cleanup и измерения подтверждены,
+документация актуальна. Невыполненные проверки сохраняют фазу открытой.
+Результаты — [отчёт](audit.md) и [машиночитаемые checks](evidence/phase20/checks.json).
+Публикация, платные сервисы, store signing/распространение и Git не входят в аудит.
+
+**История Phase0–19 сохранена.** Новые local checks не закрывают прежние
+live/iOS/Figma/profile gates. Учебные требования выпуска ниже сохраняют обязательство
+курса и выполняются позднее отдельным поручением, не возвращая release в Phase20.
 
 ---
 

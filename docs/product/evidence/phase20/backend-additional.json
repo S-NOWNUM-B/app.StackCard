@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-24",
+  "status": "passed",
+  "scope": "actual demo Auth/Firestore/Storage integration; no live config changes",
+  "project": "demo-stackcard-test",
+  "tests": 89,
+  "newScenarios": [
+    "Auth password reset OOB redeem, old password denied, new password allowed, one-use code",
+    "Empty account with available demo Storage actual Auth deletion and receipt recovery",
+    "Bucketless empty account denied before lifecycle lock even after cutover; unknown legacy bytes preserved",
+    "Device unregister after permission revoke preserves other device and durable Inbox",
+    "Binding revoked after sender receipt transaction blocks transport at pre-send recheck",
+    "Account lock after sender receipt transaction blocks transport at pre-send recheck"
+  ],
+  "command": "npm run test:all-rules",
+  "exitCode": 0,
+  "runtimePolicyChanged": false,
+  "limitations": [
+    "Emulator OOB is not actual email delivery",
+    "Demo Storage success does not relax the bucketless legacy-media safety guard",
+    "Transport spies are not live FCM/APNs delivery"
+  ]
+}

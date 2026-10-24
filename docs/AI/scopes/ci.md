@@ -17,7 +17,7 @@
   остаются у Android/Flutter; их отдельный дубликат в workflow не вводить.
 - Использовать `npm ci` для web, firebase и functions, Flutter
   `pub get --enforce-lockfile`. npm остаётся canonical package manager CI;
-  существующие pnpm-файлы не заменяют package-lock. Firebase CLI — точная
+  неиспользуемые pnpm lock/workspace удалены, второй dependency graph не поддерживается. Firebase CLI — точная
   devDependency в `firebase/package.json`, без global/latest установки CLI.
   npm закреплён `packageManager` в трёх package manifests; workflow устанавливает
   эту версию до `npm ci`, backend и firebase используют одну версию.
@@ -32,6 +32,8 @@
   Design v2/Brand A/fonts и весь Simple Icons catalog проходят provenance,
   bytes/SHA256, точный inventory и безопасный vector parser. Нельзя обновлять
   хеши только ради прохождения gate; нужны источник и проверка изменения.
+  `tools/release/test_*.py` проверяет согласование выбранного Android Firebase
+  client/Dart public key без изменения legacy/iOS и отказ чужого appId/token.
 - Actions закреплять полным commit SHA; `contents: read`, checkout без
   сохранения credentials, без `pull_request_target` и write permissions.
   Не добавлять `continue-on-error`/игнорирование exit codes quality steps.

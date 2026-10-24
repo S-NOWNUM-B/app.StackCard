@@ -163,15 +163,21 @@ void main() {
     // Разделы больше не переставляются; замеряем прокрутку до контактов.
     final contacts = find.byKey(const Key('main.editor.section.links'));
     final scroll = find.byType(Scrollable).first;
-    await capture('editor.scroll', () async {
-      await tester.scrollUntilVisible(
-        contacts,
-        500,
-        scrollable: scroll,
-        maxScrolls: 120,
-      );
-      await tester.pumpAndSettle();
-    });
+    try {
+      await capture('editor.scroll', () async {
+        await tester.scrollUntilVisible(
+          contacts,
+          500,
+          scrollable: scroll,
+          maxScrolls: 120,
+        );
+        await tester.pumpAndSettle();
+      });
+    } finally {
+      // Finder кэширует Element tree; сам замер не должен удерживать Editor после unmount.
+      contacts.reset();
+      scroll.reset();
+    }
     expect((await repository.read())!.content, workspace);
     for (final baseline in [true, false]) {
       final url = Uri.parse(

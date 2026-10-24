@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-24",
+  "status": "passed",
+  "device": "emulator-5554",
+  "package": "dev.snownumb.stackcard",
+  "scope": "actual Android Firebase Messaging read-only system permission, no token/request/Auth/draft",
+  "checkpoints": [
+    {
+      "system": "initial not granted, user-set absent",
+      "sdk": "notDetermined",
+      "reads": 2,
+      "passed": true
+    },
+    {
+      "system": "pm grant POST_NOTIFICATIONS",
+      "sdk": "authorized",
+      "reads": 2,
+      "passed": true
+    },
+    {
+      "system": "pm revoke + user-set",
+      "sdk": "denied",
+      "reads": 2,
+      "passed": true
+    }
+  ],
+  "autoInitRemainedDisabled": true,
+  "originalPermissionRestored": {
+    "granted": false,
+    "flags": [
+      "USER_SENSITIVE_WHEN_GRANTED",
+      "USER_SENSITIVE_WHEN_DENIED"
+    ]
+  },
+  "ordinaryAppDataCleared": false,
+  "liveDeliveryProven": false
+}

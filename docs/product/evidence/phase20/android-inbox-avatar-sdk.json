@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-24",
+  "status": "passed",
+  "platform": "android emulator17",
+  "environment": "Actual named Firebase Auth/Firestore SDK against demo-stackcard-test; local trusted Node Contact API",
+  "inbox": {
+    "fixture": "1 accepted Contact HTTP request +50 Admin pagination records",
+    "checks": [
+      "Server pagination50+1, newest-first, no duplicate cursor results",
+      "markRead writes only server readAt; repeat preserves first timestamp",
+      "Foreign and anonymous reads denied",
+      "Owner/session guards reject stale access"
+    ],
+    "flutterDriveExitCode": 0
+  },
+  "avatar": {
+    "checks": [
+      "Actual Firestore JPEG upload/read/reopen",
+      "Foreign/anonymous owner boundary",
+      "Lifecycle lock prevents upload/read",
+      "Synthetic JPEG is bounded512px/256KiB and strips EXIF"
+    ],
+    "flutterDriveExitCode": 0
+  },
+  "ordinaryAppDataCleared": false,
+  "defaultAuthUsed": false,
+  "disposableDemoFixtureCleanup": "completed",
+  "limitations": [
+    "No permanent hosting or live delivery/APNs proved",
+    "SDK avatar test is separate from native camera/gallery picker checks"
+  ]
+}

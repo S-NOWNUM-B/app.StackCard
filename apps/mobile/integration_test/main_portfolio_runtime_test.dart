@@ -406,13 +406,24 @@ void main() {
                   .first,
             );
             await tester.pumpAndSettle();
-            await tester.tap(control);
-            await tester.pump(const Duration(seconds: 2));
-            await _systemStage(action, publication.url!);
+            if (Platform.isIOS && action == 'open') {
+              // Safari приостанавливает Flutter frames; host ждём до возврата app.
+              await tester.runAsync(() async {
+                await Future.wait<void>([
+                  _systemStage(action, publication.url!),
+                  tester.tap(control),
+                ]);
+              });
+              expect(tester.takeException(), isNull);
+            } else {
+              await tester.tap(control);
+              await tester.pump(const Duration(seconds: 2));
+              await _systemStage(action, publication.url!);
+            }
             await tester.pumpAndSettle();
           }
         }
-        // Настоящий Android clipboard bridge, без открытия Share и отправки.
+        // Настоящий platform clipboard bridge, без открытия Share и отправки.
         final copy = find.byKey(const ValueKey('developerCard.copy'));
         await tester.scrollUntilVisible(
           copy,
@@ -589,7 +600,8 @@ void main() {
 Future<void> _systemStage(String stage, Uri url) async {
   final client = HttpClient();
   try {
-    final endpoint = Uri.http('10.0.2.2:3811', '/$stage', {'url': '$url'});
+    final host = Platform.isIOS ? '127.0.0.1:3811' : '10.0.2.2:3811';
+    final endpoint = Uri.http(host, '/$stage', {'url': '$url'});
     final response = await (await client.getUrl(endpoint))
         .close()
         .timeout(const Duration(seconds: 90));

@@ -122,7 +122,7 @@ Sans с OFL licenses сохраняются. Выбор шрифтов Design v2
 | **Маршрут и source** | **Текущее поведение и проблема** |
 |:---|:---|
 | `/home` — [Home](../../apps/mobile/lib/features/home/home_screen.dart) | Dashboard с greeting, profile poster, readiness percentage, counters, Featured и большими Projects/GitHub кнопками; строки 62–135, 205–242. Нет нужной библиотеки Все/Резюме/Проекты |
-| `/portfolio` — [Portfolio](../../apps/mobile/lib/features/portfolio/presentation/portfolio_screen.dart) | Demo либо preview единственного working content; это не список нескольких Portfolio |
+| `/portfolio` — бывший `PortfolioScreen` (удалён в Phase20; `/portfolio` перенаправляется в Editor) | Demo либо preview единственного working content; это не список нескольких Portfolio |
 | `/projects` — [Projects](../../apps/mobile/lib/features/projects/presentation/projects_screen.dart) | Import/create/search/list и редактирование работают через draft; большой poster и category filters перед списком, строки 89–206, противоречат новому порядку |
 | `/settings` — [Settings](../../apps/mobile/lib/features/settings/settings_screen.dart) | Theme/language/source descriptions, profile summary, account/guest transfer, demo state previews. Нет полного DeveloperProfile/account/privacy управления; poster и settings root принадлежат прежнему UI |
 | `/sign-in`, `/register`, `/reset-password` — [Auth forms](../../apps/mobile/lib/features/auth/presentation/sign_in_screen.dart) | Account forms/session states и explicit guest; сохраняются вместе с guards и typed errors |
@@ -146,9 +146,11 @@ Root tab change и возвращение из Settings проектируютс
 В [Projects cards](../../apps/mobile/lib/features/projects/presentation/projects_screen.dart),
 строки 308–318 и 332–337, используются крупный `project.symbol` и slash technologies.
 Это source основания для cover/placeholder и TechnologyBadge, а не подтверждение
-реализованного media lifecycle. [GitHubSourceLink](../../apps/mobile/lib/features/github_import/presentation/github_source_cards.dart),
-365–395, уже копирует URL GitHub source с подтверждением; это не публичная ссылка
-документа Resume/Portfolio.
+реализованного media lifecycle. Исторический `GitHubSourceLink` копировал
+URL GitHub source с подтверждением; компонент удалён как runtime-unreachable при
+Phase20 audit2026-10-24. Действующий import/review находится в
+[GitHub Import](../../apps/mobile/lib/features/github_import/presentation/github_import_screen.dart);
+source URL не является публичной ссылкой портфолио.
 
 [Builder](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_builder_screen.dart),
 110–148, показывает sections/projects/blocks/theme в одном содержимом, а 184–225 —
@@ -176,7 +178,7 @@ buffered input и явные Apply/Cancel необходимо сохранит�
 | Общая база | `PortfolioProfile` имеет name/username/headline/bio/locationText/avatarUrl. Остальные данные принадлежат одному `PortfolioContent`; самостоятельного DeveloperProfile store нет |
 | Resume/Portfolio | [Content](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_content.dart), строки 12–46, содержит одну строку `resumeText` и один набор content; multiple document IDs/status/date/duplicate отсутствуют |
 | Project relations | [Project](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_project.dart), строки 14–29: featured/visible глобальны. [Удаление в Builder](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_builder_panels.dart), 203–206, удаляет сам проект. Target требует separate attachment с order/featured/visibility |
-| Изменение профиля | [Profile projection](../../apps/mobile/lib/features/profile/presentation/portfolio_profile_projection.dart) читает working content. Нет independent documents, per-output overrides и review обновления base data |
+| Изменение профиля | прежняя profile projection (удалена как unused в Phase20) читает working content. Нет independent documents, per-output overrides и review обновления base data |
 | Фото | Profile хранит avatarUrl, [editor](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_profile_editor_screen.dart), 63–68, предлагает текстовый URL. [Renderer](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_content_view.dart), 97–117, показывает artwork, не выбранную фотографию |
 | Контакты и ссылки | [SocialLink](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_sections.dart), 114–146, имеет label/url/kind; CRUD [link editor](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_links_editor_screen.dart) работает. Нет public email/phone, per-link privacy, reorder и selection/override для outputs |
 | URL validation | [Validation](../../apps/mobile/lib/features/portfolio_draft/domain/portfolio_validation.dart), 31–48, принимает http/https; mailto/tel не поддерживаются этим link contract. Контакты нельзя незаметно свести к прежним URL-полям |

@@ -5,12 +5,34 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import threading
 import time
 from urllib.parse import parse_qs, urlparse
 from urllib.request import urlopen
 import xml.etree.ElementTree as ET
+
+
+def verify_browser_open(xml, resumed, url):
+    packages = {match[1] for line in resumed for match in re.finditer(
+        r'(?:^|\s)(com\.android\.chrome|org\.chromium\.webview_shell)/', line)}
+    assert len(packages) == 1, f'Unsupported foreground browser: {resumed}'
+    package = packages.pop()
+    nodes = list(ET.fromstring(xml).iter('node'))
+    assert 'Native saved author' in xml, 'Anonymous portfolio author missing'
+    assert all(marker not in xml for marker in ['PRIVATE_EDITOR_BUFFER', 'PRIVATE_SAVED_NOTE'])
+    if package == 'com.android.chrome':
+        # Наблюдённый native URL bar; Chrome скрывает только HTTP scheme.
+        values = [node.attrib.get('text', '') for node in nodes
+                  if node.attrib.get('resource-id') == 'com.android.chrome:id/url_bar'
+                  and node.attrib.get('package') == 'com.android.chrome']
+        assert any(value in {url, url.removeprefix('http://')} for value in values), \
+            'Exact URL missing from Chrome address bar'
+        return 'Chrome'
+    assert url in [node.attrib.get('text', '') for node in nodes], \
+        'Exact URL missing from foreground browser'
+    return 'AOSP Chromium WebView shell'
 
 
 def main():
@@ -42,8 +64,16 @@ def main():
         return file
 
     def dump():
-        adb('shell', 'uiautomator', 'dump', '/sdcard/stackcard-system.xml')
-        return adb('shell', 'cat', '/sdcard/stackcard-system.xml').decode()
+        result = adb('shell', 'uiautomator', 'dump', '/sdcard/stackcard-system.xml')
+        if b'ERROR' in result or b'dumped to: /sdcard/stackcard-system.xml' not in result:
+            # После null-root ошибки прежний XML не является свежим screenshot tree.
+            return None
+        xml = adb('shell', 'cat', '/sdcard/stackcard-system.xml').decode()
+        try:
+            ET.fromstring(xml)
+        except ET.ParseError:
+            return None
+        return xml
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *_args):
@@ -58,6 +88,14 @@ def main():
                 assert parsed.scheme == 'http' and parsed.netloc == '127.0.0.1:3800'
                 assert parsed.path.startswith('/d/') and len(parsed.path) == 35
                 assert not parsed.query and not parsed.fragment
+                completed = [item['stage'] for item in report['checkpoints']]
+                if report['status'] == 'failed' or stage in completed:
+                    raise ValueError('Repeated or previously failed native stage')
+                if stage != ('card', 'share', 'open')[len(completed)]:
+                    raise ValueError('Native stages must be card, share, open in order')
+                if report.get('url', url) != url:
+                    raise ValueError('The synthetic document URL changed between stages')
+                report['url'] = url
                 if stage == 'card':
                     screenshot = screen(stage)
                     decoded = subprocess.check_output(
@@ -73,7 +111,7 @@ def main():
                     deadline = time.monotonic() + 20
                     while True:
                         xml = dump()
-                        texts = [n.attrib.get('text', '') for n in ET.fromstring(xml).iter('node')]
+                        texts = [] if xml is None else [n.attrib.get('text', '') for n in ET.fromstring(xml).iter('node')]
                         if url in texts:
                             break
                         if time.monotonic() > deadline:
@@ -91,7 +129,7 @@ def main():
                     deadline = time.monotonic() + 30
                     while True:
                         xml = dump()
-                        if 'Native saved author' in xml:
+                        if xml is not None and 'Native saved author' in xml:
                             break
                         if time.monotonic() > deadline:
                             raise AssertionError('Anonymous portfolio missing from Android browser')
@@ -100,12 +138,9 @@ def main():
                     output.with_name(f'{output.stem}-open.xml').write_text(xml)
                     activity = adb('shell', 'dumpsys', 'activity', 'activities').decode()
                     resumed = [line for line in activity.splitlines() if 'mResumedActivity:' in line or 'topResumedActivity=' in line]
-                    assert any('org.chromium.webview_shell' in line for line in resumed), resumed
-                    texts = [n.attrib.get('text', '') for n in ET.fromstring(xml).iter('node')]
-                    assert url in texts, 'Exact URL missing from foreground browser'
-                    assert 'PRIVATE_EDITOR_BUFFER' not in xml
+                    browser = verify_browser_open(xml, resumed, url)
                     adb('shell', 'input', 'keyevent', 'KEYCODE_BACK')
-                    result = {'stage': stage, 'browser': 'AOSP Chromium WebView shell',
+                    result = {'stage': stage, 'browser': browser,
                               'anonymousNativeReader': True, 'resumedActivity': resumed, 'url': url}
                 else:
                     raise AssertionError('Unknown stage')
@@ -118,7 +153,7 @@ def main():
                 print(f'ANDROID_SYSTEM {stage} PASS', flush=True)
             except Exception as error:
                 report['status'] = 'failed'
-                report['error'] = str(error)
+                report.setdefault('error', str(error))
                 output.write_text(json.dumps(report, indent=2) + '\n')
                 body, status = b'FAIL', 500
                 print(f'ANDROID_SYSTEM FAIL {error}', flush=True)

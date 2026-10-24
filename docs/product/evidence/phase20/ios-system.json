@@ -1,0 +1,41 @@
+{
+  "status": "passed",
+  "device": "FE7113A2-ED30-4881-895A-BD010AA2C411",
+  "scope": "iOS Simulator native channels and anonymous local Next SSR",
+  "physicalCamera": "not checked; screenshot decoded independently by Vision",
+  "recipientSelected": false,
+  "checkpoints": [
+    {
+      "stage": "card",
+      "screenshot": "ios-system-card.png",
+      "decodedExactUrl": "http://127.0.0.1:3800/d/1b576a45a613bb7f6784694c8cd7485b",
+      "anonymousHttp200": true,
+      "privateMarkersAbsent": true
+    },
+    {
+      "stage": "share",
+      "xcresult": "stackcard-phase20-ios-system-v7-share.xcresult",
+      "xctestLog": "stackcard-phase20-ios-system-v7-share.xctest.log",
+      "securePasteVerified": true,
+      "exactCopiedUrl": "http://127.0.0.1:3800/d/1b576a45a613bb7f6784694c8cd7485b",
+      "recipientSelected": false,
+      "clipboardRepresentation": "SafariSecurePaste",
+      "plainTextAvailable": false,
+      "screenshot": "ios-system-share.png"
+    },
+    {
+      "stage": "open",
+      "xcresult": "stackcard-phase20-ios-system-v7-open.xcresult",
+      "xctestLog": "stackcard-phase20-ios-system-v7-open.xctest.log",
+      "exactSafariUrl": "http://127.0.0.1:3800/d/1b576a45a613bb7f6784694c8cd7485b",
+      "anonymousNativeReader": true,
+      "privateMarkersAbsent": true,
+      "screenshot": "ios-system-open.png"
+    }
+  ],
+  "date": "2026-10-24",
+  "platform": "iOS27.0 Simulator",
+  "automatedWithoutManualHandoff": true,
+  "rawArtifacts": "Own completed XCTest bundles/logs outside Git; screenshot attachments only copied here",
+  "openScreenshotScope": "Native address editing value; saved author/privacy asserted in Safari before address editing"
+}

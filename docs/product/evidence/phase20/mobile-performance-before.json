@@ -1,0 +1,104 @@
+{
+  "environment": "flutter_tester debug, macos, 3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"macos_arm64\"",
+  "fixture": {
+    "projects": 200,
+    "technologiesPerProject": 20,
+    "skills": 200,
+    "experience": 30,
+    "education": 20,
+    "links": 10,
+    "documents": 21
+  },
+  "qr60ParentRebuild": {
+    "samplesMs": [
+      18.265,
+      3.829,
+      2.864,
+      3.718,
+      5.213,
+      4.407,
+      3.985,
+      4.433,
+      3.203,
+      3.639,
+      3.085,
+      4.003,
+      2.986,
+      3.291,
+      3.53,
+      3.169,
+      3.506,
+      2.759,
+      3.098,
+      3.063,
+      2.501,
+      3.613,
+      3.598,
+      3.082,
+      4.103
+    ],
+    "medianMs": 3.53,
+    "p95Ms": 5.213,
+    "repaintsRequested": 0
+  },
+  "qr1024ParentRebuild": {
+    "samplesMs": [
+      5.212,
+      4.566,
+      5.229,
+      5.895,
+      5.129,
+      5.422,
+      5.498,
+      5.161,
+      4.743,
+      4.819,
+      4.374,
+      4.503,
+      4.855,
+      6.473,
+      5.351,
+      4.503,
+      4.377,
+      4.632,
+      4.531,
+      4.528,
+      4.328,
+      3.918,
+      3.67,
+      3.946,
+      4.14
+    ],
+    "medianMs": 4.632,
+    "p95Ms": 5.895,
+    "repaintsRequested": 0
+  },
+  "home": {
+    "mountWallMs": 1319.733,
+    "mountedElements": 39216,
+    "processRssBytes": 476954624
+  },
+  "library": {
+    "mountWallMs": 250.432,
+    "mountedElements": 1417,
+    "processRssBytes": 483540992
+  },
+  "editor": {
+    "mountWallMs": 765.676,
+    "mountedElements": 23321,
+    "processRssBytes": 444727296
+  },
+  "pdf": {
+    "samplesMs": [
+      575.483,
+      379.083,
+      341.123
+    ],
+    "medianMs": 379.083,
+    "p95Ms": 575.483,
+    "bytes": 256334,
+    "avatar": "512x512 JPEG"
+  },
+  "fixtureSha256": "ccdb1341879f6568890354f9687f5657f6e5cde9d8a36c989ada06d41c6ac775",
+  "limitations": "macOS flutter_tester debug wall clock and mounted elements; not native frame timing, retained heap or physical-device performance."
+}
