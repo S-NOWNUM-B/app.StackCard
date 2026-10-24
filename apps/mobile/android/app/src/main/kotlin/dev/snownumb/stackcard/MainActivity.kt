@@ -1,4 +1,4 @@
-package com.example.app_stackcard
+package dev.snownumb.stackcard
 
 import android.content.ActivityNotFoundException
 import android.app.Activity

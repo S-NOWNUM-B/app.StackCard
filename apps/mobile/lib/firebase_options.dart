@@ -50,8 +50,8 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC5Xb4O7D2tVC2vM0UQ--xjo4tZmeExYks',
-    appId: '1:713694392116:android:b644fe3e141117a5233f61',
+    apiKey: 'AIzaSyDYE61BpzSUJMmDQ4qZCFasl8FRTF8ILuM',
+    appId: '1:713694392116:android:50154e562d3b3b7d233f61',
     messagingSenderId: '713694392116',
     projectId: 'stackcard-dev-snownumb',
     storageBucket: 'stackcard-dev-snownumb.firebasestorage.app',
@@ -62,6 +62,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '713694392116',
     projectId: 'stackcard-dev-snownumb',
     storageBucket: 'stackcard-dev-snownumb.firebasestorage.app',
+    androidClientId: '713694392116-85hkkrtns11it2okhijcj14q2llngbuv.apps.googleusercontent.com',
     iosClientId: '713694392116-69gr7d31phvd3uv3lbiec69kre0hidd7.apps.googleusercontent.com',
     iosBundleId: 'com.example.appStackcard',
   );

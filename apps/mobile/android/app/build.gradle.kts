@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -8,8 +10,23 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Пароли и ключ находятся вне Git; debug/CI не требуют release credentials.
+val releasePropertiesFile = System.getenv("STACKCARD_ANDROID_KEY_PROPERTIES")
+    ?.let { file(it) } ?: rootProject.file("key.properties")
+val releaseProperties = Properties().apply {
+    if (releasePropertiesFile.isFile) {
+        releasePropertiesFile.inputStream().use { load(it) }
+    }
+}
+val releaseKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+if (releasePropertiesFile.isFile) {
+    check(releaseKeys.all { !releaseProperties.getProperty(it).isNullOrBlank() }) {
+        "Release signing requires storeFile, storePassword, keyAlias and keyPassword."
+    }
+}
+
 android {
-    namespace = "com.example.app_stackcard"
+    namespace = "dev.snownumb.stackcard"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -19,8 +36,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.app_stackcard"
+        applicationId = "dev.snownumb.stackcard"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -33,13 +49,33 @@ android {
         versionName = flutter.versionName
     }
 
-    buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+    signingConfigs {
+        create("release") {
+            if (releasePropertiesFile.isFile) {
+                storeFile = file(releaseProperties.getProperty("storeFile"))
+                storePassword = releaseProperties.getProperty("storePassword")
+                keyAlias = releaseProperties.getProperty("keyAlias")
+                keyPassword = releaseProperties.getProperty("keyPassword")
+            }
         }
     }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+}
+
+val validateReleaseCredentials = tasks.register("validateReleaseCredentials") {
+    doLast {
+        check(releasePropertiesFile.isFile) {
+            "Release signing is missing: set STACKCARD_ANDROID_KEY_PROPERTIES or android/key.properties. Debug signing is forbidden for release."
+        }
+    }
+}
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn(validateReleaseCredentials)
 }
 
 kotlin {
