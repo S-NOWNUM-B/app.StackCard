@@ -50,7 +50,6 @@ import {
   type WorkspaceContent,
   type PortfolioDocument,
   type GitHubSource,
-  type Project,
 } from '@/lib/model';
 type View =
   | 'home'

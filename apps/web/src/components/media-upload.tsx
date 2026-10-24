@@ -222,17 +222,6 @@ export function AvatarEditor({
   );
 }
 
-/** Compatibility export; modern owner screens use one AvatarEditor. */
-export function MediaUpload({
-  user,
-  onUploaded,
-}: {
-  user: User;
-  onUploaded: (path: string) => void;
-}) {
-  return <AvatarEditor user={user} path="" onChange={onUploaded} />;
-}
-
 export function PrivateImage({
   user,
   path,

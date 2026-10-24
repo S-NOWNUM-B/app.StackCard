@@ -132,7 +132,7 @@ export default async function PublicDocumentPage({ params }: Props) {
             version={document.version}
             attachedResumeUrl={attachedResumeUrl}
           />
-          <ShareActions title={document.title} />
+          <ShareActions key={publicId} title={document.title} publicId={publicId} />
           {acceptsContact && <ContactForm key={publicId} publicId={publicId} />}
         </div>
       </main>

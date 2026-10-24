@@ -3,15 +3,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui';
 
-export function ShareActions({ title }: { title: string }) {
+export function ShareActions({ title, publicId }: { title: string; publicId: string }) {
   const [url, setUrl] = useState('');
   const [canShare, setCanShare] = useState(false);
   const [status, setStatus] = useState('');
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    setUrl(`${window.location.origin}${window.location.pathname}`);
+    setUrl(`${window.location.origin}/d/${publicId}`);
+    setStatus('');
     setCanShare(typeof navigator.share === 'function');
-  }, []);
+  }, [publicId]);
   function selectLink() {
     input.current?.focus();
     input.current?.select();

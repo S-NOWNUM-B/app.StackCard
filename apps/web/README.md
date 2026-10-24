@@ -156,6 +156,9 @@ MIME, сигнатура и размеры проверяются до деко�
 при изменении сохранённой версии можно обновить публикацию или отправить существующую.
 Обычный Save не публикует. Неизвестная операция использует прежний operation ID и
 проверку статуса. При недоступном backend нет фиктивной ссылки или успеха.
+Publication и Contact API принимают HTTPS без credentials, query и fragment;
+редиректы запрещены, cookies не передаются. Loopback HTTP доступен только для
+явно включённых эмуляторов проекта `demo-*`.
 На самой публичной странице остаётся «Копировать», а «Поделиться» доступно
 только при наличии Web Share API; кнопки открытия текущей страницы нет.
 
@@ -224,11 +227,34 @@ npm start
 ```
 
 `npm test` использует Node `--import tsx`, чтобы не создавать отдельный IPC
-socket CLI. Production build не нужно выполнять параллельно с dev в одном
+socket CLI. Regression проверки редиректов поднимают короткоживущий HTTP-сервер
+на случайном loopback-порту. Production build не нужно выполнять параллельно с dev в одном
 `.next`: остановите dev перед сборкой. `.next`, `.env.local` и dependencies
 не входят в Git. Применяемый scoped gRPC override исправляет advisory
 [GHSA-m9gg-hp2v-232j](https://github.com/advisories/GHSA-m9gg-hp2v-232j)
 в транзитивном Node-пакете Firebase; private SDK остаётся browser-only.
+
+Для отдельных browser регрессий используйте существующие `esbuild` и внешний
+Playwright runtime: `PLAYWRIGHT_MODULE` — абсолютный путь его модуля,
+`CHROME_PATH` — путь к Chrome, если браузер не установлен самим Playwright.
+
+```bash
+# Проверить недоступный localStorage, смену публичной ссылки и ширины 320/1440.
+node tool/testing/component-regressions.cjs /private/tmp/stackcard-components.json
+```
+
+Это изолированные реальные React-компоненты с синтетическим GitHub transport и
+clipboard. Полный browser journey с Next production, двумя disposable аккаунтами,
+Save/PDF/Publish/Unpublish и повторным входом запускается через локальные
+Auth/Firestore emulators; команда и demo-guards находятся в CONTRIBUTING.
+Флаг `--additional` у того же `emulator-journey.cjs` выбирает дополнительные
+сценарии: password reset с одноразовым emulator OOB, Contact lost-ACK retry,
+Inbox/read, private/public privacy и AccountSettings password/email/delete recovery.
+Для него обязательны Auth/Firestore/Storage emulators на demo-проекте;
+только backend использует demo Storage bucket для проверки полного удаления.
+Режим собирает web с локальным
+Contact API; `--skip-build` допустим только при совпадающем demo окружении.
+OOB коды и synthetic account credentials не включаются в evidence или Git.
 
 ---
 
