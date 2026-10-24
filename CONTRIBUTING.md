@@ -27,6 +27,7 @@
 - [Основные команды](#основные-команды)
 - [Проверки](#проверки)
 - [CI/CD — Phase 18](#cicd--phase-18)
+- [Полный аудит — Phase20](#полный-аудит--phase20)
 - [Коммиты](#коммиты)
 - [Pull Requests](#pull-requests)
 
@@ -106,10 +107,10 @@ capability scope. Соотнеси задачу с её критериями г�
 Версии и зависимости проверяй в manifests/lockfiles. Разделяй работу на
 небольшие самостоятельные шаги; сначала используй существующий механизм.
 
-Auth/profile/projects/github_import/portfolio_draft используют `presentation/domain/data`; DI связывается у
+Auth/projects/github_import/portfolio_draft используют `presentation/domain/data`; DI связывается у
 корня feature. Domain остаётся pure Dart; concrete repositories не импортируются
-widgets. Между features используй публичные barrels. `PortfolioOverview` —
-presentation read model обзора. Чистый Builder domain принадлежит `portfolio_draft`;
+widgets. Между features используй публичные barrels. Профиль принадлежит `PortfolioProfile`
+внутри workspace. Чистый Builder domain принадлежит `portfolio_draft`;
 этот feature владеет единственным записываемым repository и app-session controller.
 В GitHub Import data слой владеет Dio, DTO mapping, Link pagination и ETag
 validators и versioned cache; controller — загрузкой, refresh, локальным debounce
@@ -448,7 +449,7 @@ define JSON вне Git: `RUN_INBOX_EMULATOR_ACCEPTANCE=true`, `INBOX_EMULATOR_PR
 macOS zsh/bash, cwd `apps/mobile`, при запущенных demo эмуляторах и Android:
 
 ```zsh
-flutter test integration_test/inbox_runtime_test.dart -d "<android-id>" --no-pub --no-uninstall --dart-define-from-file="<temporary-demo-defines.json>"
+flutter test integration_test/inbox_runtime_test.dart -d "<android-id>" --no-uninstall --dart-define-from-file="<temporary-demo-defines.json>"
 ```
 
 Тест проверяет actual Dart SDK server reads/cursor/readAt, foreign/anonymous
@@ -465,13 +466,13 @@ APK восстановите обычный debug APK через build и `adb i
 macOS zsh/bash, cwd `apps/mobile`:
 
 ```zsh
-flutter test integration_test/notification_permission_runtime_test.dart -d "<android-id>" --no-pub --no-uninstall --dart-define=RUN_NOTIFICATION_PERMISSION_ACCEPTANCE=true --dart-define=NOTIFICATION_EXPECTED_PERMISSION=notDetermined
-adb -s "<android-id>" shell pm grant com.example.app_stackcard android.permission.POST_NOTIFICATIONS
-flutter test integration_test/notification_permission_runtime_test.dart -d "<android-id>" --no-pub --no-uninstall --dart-define=RUN_NOTIFICATION_PERMISSION_ACCEPTANCE=true --dart-define=NOTIFICATION_EXPECTED_PERMISSION=authorized
-adb -s "<android-id>" shell pm revoke com.example.app_stackcard android.permission.POST_NOTIFICATIONS
-adb -s "<android-id>" shell pm set-permission-flags com.example.app_stackcard android.permission.POST_NOTIFICATIONS user-set
-flutter test integration_test/notification_permission_runtime_test.dart -d "<android-id>" --no-pub --no-uninstall --dart-define=RUN_NOTIFICATION_PERMISSION_ACCEPTANCE=true --dart-define=NOTIFICATION_EXPECTED_PERMISSION=denied
-adb -s "<android-id>" shell pm clear-permission-flags com.example.app_stackcard android.permission.POST_NOTIFICATIONS user-set user-fixed
+flutter test integration_test/notification_permission_runtime_test.dart -d "<android-id>" --no-uninstall --dart-define=RUN_NOTIFICATION_PERMISSION_ACCEPTANCE=true --dart-define=NOTIFICATION_EXPECTED_PERMISSION=notDetermined
+adb -s "<android-id>" shell pm grant dev.snownumb.stackcard android.permission.POST_NOTIFICATIONS
+flutter test integration_test/notification_permission_runtime_test.dart -d "<android-id>" --no-uninstall --dart-define=RUN_NOTIFICATION_PERMISSION_ACCEPTANCE=true --dart-define=NOTIFICATION_EXPECTED_PERMISSION=authorized
+adb -s "<android-id>" shell pm revoke dev.snownumb.stackcard android.permission.POST_NOTIFICATIONS
+adb -s "<android-id>" shell pm set-permission-flags dev.snownumb.stackcard android.permission.POST_NOTIFICATIONS user-set
+flutter test integration_test/notification_permission_runtime_test.dart -d "<android-id>" --no-uninstall --dart-define=RUN_NOTIFICATION_PERMISSION_ACCEPTANCE=true --dart-define=NOTIFICATION_EXPECTED_PERMISSION=denied
+adb -s "<android-id>" shell pm clear-permission-flags dev.snownumb.stackcard android.permission.POST_NOTIFICATIONS user-set user-fixed
 flutter build apk --debug --no-pub
 adb -s "<android-id>" install -r build/app/outputs/flutter-apk/app-debug.apk
 ```
@@ -479,6 +480,64 @@ adb -s "<android-id>" install -r build/app/outputs/flutter-apk/app-debug.apk
 Если любой шаг неуспешен, всё равно восстановите permission и обычный APK.
 Эта проверка не заменяет ручной отказ в системном prompt, live delivery/tap или
 controller resume/UID scenarios; последние отдельно проверяются regression tests.
+
+Для actual iOS notification prompt используйте отдельный созданный для теста
+Simulator с исходным `notDetermined`, выключенным Messaging auto-init и без
+обычных аккаунтов/данных. Request-режим явно включается отдельным define;
+он вызывает настоящий SDK permission request, затем дважды проверяет решение.
+Токены, Auth/Hive и consent store не открываются; APNs delivery этим не проверяется.
+Первый терминал, macOS zsh/bash, cwd `apps/mobile`:
+
+```zsh
+# Открыть системный notification prompt только на disposable Simulator
+flutter drive --no-uninstall-first --keep-app-running --no-dds \
+  --driver=test_driver/integration_test.dart \
+  --target=integration_test/notification_permission_runtime_test.dart -d "<simulator-uuid>" \
+  --dart-define=RUN_NOTIFICATION_PERMISSION_ACCEPTANCE=true \
+  --dart-define=NOTIFICATION_REQUEST_PERMISSION=true \
+  --dart-define=NOTIFICATION_EXPECTED_PERMISSION=denied \
+  > /private/tmp/stackcard-ios-notification.log 2>&1
+```
+
+После `STACKCARD_NOTIFICATION_ACCEPTANCE:READY expected=denied` второй терминал,
+cwd корень monorepo; используйте свободный3812 и новые output/xcresult paths:
+
+```zsh
+# Передать строгие READY/PASS из текущего harness в XCTest
+python3 tools/testing/ios_system_actions.py --device "<simulator-uuid>" \
+  --log /private/tmp/stackcard-ios-notification.log \
+  --output /private/tmp/stackcard-ios-notification-bridge.json
+```
+
+Третий терминал, cwd корень monorepo:
+
+```zsh
+# Отказать только в настоящем notification prompt StackCard
+xcodebuild -project tools/testing/ios_system_actions/SystemActions.xcodeproj \
+  -scheme SystemActions -destination "platform=iOS Simulator,id=<simulator-uuid>" \
+  -derivedDataPath /private/tmp/stackcard-ios-system-actions \
+  -resultBundlePath /private/tmp/stackcard-ios-notification-system.xcresult \
+  -parallel-testing-enabled NO -maximum-test-execution-time-allowance 150 \
+  -only-testing:SystemActionsTests/SystemActionsTests/testNotificationPermissionDenied \
+  test STACKCARD_IOS_SYSTEM_ACTIONS=YES STACKCARD_IOS_ACTION=notificationDeny
+```
+
+XCTest требует alert StackCard с notification/уведомлениями и настоящую кнопку
+отказа; bridge должен показать `kind=notification`, `stage=PASS`, `permission=denied`,
+а Flutter driver и XCTest — завершиться exit0. После проверки удаляется только
+созданный test Simulator; permissions обычного устройства не сбрасываются.
+
+Для положительного решения используйте новый test Simulator либо сбросьте только
+ранее созданный этим аудитом disposable Simulator после завершения его тестов.
+Нужно снова получить initial `notDetermined`: denied-состояние не открывает второй
+prompt. В первой команде замените expected на `authorized`, а log/output/xcresult
+задайте новые. В XCTest выберите
+`-only-testing:SystemActionsTests/SystemActionsTests/testNotificationPermissionAuthorized`
+и `STACKCARD_IOS_ACTION=notificationAllow`. Runner нажимает только точную
+`Allow`/`Разрешить` внутри notification alert StackCard, затем ждёт host
+`kind=notification`, `stage=PASS`, `permission=authorized`. Flutter driver и XCTest
+должны завершиться exit0; FCM auto-init остаётся false, получение token/delivery
+не выполняется. Обычный Simulator ради этого сценария не стирайте.
 
 Opt-in [live FCM test](apps/mobile/integration_test/notifications_live_runtime_test.dart)
 использует default Messaging SDK, отдельные named Auth/Firestore apps и disposable
@@ -653,11 +712,9 @@ flutter test
 `test/project_filters_test.dart` — правила поиска, сочетания фильтров и срок жизни.
 `test/state_management_test.dart` проверяет общую тему, system brightness,
 сохранение query/filter при навигации, синхронизацию поля и новую app session.
-`test/auth_repository_test.dart`, `test/profile_repository_test.dart` и
-`test/projects_repository_test.dart` проверяют contracts, чистые правила и
-immutable данные. Соответствующие `auth_di_test.dart`, `profile_di_test.dart`,
-`projects_di_test.dart` подменяют источник в Settings, DeveloperProfile и проекциях
-рабочей базы через
+`test/auth_repository_test.dart` и `test/projects_repository_test.dart` проверяют contracts, чистые правила и
+immutable данные. Соответствующие `auth_di_test.dart`, `project_read_models_widget_test.dart`,
+`projects_di_test.dart` подменяют источник в Settings/Projects и проверяют route migration через
 `StackCardApp.providerOverrides`, проверяют loading/error/empty и явный retry.
 `test/github_data_test.dart` проверяет DTO, HTTP failures, Link pagination и
 условные ETag-запросы; `test/github_import_controller_test.dart` — debounce,
@@ -877,7 +934,7 @@ firebase emulators:start --only auth,firestore --project demo-stackcard-test
 macOS zsh/bash, второй терминал, cwd `apps/mobile`:
 
 ```zsh
-flutter test --no-pub integration_test/media_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_AVATAR_ACCEPTANCE=true --dart-define=MEDIA_EMULATOR_HOST=10.0.2.2
+flutter test integration_test/media_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_AVATAR_ACCEPTANCE=true --dart-define=MEDIA_EMULATOR_HOST=10.0.2.2
 ```
 
 Тест использует named apps/disposable demo users и отдельные media docs,
@@ -888,12 +945,40 @@ Save→restart, UID during upload и PDF save/cancel фиксируется от
 iOS требует Xcode/device. Android SAF/iOS exporting picker сохраняют PDF bytes
 без новых storage permissions; web делает Blob download.
 
+Для настоящего picker без SDK/storage используйте отдельный opt-in того же
+`media_runtime_test.dart`. macOS zsh/bash, cwd `apps/mobile`, тестовый Android или
+загруженный iOS Simulator; Auth/Firestore emulators для этого режима не нужны:
+
+```zsh
+# Открыть системную галерею и проверить отмену без изменения портфолио
+flutter drive --no-uninstall-first --keep-app-running --no-dds \
+  --driver=test_driver/integration_test.dart \
+  --target=integration_test/media_runtime_test.dart -d "<test-device-id>" \
+  --dart-define=RUN_MEDIA_PICKER_ACCEPTANCE=true \
+  --dart-define=MEDIA_PICKER_SOURCE=gallery --dart-define=MEDIA_PICKER_EXPECTED=cancel
+```
+
+После `STACKCARD_MEDIA_ACCEPTANCE:READY` отмените picker; успешный run требует
+`PASS source=gallery expected=cancel` и exit0. `MEDIA_PICKER_SOURCE=camera`
+проверяет камеру; `MEDIA_PICKER_EXPECTED=selected` требует выбрать только
+синтетическое изображение и проверяет JPEG≤512px/256KiB без EXIF.
+`permissionDenied`/`unavailable` использовать только при подготовленном реальном
+отказе/недоступности. Тест не открывает Firebase/Auth/Hive и не пишет draft.
+
+Android делегирует gallery системному photo picker, camera — capture activity;
+StackCard не объявляет CAMERA или storage permissions. В современном iOS gallery
+использует PHPicker с `requestFullMetadata=false` без запроса Photos permission.
+Поэтому отсутствие permission prompt здесь штатно; cancel не считать отказом
+permission. iOS camera authorization проверяется отдельно; камера Simulator
+не заменяет физическую камеру. После изменения тестовых разрешений восстановите
+исходное состояние и обычную debug-сборку без uninstall/очистки данных.
+
 Отдельная native PDF проверка не открывает Auth/Hive и использует только
 одноразовый документ с кириллицей, аватаром и семью иконками. macOS zsh/bash,
 cwd `apps/mobile`; оператор управляет настоящими системными диалогами:
 
 ```zsh
-flutter test --no-pub integration_test/pdf_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_PDF_ACCEPTANCE=true --reporter expanded
+flutter test integration_test/pdf_runtime_test.dart -d emulator-5554 --no-uninstall --dart-define=RUN_PDF_ACCEPTANCE=true --reporter expanded
 ```
 
 После `STACKCARD_PDF_ACCEPTANCE:SAVE_READY` сохранить
@@ -904,6 +989,101 @@ SHA256 с экспортом, затем нажать Back. `SAVE_PASS/CANCEL_PA
 кириллицу/pages/avatar/URI отдельно; удалить только созданный тестом экспорт
 после проверки. Test finally удаляет приватный original. Для iOS использовать
 подключённый device вместо Android ID и соответствующий системный picker.
+
+Для автоматизации iOS Simulator есть отдельный XCTest UI runner в
+`tools/testing/ios_system_actions`; он подключается к уже запущенному fixture,
+не меняет native Runner target и не перезапускает приложение. Нужны Xcode,
+загруженный test Simulator и новое имя `.xcresult` для каждого запуска.
+macOS zsh/bash, cwd `apps/mobile`, первый терминал:
+
+```zsh
+# Оставить синтетический PDF harness запущенным для управления системным picker
+flutter drive --no-uninstall-first --keep-app-running --no-dds \
+  --driver=test_driver/integration_test.dart \
+  --target=integration_test/pdf_runtime_test.dart -d "<simulator-uuid>" \
+  --dart-define=RUN_PDF_ACCEPTANCE=true > /private/tmp/stackcard-ios-pdf.log 2>&1
+```
+
+После `SAVE_READY` в логе запустите host phase bridge: до установки driver
+container UUID ещё может измениться. macOS zsh/bash, второй терминал, cwd корень
+monorepo;3812 должен быть свободен, log относится только к текущему harness,
+output и `.expected.pdf` рядом с ним должны быть новыми файлами:
+
+```zsh
+# Передавать только строгие native markers и сохранить synthetic PDF до cleanup
+python3 tools/testing/ios_system_actions.py --device "<simulator-uuid>" \
+  --log /private/tmp/stackcard-ios-pdf.log --output /private/tmp/stackcard-ios-pdf-bridge.json
+```
+
+Bridge слушает только127.0.0.1:3812. Он получает data container ровно bundle
+`com.example.appStackcard` и копирует только `tmp/stackcard-pdf-acceptance-*/expected.pdf`:
+проверяет принадлежность/отсутствие symlink, `%PDF-`, bounded size и совпадение
+с `GENERATED`. Копия0600 и SHA256 остаются вне Git; raw log/app paths через HTTP
+не передаются. После native Save/cancel test finally удалит оригинал.
+Третий терминал, cwd корень monorepo:
+
+```zsh
+# Проверить SAVE_READY и sourceVerified=true перед разрешением filename fallback
+curl --fail http://127.0.0.1:3812/status
+# Нажать Save для точного test filename, затем Cancel во втором picker
+xcodebuild -project tools/testing/ios_system_actions/SystemActions.xcodeproj \
+  -scheme SystemActions -destination "platform=iOS Simulator,id=<simulator-uuid>" \
+  -derivedDataPath /private/tmp/stackcard-ios-system-actions \
+  -resultBundlePath /private/tmp/stackcard-ios-pdf-system.xcresult \
+  -parallel-testing-enabled NO -maximum-test-execution-time-allowance 150 \
+  -only-testing:SystemActionsTests/SystemActionsTests/testPDFSaveAndCancel \
+  test STACKCARD_IOS_SYSTEM_ACTIONS=YES STACKCARD_IOS_ACTION=pdf \
+  STACKCARD_IOS_PDF_SOURCE_VERIFIED=YES
+```
+
+Runner проверяет имена `stackcard-native-acceptance.pdf` и `stackcard-native-cancel.pdf`
+через UI либо host-verified fallback: `STACKCARD_IOS_PDF_SOURCE_VERIFIED=YES`
+разрешён только после проверки bridge `sourceVerified=true`. Это нужно для iOS27,
+где exporting picker не раскрывает filename через accessibility; fallback
+по-прежнему требует настоящий `DOCPicker.actionButton`. Для этапов XCTest читает
+строгий `/status`, без зависимости от невидимого Flutter accessibility tree и задержек.
+После Save он требует actual `CANCEL_READY` из Flutter log до второго picker;
+отмена допускает переход «Обзор» к корню системного диалога. Replace не нажимается:
+существующий export нужно отдельно проверить и удалить только как известный test fixture.
+Для gallery cancel
+сначала запустите media picker-only команду на том же Simulator, затем выберите
+`STACKCARD_IOS_ACTION=galleryCancel` и `-only-testing:SystemActionsTests/SystemActionsTests/testGalleryCancel`
+с отдельным result path. Перенаправьте media driver log в отдельный файл и
+перезапустите bridge с ним/новым output после `STACKCARD_MEDIA_ACCEPTANCE:READY`.
+HTTP передаёт только последние `READY`/`PASS` с exact source/outcome;
+PDF допускает `SAVE_READY`/`CANCEL_READY`/`ALL_PASS` с последовательными ACK.
+Для positive gallery acceptance используйте отдельный одноразовый Simulator
+с синтетическим изображением: `MEDIA_PICKER_EXPECTED=selected`, XCTest action
+`gallerySelected`, selector `SystemActionsTests/SystemActionsTests/testGallerySelectedSyntheticPhoto`
+и `PHOTO_LABEL="<точный наблюдённый label синтетического asset>"`.
+Без exact уникального Cell/Image label тест показывает actual accessibility tree
+и завершается без нажатия; первый неизвестный снимок автоматически не выбирается.
+Done/Добавить нажимается только если системный picker требует подтверждение.
+Успех требует XCTest PASS, Flutter exit0 и итогового
+`ALL_PASS`/`MEDIA_PICKER_PASS`; build-for-testing сам по себе не подтверждает picker.
+Accessibility tree/screenshots сохраняются в `.xcresult` вне Git; по ним проверяют
+неизвестный системный UI. Экспортированный PDF сравните с сохранённым original
+побайтово/по SHA256, затем удалите только синтетический test export.
+Остановите собственный bridge после завершения driver/XCTest. Это Simulator
+acceptance, отдельно от физического iPhone/APNs.
+
+Для настоящего camera permission prompt сначала подтвердите исходный
+`notDetermined` на тестовом Simulator и запустите picker-only с
+`MEDIA_PICKER_SOURCE=camera`, `MEDIA_PICKER_EXPECTED=permissionDenied`.
+XCTest action `cameraDeny` и selector
+`SystemActionsTests/SystemActionsTests/testCameraPermissionDenied` проверяют
+принадлежность alert приложению StackCard и нажимают «Не разрешать».
+Нужны `MEDIA_PICKER_PASS:camera:permissionDenied` и Flutter exit0.
+
+Только после завершения Flutter driver выполните отдельный XCTest action
+`cameraReset`, selector
+`SystemActionsTests/SystemActionsTests/testResetCameraAuthorizationToOriginalUndeterminedState`
+с `STACKCARD_IOS_CAMERA_INITIAL_STATE=notDetermined` и новым result path.
+Он использует официальный `XCUIApplication.resetAuthorizationStatus(for: .camera)`
+только для тестируемого StackCard bundle и восстанавливает возможность следующего prompt; проверьте
+возврат исходного статуса. Reset может завершить приложение, поэтому его не
+выполняют во время acceptance driver. Другие permissions и app data сохраняются.
+`simctl privacy` установленного Xcode не поддерживает camera; TCC database напрямую не менять.
 
 `FIRESTORE_MEDIA_ONLY_ACCOUNTS_SINCE` в backend env пуст по умолчанию.
 Заполнять только после доказанного закрытия ВСЕХ новых Storage create в реальном
@@ -946,6 +1126,12 @@ flutter test --no-pub tool/performance/benchmark.dart --dart-define=PERFORMANCE_
 flutter test --no-pub test/projects_di_test.dart test/developer_card_qr_test.dart
 # На подключённом Android/iOS запустить тот же workspace для Flutter DevTools
 flutter run --profile -d DEVICE_ID --target=tool/performance/main.dart
+# Android: реальные frames/timeline/post-GC heap и две страницы публичного GitHub
+FLUTTER_TEST_OUTPUTS_DIR=/private/tmp/stackcard-native-profile \
+  flutter drive --profile --no-uninstall-first --keep-app-running --no-dds \
+  --driver=test_driver/performance.dart \
+  --target=integration_test/performance_runtime_test.dart -d ANDROID_DEVICE_ID \
+  --dart-define=RUN_PERFORMANCE_ACCEPTANCE=true
 ```
 
 Output: указанный JSON, `.workspace.json` для web harness и `.pdf` для проверки
@@ -955,6 +1141,17 @@ Profile target использует Memory repository и обычные Home/Pro
 Save живёт до закрытия процесса, native PDF запускается явной кнопкой.
 Card/QR/publication и GitHub network acceptance выполнять отдельно в обычном
 приложении с настроенным backend. Target не вызывает native LocalRuntime.
+
+Native harness использует изолированный Memory repository без Auth/Hive. Он
+сравнивает `baseline_projects.dart` с настоящим ProjectsScreen и старый QR с
+текущим, снимает Home/Editor/Card/PDF, actual GitHub pagination и post-GC heap.
+Baseline — используемый comparison fixture, не мёртвый runtime code.
+Finder после editor scroll очищается: его cached Element tree иначе удерживает
+State и искажает retained-memory measurement. Полный response JSON пишется в
+указанный `FLUTTER_TEST_OUTPUTS_DIR`, raw traces/PNG — в own Android external
+files `phase16-<pid>`. Traces могут содержать symbol/source paths: хранить отдельно
+от Git, для отчёта использовать очищенные числовые summary и синтетические PNG.
+Emulator/виртуальный GPU не доказывает frame budget физического телефона.
 
 В DevTools записать устройство/OS/Flutter/build mode, fixture, frames/build/raster,
 rebuilds и retained heap до/после одинаковой серии scroll/search/edit/drag.
@@ -1037,6 +1234,16 @@ Cwd `firebase`; команда не использует production target:
 PLAYWRIGHT_MODULE="$PLAYWRIGHT_MODULE" CHROME_PATH="$CHROME_PATH" firebase emulators:exec --only auth,firestore --project demo-stackcard-test 'GCLOUD_PROJECT=demo-stackcard-test node ../apps/web/tool/testing/emulator-journey.cjs /private/tmp/stackcard-testing-browser.json'
 ```
 
+Дополнительные сценарии проверяют reset OOB, Contact/Inbox/privacy и реальную
+смену пароля/email/удаление аккаунта с потерянным ACK и восстановлением receipt.
+Этот режим требует также Storage emulator; demo bucket используется только
+trusted backend, чтобы проверить полный cleanup без ослабления bucketless guard:
+
+```zsh
+# Из firebase: дополнительные browser сценарии с actual demo SDK и Storage cleanup
+PLAYWRIGHT_MODULE="$PLAYWRIGHT_MODULE" CHROME_PATH="$CHROME_PATH" firebase emulators:exec --only auth,firestore,storage --project demo-stackcard-test 'GCLOUD_PROJECT=demo-stackcard-test node ../apps/web/tool/testing/emulator-journey.cjs /private/tmp/stackcard-browser-additional.json --additional'
+```
+
 Runner проверяет demo project/loopback emulator env, сам задаёт demo-only build
 config, запускает обычные Next production runtime и standalone Node HTTP API.
 Он отказывается занимать уже занятые3800/3810, блокирует внешние browser requests,
@@ -1096,6 +1303,108 @@ source, а Card/QR/Copy — через настоящий native UI/Clipboard. �
 journey регистрации/import, не физический QR scan/Share/Open и не live hosting.
 Системные PDF Save/Cancel и notification permission denial проверяются отдельными
 существующими opt-in suites выше. iOS требует собственного запуска и evidence.
+
+Для настоящих Android Card/QR/Share/Open добавьте `--system-actions` к native
+runner. Этот режим предназначен для Android emulator: нужен macOS Swift/Vision
+для независимого QR decode, Chrome (`com.android.chrome`) либо AOSP
+`org.chromium.webview_shell` и заранее
+запущенные demo Auth/Firestore emulators и Next SSR на127.0.0.1:3800 с тем же project.
+Порты3810/3811 должны быть свободны; native runner запустит собственный backend3810.
+Первый терминал, macOS zsh/bash, cwd корень monorepo, с доступным `adb`:
+
+```zsh
+# Запустить coordinator настоящих system channels
+GCLOUD_PROJECT=demo-stackcard-test FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 \
+  FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
+  python3 tools/testing/android_system_actions.py --adb "$(command -v adb)" \
+  --device "<android-emulator-id>" --output /private/tmp/stackcard-android-system.json
+```
+
+Второй терминал, cwd `firebase`, при уже работающих Auth/Firestore emulators:
+
+```zsh
+# Дополнить process-pair проверками QR screenshot, Share preview/cancel и browser Open
+GCLOUD_PROJECT=demo-stackcard-test FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 \
+  FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
+  python3 ../tools/testing/native_journey.py --device "<android-emulator-id>" \
+  --system-actions --output /private/tmp/stackcard-native-system.json
+```
+
+Coordinator требует отдельные `card`, `share`, `open`, точный URL/foreground activity
+и отсутствие private markers. Каждый stage должен ответить HTTP200/PASS; иначе
+Flutter и весь journey завершаются ошибкой. Сохраняйте оба JSON и synthetic PNG;
+затем остановите собственный coordinator/SSR. Если у Chrome есть first-run UI,
+пройдите его вручную без входа в аккаунт до запуска; runner не меняет browser role/data.
+Chrome может скрывать `http://`: такое точное значение принимается только из
+наблюдённого `com.android.chrome:id/url_bar`, не из произвольного текста страницы.
+Ошибочный uiautomator null-root dump повторяется в пределах deadline; старый XML не принимается.
+Native runner сам проверяет reverse3800: существующий exact3800→3800 сохраняет,
+чужой mapping отклоняет до native/backend, свой создаёт с `--no-rebind` и удаляет
+в finally с readback. Другие reverse не меняются; externally changed mapping
+остаётся нетронутым и завершает run ошибкой. Состояние записано в `readerReverse` JSON.
+Share закрывается Back без выбора получателя; камера второго устройства не
+используется. Такой run подтверждает emulator/native channels и локальный reader,
+не физический QR scan, отправку сообщения или постоянный hosting.
+
+Для iOS Simulator тот же `native_journey.py --system-actions` использует
+`tools/testing/ios_link_actions.py`: нужен Xcode, уже booted test UUID, standalone
+XCTest target выше и тот же demo SSR/emulator setup. Safari first-run/onboarding
+пройдите заранее на test Simulator; никакие browser accounts/data/default role
+runner не меняет. Сначала завершите другие XCTest runs;3811 и output paths должны
+быть свободны. Первый терминал, macOS zsh/bash, cwd корень monorepo:
+
+```zsh
+# Управлять iOS Card/QR, UIKit Copy и Safari через отдельный host coordinator
+GCLOUD_PROJECT=demo-stackcard-test FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 \
+  FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
+  python3 tools/testing/ios_link_actions.py --device "<simulator-uuid>" \
+  --output /private/tmp/stackcard-ios-links.json
+```
+
+Второй терминал, cwd `firebase`, при работающих demo emulators/SSR:
+
+```zsh
+# Пройти два iOS процесса и все native system stages без Android reverse
+GCLOUD_PROJECT=demo-stackcard-test FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 \
+  FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
+  python3 ../tools/testing/native_journey.py --platform ios --device "<simulator-uuid>" \
+  --system-actions --output /private/tmp/stackcard-ios-native-system.json
+```
+
+Coordinator принимает только точный synthetic `http://127.0.0.1:3800/d/<32-hex>`
+и последовательность Card→Share→Open. QR screenshot независимо декодируется;
+anonymous SSR и Safari должны содержать сохранённого автора без private markers.
+Share нажимает только UIKit Copy, ждёт закрытия известного share sheet и проверяет
+точный payload через системный Paste в native Safari URL field; получатель не
+выбирается. Поле очищается native `ClearTextButton`, ожидаемый URL в него не вводится;
+после Paste значение обязано точно совпасть с LINK_URL, затем возвращается StackCard.
+Для iOS27 NSURL payload может иметь только `public.url` без plain text. Поэтому
+host требует отдельный `SHARE_PAYLOAD_URL_PASS`: пустой `simctl pbpaste` допускается
+только с secure UI paste proof; непустой plain text обязан точно совпасть с URL.
+JSON сохраняет `clipboardRepresentation=SafariSecurePaste` и `plainTextAvailable`;
+чужой clipboard не печатается. Прямое background чтение UIPasteboard runner не
+использует, неизвестный paste-consent prompt автоматически не подтверждается. Open проверяет foreground Safari и точное значение
+native URL field, после чего возвращает StackCard. Наблюдённый Safari может
+скрывать только `http://`: допускается точный URL либо точный URL без этого prefix
+только в native address field, без trim/substring matching. Неизвестный UI завершает тест
+ошибкой с локальным XCTest tree, без координат или выбора неизвестного элемента.
+
+iOS Open запускает host handshake до нажатия через
+`tester.runAsync` + `Future.wait([_systemStage(...), tester.tap(...)])`.
+Пока foreground Safari приостанавливает Flutter frames, harness не вызывает
+`pump`/`pumpAndSettle`; продолжение происходит после возврата StackCard.
+XCTest `tearDownWithError` активирует только уже запущенный StackCard даже при
+assertion failure, чтобы Flutter обработал HTTP result/timeout; приложение не
+перезапускается и данные не очищаются.
+
+Каждый stage требует HTTP200/PASS; Share/Open дополнительно требуют exit0 выбранного
+XCTest и его success marker. Оба итоговых JSON должны иметь `status=passed`,
+Flutter driver — exit0; `.xcresult`/logs/synthetic screenshot сохраняются вне Git.
+При75s XCTest deadline coordinator завершает только собственную host process group
+и свой `dev.snownumb.stackcard.systemactions.xctrunner` на указанном Simulator;
+обычный StackCard и чужие XCTest runs не останавливаются. Это Simulator/local
+acceptance; физический camera QR scan, доставка сообщения и hosting остаются
+отдельными проверками. После запуска остановите собственный coordinator/SSR.
 
 ### Остальные focused и visual проверки
 
@@ -1174,7 +1483,8 @@ Branch protection автоматически не меняется.
 Flutter pin соответствует текущему SDK/Dart constraint; Node22 — backend
 runtime из `firebase/functions/package.json`, Java21 подходит Gradle/emulators.
 Версия npm закреплена `packageManager` во всех трёх npm manifests; workflow
-устанавливает её перед locked resolution. Существующие pnpm-файлы не используются CI.
+устанавливает её перед locked resolution. Canonical package manager — npm;
+неиспользуемые pnpm lock/workspace удалены при аудите, второй dependency graph не поддерживается.
 FVM устанавливать необязательно: достаточно выбранного Flutter SDK.
 Команды ниже для macOS zsh/bash или Linux bash.
 
@@ -1184,6 +1494,7 @@ python3 tools/redesign/check_imports.py --require-imported --require-brand
 python3 -m unittest discover -s tools/redesign -p 'test_*.py' -v
 python3 -m unittest discover -s tools/testing -p 'test_*.py' -v
 python3 -m unittest discover -s tools/git -p 'test_*.py' -v
+python3 -m unittest discover -s tools/release -p 'test_*.py' -v
 # apps/web
 npm ci --no-audit --no-fund
 npm run format:check
@@ -1227,7 +1538,7 @@ unsent reports удаляются; уже отправленные отчёты 
 нет Analytics, custom logs или user identifier. Dart handlers передают фиксированный
 код и максимум32 allowlisted source positions, без raw exception/context и private
 данных. Неизвестные/obfuscated frames заменяются redacted marker; полноценная
-символика release проверяется отдельно на Phase20. Debug console остаётся debug
+символика release проверяется после отдельного возобновления выпуска. Debug console остаётся debug
 console, её вывод с тестовыми SDK UID не является production error payload.
 
 Обычный bootstrap не отправляет тестовую ошибку. Явная acceptance-команда из
@@ -1269,7 +1580,7 @@ Xcode повтори `flutter pub get`, если он выполнялся пр�
 Отдельный UI smoke с synthetic memory fixture (не SDK/persistence acceptance):
 
 ```zsh
-flutter drive --no-pub --no-uninstall-first --keep-app-running --no-dds \
+flutter drive --no-uninstall-first --keep-app-running --no-dds \
   --driver=test_driver/integration_test.dart \
   --target=integration_test/hardening_ui_runtime_test.dart \
   -d <test-device-id> --dart-define=RUN_HARDENING_UI_ACCEPTANCE=true
@@ -1293,6 +1604,44 @@ checker, `npm run check` в web и backend/Rules suites выше. `npm audit --o
 в web/functions проверяет актуальные production advisories; минимальный patch
 update проходит весь web gate. Source, demo Emulator Suite, native SDK и live
 diagnostic evidence записываются раздельно в product spec.
+
+### Полный аудит — Phase20
+
+Последнее поручение2026-10-24 заменяет release на аудит web/mobile/backend.
+Матрица сценариев, исправления, cleanup и измерения — в [отчёте](docs/product/audit.md);
+критерии закрытия — в [плане](docs/product/product-spec.md#phase-20--полный-аудит-проекта).
+Запускайте существующие quality commands [CI/CD](#cicd--phase-18),
+[browser/native journeys](#testing--phase-17) и [performance harness](#performance--phase-16).
+Для нового Android ID native runner останавливает `dev.snownumb.stackcard`;
+старую установку `com.example.app_stackcard` с её данными не удаляет.
+
+Native integration команды должны разрешать штатный pub step: после release
+Flutter исключает dev plugins, поэтому `--no-pub` может оставить устаревший
+`GeneratedPluginRegistrant.java`. Runner обновляет его через Flutter, вручную
+generated Java не менять. Сохранение app data по-прежнему требует
+`--no-uninstall-first --keep-app-running` у drive либо `--no-uninstall` у test.
+Platform system coordinators принимают один точный URL и порядок
+`card → share → open`; повтор, смена URL или попытка продолжить после failure
+не могут превратить результат в PASS.
+
+Cleanup выполняется после проверки imports, CLI/glob/runtime entries и
+compatibility. Unused/test-only не означает безопасное удаление migration codec,
+legacy reader или harness; generated/build caches не являются исходниками.
+Оптимизацию подтверждают одинаковый fixture и before/after measurements;
+host debug wall clock не называется native frame time. Coverage показывает
+исполненные строки, не процент работающих функций. Внешние/native ограничения
+перечисляются отдельно; audit не разрешает commit/push/deployment.
+
+### Отложенная подготовка релиза
+
+Подписанный AAB/APK, obfuscation/symbols и материалы описаны в
+[release guide](docs/release/README.md). Android release требует отдельный upload
+keystore через `STACKCARD_ANDROID_KEY_PROPERTIES` либо игнорируемый
+`apps/mobile/android/key.properties`; поля — в отслеживаемом образце рядом.
+Без credentials `validateReleaseCredentials` блокирует release; debug CI работает
+без ключа. Keystore, пароли и symbols не добавлять в Git/CI artifacts.
+Наличие локального комплекта не означает store/App Distribution публикацию;
+публичные ссылки и hosting проверяются отдельно.
 
 ## Коммиты
 

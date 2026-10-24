@@ -1,0 +1,23 @@
+{
+  "environment": "Next production + Chrome + demo Auth/Firestore/Storage + actual Node Contact/Publication; disposable fixtures only",
+  "browser": "155.0.8059.85",
+  "passed": [
+    "anonymous SSR projects only approved contact; hidden bio/city/private notes/owner UID absent from HTML",
+    "actual Contact POST commits before lost ACK; retry preserves requestId/payload, creates one Inbox record and retains newer input",
+    "owner Inbox loads saved request and marks read without modifying private draft",
+    "already-open Contact form refuses a withdrawn publication and preserves unsent input without creating another Inbox request",
+    "missing and malformed public snapshots return404/noindex without exposing rejected fields",
+    "browser password reset requests actual emulator OOB; code redeems once, old password fails, new password restores Inbox returnTo and saved data",
+    "unknown reset email uses the same accepted UI without disclosing account existence",
+    "AccountSettings wrong reauthentication cannot change password; correct reauthentication updates it, clears password inputs and supports only new credentials with unchanged UID",
+    "verifyBeforeUpdateEmail leaves old email active until actual OOB redeem; only new email signs in afterward with the same UID and saved private workspace",
+    "AccountSettings deletion persists receipt before real HTTP; Auth identity, draft, Inbox and Storage orphan are deleted before deliberately lost ACK; reload recovers the same unsigned deletionStatus and clears the journal"
+  ],
+  "boundaries": {
+    "account": "Actual AccountSettings SDK reauthentication/password/email mutation; emulator OOB redeemed through official REST. Actual Auth/Firestore/Storage deletion and restricted recovery; only final HTTP ACK intentionally dropped.",
+    "reset": "Browser requests actual SDK reset email; emulator OOB inspected and redeemed through official Auth REST; no real mailbox/hosted action page.",
+    "contact": "Actual backend and Inbox; only first HTTP ACK intentionally dropped; App Check bypass restricted to demo emulator.",
+    "public": "Anonymous actual SSR and privacy projection; malformed snapshot seeded by demo Admin SDK."
+  },
+  "limitations": "No live Google OAuth, real email delivery, production App Check/hosting, native sharing/QR or physical device acceptance."
+}

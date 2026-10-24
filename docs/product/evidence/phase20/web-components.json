@@ -1,0 +1,11 @@
+{
+  "environment": "Isolated real React components in Chrome; blocked localStorage getter; synthetic GitHub and clipboard",
+  "browser": "155.0.8059.85",
+  "passed": [
+    "Share URL and Copy update after same-instance document navigation",
+    "GitHub loads and imports despite localStorage SecurityError",
+    "No horizontal overflow at 320px and 1440px",
+    "No uncaught browser exceptions"
+  ],
+  "limitations": "No Firebase, backend, actual GitHub HTTP or native clipboard acceptance."
+}

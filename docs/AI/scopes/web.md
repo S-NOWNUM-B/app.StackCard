@@ -58,7 +58,10 @@ mobile Save. Profile остаётся первым, GitHub следует вме
   от другой вкладки; неизвестный результат повторяется с тем же ID. Квитанция
   доказывает действие, текущая publication metadata может уже отражать другой клиент.
   Не хранить password/token в приложении, не выводить credentials.
-  После получения ID token повторно проверять UID до отправки HTTP mutation;
+  Trusted publication/contact endpoints требуют HTTPS без credentials/query/fragment;
+  loopback HTTP допустим только при emulator mode и project с `demo-` prefix.
+  Fetch использует `credentials: omit`, `redirect: error`, чтобы redirect не передал
+  token/payload другому адресу. После получения ID token повторно проверять UID до отправки HTTP mutation;
   поздние ответы не изменяют состояние/квитанцию завершённой owner session.
 - `/d/[publicId]` читает только anonymous `publicDocuments` snapshot; отсутствие
   и withdrawn отображаются без private lookup. Public parser allowlist и безопасные

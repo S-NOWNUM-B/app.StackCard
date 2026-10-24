@@ -1,0 +1,104 @@
+{
+  "environment": "flutter_tester debug, macos, 3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"macos_arm64\"",
+  "fixture": {
+    "projects": 200,
+    "technologiesPerProject": 20,
+    "skills": 200,
+    "experience": 30,
+    "education": 20,
+    "links": 10,
+    "documents": 21
+  },
+  "qr60ParentRebuild": {
+    "samplesMs": [
+      20.945,
+      4.752,
+      3.986,
+      4.119,
+      5.97,
+      4.302,
+      3.688,
+      3.55,
+      3.767,
+      2.941,
+      3.664,
+      3.347,
+      3.234,
+      3.609,
+      3.112,
+      3.569,
+      3.846,
+      3.743,
+      2.987,
+      3.67,
+      3.06,
+      4.276,
+      3.729,
+      3.043,
+      3.407
+    ],
+    "medianMs": 3.67,
+    "p95Ms": 5.97,
+    "repaintsRequested": 0
+  },
+  "qr1024ParentRebuild": {
+    "samplesMs": [
+      5.264,
+      4.474,
+      5.447,
+      5.851,
+      4.72,
+      4.621,
+      4.323,
+      4.657,
+      4.685,
+      4.261,
+      4.532,
+      4.573,
+      4.211,
+      4.751,
+      5.913,
+      4.544,
+      4.103,
+      4.393,
+      4.528,
+      4.429,
+      4.661,
+      4.173,
+      4.258,
+      5.071,
+      5.154
+    ],
+    "medianMs": 4.573,
+    "p95Ms": 5.851,
+    "repaintsRequested": 0
+  },
+  "home": {
+    "mountWallMs": 438.824,
+    "mountedElements": 5355,
+    "processRssBytes": 354566144
+  },
+  "library": {
+    "mountWallMs": 226.917,
+    "mountedElements": 1417,
+    "processRssBytes": 375816192
+  },
+  "editor": {
+    "mountWallMs": 971.91,
+    "mountedElements": 23321,
+    "processRssBytes": 415383552
+  },
+  "pdf": {
+    "samplesMs": [
+      598.495,
+      384.388,
+      359.231
+    ],
+    "medianMs": 384.388,
+    "p95Ms": 598.495,
+    "bytes": 256334,
+    "avatar": "512x512 JPEG"
+  },
+  "fixtureSha256": "ccdb1341879f6568890354f9687f5657f6e5cde9d8a36c989ada06d41c6ac775",
+  "limitations": "macOS flutter_tester debug wall clock and mounted elements; not native frame timing, retained heap or physical-device performance."
+}

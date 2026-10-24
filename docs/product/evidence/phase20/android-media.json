@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "device": "emulator-5554",
+  "checkpoints": [
+    {
+      "source": "gallery",
+      "outcome": "cancel",
+      "exitCode": 0,
+      "actualSystemPicker": true
+    },
+    {
+      "source": "gallery",
+      "outcome": "selected",
+      "exitCode": 0,
+      "actualSystemPicker": true
+    },
+    {
+      "source": "camera",
+      "outcome": "cancel",
+      "exitCode": 0,
+      "actualSystemPicker": true
+    },
+    {
+      "source": "camera",
+      "outcome": "selected",
+      "exitCode": 0,
+      "actualSystemPicker": true,
+      "cameraSource": "AVD back virtualscene; front emulated; no host webcam"
+    }
+  ],
+  "fixture": "Only one synthetic JPEG600x400, actual processor result JPEG<=512,<=256KiB,EXIFempty",
+  "ordinaryDataUsed": false,
+  "permission": "Android modern photo picker and external camera do not request StackCard storage/camera runtime permission",
+  "cameraCapture": "Actual com.android.camera2 Shutter and Done; processed JPEG<=512,<=256KiB,EXIFempty",
+  "fixtureCleanup": "Exact synthetic JPEG verified by SHA256 then removed; exact MediaStore path has no row; owned XML removed"
+}

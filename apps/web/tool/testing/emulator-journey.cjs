@@ -14,12 +14,14 @@ assert.equal(process.env.FIRESTORE_EMULATOR_HOST, '127.0.0.1:8085');
 assert.equal(process.env.FIREBASE_AUTH_EMULATOR_HOST, '127.0.0.1:9099');
 const origin = 'http://127.0.0.1:3800';
 const api = 'http://127.0.0.1:3810/documentPublication';
+const additional = process.argv.includes('--additional');
+if (additional) assert.equal(process.env.FIREBASE_STORAGE_EMULATOR_HOST, '127.0.0.1:9199');
 const env = {
   ...process.env,
   FUNCTIONS_EMULATOR: 'true',
   BACKEND_PORT: '3810',
   PUBLIC_WEB_ORIGIN: origin,
-  PUBLIC_STORAGE_BUCKET: '',
+  PUBLIC_STORAGE_BUCKET: additional ? 'demo-stackcard-test.appspot.com' : '',
   CONTACT_APP_CHECK_APP_ID: '',
   CONTACT_RATE_HMAC_KEY: '',
   NEXT_PUBLIC_FIREBASE_API_KEY: 'demo-key',
@@ -28,7 +30,7 @@ const env = {
   NEXT_PUBLIC_FIREBASE_APP_ID: 'demo-app',
   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: '',
   NEXT_PUBLIC_PUBLICATION_API_URL: api,
-  NEXT_PUBLIC_CONTACT_INBOX_API_URL: '',
+  NEXT_PUBLIC_CONTACT_INBOX_API_URL: additional ? 'http://127.0.0.1:3810/contactInbox' : '',
   NEXT_PUBLIC_APP_CHECK_SITE_KEY: '',
   NEXT_PUBLIC_WEB_ORIGIN: origin,
   NEXT_PUBLIC_USE_EMULATORS: 'true',
@@ -126,6 +128,21 @@ async function ready(url, child) {
     page = await context.newPage();
     page.setDefaultTimeout(15000);
     page.on('pageerror', (error) => errors.push(error.message));
+    if (additional) {
+      await require('./additional-journey.cjs')({
+        page,
+        browser,
+        context,
+        localOnly,
+        errors,
+        blockedHosts,
+        origin,
+        api,
+        output,
+        backend,
+      });
+      return;
+    }
     let token;
     page.on('response', async (response) => {
       if (response.url().includes('accounts:signUp') && response.ok()) {
@@ -136,9 +153,8 @@ async function ready(url, child) {
     await page.waitForURL('**/sign-in?**');
     passed.push('signed-out owner route redirects with returnTo');
     await page.goto(`${origin}/sign-up`);
-    await page
-      .getByRole('textbox', { name: 'Почта', exact: true })
-      .fill(`journey-${Date.now()}@example.test`);
+    const ownerEmail = `journey-${Date.now()}@example.test`;
+    await page.getByRole('textbox', { name: 'Почта', exact: true }).fill(ownerEmail);
     await page.getByLabel('Пароль', { exact: true }).fill('Testing#7392Brick');
     await page.getByLabel('Подтверждение пароля', { exact: true }).fill('Testing#7392Brick');
     await page.getByRole('button', { name: 'Создать аккаунт', exact: true }).click();
@@ -249,6 +265,7 @@ async function ready(url, child) {
     for (const width of [320, 1440]) {
       await page.setViewportSize({ width, height: 844 });
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      await page.screenshot({ path: `${output}.${width}px.png` });
     }
     await page.screenshot({ path: `${output}.png` });
     await page.getByRole('button', { name: 'Настройки', exact: true }).click();
@@ -257,6 +274,40 @@ async function ready(url, child) {
     await page.goto(`${origin}/workspace/editor`);
     await page.waitForURL('**/sign-in?**');
     passed.push('logout removes private access and deep-link guard remains active');
+    await page.goto(`${origin}/sign-up`);
+    await page
+      .getByRole('textbox', { name: 'Почта', exact: true })
+      .fill(`other-${Date.now()}@example.test`);
+    await page.getByLabel('Пароль', { exact: true }).fill('Testing#7392Brick');
+    await page.getByLabel('Подтверждение пароля', { exact: true }).fill('Testing#7392Brick');
+    await page.getByRole('button', { name: 'Создать аккаунт', exact: true }).click();
+    for (let step = 1; step <= 4; step++) {
+      await page.getByText(`Шаг ${step} из 4`, { exact: true }).waitFor();
+      await page
+        .getByRole('button', { name: step === 4 ? 'Завершить' : 'Далее', exact: true })
+        .click();
+    }
+    await page.getByRole('button', { name: 'Скачать портфолио', exact: true }).waitFor();
+    await navigation.getByRole('button', { name: 'Проекты', exact: true }).click();
+    await page.getByRole('button', { name: 'Создать проект', exact: true }).waitFor();
+    assert.equal(
+      await page.getByRole('heading', { name: 'Journey project', exact: true }).count(),
+      0,
+    );
+    assert.equal(await page.getByText('PRIVATE_BUFFER', { exact: true }).count(), 0);
+    await page.getByRole('button', { name: 'Настройки', exact: true }).click();
+    await page.getByRole('button', { name: 'Выйти', exact: true }).click();
+    await page.waitForURL('**/sign-in?**');
+    await page.getByRole('textbox', { name: 'Почта', exact: true }).fill(ownerEmail);
+    await page.getByLabel('Пароль', { exact: true }).fill('Testing#7392Brick');
+    await page.getByRole('button', { name: 'Войти', exact: true }).click();
+    await page.getByRole('heading', { name: 'Аккаунт и безопасность', exact: true }).waitFor();
+    await navigation.getByRole('button', { name: 'Главная', exact: true }).click();
+    await page.getByRole('heading', { name: 'Newer saved author', exact: true }).waitFor();
+    await page.getByRole('heading', { name: 'Journey project', exact: true }).waitFor();
+    passed.push(
+      'second account has an empty project library; signing back restores only the first owner saved data',
+    );
     assert.deepEqual(blockedHosts, []);
     assert.deepEqual(errors, []);
     fs.writeFileSync(

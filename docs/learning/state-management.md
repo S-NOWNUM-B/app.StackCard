@@ -140,11 +140,11 @@ Theme закономерно обновляет использующие её wi
 | ThemeMode, locale ru/en и showSourceDescriptions | AppSettings в AppearanceController через Provider; восстановление и сохранение через SharedPreferences |
 | Очередь сохранения настроек и save failure | AppearanceController, app session; последние изменения записываются последовательно, retry явный |
 | Query и выбранный фильтр Projects | ProjectFiltersNotifier через Riverpod, app session |
-| Полный список проектов и профиль | projectsProvider/profileProvider, проекции рабочего Builder content либо async demo repository state |
+| Полный список проектов и workspace | projectsProvider и portfolioDraftControllerProvider; рабочий workspace либо async demo projects repository |
 | Отфильтрованный список | visibleProjectsProvider, AsyncValue из query/filter и полного списка |
 | Featured проекты | featuredProjectsProvider и pure selectFeaturedProjects, независимы от поиска |
 | Demo-session и действие входа | AuthController через AsyncNotifier, repository вызывается через DI |
-| Home и demo Portfolio | PortfolioOverview в presentation объединяет публичные profile/projects states |
+| Home | Durable main из draft.content; фильтр Projects не меняет сохранённое портфолио |
 | Builder Portfolio и preview | Рабочий PortfolioContent через публичный portfolioWorkingContentProvider, порядок/видимость блоков и выбранная тема |
 | GitHub username, профиль, repositories и loading/error flags | GitHubImportController через autoDispose Notifier, время жизни экрана GitHub Import |
 | GitHub query и фильтр | Immutable GitHubImportState; controller применяет локальный query после debounce 300 ms |
@@ -208,16 +208,15 @@ curated demo-данные через свой repository.
 ## Repository и DI на Phase 3
 
 Riverpod связывает используемые repository contracts с demo/mock реализациями.
-Feature-root `auth_providers.dart`, `profile_dependencies.dart` и
-`projects_providers.dart` владеют DI; widgets используют controller/providers и
+Feature-root `auth_providers.dart` и `projects_providers.dart` владеют DI; widgets используют controller/providers и
 domain, не concrete repositories. Между features импортируются публичные APIs.
 
-`FutureProvider` загружает Profile и список Project; `AsyncNotifier` выполняет
+`FutureProvider` загружает список Project; `AsyncNotifier` выполняет
 `AuthRepository.openDemo`. `AsyncValue` распространяет loading/error/data;
 shared widgets показывают ожидание, ошибку и явный retry. Смена query/filter
 вычисляет новый вид списка и не повторяет repository запрос.
-`featuredProjectsProvider` и `PortfolioOverview` используют полный список:
-поиск в Projects не меняет карточки Home, Portfolio или preview.
+`featuredProjectsProvider` использует полный список; поиск в Projects не меняет
+saved Home или preview. Home читает основное портфолио через draft API.
 
 ```dart
 StackCardApp(
@@ -234,9 +233,9 @@ Provider остаётся владельцем простой темы чере�
 product state, асинхронных действий и repository composition. Два механизма
 не конкурируют за одно значение.
 
-Модель ProfileReadiness содержит счётчики read model, PortfolioOverview —
-модель чтения presentation. Demo repository задаёт счётчики в snapshot;
-проекция Builder получает их из pure алгоритма полноты. Notes-only draft появился
+Исторические ProfileReadiness/PortfolioOverview удалены в Phase20 как unused
+read models. Действующий PortfolioProfile находится в workspace; полнота
+вычисляется pure алгоритмом из PortfolioContent. Notes-only draft появился
 на Phase 5, единый portfolio content и Builder — на Phase 6. Repository отвечает
 за сохранение draft; published контракты вводятся на своей фазе.
 

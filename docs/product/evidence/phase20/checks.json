@@ -1,0 +1,332 @@
+{
+  "date": "2026-10-24",
+  "phase": 20,
+  "status": "awaiting_external_acceptance",
+  "scope": "Full web/mobile/backend audit; release deferred by owner",
+  "baseCommit": "45a530a1f213abd94f6a61aa7a290c4b7dce5b30",
+  "report": "docs/product/audit.md",
+  "checks": [
+    {
+      "check": "Flutter locked pub, full format/analyze/test/LCOV",
+      "result": "passed",
+      "tests": 1398,
+      "coveredLines": 13165,
+      "executableLines": 15080,
+      "linePercent": 87.30106100795756,
+      "unreportedFiles": 28,
+      "thresholdUnchanged": true,
+      "evidence": "coverage-summary.json"
+    },
+    {
+      "check": "Web canonical format/typecheck/tests/normal production build",
+      "result": "passed",
+      "tests": 167,
+      "note": "Final format/typecheck/167 tests passed; after demo browser/native acceptance a clean normal production build restored using ordinary env, with demo project/API URLs absent from compiled JS."
+    },
+    {
+      "check": "Actual Next/Chrome/Auth/Firestore/HTTP backend journey",
+      "result": "passed",
+      "checkpoints": 8,
+      "evidence": "web-browser.json"
+    },
+    {
+      "check": "Isolated real React/Chrome regressions",
+      "result": "passed",
+      "checkpoints": 4,
+      "evidence": "web-components.json"
+    },
+    {
+      "check": "Backend syntax/unit/HTTP after dependency fix",
+      "result": "passed",
+      "tests": 43
+    },
+    {
+      "check": "Actual demo Auth/Firestore/Storage Rules/service after dependency fix",
+      "result": "passed",
+      "tests": 89,
+      "evidence": "backend-additional.json"
+    },
+    {
+      "check": "Python tooling and pinned assets",
+      "result": "passed",
+      "tests": {
+        "testing": 47,
+        "releaseConfiguration": 3,
+        "redesign": 4,
+        "git": 15
+      }
+    },
+    {
+      "check": "Fresh production npm audit",
+      "result": "passed",
+      "vulnerabilities": {
+        "web": 0,
+        "backend": 0
+      }
+    },
+    {
+      "check": "Android actual SDK process pair",
+      "result": "passed",
+      "checkpoints": 11,
+      "evidence": "android-native.json"
+    },
+    {
+      "check": "Android native UI memory fixture",
+      "result": "passed",
+      "checkpoints": 3,
+      "evidence": "android-ui.json"
+    },
+    {
+      "check": "Android actual SAF PDF Save/cancel and byte comparison",
+      "result": "passed",
+      "evidence": "android-pdf.json"
+    },
+    {
+      "check": "iOS Simulator actual SDK process pair",
+      "result": "passed",
+      "checkpoints": 11,
+      "evidence": "ios-native.json"
+    },
+    {
+      "check": "iOS Simulator native UI memory fixture",
+      "result": "passed",
+      "checkpoints": 3,
+      "evidence": "ios-ui.json"
+    },
+    {
+      "check": "Actual Android profile frames/VM post-GC/GitHub/PDF",
+      "result": "passed",
+      "evidence": "android-profile.json",
+      "trackedUiClassesAfterUnmount": 0,
+      "publicGitHubRepositories": 41
+    },
+    {
+      "check": "Normal iOS main.dart debug build restored without data clear",
+      "result": "passed",
+      "seconds": 105.94,
+      "evidence": "environment-restoration.json"
+    },
+    {
+      "check": "Normal Android main.dart debug build",
+      "result": "passed",
+      "seconds": 25.73,
+      "note": "Installed/started without uninstall or data clear; MainActivity foreground verified; legacy package retained.",
+      "evidence": "environment-restoration.json"
+    },
+    {
+      "check": "Final Markdown local targets/JSON parsing and git diff whitespace",
+      "result": "passed",
+      "markdownFiles": 17,
+      "scope": "Changed Markdown H1/fences/local links; evidence JSON parse/references and whitespace checks"
+    },
+    {
+      "check": "Additional browser reset/Contact/Inbox/public privacy lifecycle",
+      "result": "passed",
+      "checkpoints": 7,
+      "evidence": "web-additional.json"
+    },
+    {
+      "check": "Android actual gallery selection/cancel and virtual camera capture/cancel",
+      "result": "passed",
+      "checkpoints": 4,
+      "evidence": "android-media.json"
+    },
+    {
+      "check": "Android actual notification permission initial/grant/revoke/readback",
+      "result": "passed",
+      "checkpoints": 3,
+      "evidence": "android-notification-permission.json"
+    },
+    {
+      "check": "Optimized maximum-fixture Android native Editor profile/GC",
+      "result": "passed",
+      "evidence": "android-editor-profile-after.json"
+    },
+    {
+      "check": "iOS actual UIDocumentPicker PDF Save/cancel and exact export bytes",
+      "result": "passed",
+      "evidence": "ios-pdf.json",
+      "bytes": 30884
+    },
+    {
+      "check": "Android actual Card QR decode, Share sheet and exact foreground Chrome reader",
+      "result": "passed",
+      "checkpoints": 3,
+      "evidence": "android-system.json",
+      "sdkJourney": "android-native-system.json"
+    },
+    {
+      "check": "Android actual Inbox pagination/markRead/ownership and avatar Firestore SDK",
+      "result": "passed",
+      "evidence": "android-inbox-avatar-sdk.json"
+    },
+    {
+      "check": "iOS actual Inbox pagination/markRead/ownership and avatar Firestore SDK",
+      "result": "passed",
+      "evidence": "ios-inbox-avatar-sdk.json"
+    },
+    {
+      "check": "iOS actual PHPicker selection/cancel and camera permission denial",
+      "result": "passed",
+      "checkpoints": 3,
+      "evidence": "ios-media.json"
+    },
+    {
+      "check": "iOS actual notification Deny/Allow and SDK readbacks, token auto-init disabled",
+      "result": "passed",
+      "checkpoints": 2,
+      "evidence": "ios-notification-permission.json"
+    },
+    {
+      "check": "Browser actual password/email changes and account deletion lost-ACK recovery, plus prior additional cases",
+      "result": "passed",
+      "checkpoints": 10,
+      "evidence": "web-account-e2e.json"
+    },
+    {
+      "check": "iOS actual Card QR decode, UIKit Copy exact payload, foreground Safari public reader",
+      "result": "passed",
+      "checkpoints": 3,
+      "evidence": "ios-system.json",
+      "sdkJourney": "ios-native-system.json",
+      "automatedWithoutManualHandoff": true
+    }
+  ],
+  "findings": [
+    {
+      "area": "mobile",
+      "issue": "Stale avatar menu after owner/basis change and stale failed-upload retry",
+      "result": "fixed",
+      "regressions": 3
+    },
+    {
+      "area": "web",
+      "issue": "Blocked localStorage getter aborts GitHub import; stale public URL after navigation",
+      "result": "fixed"
+    },
+    {
+      "area": "web HTTP",
+      "issue": "Missing demo-project endpoint guard and automatic redirect forwarding",
+      "result": "fixed",
+      "regression": "Actual307 not followed; captured UID token/ACK checks"
+    },
+    {
+      "area": "backend",
+      "issue": "Failed publication retry did not clean recoverable public media paths",
+      "result": "fixed",
+      "regression": "Real demo emulator RED/GREEN; private JPEG retained"
+    },
+    {
+      "area": "tooling",
+      "issue": "Stale release integration registrant and duplicated system stage false PASS",
+      "result": "fixed",
+      "regressions": 3
+    },
+    {
+      "area": "dependencies",
+      "issue": "GHSA-27r3-jxmh-p828 body-parser compressed body trailing-byte DoS",
+      "result": "fixed",
+      "versions": {
+        "body-parser": "2.3.0 ->2.4.0",
+        "qs": "6.16.0 ->6.16.1"
+      },
+      "manifestAndSdkUnchanged": true,
+      "regression": "Actual HTTP uncaught Z_DATA_ERROR before; server survives after"
+    },
+    {
+      "area": "measurement harness",
+      "issue": "Cached editor Finder retained Element/State during VM heap capture",
+      "result": "fixed",
+      "regression": "Two actual native profile runs: selected Editor State1 before Finder.reset(),0 after; no product runtime leak claimed"
+    },
+    {
+      "area": "performance acceptance",
+      "issue": "Maximum-fixture Editor eager mount creates23324 elements",
+      "result": "fixed",
+      "evidence": "android-editor-profile-after.json",
+      "note": "One owning scroll, lazy reorderable rows, field identity retained;2606 elements after. Physical-device60FPS remains unverified."
+    },
+    {
+      "area": "Editor Library lifecycle",
+      "issue": "Deleted attached project returned an unkeyed reorderable child and could crash the mounted Editor",
+      "result": "fixed",
+      "regression": "Actual deleteProject triggers child.key assertion before fix; keyed placeholder retains conflict/explicit reload/remaining workspace"
+    },
+    {
+      "area": "iOS acceptance harness",
+      "issue": "Native Open backgrounds Flutter and suspends frame pumping; URL clipboard uses public.url representation",
+      "result": "fixed",
+      "regression": "Unattended full native SDK process-pair and Card/Share/Open pass; secure system Paste proves exact payload, host starts before Open tap and XCTest returns the existing app."
+    }
+  ],
+  "openGates": [
+    "Owner confirms no physical iPhone or Apple Developer team; APNs and physical iOS delivery/profile remain unverified",
+    "Permanent publication/Contact hosting intentionally deferred by owner; production App Check/FCM/hosted end-to-end acceptance is separate",
+    "Actual Google OAuth needs a real test account; Android emulator has zero accounts. Emulator reset/password/email passed, real mailbox delivery/hosted action remains external",
+    "Physical camera QR scan and physical-device frame/GPU budget remain unverified; Android emulator VM/frame traces and native Share/Open are actual available evidence"
+  ],
+  "excluded": [
+    "store/release distribution",
+    "permanent hosting",
+    "billing",
+    "Git publication"
+  ],
+  "performance": {
+    "before": "mobile-performance-before.json",
+    "after": "mobile-performance-after.json",
+    "homeMountedElementsBefore": 39216,
+    "homeMountedElementsAfter": 5355,
+    "homeMountWallMsBefore": 1319.733,
+    "homeMountWallMsAfter": 438.824,
+    "sameFixtureSha256": "ccdb1341879f6568890354f9687f5657f6e5cde9d8a36c989ada06d41c6ac775",
+    "limitations": "Single host debug wall-clock sample, not native FPS or retained heap",
+    "web": "web-performance.json",
+    "editorNative": "android-editor-profile-after.json",
+    "editorMountedElementsBefore": 23324,
+    "editorMountedElementsAfter": 2606
+  },
+  "ownerHardwareDecision": {
+    "source": "Direct reply2026-10-24",
+    "physicalIPhone": false,
+    "appleDeveloperTeam": false,
+    "billingOrAccountCreationAuthorized": false,
+    "result": "All available Simulator checks passed; physical/APNs gates remain open"
+  },
+  "availableEnvironmentAuditComplete": true,
+  "fullPlatformAcceptanceComplete": false,
+  "cleanup": {
+    "unusedMobileComponents": [
+      "DeveloperProfileScreen",
+      "GitHubSourceCards",
+      "GitHubProjectReviewSheet",
+      "features/profile (7 files)",
+      "features/portfolio (3 files)"
+    ],
+    "unusedWeb": [
+      "MediaUpload wrapper",
+      "unused imports",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml"
+    ],
+    "unusedBackend": [
+      "attached Resume write branch",
+      "prepare.existing"
+    ],
+    "preserved": [
+      "PortfolioProfile and all persisted codecs/migrations",
+      "legacy public reader/Storage/Functions adapters",
+      "baseline_projects.dart used by native profile harness",
+      "all actual current routes and meaningful tests"
+    ],
+    "tests": "4 archival UI cases and6 dead-cluster demo cases removed; actual Projects/Home/cold-read/error/reload/Save cases preserved/strengthened, final1398 tests"
+  },
+  "normalApplicationRestoration": {
+    "status": "passed",
+    "evidence": "environment-restoration.json",
+    "ordinaryDataCleared": false
+  },
+  "acceptedConstraints": [
+    "Bucketless account deletion keeps the legacy-media safety guard: verified operator cutover and saved schema7 draft required. Empty account rejects before lock; actual demo Storage full delete and receipt recovery passed.",
+    "iOS Simulator supports debug mode only in installed Flutter SDK; no Simulator profile/physical60FPS claim."
+  ]
+}

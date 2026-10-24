@@ -63,7 +63,7 @@ paths согласуются вместе с guards/deep links перед пер
 | **Существующий route** | **Файл и поведение** |
 |:---|:---|
 | `/`, `/home` | Redirect и [Home](../../apps/mobile/lib/features/home/home_screen.dart), прежний dashboard |
-| `/portfolio` | [PortfolioScreen](../../apps/mobile/lib/features/portfolio/presentation/portfolio_screen.dart), единственный preview |
+| `/portfolio` | исторический `PortfolioScreen`, удалён в Phase20; действующий route ведёт в Editor |
 | `/projects` | [ProjectsScreen](../../apps/mobile/lib/features/projects/presentation/projects_screen.dart), проекция draft |
 | `/settings` | [Settings](../../apps/mobile/lib/features/settings/settings_screen.dart), root старого ShellRoute |
 | `/sign-in`, `/register`, `/reset-password` | [SignInScreen](../../apps/mobile/lib/features/auth/presentation/sign_in_screen.dart), режимы auth |

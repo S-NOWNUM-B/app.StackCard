@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:app_stackcard/features/inbox/data/firestore_inbox_repository.dart';
 import 'package:app_stackcard/features/inbox/inbox.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -41,8 +43,12 @@ void main() {
       expect(isContactRequestId(id), isTrue);
       final stamp = DateTime.now().microsecondsSinceEpoch;
       final options = FirebaseOptions(
-        apiKey: 'demo-api-key',
-        appId: '1:123456789:android:1234567890abcdef',
+        // iOS Installations валидирует форму synthetic options ещё до Emulator API.
+        apiKey: 'A00000000000000000000000000000000000000',
+        appId: Platform.isIOS
+            ? '1:123456789:ios:1234567890abcdef'
+            : '1:123456789:android:1234567890abcdef',
+        iosBundleId: Platform.isIOS ? 'com.example.appStackcard' : null,
         messagingSenderId: '123456789',
         projectId: project,
       );

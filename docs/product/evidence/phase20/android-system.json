@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "device": "emulator-5554",
+  "scope": "Android emulator native channels and local anonymous Next SSR",
+  "physicalCamera": "not available; screenshot independently decoded by Vision",
+  "recipientSelected": false,
+  "checkpoints": [
+    {
+      "stage": "card",
+      "decodedExactUrl": "http://127.0.0.1:3800/d/a1202b8723d5867dc44f51850bd24bfd",
+      "anonymousHttp200": true,
+      "privateMarkersAbsent": true,
+      "screenshot": "android-system-card.png"
+    },
+    {
+      "stage": "share",
+      "exactPreviewText": "http://127.0.0.1:3800/d/a1202b8723d5867dc44f51850bd24bfd",
+      "androidChooser": true,
+      "resumedActivity": [
+        "    topResumedActivity=ActivityRecord{96882721 u0 com.android.intentresolver/.ChooserActivityLauncher t51}"
+      ],
+      "cancelledWithoutRecipient": true,
+      "screenshot": "android-system-share.png"
+    },
+    {
+      "stage": "open",
+      "browser": "Chrome",
+      "anonymousNativeReader": true,
+      "resumedActivity": [
+        "    topResumedActivity=ActivityRecord{10852504 u0 com.android.chrome/org.chromium.chrome.browser.ChromeTabbedActivity t49}"
+      ],
+      "url": "http://127.0.0.1:3800/d/a1202b8723d5867dc44f51850bd24bfd",
+      "screenshot": "android-system-open.png"
+    }
+  ]
+}

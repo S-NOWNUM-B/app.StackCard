@@ -53,8 +53,16 @@ snapshots не содержат этих root metadata. Предельные 20 
 допускают один дополнительный основной документ из базы (21 в новой schema).
 Чтение не выполняет migration write; выбор/backup/Save атомарны с CAS/revision.
 
-Mobile Home использует durable `draft.content`, web Home — confirmed basis;
-редактор хранит working buffer с явным Save и guard выхода. Scoped Library
+Mobile Home использует durable `draft.content`, web Home — confirmed basis.
+Длинные разделы mobile рендерятся лениво в одном `CustomScrollView` через
+`MainPortfolioContentView.sliver`, `StackCardCard.sliver` и `SliverList.builder`.
+Shared tokens и обычный constructor для вложенного preview сохраняются;
+saved порядок и все записи доступны прокруткой без eager mount всей базы.
+Main Editor использует свой единственный `CustomScrollView` с ленивыми
+`SliverReorderableList` и `BuilderTagsEditor.sliver`. Контроллеры полей остаются
+у Editor State; конечный cache расширяется только во время длинного drag и
+очищается после drop/cancel, сохраняя placeholder до завершения SDK animation.
+Редактор хранит working buffer с явным Save и guard выхода. Scoped Library
 import/delete и GitHub identity Save не сохраняют соседний несохранённый ввод.
 GitHub-профиль редактируется в Settings и персонализации; Main Editor не содержит
 этого поля и не изменяет root identity при Save. Scoped сохранение портфолио
@@ -158,9 +166,10 @@ content и известным GitHub snapshots; UI предлагает явны
 Непроверенные сценарии Phase 7 остаются открытыми.
 Приёмка и фактические результаты проверок ведутся в
 [product spec](../product/product-spec.md#phase-10--portfolio-suggestions).
-Home, Resumes, Projects и Portfolios используют stateful app shell и Material 3
-light-only; Settings, Sign In и редакторы открываются отдельно. Home/document
-libraries читают actual draft через Riverpod и сохраняют пустую базу пустой.
+Действующий stateful shell по ADR0005 содержит только Home/Projects/Editor
+и светлый Material3. Settings и Sign In открываются отдельно; прежние
+Resumes/Portfolios остаются совместимым архивом, не root-вкладками.
+Home читает durable snapshot через Riverpod и сохраняет пустую базу пустой.
 Legacy preview/read models остаются отдельными демонстрационными сценариями. Данные сохраняются
 через Repository contracts. Firebase Auth работает через отдельный account API;
 Firestore adapter синхронизирует account draft поверх Hive. Publish/unpublish
@@ -185,10 +194,8 @@ apps/mobile/
 │   ├── shared/widgets/       # card, button, input, states, async view, brand
 │   └── features/
 │       ├── auth/             # public API, DI, presentation/domain/data
-│       ├── profile/          # public API, DI, presentation/domain/data
 │       ├── projects/         # public API, DI, presentation/domain/data
 │       ├── github_import/    # public GitHub source, DTO, Dio, Hive response cache
-│       ├── portfolio/        # public API и presentation read model
 │       ├── portfolio_draft/  # Builder, Hive/Firestore sync, publication и controller
 │       ├── media/            # avatar picker, Firestore media и legacy Storage reads
 │       ├── location/         # ручной город/страна, optional native geolocation
@@ -440,7 +447,8 @@ alias migration. Missing production endpoint/origin — явное configuration
 
 ## Mobile modules — при реальных сценариях
 
-На Phase 3 `auth`, `profile` и `projects` разделены на используемые слои:
+На Phase3 были выделены `auth`, `profile` и `projects`. Phase20 удалил unused
+profile/portfolio read-model cluster; действующие features сохраняют слои:
 
 ```text
 features/<feature>/
@@ -456,26 +464,24 @@ features/<feature>/
 | **Область** | **Ответственность и публичная граница** |
 |:---|:---|
 | [auth](../../apps/mobile/lib/features/auth/auth.dart) | Pure Dart `AccountAuthRepository`, `AuthUser`, typed `AuthFailure`; Firebase adapter и Riverpod account session/actions. Legacy `AuthRepository`/`DemoSession` сохранены для preview без native configuration |
-| [profile](../../apps/mobile/lib/features/profile/profile.dart) | Immutable read models `Profile`, `ProfileHighlight`, `ProfileReadiness`; `profileProvider` читает проекцию Builder, при отсутствии content — заменяемый demo repository |
 | [projects](../../apps/mobile/lib/features/projects/projects.dart) | Read model `Project`, typed `ProjectSource`, `ProjectsRepository`, pure query/filter и featured-отбор; проекция ручных проектов Builder либо demo repository через Riverpod |
-| [github_import](../../apps/mobile/lib/features/github_import/github_import.dart) | Public source models и `GitHubImportRepository`; Dio/DTO/cache в data, отдельный Riverpod controller и экран. Не меняет profile/projects/portfolio repositories |
-| [portfolio](../../apps/mobile/lib/features/portfolio/portfolio.dart) | `PortfolioOverview` объединяет публичные profile/projects states для Home и demo Portfolio; это presentation read model |
+| [github_import](../../apps/mobile/lib/features/github_import/github_import.dart) | Public source models и `GitHubImportRepository`; Dio/DTO/cache в data, отдельный Riverpod controller и экран. Не сохраняет workspace без явного import/Save |
 | [portfolio_draft](../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart) | Pure Dart portfolio content, validation/completion/suggestions, draft/sync/publication contracts; working controller, Builder/preview, Hive cache/outbox и UID-bound Firestore adapters |
 | [media](../../apps/mobile/lib/features/media/media.dart) | Pure picker/repository contracts, MIME/resize preprocessing, UID-bound Firestore avatar и чтение legacy Storage; widgets используют публичный API |
 | Location (история Phase12) | Pure `PortfolioPlace` и repository; geolocator/native geocoding в data, picker подтверждает только город/страну, без карты |
-| Home и Settings | Рендерят данные публичных feature APIs; Home использует overview, Settings — profile state и AppSettings через Provider |
+| Home и Settings | Home рендерит saved main через draft API; Settings использует account/draft/settings APIs. Legacy profile/overview providers сохраняют совместимость прежних сценариев |
 
 </div>
 
 Зависимости: presentation → domain, data → domain. Корневые DI-файлы feature
 связывают repository contract с реализацией. Widgets не импортируют concrete
 repositories или mock content. Между features используются публичные
-`auth.dart`, `profile.dart`, `projects.dart`, `portfolio.dart`, `github_import.dart`,
+`auth.dart`, `projects.dart`, `github_import.dart`,
 `portfolio_draft.dart`;
 внутренние файлы другой feature не импортируются.
 
 Domain использует только Dart и не зависит от Flutter, Riverpod, Dio, Hive или
-Firebase. Model collections защищены от внешнего изменения. UI auth/profile/projects
+Firebase. Model collections защищены от внешнего изменения. UI auth/projects
 получает `AsyncValue`; GitHub Import использует `GitHubImportState` для списка,
 refresh и pagination. Loading/error и явный retry показываются общими widgets,
 empty обрабатывается соответствующим экраном. Repository отвечает за источник,
@@ -483,10 +489,9 @@ controller/notifier — за действие или состояние; pure do
 UseCase/DataSource не созданы: mock repositories и GitHub HTTP-adapter
 достаточны для текущих сценариев, без дополнительного промежуточного слоя.
 
-`ProfileReadiness` предоставляет счётчики и долю/процент для read model:
-demo repository задаёт их в snapshot, проекция Builder получает результат pure
-`calculatePortfolioCompletion`. `PortfolioOverview` не является draft, опубликованной версией или
-контрактом синхронизации.
+Полнота портфолио вычисляется pure `calculatePortfolioCompletion` по
+существующему `PortfolioContent`. Отдельные demo `ProfileReadiness` и
+`PortfolioOverview` больше не поддерживаются; это не изменение persisted schema.
 
 Provider владеет ThemeMode, Locale и простой настройкой отображения описаний.
 Их neutral immutable contract — `core/state/AppSettings`, persistence adapter —
@@ -794,7 +799,7 @@ Markdown, файловые вложения и обработка media в эт�
 [`PortfolioDraftController`](../../apps/mobile/lib/features/portfolio_draft/presentation/portfolio_draft_controller.dart)
 — единственный mutable владелец рабочего notes/content и последнего durable
 draft в app session. Формы применяют валидный результат целиком; отмена не меняет
-content. Home, Portfolio, Projects и Settings читают проекции публичного
+content. Legacy Portfolio/профиль читают проекции публичного
 `portfolioWorkingContentProvider`, без отдельного write store.
 После `ensureLoaded()` read models подписываются на readiness/content, чтобы
 завершение первого чтения не повторяло demo-запрос. Demo допускается только
@@ -1075,9 +1080,10 @@ Ignore/override flags, Auth/provider data и private media references. Block
 visibility, Library/attachment visibility и document overrides применяются до
 public write. Contact допустим только если его stable ID разрешён актуальной
 базой и snapshot документа выбирает его; location требует разрешения в обоих.
-Private Resume attachment превращается в publicId только при видимой Resume
-секции и отдельной подтверждённой публикации Resume; public reader перепроверяет
-доступность target. Лимит 200 относится к каждой опубликованной skills/projects/
+Новый writer по ADR0005 публикует только основное портфолио: Resume attachment
+и произвольный legacy resumeText в новый public snapshot не переносятся.
+Legacy public schema1 reader сохраняет чтение ранее опубликованных Resume и
+проверяет доступность старого attached target; это не новая capability writer. Лимит 200 относится к каждой опубликованной skills/projects/
 experience/education/links коллекции после visibility/privacy projection.
 Большая private база не получает искусственный общий лимит200: сохраняются
 исходные field/document limits и aggregate предел Firestore1MiB.

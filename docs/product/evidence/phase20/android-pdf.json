@@ -1,0 +1,13 @@
+{
+  "platform": "Android emulator",
+  "status": "passed",
+  "configuration": "Existing synthetic pdf_runtime_test.dart and real native SAF picker, no Auth/Hive/user draft",
+  "bytes": 30884,
+  "pages": 3,
+  "savedExactExpectedBytes": true,
+  "savedSha256": "67e57c710676ebd826f228791c568f6d43bfc33cf550f11dbb4d18067fa8c33f",
+  "saveAndCancelPassed": true,
+  "evidence": "SAVE_PASS/CANCEL_PASS/ALL_PASS, drive exit0; independent pulled Downloads file byte comparison",
+  "cancelledFileCreated": false,
+  "limitations": "Not physical-device camera/gallery or iOS acceptance"
+}

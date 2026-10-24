@@ -1,7 +1,37 @@
 # Правила StackCard Mobile
 
+Phase20 — аудит; Android release отложен пользователем2026-10-24.
+Существующая signing configuration сохраняется: отдельный `signingConfigs.release`, credentials из
+игнорируемого `android/key.properties` или `STACKCARD_ANDROID_KEY_PROPERTIES`.
+`validateReleaseCredentials` обязателен перед `preReleaseBuild`; отсутствие
+подписи не включает debug fallback. Debug CI сохраняется без release secrets.
+Keystore/пароли/obfuscation symbols не хранить в Git или публичных artifacts.
+Application ID менять после согласования вместе с Firebase/native consumers.
+Пользователь утвердил Android `dev.snownumb.stackcard`; iOS bundle ID прежний.
+После FlutterFire configure проверять выбранный Android public key в native/Dart:
+CLI может вернуть legacy shared key. `tools/release/configure_android_firebase.py`
+согласует только выбранный appId/package с отдельно ограниченным новым key;
+legacy clients/iOS и ограничения старого key не меняются. Повторный configure
+может добавить лишний iOS upload phase: сохранять existing foreground uploader
+единственным последним phase, CLI-managed `uploadDebugSymbols` оставлять false.
+Команды и материалы — [release guide](../../release/README.md); статус — product spec.
+
 Действующий продуктовый контракт — [ADR 0005](../../decisions/0005-single-main-portfolio.md).
 Home/Projects/Editor — единственные roots; saved Home не использует buffer.
+Home использует один `CustomScrollView`; `MainPortfolioContentView.sliver` и
+`StackCardCard.sliver` сохраняют shared tokens/рамку, а длинные списки проектов,
+опыта и образования строятся через `SliverList.builder`. Обычный constructor
+renderer остаётся для вложенного preview; не возвращать eager Column всех
+записей в Home и не добавлять вложенный scroll/shrinkWrap ради ленивой загрузки.
+Main Editor также использует один `CustomScrollView`: длинные записи —
+`SliverReorderableList`, навыки/контакты — `BuilderTagsEditor.sliver` с shared card.
+Контроллеры полей принадлежат State редактора и переживают прокрутку. Каждый
+reorderable child сохраняет стабильный key, включая пустой placeholder удалённого
+Library project до explicit reload; conflict не должен сбрасывать buffer. Во время
+длинного drag cache конечный и растёт вместе с пройденным расстоянием, чтобы
+placeholder не исчезал. После drop/cancel и SDK animation он возвращается к
+обычному размеру; чужой pointer cancel не должен обрывать активное перетаскивание.
+Не возвращать eager shrinkWrap списки или бесконечный cache ради reorder.
 Порядок пяти разделов main хранится в существующем `document.content.blocks`;
 `mainPortfolioSectionOrder` задаёт совместимый default и сохраняет выбранный порядок.
 Современный Editor переставляет записи только внутри раздела; точки в заголовках
@@ -23,6 +53,8 @@ Host debug timings/mounted elements/RSS не заменяют native profile fra
 Library строит карточки лениво, loading/refresh/error не показывает прежние данные;
 QR State переиспользует матрицу только для прежнего URL, без global cache.
 Команды — в CONTRIBUTING, открытые native/live/iOS проверки Phase 15 сохраняются.
+Flutter поддерживает на iOS Simulator только debug mode; его timings не заменяют
+profile на физическом iPhone. Android emulator profile отделять от physical GPU.
 
 Phase 17 native journey: `integration_test/main_portfolio_runtime_test.dart`
 использует explicit opt-in, demo named Auth/Firestore apps, отдельный persistent
@@ -37,6 +69,33 @@ Controller onboarding/import и настоящий Card/Clipboard UI обозн�
 заменяет iOS; системные permissions и full touch journey требуют своих результатов.
 `integration_test/hardening_ui_runtime_test.dart` проверяет native UI с memory
 fixture отдельно от SDK journey и не открывает ordinary storage/session.
+Android `--system-actions` использует отдельный coordinator и временный owned
+reverse3800; точный URL проверяется в foreground Chrome/AOSP, настройки browser
+role и account не меняются. iOS `--system-actions` использует
+`tools/testing/ios_link_actions.py` на loopback3811 без ADB reverse; только demo
+project, booted UUID и exact localhost synthetic publicId. Card требует Vision
+QR decode/anonymous SSR privacy, Share — UIKit Copy и точный secure UI Paste в
+native Safari URL field без ввода ожидаемого URL. iOS27 `public.url` без plain text
+допускается только с отдельным payload success marker; непустой host pbpaste
+обязан точно совпасть. Background UIPasteboard reads не использовать; чужой
+clipboard не логировать, неизвестный paste-consent автоматически не подтверждать.
+Open — foreground Safari/native URL field и saved author/privacy. Только в
+наблюдённом native URL field допускается exact URL либо exact URL без `http://`;
+trim/substring matching и проверка URL в произвольном page text запрещены. Host запускает
+только selected standalone XCTest, требует exit0+marker; timeout завершает только
+свою process group/own XCTest runner. iOS Open handshake запускается до tap:
+`tester.runAsync` + `Future.wait([_systemStage(...), tester.tap(...)])`; пока Safari
+оставляет Flutter в background, нельзя ждать/pump Flutter frames. После native
+проверки XCTest `tearDownWithError` активирует только уже работающий StackCard,
+чтобы HTTP result/timers дошли до harness даже при assertion abort; frame pumping
+возобновляется после возврата. Обычные browser data/role/account не менять.
+iOS system picker проверяется отдельным XCTest target
+в `tools/testing/ios_system_actions`, phase bridge — `ios_system_actions.py`.
+Native Flutter markers читаются из отдельного opt-in log через loopback3812,
+без private log payloads; UI buttons остаются настоящими. PDF требует отдельного
+побайтового сравнения File Provider export с проверенным synthetic source,
+одних Flutter markers/XCTest build недостаточно. Camera denial после проверки
+восстанавливается supported XCTest API только для прежнего `notDetermined`.
 
 Phase 15 Developer Card/QR: `portfolio_draft` владеет public read model,
 strict card projection и `FirestoreDeveloperCardRepository`. SDK `publishedAt`
@@ -65,11 +124,18 @@ ACK, включая поздний token-refresh ACK; успешный SDK delet
 Смена UID очищает private Inbox и pending notification navigation.
 Default/demo runtime не создаёт fake requests/tokens; device/live gate отдельный.
 Opt-in `integration_test/notification_permission_runtime_test.dart` читает actual
-Android permission без prompt/token/Auth/draft mutations; его локальный результат
-не подтверждает FCM delivery. Запуск и восстановление permission/APK — в CONTRIBUTING.
+Android permission без prompt/token/Auth/draft mutations. Отдельный iOS request
+режим требует `NOTIFICATION_REQUEST_PERMISSION=true`, initial `notDetermined`,
+auto-init=false и disposable Simulator. XCTest `notificationDeny`/`notificationAllow`
+нажимает только точный Deny/Allow внутри notification alert StackCard; host3812
+передаёт строгие READY/PASS с `permission=denied`/`authorized`. Allow запускается
+снова из initial `notDetermined` на fresh/owned-reset test Simulator; обычные
+устройства не стирать. SDK делает два readbacks без token/Auth/Hive/consent writes.
+Этот результат не подтверждает APNs/FCM delivery. Запуск и восстановление
+permission/APK либо удаление только созданного test Simulator — в CONTRIBUTING.
 
 Область этих правил — `apps/mobile/`. CI и версии SDK — в [CI scope](ci.md);
-Flutter pin берётся из корневого `.fvmrc`, формат включает также `tool/test_driver`.
+Flutter pin берётся из корневого `.fvmrc`, формат включает также `tool` и `test_driver`.
 
 Общие правила и границы текущей фазы наследуются из [общих правил](../AGENTS.md).
 Перед изменениями прочитай [общий AI router](../README.md) и применимые
@@ -187,16 +253,15 @@ headless проверки не закрывают native visual, public/web ил
   failure оставляет выбор в UI с retry. Corrupt/unknown preferences дают defaults;
   пользовательский draft не хранится в preferences.
 - Feature APIs: [auth.dart](../../../apps/mobile/lib/features/auth/auth.dart),
-  [profile.dart](../../../apps/mobile/lib/features/profile/profile.dart),
   [projects.dart](../../../apps/mobile/lib/features/projects/projects.dart),
   [github_import.dart](../../../apps/mobile/lib/features/github_import/github_import.dart),
-  [portfolio_draft.dart](../../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart),
-  [portfolio.dart](../../../apps/mobile/lib/features/portfolio/portfolio.dart).
+  [portfolio_draft.dart](../../../apps/mobile/lib/features/portfolio_draft/portfolio_draft.dart).
   Между features импортировать только публичные APIs; `domain` остаётся pure Dart.
   Presentation использует domain и providers, data реализует repository contracts.
-- DI находится у корня feature: auth/projects providers и profile dependencies
-  связывают concrete repositories; profile/projects providers читают рабочий
-  Builder content через публичный draft API либо demo repositories при content null.
+- DI находится у корня feature: auth/projects providers связывают concrete
+  repositories; projects provider читает workspace через публичный draft API
+  либо demo repository при отсутствии runtime draft. Профиль принадлежит
+  `PortfolioProfile` внутри `portfolio_draft`, не отдельному read-model feature.
   Widgets не импортируют data sources.
   `StackCardApp.providerOverrides` передаётся своему ProviderScope и позволяет
   менять источник для реальных экранов. Native `LocalRuntime` подставляет Hive
@@ -204,8 +269,7 @@ headless проверки не закрывают native visual, public/web ил
   memory defaults сохраняют изоляцию preview/tests `StackCardApp`.
   Не дублировать DI в widgets и не открывать boxes из экрана.
 - Демонстрационные данные принадлежат
-  [DemoAuthRepository](../../../apps/mobile/lib/features/auth/data/demo_auth_repository.dart),
-  [MockProfileRepository](../../../apps/mobile/lib/features/profile/data/mock_profile_repository.dart) и
+  [DemoAuthRepository](../../../apps/mobile/lib/features/auth/data/demo_auth_repository.dart) и
   [MockProjectsRepository](../../../apps/mobile/lib/features/projects/data/mock_projects_repository.dart).
   Demo-вход не авторизует аккаунт; эти источники не обращаются к GitHub/backend
   и не сохраняют draft. GitHub Import имеет отдельный публичный HTTP-источник.
@@ -431,13 +495,11 @@ headless проверки не закрывают native visual, public/web ил
   Permanent URL/delete/security — в [architecture](../../architecture/architecture.md#privatepublic-schema-и-явная-публикация)
   и [Firebase scope](firebase.md). Endpoint/origin/deployment отсутствуют в live
   окружении, пока это не подтверждено отдельной проверкой.
-- [PortfolioOverview](../../../apps/mobile/lib/features/portfolio/presentation/portfolio_overview.dart)
-  объединяет profile/projects для Home и demo Portfolio; query/filter Projects
-  не влияет на полный или featured список других экранов. Это presentation read model,
-  не draft/published domain. `Profile`/`Project` также остаются read models;
-  Home/document libraries/Projects/Settings читают единый workspace через
-  публичные feature APIs, без отдельных write stores. `ProfileReadiness` получает
-  счётчики из demo snapshot либо pure вычисления полноты Builder.
+- Home рендерит saved main через публичный draft API; Projects query/filter
+  влияет только на Library. Профиль и pure completion принадлежат
+  `PortfolioContent`/`PortfolioProfile`/`calculatePortfolioCompletion`.
+  Не восстанавливать удалённые unused `profile`/`portfolio` read-model modules:
+  сериализация, миграции и архив остаются в существующем `portfolio_draft`.
 - Loading/error/retry: [StackCardAsyncView](../../../apps/mobile/lib/shared/widgets/stackcard_async_view.dart)
   использует существующий StackCardStateView; empty принадлежит экрану.
   Manual refresh — opt-in; UID/owner transition не показывает предыдущий owner
@@ -451,7 +513,7 @@ headless проверки не закрывают native visual, public/web ил
   [state_management_test.dart](../../../apps/mobile/test/state_management_test.dart).
   При смене владельца состояния проверять навигацию, reset и новую app session.
 - Repository/DI checks: `test/auth_repository_test.dart`, `test/auth_di_test.dart`,
-  `test/profile_repository_test.dart`, `test/profile_di_test.dart`,
+  `test/project_read_models_widget_test.dart`,
   `test/projects_repository_test.dart`, `test/projects_di_test.dart`.
   Проверять замену источника на реальных экранах, immutable outputs,
   loading/error/empty и явный retry. Учебные patches должны сохранять Phase 3 DI.

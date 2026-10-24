@@ -139,6 +139,18 @@
 
 ## Разработка по плану
 
+Последнее поручение пользователя2026-10-24 заменяет Phase20 Release на полный
+аудит web/mobile/backend: исправление функций и ошибок, доказанный dead-code
+cleanup, измеримая оптимизация, недостающие тесты и актуализация документации.
+Разрешена приоритетная работа субагентов с непересекающимися write scopes;
+ведущий согласует общие контракты и проверяет итоговую интеграцию.
+Готовность подтверждать матрицей сценариев и фактическими проверками, а не
+обещанием «100%» или одним coverage. Unchecked/native/live gates оставлять видимыми.
+Релиз отложен: AAB/store/App Distribution и материалы выпуска больше не продолжать
+без нового поручения. Сохранить согласованный Android ID и безопасную signing
+configuration; keystore/пароли/symbols не включать в Git/artifacts.
+Deployment, постоянный hosting, billing и commit/push не разрешены аудитом.
+
 Прямой переход пользователя 2026-10-23 разрешает Phase19 production hardening:
 бесплатную opt-in диагностику, security/lifecycle/UI/privacy review и проверки.
 Crashlytics остаётся на Spark, без Analytics и private error payloads. Hosting,

@@ -97,7 +97,7 @@ loading и DI — Riverpod. Их границы и
 | [lib/core/localization](lib/core/localization/) | Согласованные UI-каталоги ru/en и Localizations delegate |
 | [lib/core/theme](lib/core/theme/) | Утверждённая палитра, Material 3, typography, spacing/radius |
 | [lib/shared/widgets](lib/shared/widgets/) | Используемые общие widgets, loading/error/retry и async view |
-| [lib/features](lib/features/) | Auth/profile/projects/github_import/portfolio_draft: presentation/domain/data и public APIs; portfolio read model, Home и Settings |
+| [lib/features](lib/features/) | Auth/projects/github_import/portfolio_draft: presentation/domain/data и public APIs; Home и Settings |
 | [lib/features/github_import/github_import.dart](lib/features/github_import/github_import.dart) | Публичный API GitHub Import; DI связывает repository, clock и response cache, native bootstrap подставляет Hive adapter |
 | [lib/features/auth/auth.dart](lib/features/auth/auth.dart) | Account repository/user/typed failures, Firebase adapter, session/actions/explicit guest access; legacy demo API для preview/tests |
 | [lib/features/portfolio_draft/portfolio_draft.dart](lib/features/portfolio_draft/portfolio_draft.dart) | Portfolio domain, validation/completion, repository, единый session controller, Builder/preview и private notes |
@@ -111,8 +111,8 @@ loading и DI — Riverpod. Их границы и
 | [lib/features/portfolio_draft/domain/portfolio_suggestions.dart](lib/features/portfolio_draft/domain/portfolio_suggestions.dart), [presentation/portfolio_suggestion_list.dart](lib/features/portfolio_draft/presentation/portfolio_suggestion_list.dart) | Pure deterministic rules, единые пороги и локализованные объяснения без автоматической записи |
 | [assets/fonts](assets/fonts/) | Локальный Manrope, совместимые DM Sans/Noto Sans и SIL OFL лицензии |
 | [test/widget_test.dart](test/widget_test.dart), [test/responsive_test.dart](test/responsive_test.dart) | UI-сценарии, навигация, темы и адаптивность |
-| [test/auth_di_test.dart](test/auth_di_test.dart), [test/profile_di_test.dart](test/profile_di_test.dart), [test/projects_di_test.dart](test/projects_di_test.dart) | Подмена repositories в реальных экранах и async states |
-| [test/auth_repository_test.dart](test/auth_repository_test.dart), [test/profile_repository_test.dart](test/profile_repository_test.dart), [test/projects_repository_test.dart](test/projects_repository_test.dart) | Domain rules, demo/mock content и immutable collections |
+| [test/auth_di_test.dart](test/auth_di_test.dart), [test/project_read_models_widget_test.dart](test/project_read_models_widget_test.dart), [test/projects_di_test.dart](test/projects_di_test.dart) | Подмена repositories в реальных экранах и async states |
+| [test/auth_repository_test.dart](test/auth_repository_test.dart), [test/projects_repository_test.dart](test/projects_repository_test.dart) | Domain rules, demo/mock content и immutable collections |
 | [test/appearance_controller_test.dart](test/appearance_controller_test.dart), [test/project_filters_test.dart](test/project_filters_test.dart), [test/state_management_test.dart](test/state_management_test.dart) | Владельцы состояния, действия, навигация и новая session |
 | [test/github_data_test.dart](test/github_data_test.dart), [test/github_import_controller_test.dart](test/github_import_controller_test.dart), [test/github_import_widget_test.dart](test/github_import_widget_test.dart) | DTO/HTTP/ETag, запросы и lifecycle controller, локальные фильтры и экран GitHub Import |
 | [test/github_persistence_test.dart](test/github_persistence_test.dart), [test/local_storage_test.dart](test/local_storage_test.dart) | Реальный Hive reopen, TTL/fallback/304, ошибки записи, изоляция boxes и повреждённые файлы |
@@ -133,8 +133,9 @@ pure Dart модели, правила и repository contracts; data содер�
 источники, Dio-реализацию GitHub repository, Firebase Auth/Firestore и storage adapters. DI связывается у корня
 feature, `StackCardApp.providerOverrides`
 передаётся внутреннему ProviderScope для замены источника. `PortfolioContent`
-принадлежит единому draft; profile/projects остаются read model проекциями,
-`PortfolioOverview` объединяет их для Home и demo Portfolio. Builder preview
+принадлежит единому draft; `PortfolioProfile` — его persisted профиль, а
+Projects использует read model для query/filter. Home читает saved main напрямую;
+unused profile/portfolio demo modules удалены. Builder preview
 читает рабочий content и не показывает private notes. Подробные границы — в
 [architecture](../../docs/architecture/architecture.md#mobile-modules--при-реальных-сценариях). Brand originals находятся в
 [assets/branding](../../assets/branding/); `StackCardBrand` отрисовывает

@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-24",
+  "status": "passed",
+  "platform": "iOS27.0 Simulator",
+  "device": "FE7113A2-ED30-4881-895A-BD010AA2C411",
+  "checkpoints": [
+    {
+      "source": "gallery",
+      "outcome": "selected",
+      "flutterDriveExitCode": 0,
+      "xctestExitCode": 0,
+      "actualSystemUI": true
+    },
+    {
+      "source": "gallery",
+      "outcome": "cancel",
+      "flutterDriveExitCode": 0,
+      "xctestExitCode": 0,
+      "actualSystemUI": true
+    },
+    {
+      "source": "camera",
+      "outcome": "permissionDenied",
+      "flutterDriveExitCode": 0,
+      "xctestExitCode": 0,
+      "actualSystemUI": true
+    }
+  ],
+  "isolation": "Simulator created solely for this audit; no ordinary Photos/Auth/Hive used",
+  "selectedFixture": "Exact observed label for own synthetic gray JPEG600x400; processed JPEG<=512,<=256KiB,EXIFempty",
+  "permission": "Actual SpringBoard StackCard camera prompt denied; gateway returned permissionDenied. Modern PHPicker with requestFullMetadata=false needs no full Photo Library permission.",
+  "physicalCameraCapture": "Not accepted by Simulator",
+  "taskOwnedSimulatorDeletedAfterAcceptance": true
+}

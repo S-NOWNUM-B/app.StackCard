@@ -6,6 +6,8 @@
 Phase18 CI/CD завершена2026-10-23: GitHub green/red runs и artifacts проверены.
 Phase19 завершена2026-10-24, включая Xcode/iOS SDK/UI и проверенный Crashlytics
 report с разрешённой автозагрузкой dSYM; фактическая приёмка — в product spec.
+Phase20 заменена пользователем2026-10-24 на полный аудит web/mobile/backend;
+релиз отложен. Статус, матрица сценариев и результаты — в product spec.
 Source/local и Android Phase17 проверены; iOS SDK journey дополнительно PASS
 в Phase19. Незакрытые system/live/profile/Figma/release gates сохраняются отдельно.
 Native Share переиспользует существующий канал; новые root-вкладки не добавляются.
@@ -35,6 +37,8 @@ deploy/billing/Git сохраняют отдельные ограничения.
 
 | Задача | Читать | Canonical source |
 | --- | --- | --- |
+| Полный аудит web/mobile/backend, cleanup и оптимизация | [Phase20](../product/product-spec.md#phase-20--полный-аудит-проекта), [результаты](../product/audit.md), scopes по затронутой области | Actual source/configs, scenario matrix, meaningful regressions, browser/native journeys и измерения; не удалять compatibility/generated entry points по одному отсутствию imports/LCOV |
+| Отложенный Android release, подпись и материалы | [release guide](../release/README.md), [mobile scope](scopes/mobile.md) | `android/app/build.gradle.kts`, `android/key.properties.example`, pubspec version; запуск только по новому поручению, секреты вне Git |
 | Diagnostics, privacy и production hardening | [Phase19](../product/product-spec.md#phase-19--production-hardening), [mobile scope](scopes/mobile.md), [команды](../../CONTRIBUTING.md#production-hardening--phase-19) | `core/diagnostics`, LocalRuntime/main, отдельное consent preference; native Crashlytics configs, opt-in `diagnostics_runtime_test.dart` / `hardening_ui_runtime_test.dart`, `Runner/upload_crashlytics_symbols.sh`, `tools/testing/test_crashlytics_symbols.py`, existing Rules/service suites |
 | Commit, pull, rebase, push и исправление истории | [Git workflow](GIT_WORKFLOW.md) | [шаблон commit-msg](../../tools/git/commit-msg), [validator](../../tools/git/validate_commit_message.py), реальные status/diff, сохранённые commit objects/body, upstream и актуальные remote refs |
 | CI/CD, checks, APK и coverage artifacts | [CI scope](scopes/ci.md), [Phase 18](../product/product-spec.md#phase-18--cicd), [команды](../../CONTRIBUTING.md#cicd--phase-18) | `.github/workflows/ci.yml`, `.fvmrc`, `.node-version`, `.java-version`, actual manifests/lockfiles, `tools/redesign/check_imports.py`, `tools/testing/check_coverage.py` |
