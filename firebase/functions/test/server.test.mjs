@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { request as httpRequest } from 'node:http';
+import { gzipSync } from 'node:zlib';
 import { after, before, test } from 'node:test';
+import express from 'express';
 import { createBackendServer, readServerConfiguration } from '../src/server.mjs';
 import { createContactHttpHandler } from '../src/contact-http.mjs';
 import { createPublicationHttpHandler } from '../src/publication-http.mjs';
@@ -83,4 +85,39 @@ test('HTTP parser rejects malformed/wrong-type/oversized JSON for both route lim
     });
     assert.equal(result.status, 400); assert.equal(result.body.error.code, 'invalid-data');
   }
+});
+
+test('installed Functions Express parser survives trailing bytes after a compressed publication request', { timeout: 5000 }, async (t) => {
+  // Проверяем установленную transitive HTTP dependency; standalone Node parser её не использует.
+  const app = express();
+  app.use(express.json({ limit: 8192 }));
+  app.post('/documentPublication', createPublicationHttpHandler({ origin: 'https://stackcard.example' }));
+  app.get('/health', (_request, response) => response.json({ status: 'ok' }));
+  const parserServer = await new Promise((resolve, reject) => {
+    const listening = app.listen(0, '127.0.0.1', () => resolve(listening));
+    listening.once('error', reject);
+  });
+  t.after(async () => {
+    parserServer.closeAllConnections();
+    await new Promise((resolve, reject) => parserServer.close((error) => error ? reject(error) : resolve()));
+  });
+  const base = `http://127.0.0.1:${parserServer.address().port}`;
+  const body = Buffer.concat([gzipSync(JSON.stringify({ action: 'inventory' })), Buffer.from([0]), Buffer.alloc(128 * 1024, 0x58)]);
+  const result = await new Promise((resolve, reject) => {
+    const request = httpRequest(`${base}/documentPublication`, { method: 'POST', agent: false, headers: {
+      'Content-Type': 'application/json', 'Content-Encoding': 'gzip', 'Content-Length': body.length,
+    } }, (response) => {
+      let value = '';
+      response.on('data', (chunk) => { value += chunk; });
+      response.on('end', () => resolve({ status: response.statusCode, body: JSON.parse(value) }));
+    });
+    request.on('error', reject);
+    request.setTimeout(2000, () => request.destroy(new Error('Compressed request did not finish')));
+    request.end(body);
+  });
+  assert.equal(result.status, 401);
+  assert.equal(result.body.error.code, 'unauthenticated');
+  // Decoder мог выбросить error уже после HTTP response (GHSA-27r3-jxmh-p828).
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  assert.deepEqual(await (await fetch(`${base}/health`)).json(), { status: 'ok' });
 });

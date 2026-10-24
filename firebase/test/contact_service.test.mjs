@@ -282,6 +282,40 @@ test('notification failures preserve Inbox and late invalid-token cleanup cannot
   assert.equal((await database.doc(`pushTokenOwners/${tokenHash('owner-token')}`).get()).data().ownerUid, 'other');
   assert.equal((await database.doc(`accounts/owner/contactRequests/${requestId}`).get()).exists, true);
 });
+test('permission revoke removes its binding, preserves other devices and leaves Inbox readable without a push', async () => {
+  await published(); const api = service();
+  await api.execute(null, submit());
+  await api.execute('owner', device('revoked-owner-token'));
+  await api.execute('other', device('other-owner-token'));
+  await api.execute('owner', device('revoked-owner-token', 'unregisterDevice'));
+  await sendContactNotification({ database, ownerUid: 'owner', requestId,
+    messaging: { sendEachForMulticast: () => assert.fail('revoked permission must not receive a push') } });
+  assert.equal((await database.doc(`pushTokenOwners/${tokenHash('revoked-owner-token')}`).get()).exists, false);
+  assert.equal((await database.doc(`accounts/owner/pushDevices/${tokenHash('revoked-owner-token')}`).get()).exists, false);
+  assert.equal((await database.doc(`pushTokenOwners/${tokenHash('other-owner-token')}`).get()).data().ownerUid, 'other');
+  const owner = environment.authenticatedContext('owner').firestore();
+  await assertSucceeds(getDoc(doc(owner, `accounts/owner/contactRequests/${requestId}`)));
+});
+for (const changed of ['binding', 'account']) test(`sender rechecks ${changed} revoked after its receipt transaction before transport`, async () => {
+  await published(); const api = service();
+  await api.execute(null, submit()); await api.execute('owner', device('owner-token'));
+  let rechecked = false;
+  const guardedDatabase = {
+    doc: (path) => database.doc(path),
+    runTransaction: (callback) => database.runTransaction(callback),
+    async getAll(...references) {
+      assert.equal((await database.doc(`accounts/owner/contactNotificationReceipts/${requestId}`).get()).exists, true);
+      if (changed === 'binding') await api.execute('owner', device('owner-token', 'unregisterDevice'));
+      else await database.doc('accounts/owner').update({ lifecycleState: 'deleting' });
+      rechecked = true;
+      return database.getAll(...references);
+    },
+  };
+  await sendContactNotification({ database: guardedDatabase, ownerUid: 'owner', requestId,
+    messaging: { sendEachForMulticast: () => assert.fail('revoked state must block transport') } });
+  assert.equal(rechecked, true);
+  assert.equal((await database.doc(`accounts/owner/contactRequests/${requestId}`).get()).exists, true);
+});
 test('a thrown FCM transport failure preserves the durable Inbox and suppresses a duplicate transport attempt', async () => {
   await published(); const api = service(); await api.execute(null, submit()); await api.execute('owner', device('owner-token'));
   let attempts = 0;

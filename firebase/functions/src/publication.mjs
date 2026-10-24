@@ -91,7 +91,7 @@ export function createPublicationService({ database, bucket, auth, origin, emula
         if (operation.fingerprint !== digest) conflict();
         if (operation.cleanupPaths?.length || (operation.status === 'pending'
             && (operation.media?.length || publication?.mediaPaths?.length))) requireStorage();
-        return { operation, existing: true };
+        return { operation };
       }
       if (stateOf(account) !== 'active') throw new PublicationError('account-deleting', 'Account is unavailable', 409);
       if (generationOf(account) !== request.expectedGeneration || (publication?.version ?? 0) !== request.expectedVersion) conflict();
@@ -116,10 +116,6 @@ export function createPublicationService({ database, bucket, auth, origin, emula
         }
         projection.media = storageMedia;
         validatePublicDocumentSize(projection.publicDocument);
-        if (projection.attachedResumeId) {
-          const resume = await transaction.get(publicationRef(uid, projection.attachedResumeId));
-          if (resume.data()?.state === 'published') projection.publicDocument.attachedResumePublicId = resume.data().publicId;
-        }
         projection.url = `${baseOrigin}/d/${publicId}`;
       } else if (request.action === 'deleteDocument') {
         if (!draft || draft.ownerUid !== uid || !Array.isArray(draft.content?.documents)
@@ -142,7 +138,7 @@ export function createPublicationService({ database, bucket, auth, origin, emula
         url: projection?.url ?? null,
       };
       transaction.create(operationRef(uid, request.operationId), pending);
-      return { operation: pending, existing: false };
+      return { operation: pending };
     });
   }
 
@@ -270,7 +266,8 @@ export function createPublicationService({ database, bucket, auth, origin, emula
   async function mutate(uid, request) {
     const { operation } = await prepare(uid, request);
     if (operation.status !== 'pending') {
-      if (operation.status === 'completed' && operation.cleanupPaths?.length) {
+      // Отказанный CAS тоже мог оставить копии после временного сбоя cleanup.
+      if (operation.cleanupPaths?.length) {
         await operationRef(uid, request.operationId).update({ cleanupPaths: await cleanupPaths(operation.cleanupPaths) });
       }
       return operationResult(uid, request.operationId, operation);
