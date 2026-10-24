@@ -150,6 +150,10 @@ cleanup, измеримая оптимизация, недостающие те�
 без нового поручения. Сохранить согласованный Android ID и безопасную signing
 configuration; keystore/пароли/symbols не включать в Git/artifacts.
 Deployment, постоянный hosting, billing и commit/push не разрешены аудитом.
+Отдельный ответ пользователя2026-10-24 разрешил обновить только canonical
+Firestore Rules существующего dev проекта для исправления live cloud7 sync.
+Проверка требует readback опубликованного source и disposable web↔Android journey;
+хостинг, Functions, Storage, индексы, релиз и billing этим ответом не разрешены.
 
 Прямой переход пользователя 2026-10-23 разрешает Phase19 production hardening:
 бесплатную opt-in диагностику, security/lifecycle/UI/privacy review и проверки.

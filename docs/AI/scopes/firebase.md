@@ -130,6 +130,11 @@ Scope и фактическая приёмка остаются в [product spec
   и `npm test`; команды полного emulated integration берутся из actual manifest.
 - Native acceptance имеет explicit opt-in, отдельный test storage/disposable
   accounts и `--no-uninstall`; обычный app draft/session не очищаются.
+- Live web↔Android runner и его isolated named SDK/Hive harness описаны в
+  [CONTRIBUTING](../../../CONTRIBUTING.md#настоящая-синхронизация-web--android).
+  Они не ослабляют demo guards прежних suites и не публикуют Rules автоматически.
+  При permission-denied сравнить actual deployed Rules с canonical source:
+  зелёные emulator tests не подтверждают актуальность live release.
 - Команды и предусловия находятся в
   [CONTRIBUTING](../../../CONTRIBUTING.md#firestore-rules-и-native-sync-acceptance).
   Emulator tests не доказывают live SDK flow; native Android не доказывает iOS.

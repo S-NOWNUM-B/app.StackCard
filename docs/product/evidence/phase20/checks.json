@@ -190,6 +190,14 @@
       "evidence": "ios-system.json",
       "sdkJourney": "ios-native-system.json",
       "automatedWithoutManualHandoff": true
+    },
+    {
+      "check": "Real Firebase email/password web-Android sync, durable offline outbox and account isolation",
+      "result": "passed",
+      "evidence": "live-cross-client.json",
+      "note": "Approved Firestore Rules-only deployment fixed cloud6/cloud7 drift; exact readback matches repository. Actual Next/Chrome and Android named SDK/Hive pass roundtrip, server ACK, offline reopen/reconnect and strict foreign denial after positive B server proof. All disposable accounts/drafts deleted, default session preserved, ordinary debug APK restored without data clear. Google/mailbox remain separate.",
+      "checkpoints": 7,
+      "nativeMarkers": 9
     }
   ],
   "findings": [
@@ -257,12 +265,19 @@
       "issue": "Native Open backgrounds Flutter and suspends frame pumping; URL clipboard uses public.url representation",
       "result": "fixed",
       "regression": "Unattended full native SDK process-pair and Card/Share/Open pass; secure system Paste proves exact payload, host starts before Open tap and XCTest returns the existing app."
+    },
+    {
+      "area": "live Firebase configuration",
+      "issue": "Deployed2026-10-10 Firestore Rules accepted schemas1-6 while current web/mobile writers use7; first draft commit returned403",
+      "result": "fixed",
+      "correction": "Owner-approved Firestore Rules-only deployment; exact source readback and subsequent live web-Android roundtrip/offline/isolation PASS",
+      "evidence": "live-cross-client.json"
     }
   ],
   "openGates": [
     "Owner confirms no physical iPhone or Apple Developer team; APNs and physical iOS delivery/profile remain unverified",
     "Permanent publication/Contact hosting intentionally deferred by owner; production App Check/FCM/hosted end-to-end acceptance is separate",
-    "Actual Google OAuth needs a real test account; Android emulator has zero accounts. Emulator reset/password/email passed, real mailbox delivery/hosted action remains external",
+    "Google OAuth deferred by owner until APK testing; no test Google account/mailbox supplied. Emulator reset/password/email passed, real mailbox delivery/hosted action remains external",
     "Physical camera QR scan and physical-device frame/GPU budget remain unverified; Android emulator VM/frame traces and native Share/Open are actual available evidence"
   ],
   "excluded": [

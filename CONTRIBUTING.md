@@ -1624,6 +1624,48 @@ Platform system coordinators принимают один точный URL и п�
 `card → share → open`; повтор, смена URL или попытка продолжить после failure
 не могут превратить результат в PASS.
 
+#### Настоящая синхронизация web ↔ Android
+
+[Live runner](apps/web/tool/testing/live-cross-client.cjs) использует обычный Next
+и Firebase `stackcard-dev-snownumb`, два новых disposable email/password аккаунта
+и [Android SDK harness](apps/mobile/integration_test/cross_client_live_runtime_test.dart).
+Нужны normal web build с текущей `.env.local`, установленные web dependencies,
+Playwright/Chrome, Flutter из PATH и запущенный Android emulator. ADB берётся из
+`ADB_BIN`, Android SDK env или `apps/mobile/android/local.properties`.
+Firebase emulators должны быть выключены; localhost3900/3815 свободны.
+macOS zsh/bash, cwd — корень monorepo:
+
+```zsh
+# Создать только временные аккаунты и проверить live Save, offline outbox и смену UID
+RUN_LIVE_CROSS_CLIENT_ACCEPTANCE=true ANDROID_DEVICE="<emulator-id>" \
+  PLAYWRIGHT_MODULE="<absolute-path-to-installed-playwright>" \
+  CHROME_PATH="<chrome-executable>" \
+  node apps/web/tool/testing/live-cross-client.cjs
+```
+
+`PLAYWRIGHT_MODULE` можно опустить, если `playwright` доступен Node resolver;
+`CHROME_PATH` — если установлен соответствующий Playwright browser.
+`FLUTTER_BIN` переопределяет executable. Runner не отправляет писем, не запускает
+Google OAuth/publication и не развёртывает сервисы. Credentials генерируются в
+private temp0700/0600, не выводятся; сохранять только redacted `report.json`.
+После остановки writers удаляются только новые exact UID/draft этого запуска;
+затем восстанавливается обычный `main.dart` debug APK через install-r без очистки
+app data. При незавершённом cleanup private manifest сохраняется для восстановления.
+Native offline проверяет reopen реального Hive в одном процессе; отдельный
+OS-process restart принимается прежними process-pair journeys.
+После смены Auth тест сначала доказывает серверную identity B чтением её
+собственного draft, затем строго требует `permission-denied` для A. Проверка
+старого UID-bound repository выполняется сразу после switch и не допускает
+доступа к A; чтение A никогда не повторяется до получения желаемого отказа.
+
+Первый live прогон2026-10-24 обнаружил [устаревшие опубликованные Rules](docs/product/evidence/phase20/live-cross-client.json):
+cloud6 отклонял cloud7 первого черновика. После32 emulator tests и Firebase
+compile-only пользователь отдельно разрешил обновить только Firestore Rules;
+readback совпал с source. Повторный live прогон PASS: регистрация/onboarding,
+Save в обе стороны, Hive outbox reopen/offline/reconnect, A/B isolation и Rules
+denial. Cleanup и восстановление обычного debug APK подтверждены.
+Google OAuth отложен владельцем до APK, доставка писем требует тестового ящика.
+
 Cleanup выполняется после проверки imports, CLI/glob/runtime entries и
 compatibility. Unused/test-only не означает безопасное удаление migration codec,
 legacy reader или harness; generated/build caches не являются исходниками.

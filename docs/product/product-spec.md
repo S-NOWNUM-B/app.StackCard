@@ -3142,6 +3142,16 @@ physical60FPS budget не принят. Flutter поддерживает на iO
 debug mode; его замеры не заменяют physical iOS profile. Доступные system checks
 фиксируются в матрице аудита; фаза целиком не объявлена завершённой.
 
+**Последующая live-проверка2026-10-24:** real email/password регистрация web PASS,
+первоначальный Firestore403 устранён: после32 emulator tests/Firebase compile-only
+владелец разрешил обновить только Firestore Rules, readback точно совпал с source.
+Live web↔Android PASS: onboarding/повторный вход, двусторонний Save/server ACK,
+offline Hive outbox reopen/reconnect, A/B isolation и foreign Rules denial после
+доказанного server read B. Это repository/SDK journey, не touch/process restart.
+Disposable accounts/drafts удалены, default session сохранена, ordinary debug APK
+восстановлен без очистки app data. Google отложен до проверки APK, mailbox не предоставлен;
+подробности и hashes — в [evidence](evidence/phase20/live-cross-client.json).
+
 **Готово, когда:** вся матрица текущего контракта проверена на заявленных платформах,
 исправлены найденные значимые дефекты, безопасный cleanup и измерения подтверждены,
 документация актуальна. Невыполненные проверки сохраняют фазу открытой.

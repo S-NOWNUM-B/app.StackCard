@@ -12,7 +12,7 @@
 | Editor/Home | `home_main_portfolio_widget_test`33 PASS, Editor32 cases и full suite; bounded mount/field identity/scroll/Save и длинный drag/drop/cancel | Saved main отделён от buffer; Android/iOS UI по3 checkpoints PASS |
 | Projects/GitHub | Smart Sync/controller/HTTP suites, scoped Save и attachments в browser; blocked localStorage regression | Browser GitHub HTTP в компонентном regression синтетический, rate-limit/cache проверяются suites |
 | Avatar/manual city/PDF |3 media race regressions; actual Android/iOS avatar SDK; image processor/PDF/location suites; настоящий PDF в browser | Android/iOS gallery selection/cancel, Android virtual camera capture/cancel и iOS camera denial PASS; PDF Save/cancel,30884bytes exact match на обеих платформах |
-| Sync/cross-client | Cloud7/Hive8 codecs/legacy/Rules и mobile cross-client bridge; browser Firestore server CAS | Android/iOS native process-pair PASS, отдельные named apps/Hive без обычных данных |
+| Sync/cross-client | Cloud7/Hive8 codecs/legacy/Rules; actual live Next/Chrome↔Android SDK Save/server ACK/offline Hive reopen/reconnect и A/B isolation PASS | Live email/password; отдельные named apps/Hive без обычных данных. Android/iOS demo process-pair PASS отдельно; live reopen не OS restart |
 | Publication | Backend43 unit +89 Rules/service, web URL/redirect/captured UID tests; browser Publish/Save/Unpublish | Локальный trusted Node API; постоянного hosting нет |
 | Public reader/Card/QR | Public parser/privacy; actual Android/iOS QR screenshot decode точного URL, native Share без recipient и foreground Chrome/Safari anonymous reader;404 после withdrawal | Local trusted backend/Next, permanent live reader и physical camera scan отдельно |
 | Account lifecycle | Actual browser password/email mutation с wrong reauth/OOB; UI delete теряет ACK после реального удаления Auth/draft/Inbox/Storage, reload восстанавливает receipt; bucketless empty отказ до lock | Bucketless delete требует operator cutover и проверяемый saved schema7 draft; защиту legacy media не ослабляли |
@@ -29,6 +29,7 @@ Flutter1398 tests PASS; LCOV13165/15080=87,30%,28 unreported (без новых 
 
 | Область | До | После и проверка |
 |:---:|:---:|:---:|
+| Live Firestore Rules | Опубликованный cloud6 release отклонял первый cloud7 draft с403 | После32 tests/compile-only владелец разрешил Rules-only update; exact readback и полный live web↔Android sync PASS |
 | Mobile avatar menu | Открытое меню продолжало picker/remove после смены owner или avatar | Captured repository/generation/basis проверяются после await;2 RED→GREEN regressions |
 | Mobile upload retry | Старый prepared upload оставался после внешней смены avatar, retry мог зависнуть busy | Basis change очищает failure/prepared/operation repository; RED→GREEN regression |
 | Web GitHub | Getter `localStorage` мог бросить SecurityError до cache adapter и оборвать import | Сбой cache чтения оставляет сетевой import доступным; реальный React/Chrome regression |
@@ -165,13 +166,42 @@ modern picker/external camera не запрашивают storage/camera permiss
 architecture, CONTRIBUTING, web README и исторические ссылки удалённого UI.
 Новый аудит не разрешает Git publication, deployment, billing или выпуск.
 
+## Последующая live-проверка2026-10-24
+
+Настоящий Next.js/Chrome с выключенными Firebase emulators создал временный
+email/password аккаунт: Auth `accounts:signUp` вернул200. Первый cloud7 draft
+получил403 `permission-denied`, onboarding заблокирован до первого шага.
+Readback Rules подтвердил причину: прежний release обновлён2026-10-10 и
+разрешал только schema1–6; текущие web/mobile writers используют7.
+После32 emulator tests и Firebase compile-only200 без issues пользователь
+отдельно разрешил обновить только Firestore Rules. Новый release точно совпал
+с repository source по bytes/SHA256; хостинг/релиз не затронуты.
+[Evidence](evidence/phase20/live-cross-client.json) сохраняет оба hashes/release
+и результаты без credentials.
+
+Добавлены opt-in browser coordinator и Android named SDK/Hive harness для
+двустороннего Save, server ACK, durable offline outbox и изоляции A/B.
+Полный live прогон PASS: web регистрация/4 шага onboarding/повторный вход,
+web→Android→web Save, native listener, точный Hive outbox reopen при offline,
+server ACK после reconnect, browser A→B→A и native UID/local isolation.
+Сразу после switch старый A repository блокируется. Rules denial проверяется
+после положительного server read B, чтобы не принимать Auth callback за
+доказательство смены credentials Firestore transport; успех чтения A остаётся
+ошибкой. Первый диагностический прогон сохранён отдельно от успешной приёмки.
+Все созданные disposable accounts/drafts удалены; default session сохранена,
+обычный `main.dart` debug APK восстановлен через install-r без очистки app data.
+Это настоящий Firebase, но не Android touch journey или OS-process restart.
+Владелец отложил Google-вход до собственной проверки APK;
+доставка настоящих писем требует доступного тестового ящика.
+
 ## Открытые ограничения
 
 Полная приёмка фазы пока открыта. Владелец2026-10-24 подтвердил отсутствие
 физического iPhone и Apple Developer team; APNs не принимается по Simulator.
 
 Постоянный hosting/publication/Contact ранее отложен владельцем; новый rollout
-аудитом не выполняется. Google OAuth требует реального тестового аккаунта:
+аудитом не выполняется. Email/password live sync web↔Android принят отдельно выше.
+Google OAuth требует реального тестового аккаунта:
 в текущем Android emulator настроенных аккаунтов0. Browser и Auth emulator reset
 прошли с одноразовым OOB, но доставка настоящего письма/hosted action и live
 Google session этим не принимаются. Live App Check/FCM/APNs зависят от внешнего
