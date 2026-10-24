@@ -33,11 +33,12 @@ EXPECTED = {
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--device", required=True)
+    parser.add_argument("--platform", choices=("android", "ios"), default="android")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--run-id", default=None)
     parser.add_argument("--phase", choices=("both", "check"), default="both")
     parser.add_argument("--adb", default=os.environ.get("ADB"))
-    parser.add_argument("--host", choices=("10.0.2.2", "127.0.0.1", "localhost"), default="10.0.2.2")
+    parser.add_argument("--host", choices=("10.0.2.2", "127.0.0.1", "localhost"))
     args = parser.parse_args()
     run = args.run_id or secrets.token_hex(16)
     if not re.fullmatch(r"[0-9a-f]{32}", run):
@@ -52,18 +53,32 @@ def main():
         if os.environ.get(key) != value:
             parser.error(f"{key} must be {value}")
     root = Path(__file__).resolve().parents[2]
-    adb = args.adb or shutil.which("adb")
-    if not adb:
-        properties = root / "apps/mobile/android/local.properties"
-        if properties.exists():
-            sdk = next((line[8:] for line in properties.read_text().splitlines()
-                        if line.startswith("sdk.dir=")), "")
-            if sdk:
-                adb = str(Path(sdk) / "platform-tools/adb")
-    if not adb or not Path(adb).is_file():
-        parser.error("Android adb not found: pass --adb, set ADB or configure sdk.dir")
-    if subprocess.check_output([adb, "-s", args.device, "get-state"], timeout=10).strip() != b"device":
-        parser.error("Android device is not ready")
+    host = args.host or ("127.0.0.1" if args.platform == "ios" else "10.0.2.2")
+    if args.platform == "ios":
+        if host == "10.0.2.2":
+            parser.error("iOS simulator requires a loopback host")
+        if not re.fullmatch(r"[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}", args.device):
+            parser.error("iOS simulator requires an explicit device UUID")
+        devices = json.loads(subprocess.check_output(
+            ["xcrun", "simctl", "list", "devices", "booted", "--json"], timeout=15))
+        if not any(device["udid"].lower() == args.device.lower()
+                   for runtime in devices["devices"].values() for device in runtime):
+            parser.error("iOS simulator is not booted")
+        stop = ["xcrun", "simctl", "terminate", args.device, "com.example.appStackcard"]
+    else:
+        adb = args.adb or shutil.which("adb")
+        if not adb:
+            properties = root / "apps/mobile/android/local.properties"
+            if properties.exists():
+                sdk = next((line[8:] for line in properties.read_text().splitlines()
+                            if line.startswith("sdk.dir=")), "")
+                if sdk:
+                    adb = str(Path(sdk) / "platform-tools/adb")
+        if not adb or not Path(adb).is_file():
+            parser.error("Android adb not found: pass --adb, set ADB or configure sdk.dir")
+        if subprocess.check_output([adb, "-s", args.device, "get-state"], timeout=10).strip() != b"device":
+            parser.error("Android device is not ready")
+        stop = [adb, "-s", args.device, "shell", "am", "force-stop", "com.example.app_stackcard"]
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     # Не подключаться к случайному уже работающему backend.
@@ -80,10 +95,10 @@ def main():
     }
     report = {
         "status": "failed", "project": "demo-stackcard-test",
-        "device": args.device, "runId": run,
+        "device": args.device, "platform": args.platform, "runId": run,
         "scope": "native SDK/controller/Card UI with local Auth/Firestore and HTTP backend",
         "phases": [], "checkpoints": [],
-        "excluded": ["iOS acceptance", "physical camera QR scan", "native Share/Open",
+        "excluded": [f"{'iOS' if args.platform == 'android' else 'Android'} acceptance", "physical camera QR scan", "native Share/Open",
                      "production hosting", "system picker permission denial", "full UI onboarding/import"],
     }
     with output.with_suffix(".api.log").open("w") as backend_log:
@@ -116,16 +131,12 @@ def main():
                     "--dart-define=RUN_MAIN_PORTFOLIO_ACCEPTANCE=true",
                     f"--dart-define=MAIN_PORTFOLIO_PHASE={phase}",
                     f"--dart-define=MAIN_PORTFOLIO_RUN_ID={run}",
-                    f"--dart-define=MAIN_PORTFOLIO_EMULATOR_HOST={args.host}",
+                    f"--dart-define=MAIN_PORTFOLIO_EMULATOR_HOST={host}",
                 ]
                 print(f"Native journey {phase}; runId={run}; log={log}", flush=True)
                 with log.open("w") as stream:
                     result = subprocess.run(command, cwd=root / "apps/mobile", env=env,
                                             stdout=stream, stderr=subprocess.STDOUT, timeout=720)
-                # drive по умолчанию удаляет APK в teardown. keep-app-running
-                # сохраняет data; останавливаем только процесс, без uninstall/clear.
-                subprocess.run([adb, "-s", args.device, "shell", "am", "force-stop",
-                                "com.example.app_stackcard"], check=True, timeout=15)
                 text = log.read_text()
                 checkpoints = [json.loads(item) for item in re.findall(
                     r"STACKCARD_MAIN_JOURNEY:(\{[^\n]+\})", text)]
@@ -135,6 +146,9 @@ def main():
                         or {item["checkpoint"] for item in checkpoints} != EXPECTED[phase]
                         or any(item["phase"] != phase for item in checkpoints)):
                     raise RuntimeError(f"Native {phase} failed; inspect {log}")
+                # Сначала сохраняем результат: уже упавший процесс нельзя terminate.
+                # keep-app-running сохраняет data; завершаем успешный процесс без uninstall/clear.
+                subprocess.run(stop, check=True, timeout=15)
             if args.phase == "both":
                 pids = {item["pid"] for item in report["checkpoints"]}
                 if len(pids) != 2:

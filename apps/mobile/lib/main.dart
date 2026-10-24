@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'app/app_router.dart';
 import 'app/local_runtime.dart';
+import 'core/diagnostics/app_diagnostics.dart';
 import 'core/localization/app_strings.dart';
 import 'core/state/app_settings.dart';
 import 'core/state/appearance_controller.dart';
@@ -55,6 +56,7 @@ class _StackCardBootstrapState extends State<StackCardBootstrap> {
       await runtime.close();
     } else {
       _loaded = runtime;
+      runtime.diagnostics?.installErrorHandlers();
     }
     return runtime;
   }
@@ -75,6 +77,7 @@ class _StackCardBootstrapState extends State<StackCardBootstrap> {
           initialSettings: runtime.settings,
           settingsRepository: runtime.settingsRepository,
           providerOverrides: [
+            appDiagnosticsProvider.overrideWithValue(runtime.diagnostics),
             githubResponseCacheProvider.overrideWithValue(runtime.githubCache),
             accountAuthRepositoryProvider.overrideWithValue(
               runtime.authRepository,

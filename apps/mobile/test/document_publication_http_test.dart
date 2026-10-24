@@ -8,6 +8,34 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('production endpoints reject insecure or decorated URLs before reading a token', () async {
+    for (final url in [
+      'http://localhost:5001/documentPublication',
+      'http://10.0.2.2:5001/documentPublication',
+      'http://foreign.example/documentPublication',
+      'https://api.example/documentPublication?token=private',
+      'https://api.example/documentPublication#private',
+    ]) {
+      var tokenCalls = 0;
+      final adapter = _Adapter((_) => _response(_result()));
+      final repository = HttpDocumentPublicationRepository(
+        dio: Dio()..httpClientAdapter = adapter,
+        endpoint: Uri.parse(url),
+        ownerUid: 'owner',
+        token: (_) async {
+          tokenCalls++;
+          return 'private-token';
+        },
+      );
+      await expectLater(
+        repository.inventory(),
+        throwsA(_failure(DocumentPublicationFailureKind.configurationRequired)),
+      );
+      expect(tokenCalls, 0);
+      expect(adapter.requests, isEmpty);
+    }
+  });
+
   test(
     'authenticated mutation sends CAS metadata and trusts server URL',
     () async {
@@ -26,10 +54,45 @@ void main() {
     },
   );
 
+  test(
+    'explicit demo HTTP still requires loopback and never follows redirects',
+    () async {
+      for (final host in [
+        'localhost',
+        '127.0.0.1',
+        '10.0.2.2',
+        'foreign.example',
+      ]) {
+        final adapter = _Adapter((_) => _response(_result()));
+        final repository = HttpDocumentPublicationRepository(
+          dio: Dio()..httpClientAdapter = adapter,
+          endpoint: Uri.parse('http://$host:5001/documentPublication'),
+          ownerUid: 'owner',
+          allowDemoHttp: true,
+          token: (_) async => 'demo-token',
+        );
+        if (host == 'foreign.example') {
+          await expectLater(
+            repository.mutate(_mutation),
+            throwsA(
+              _failure(DocumentPublicationFailureKind.configurationRequired),
+            ),
+          );
+          expect(adapter.requests, isEmpty);
+        } else {
+          await repository.mutate(_mutation);
+          expect(adapter.requests.single.followRedirects, isFalse);
+        }
+      }
+    },
+  );
+
   test('unsafe public URL and malformed mutation ACK remain unknown', () async {
     for (final value in [
       _result(url: 'https://name:secret@public.example/p/public-id'),
       _result(url: 'javascript:alert(1)'),
+      _result(url: 'http://localhost/p/public-id'),
+      _result(url: 'https://public.example/p/public-id?token=private'),
       {'status': 'completed', 'operationId': 'other-operation'},
       'broken-success-response',
     ]) {

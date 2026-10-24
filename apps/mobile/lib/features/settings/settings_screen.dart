@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/localization/app_strings.dart';
+import '../../core/diagnostics/app_diagnostics.dart';
 import '../../core/state/appearance_controller.dart';
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
@@ -90,7 +91,7 @@ class SettingsScreen extends riverpod.ConsumerWidget {
   }
 }
 
-/// Route /settings/appearance: сохраняет только существующий AppSettings.
+/// AppSettings и отдельное согласие устройства на диагностику.
 class SettingsAppearanceScreen extends riverpod.ConsumerStatefulWidget {
   const SettingsAppearanceScreen({super.key});
   @override
@@ -146,6 +147,29 @@ class _SettingsAppearanceState
           value: appearance.reducedMotion,
           onChanged: appearance.setReducedMotion,
         ),
+        if (ref.watch(appDiagnosticsProvider) case final diagnostics?)
+          ListenableBuilder(
+            listenable: diagnostics,
+            builder: (context, _) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SwitchListTile.adaptive(
+                  key: const Key('settings.diagnostics'),
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Отчёты об ошибках'),
+                  subtitle: const Text(
+                    'Разрешить Firebase Crashlytics получать техническую диагностику устройства и очищенные ошибки. Подробнее — в разделе помощи.',
+                  ),
+                  value: diagnostics.enabled,
+                  onChanged: diagnostics.busy ? null : diagnostics.setEnabled,
+                ),
+                if (diagnostics.failed)
+                  const Text(
+                    'Не удалось подтвердить изменение диагностики. Повторите выбор.',
+                  ),
+              ],
+            ),
+          ),
         if (appearance.isSaving)
           Semantics(
             liveRegion: true,
@@ -362,6 +386,24 @@ class SettingsAboutScreen extends StatelessWidget {
       const SizedBox(height: StackCardSpacing.lg),
       const Text(
         'При ошибке соединения введённые данные остаются в форме. Дождитесь синхронизации перед обновлением публикации.',
+      ),
+      const SizedBox(height: StackCardSpacing.xl),
+      Text('Приватность', style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: StackCardSpacing.md),
+      const Text(
+        'Гостевой черновик хранится на этом устройстве. После входа сохранённые данные аккаунта синхронизируются с Firebase Firestore. Несохранённый ввод остаётся в редакторе. Черновик и личные заметки не доступны посетителям.',
+      ),
+      const SizedBox(height: StackCardSpacing.md),
+      const Text(
+        'Явная публикация создаёт отдельный публичный снимок: фото профиля и разрешённые контакты становятся доступны любому обладателю ссылки, в том числе через QR. Сохранение или изменение приватности не обновляет этот снимок. Обновите публикацию или отзовите её. Уже скачанные PDF, фото и копии у получателей отозвать нельзя.',
+      ),
+      const SizedBox(height: StackCardSpacing.md),
+      const Text(
+        'Камера и галерея используются только для выбранного вами фото. Уведомления включаются отдельно. Город и страна вводятся вручную; приложение не запрашивает геопозицию. Публикация и обращения доступны только при подключённом сервисе.',
+      ),
+      const SizedBox(height: StackCardSpacing.md),
+      const Text(
+        'Отчёты об ошибках выключены по умолчанию и включаются в настройках приложения. Crashlytics получает версию приложения, модель устройства, ОС, технические данные сбоя и идентификатор установки. Приложение не передаёт в отчёты UID аккаунта, контакты, токены, текст портфолио или заметок; Analytics не подключён. При выключении ожидающие отправки отчёты удаляются с устройства. Ранее отправленные отчёты этим не удаляются.',
       ),
       const SizedBox(height: StackCardSpacing.xl),
       StackCardButton(

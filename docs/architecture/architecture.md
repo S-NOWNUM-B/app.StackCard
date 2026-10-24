@@ -1315,7 +1315,28 @@ Package, UseCase или DataSource выделяется под существу�
 
 </div>
 
-### Errors, privacy и интеграции — будущие требования
+### Errors, privacy и интеграции
+
+Phase19 mobile diagnostics реализована в `core/diagnostics`: LocalRuntime собирает
+Crashlytics sink и отдельное device-wide согласие `stackcard.diagnostics.enabled`
+через SharedPreferencesAsync; default false, schema AppSettings не меняется.
+Settings/Application даёт явный opt-in/opt-out, Help объясняет data handling.
+До включения/после выключения unsent reports удаляются; уже доставленные отчёты
+при выключении не удаляются. Ошибка чтения/записи/SDK оставляет Dart reporting
+выключенным. Preview/demo/Auth-emulator runtimes не подключают live sink.
+Global Flutter/PlatformDispatcher handlers передают только фиксированный enum code
+и максимум32 source positions из явного allowlist. Raw exception, function names,
+widget context, UID, contact/message/token/draft не передаются; нет custom logs,
+user identifier или Analytics breadcrumbs. Неизвестный stack получает redacted
+marker (пустой stack заставляет SDK самостоятельно захватить текущий).
+Максимум20 Dart reports за runtime; ошибка sink не вызывает рекурсивный report.
+Native Crashlytics/device/installation metadata остаются частью SDK и описаны в
+privacy policy; отсутствие app UID не делает эту диагностику полностью анонимной.
+Native consent defaults заданы до запуска Dart; iOS SPM dSYM script — последняя
+build phase. Разрешённая автозагрузка передаёт весь bundle вместе с debug dylib
+через official `upload-symbols`, ждёт результата и не скрывает upload errors.
+Символы и report должны иметь совпадающий UUID. Android report delivery, iOS
+symbolication/build и live hosting — разные gates.
 
 - Widget получает Loading/Success/Empty/Error; ошибки timeout/network/auth/parsing/
   validation/cache преобразуются на границах, без разбросанного `try/catch` в UI.

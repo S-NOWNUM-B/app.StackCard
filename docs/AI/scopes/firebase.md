@@ -43,6 +43,11 @@ Scope и фактическая приёмка остаются в [product spec
   сохраняет read-only совместимость. Account delete без bucket допускается
   только после доказанного operator cutover из FIRESTORE_MEDIA_ONLY_ACCOUNTS_SINCE;
   default пуст, неизвестные legacy объекты дают configuration error до lock.
+  Mobile publication HTTP adapter по умолчанию требует HTTPS, без credentials,
+  query/fragment и redirects. Loopback HTTP требует явный `allowDemoHttp`;
+  LocalRuntime выдаёт его только demo project + Auth emulator, native harness —
+  только после собственных demo/loopback guards. Это же ограничение применяется
+  к полученному public URL; отсутствие конфигурации не означает success.
   Admin SDK обходит Rules; server validation tests обязательны отдельно.
 - [storage.rules](../../../firebase/storage.rules) и `features/media` владеют
   Phase 11 private image доступом. Path `accounts/{uid}/media/{32hex}.jpg`:

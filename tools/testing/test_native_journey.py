@@ -7,6 +7,10 @@ import unittest
 
 
 class NativeJourneyGuardTest(unittest.TestCase):
+    demo = {"GCLOUD_PROJECT": "demo-stackcard-test",
+            "FIRESTORE_EMULATOR_HOST": "127.0.0.1:8085",
+            "FIREBASE_AUTH_EMULATOR_HOST": "127.0.0.1:9099"}
+
     def rejected(self, extra, env, message):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "report.json"
@@ -38,6 +42,10 @@ class NativeJourneyGuardTest(unittest.TestCase):
                        "FIRESTORE_EMULATOR_HOST": "127.0.0.1:8085",
                        "FIREBASE_AUTH_EMULATOR_HOST": "127.0.0.1:9099"},
                       "Android adb not found")
+
+    def test_ios_requires_specific_simulator_and_loopback_before_start(self):
+        self.rejected(["--platform", "ios"], self.demo, "explicit device UUID")
+        self.rejected(["--platform", "ios", "--host", "10.0.2.2"], self.demo, "loopback host")
 
 
 if __name__ == "__main__":

@@ -352,9 +352,10 @@ flutter test integration_test/demo_account_seed_test.dart -d "<android-id>" --da
 flutter run -d "<android-id>" --dart-define=FIREBASE_AUTH_EMULATOR_HOST=10.0.2.2 --dart-define=FIREBASE_AUTH_EMULATOR_PORT=9099 --dart-define=FIRESTORE_EMULATOR_HOST=10.0.2.2 --dart-define=FIRESTORE_EMULATOR_PORT=8085
 ```
 
-Android — доступный target текущей среды. iOS configuration сгенерирована, но
-native iOS build/приёмка недоступны при неполном Xcode и отсутствии CocoaPods;
-проверяй фактический toolchain через `flutter doctor -v`.
+Проверяй доступные targets и toolchain через `flutter doctor -v` и `flutter devices`.
+iOS использует Flutter Swift Package Manager: нужны полный Xcode, принятая
+владельцем лицензия и установленный simulator runtime. CocoaPods для текущего
+SPM build не требуется; generated Swift package вручную не изменять.
 
 ---
 
@@ -1055,17 +1056,21 @@ permissions failures и UID/late ACK проверяются соответств
 
 Связанный native SDK journey использует
 [main_portfolio_runtime_test.dart](apps/mobile/integration_test/main_portfolio_runtime_test.dart):
-два запуска `seed/check` на одном Android, настоящие named Auth/Firestore SDK,
+два запуска `seed/check` на одном Android или iOS Simulator, настоящие named Auth/Firestore SDK,
 отдельный Hive/outbox и standalone HTTP backend. Нужны подключённый test device,
 свободный3810 и те же demo emulator ports. Обычные session/draft не открываются.
 Официальный `flutter drive --keep-app-running --no-uninstall-first` сохраняет
-test outbox: runner отдельно вызывает `adb shell am force-stop`, без uninstall/
-clear data. Без `--keep-app-running` drive удаляет APK при завершении.
+test outbox: runner отдельно вызывает Android `adb shell am force-stop` или iOS
+`xcrun simctl terminate`, без uninstall/clear data. Без `--keep-app-running`
+drive удаляет приложение при завершении.
 `flutter test` по-прежнему требует `--no-uninstall`. Cwd `firebase`:
 
 ```zsh
 # Проверить native process restart → exact server ACK → Publish/Card/Copy → Unpublish/delete
 firebase emulators:exec --only auth,firestore --project demo-stackcard-test 'GCLOUD_PROJECT=demo-stackcard-test python3 ../tools/testing/native_journey.py --device emulator-5580 --output /private/tmp/stackcard-testing-native.json'
+
+# iOS: UUID загрузившегося тестового симулятора из simctl/flutter devices
+firebase emulators:exec --only auth,firestore --project demo-stackcard-test 'GCLOUD_PROJECT=demo-stackcard-test python3 ../tools/testing/native_journey.py --platform ios --device <simulator-uuid> --output /private/tmp/stackcard-testing-ios.json'
 ```
 
 Device ID заменить на фактический `flutter devices`. `adb` выбирается из `--adb`, env `ADB`, PATH или Android `local.properties` (`sdk.dir`);
@@ -1213,6 +1218,81 @@ APK использует обычный `main.dart` и existing development Fire
 Credentials, emulator exports, app storage, приватные fixtures и logs не
 загружаются. Remote branch rules, зелёный run и доступность artifacts требуют
 проверки на GitHub; iOS/native/live приёмка прежних фаз остаётся отдельно.
+
+### Production hardening — Phase 19
+
+Mobile Crashlytics работает на Spark и выключен до явного device-wide opt-in
+в «Настройки → Приложение → Отчёты об ошибках». Перед включением и после выключения
+unsent reports удаляются; уже отправленные отчёты этим не удаляются. В приложении
+нет Analytics, custom logs или user identifier. Dart handlers передают фиксированный
+код и максимум32 allowlisted source positions, без raw exception/context и private
+данных. Неизвестные/obfuscated frames заменяются redacted marker; полноценная
+символика release проверяется отдельно на Phase20. Debug console остаётся debug
+console, её вывод с тестовыми SDK UID не является production error payload.
+
+Обычный bootstrap не отправляет тестовую ошибку. Явная acceptance-команда из
+`apps/mobile` использует только synthetic enum event в существующем Firebase app,
+не открывает ordinary Auth/draft и не меняет app consent preference:
+
+```zsh
+flutter drive --driver=test_driver/integration_test.dart \
+  --target=integration_test/diagnostics_runtime_test.dart \
+  --device-id=<test-device-id> --dart-define=RUN_DIAGNOSTICS_ACCEPTANCE=true \
+  --keep-app-running --no-uninstall-first
+```
+
+Harness временно включает SDK и восстанавливает предыдущий SDK flag в `finally`.
+`recordError`/HTTP200 доказывают только передачу SDK/transport: отдельно дождись
+события `StackCard.acceptance` в Crashlytics Console, проверь Stack trace, Keys,
+Logs & Breadcrumbs и Data. Не сохраняй Auth tokens, account UID или SDK installation
+ID в evidence. Device/OS/app version остаются техническими данными SDK и описаны
+в web `/help#privacy` и mobile Help.
+
+iOS использует existing Flutter SPM, default collection false и последнюю build
+phase `Crashlytics Symbols`; `Runner/upload_crashlytics_symbols.sh` выбирает SPM
+`upload-symbols` из Flutter BUILD_DIR либо Xcode DerivedData. Он передаёт весь
+dSYM bundle, включая `Runner.debug.dylib`, и ждёт окончания: failure прерывает
+build вместо скрытой фоновой ошибки. Пользователь отдельно разрешил передачу
+текущего dSYM и автозагрузку следующих iOS builds в существующий Firebase project.
+Нужны полный Xcode, принятая
+владельцем лицензия, iOS platform/simulator, resolved packages и отдельный native
+build/journey/report. Plist/shell lint и Android report этого не подтверждают.
+При missing dSYM в Console сравни UUID через `xcrun dwarfdump --uuid` с точной
+сборкой, отправившей report. Обычная и integration сборки могут иметь разные UUID;
+успешная загрузка символов другой сборки не закрывает warning. dSYM содержит
+символы и локальные source paths; не коммитить его и не включать в CI artifacts.
+Все Firebase Flutter plugins должны разрешать одну версию native Firebase SDK;
+проверяй actual SPM graph, а не только `pub get`. SwiftPM `Package.resolved` в
+project и workspace фиксируют граф для обоих путей Xcode/Flutter. После установки
+Xcode повтори `flutter pub get`, если он выполнялся при недоступном SPM toolchain.
+
+Отдельный UI smoke с synthetic memory fixture (не SDK/persistence acceptance):
+
+```zsh
+flutter drive --no-pub --no-uninstall-first --keep-app-running --no-dds \
+  --driver=test_driver/integration_test.dart \
+  --target=integration_test/hardening_ui_runtime_test.dart \
+  -d <test-device-id> --dart-define=RUN_HARDENING_UI_ACCEPTANCE=true
+```
+
+Он проверяет светлый русский UI, три roots, saved Home/dirty discard, Library,
+unavailable publication и opt-in/out diagnostics/privacy help. Fixture не открывает
+обычный draft/Auth/settings. iOS runner принимает только booted Simulator UUID
+и loopback host; синтетический API key имеет валидную форму для iOS Installations,
+но не даёт доступа к live Firebase. Системные picker/Share/APNs — отдельные gates.
+
+Production publication endpoint требует HTTPS без credentials/query/fragment;
+redirects запрещены. Loopback HTTP разрешается только явным `allowDemoHttp` в
+demo runtime/harness. Перед будущим live запуском проверить actual HTTPS origins,
+точный CORS/Auth/App Check appId, Rules/indexes, private ADC/HMAC и deletion recovery
+по прежним env examples. API URLs по-прежнему пусты до отдельного разрешённого
+hosting; не включать Storage uploads, TTL, billing или mock success.
+
+Проверки: `flutter analyze`, полный `flutter test --coverage`, existing coverage
+checker, `npm run check` в web и backend/Rules suites выше. `npm audit --omit=dev`
+в web/functions проверяет актуальные production advisories; минимальный patch
+update проходит весь web gate. Source, demo Emulator Suite, native SDK и live
+diagnostic evidence записываются раздельно в product spec.
 
 ## Коммиты
 

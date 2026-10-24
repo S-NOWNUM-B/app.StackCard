@@ -9,7 +9,7 @@
 
 **Сайт, редактор единого портфолио и публичная страница владельца**
 
-![Next.js 16.4.0](https://img.shields.io/badge/Next.js-16.4.0-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![Next.js 16.4.3](https://img.shields.io/badge/Next.js-16.4.3-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![Firebase JS 13.0.0](https://img.shields.io/badge/Firebase_JS-13.0.0-FFCA28?style=for-the-badge&logo=firebase&logoColor=000000)
 
 </div>

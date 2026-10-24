@@ -146,6 +146,12 @@ class _DeveloperCardScreenState extends ConsumerState<DeveloperCardScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
+      bottomNavigationBar: _message == null
+          ? null
+          : SafeArea(
+              minimum: const EdgeInsets.all(StackCardSpacing.lg),
+              child: Semantics(liveRegion: true, child: Text(_message!)),
+            ),
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
@@ -243,8 +249,6 @@ class _DeveloperCardScreenState extends ConsumerState<DeveloperCardScreen> {
                       ],
                     ),
                   ),
-                if (_message != null)
-                  Semantics(liveRegion: true, child: Text(_message!)),
               ],
             ),
           ),

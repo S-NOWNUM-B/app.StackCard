@@ -48,6 +48,10 @@ void main() {
   testWidgets('Copy passes only the confirmed public URL to Clipboard', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     String? copied;
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,
@@ -72,6 +76,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(copied, publication().url.toString());
     expect(find.text('Ссылка скопирована.'), findsOneWidget);
+    expect(
+      tester.getRect(find.text('Ссылка скопирована.')).bottom,
+      lessThanOrEqualTo(640),
+    );
   });
   testWidgets(
     'withdrawal removes the QR and actions while the card remains open',
