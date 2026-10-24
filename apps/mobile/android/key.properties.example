@@ -1,0 +1,6 @@
+# Копия с реальными значениями хранится вне Git с доступом только владельцу.
+# Абсолютный путь; пароли должны соответствовать существующему upload keystore.
+storeFile=/absolute/private/path/stackcard-upload.jks
+storePassword=
+keyAlias=stackcard-upload
+keyPassword=

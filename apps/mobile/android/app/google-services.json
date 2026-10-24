@@ -29,6 +29,61 @@
       "api_key": [
         {
           "current_key": "AIzaSyC5Xb4O7D2tVC2vM0UQ--xjo4tZmeExYks"
+        },
+        {
+          "current_key": "AIzaSyDYE61BpzSUJMmDQ4qZCFasl8FRTF8ILuM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "713694392116-9b135nqp99t96ea3foeh3jbe9sv5hcm7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "713694392116-69gr7d31phvd3uv3lbiec69kre0hidd7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.appStackcard"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:713694392116:android:50154e562d3b3b7d233f61",
+        "android_client_info": {
+          "package_name": "dev.snownumb.stackcard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "713694392116-85hkkrtns11it2okhijcj14q2llngbuv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "dev.snownumb.stackcard",
+            "certificate_hash": "eb61488e13dc89357162186a5b72a58d3a7045a9"
+          }
+        },
+        {
+          "client_id": "713694392116-qqn3os6enl9h8k3d385u8ecb24ok84aj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "dev.snownumb.stackcard",
+            "certificate_hash": "08abb946814e9812c2d07be5f185f4dc2b5c2501"
+          }
+        },
+        {
+          "client_id": "713694392116-9b135nqp99t96ea3foeh3jbe9sv5hcm7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYE61BpzSUJMmDQ4qZCFasl8FRTF8ILuM"
         }
       ],
       "services": {

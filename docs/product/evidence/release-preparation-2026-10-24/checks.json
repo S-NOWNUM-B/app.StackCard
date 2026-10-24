@@ -1,0 +1,124 @@
+{
+  "date": "2026-10-24",
+  "status": "deferred_by_owner",
+  "baseCommit": "45a530a1f213abd94f6a61aa7a290c4b7dce5b30",
+  "scope": "Local release preparation; no store upload, distribution, hosting, billing or Git publication",
+  "applicationIdentity": {
+    "android": "dev.snownumb.stackcard",
+    "previousAndroid": "com.example.app_stackcard",
+    "ios": "com.example.appStackcard",
+    "changed": true,
+    "decision": "Owner explicitly approved dev.snownumb.stackcard",
+    "firebaseAppId": "1:713694392116:android:50154e562d3b3b7d233f61"
+  },
+  "signing": {
+    "releaseDebugFallbackRemoved": true,
+    "configuration": "android/key.properties or STACKCARD_ANDROID_KEY_PROPERTIES",
+    "prerequisite": "preReleaseBuild dependsOn validateReleaseCredentials",
+    "key": "Separate RSA4096 Android upload certificate, 10000 days validity",
+    "secretsOutsideRepository": true,
+    "directoryMode": "0700",
+    "secretFileMode": "0600",
+    "certificateSha1": "EB:61:48:8E:13:DC:89:35:71:62:18:6A:5B:72:A5:8D:3A:70:45:A9",
+    "certificateSha256": "C4:08:3A:5D:7B:87:C4:ED:C5:E9:89:E2:78:1A:0D:43:14:BF:E1:81:74:C9:14:13:DA:C8:A5:60:03:D2:50:9C",
+    "independentOwnerBackupConfirmed": false,
+    "firebaseReleaseFingerprintRegistered": true
+  },
+  "checks": [
+    {
+      "check": "Actual Gradle preReleaseBuild without credentials",
+      "result": "passed_negative_gate",
+      "expected": "Build fails at validateReleaseCredentials; no debug fallback"
+    },
+    {
+      "check": "Actual Gradle validateReleaseCredentials + validateSigningRelease + validateSigningDebug with private keystore",
+      "result": "passed"
+    },
+    {
+      "check": "flutter build apk --debug --no-pub with absent release credential path",
+      "result": "passed",
+      "seconds": 10.6
+    },
+    {
+      "check": "git diff --check and local Markdown references",
+      "result": "passed"
+    },
+    {
+      "check": "Final AAB attempt after normal Flutter plugin regeneration",
+      "result": "failed",
+      "reason": "Release app bundle failed to strip debug symbols from native libraries",
+      "seconds": 80.6
+    }
+  ],
+  "androidRelease": {
+    "aabBuilt": false,
+    "releaseApkBuilt": false,
+    "obfuscationSymbolsSaved": false,
+    "nativeReleaseAcceptancePassed": false,
+    "reason": "Android ID approved and Firebase fingerprints registered; last AAB attempt failed native debug symbol stripping; no accepted release artifact. Further builds deferred by owner."
+  },
+  "ios": {
+    "xcode": "27.1",
+    "simulator": "iOS27.0",
+    "validSigningIdentities": 0,
+    "physicalDeviceConnected": false,
+    "pdfHarness": {
+      "configuration": "Existing pdf_runtime_test.dart; synthetic three-page Cyrillic PDF, 30884 bytes; no ordinary Auth/draft/preferences",
+      "build": "passed",
+      "buildSeconds": 81.6,
+      "nativePickerOpened": true,
+      "saveAndCancel": "not_passed",
+      "result": "Timed out waiting for native Save confirmation; Device Hub coordinate clicks returned noWindowsAvailable, keyboard did not confirm",
+      "screenshot": "ios-pdf-picker.png",
+      "manualOwnerAcceptance": {
+        "source": "Direct user reply",
+        "result": "User reports first PDF saved and second dialog cancelled",
+        "automatedResult": "Earlier automated run still failed on 5-minute confirmation timeout; no SAVE_PASS/CANCEL_PASS in its log",
+        "savedCopyIndependentlyVerified": false
+      }
+    },
+    "sharing": "not_retested",
+    "apns": "not_tested_requires_physical_device_and_developer_team",
+    "appStoreRelease": "not_tested",
+    "normalSimulatorBuild": {
+      "result": "passed",
+      "seconds": 97.7,
+      "configuration": "flutter build ios --simulator --debug --no-pub; foreground dSYM upload unchanged"
+    },
+    "normalApplicationRestoredWithoutDataClear": true
+  },
+  "materials": {
+    "guide": "docs/release/README.md",
+    "shortDescriptionCharacters": 67,
+    "descriptionAndPrivacyScopePrepared": true,
+    "storeScreenshots": "not_yet_captured_from_final_release",
+    "supportAndPublicPrivacyUrl": "owner prerequisites for a later store launch",
+    "downloadLinksAdded": false,
+    "reason": "No publicly distributed release exists"
+  },
+  "openGates": [
+    "Build and verify signed obfuscated AAB/APK, preserve exact symbols/R8 mapping",
+    "Check final release normal UI and capture current screenshots with synthetic data",
+    "Confirm an independent protected keystore/password backup with owner",
+    "Repeat actual iOS PDF Save/cancel and native sharing successfully",
+    "Verify APNs with a physical iPhone and Apple developer team; App Store steps separately",
+    "Store upload/distribution/hosting require explicit authorization; local AAB/materials path is permitted by plan"
+  ],
+  "warnings": [
+    "Upstream Flutter Firebase plugins still apply KGP; current pinned Gradle/debug builds succeed. No dependency upgrade or CI bypass was made."
+  ],
+  "firebase": {
+    "project": "stackcard-dev-snownumb",
+    "billing": "Spark; no billing change",
+    "newAppRegistered": true,
+    "releaseAndDebugShaRegistered": true,
+    "newApiKeyId": "9888a2ad-8096-4bf9-bad6-3da3d6a8db92",
+    "newKeyReadback": "Two exact dev.snownumb.stackcard certificate pairs; 11 Firebase APIs; no AI/Gemini/service account",
+    "legacyKeyChanged": false,
+    "configurationGenerator": "tools/release/configure_android_firebase.py",
+    "configurationIssue": "Official FlutterFire SDK configuration selected a legacy shared key; generator aligns new native/Dart public key without changing legacy/iOS",
+    "autoReview": "Initial debug SHA target rejection resolved after fresh Firebase appId/package readback; old shared-key expansion rejected and NOT executed; separate new restricted key used instead"
+  },
+  "phaseAtCreation": 20,
+  "supersededBy": "Phase20 full project audit; release deferred 2026-10-24"
+}
