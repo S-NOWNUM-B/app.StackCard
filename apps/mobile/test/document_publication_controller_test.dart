@@ -6,6 +6,162 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('lost journal clear after Publish ACK keeps recovery and status retry never republishes', () async {
+    final repository = _Repository();
+    final store = _Store()..failClear = true;
+    final fixture = await _Fixture.create(repository, store: store);
+    expect(
+      await fixture.controller.perform(
+        action: DocumentPublicationAction.publish,
+        documentId: 'document',
+      ),
+      isFalse,
+    );
+    final mutation = store.pending!;
+    expect(fixture.state.pending, same(mutation));
+    expect(fixture.state.failure?.kind, DocumentPublicationFailureKind.storage);
+    expect(fixture.state.canMutate, isFalse);
+    expect(repository.mutations, [mutation]);
+    store.failClear = false;
+    repository.statusResult = DocumentPublicationOperation(
+      outcome: DocumentPublicationOutcome.completed,
+      operationId: mutation.operationId,
+      action: mutation.action.name,
+      publication: repository.publication,
+    );
+    expect(await fixture.controller.checkOperation(), isTrue);
+    expect(repository.mutations, [mutation]);
+    expect(store.pending, isNull);
+    expect(fixture.state.pending, isNull);
+    expect(fixture.state.forDocument('document')!.shareableUrl, isNotNull);
+  });
+
+  for (final wrongProof in ['operationId', 'documentId']) {
+    test(
+      'foreign $wrongProof in completed ACK never confirms Publish or clears recovery',
+      () async {
+        final repository = _Repository();
+        final fixture = await _Fixture.create(repository);
+        repository.send = (mutation) async => DocumentPublicationOperation(
+          outcome: DocumentPublicationOutcome.completed,
+          operationId: wrongProof == 'operationId'
+              ? 'foreign-operation'
+              : mutation.operationId,
+          action: mutation.action.name,
+          publication: _publication(
+            DocumentPublicationVisibility.published,
+            documentId: wrongProof == 'documentId'
+                ? 'foreign-document'
+                : 'document',
+          ),
+        );
+        expect(
+          await fixture.controller.perform(
+            action: DocumentPublicationAction.publish,
+            documentId: 'document',
+          ),
+          isFalse,
+        );
+        expect(fixture.store.pending, same(repository.mutations.single));
+        expect(fixture.state.pending, same(fixture.store.pending));
+        expect(
+          fixture.state.failure?.kind,
+          DocumentPublicationFailureKind.unknown,
+        );
+        expect(fixture.state.canMutate, isFalse);
+      },
+    );
+  }
+
+  test(
+    'Delete ACK without a tombstone never removes private document',
+    () async {
+      final repository = _Repository();
+      final fixture = await _Fixture.create(repository);
+      repository.send = (mutation) async => DocumentPublicationOperation(
+        outcome: DocumentPublicationOutcome.completed,
+        operationId: mutation.operationId,
+        action: mutation.action.name,
+        publication: repository.publication,
+      );
+      expect(
+        await fixture.controller.perform(
+          action: DocumentPublicationAction.deleteDocument,
+          documentId: 'document',
+        ),
+        isFalse,
+      );
+      expect(fixture.store.pending, same(repository.mutations.single));
+      expect(
+        fixture.state.failure?.kind,
+        DocumentPublicationFailureKind.unknown,
+      );
+      expect(
+        fixture.container
+            .read(portfolioDraftControllerProvider)
+            .content!
+            .documents
+            .map((item) => item.id),
+        contains('document'),
+      );
+      expect(fixture.draftRepository.saveCalls, 0);
+    },
+  );
+
+  test('owner switch while journal is writing prevents POST and preserves only old owner recovery', () async {
+    final repository = _Repository();
+    final store = _Store();
+    final fixture = await _Fixture.create(repository, store: store);
+    final release = Completer<void>();
+    store.beforeWrite = () => release.future;
+    final publishing = fixture.controller.perform(
+      action: DocumentPublicationAction.publish,
+      documentId: 'document',
+    );
+    await _flush(fixture.container);
+    expect(fixture.state.busy, isTrue);
+    expect(repository.mutations, isEmpty);
+    final nextRepository = _Repository();
+    final nextStore = _Store();
+    await _replaceOwner(fixture, nextRepository, nextStore);
+    release.complete();
+    expect(await publishing, isFalse);
+    expect(store.pending, isNotNull);
+    expect(nextStore.pending, isNull);
+    expect(repository.mutations, isEmpty);
+    expect(nextRepository.mutations, isEmpty);
+    expect(fixture.state.pending, isNull);
+  });
+
+  test('old owner inventory cannot restore a revoked public URL after account switch', () async {
+    final repository = _Repository();
+    final fixture = await _Fixture.create(repository);
+    final delayed = Completer<DocumentPublicationInventory>();
+    repository.readInventory = () => delayed.future;
+    final loading = fixture.controller.load();
+    await _flush(fixture.container);
+    final nextRepository = _Repository()
+      ..publication = _publication(DocumentPublicationVisibility.unpublished);
+    await _replaceOwner(fixture, nextRepository, _Store());
+    expect(fixture.state.forDocument('document')!.shareableUrl, isNull);
+    delayed.complete(
+      DocumentPublicationInventory(
+        publications: [repository.publication],
+        lifecycleGeneration: 3,
+      ),
+    );
+    await loading;
+    expect(fixture.state.loading, isFalse);
+    expect(
+      fixture.state.forDocument('document')!.visibility,
+      DocumentPublicationVisibility.unpublished,
+    );
+    expect(fixture.state.forDocument('document')!.shareableUrl, isNull);
+    expect(fixture.state.failure, isNull);
+    expect(repository.mutations, isEmpty);
+    expect(nextRepository.mutations, isEmpty);
+  });
+
   test('automatic and explicit loads share one inventory and refresh after mutation', () async {
     final repository = _Repository();
     final delayed = Completer<DocumentPublicationInventory>();
@@ -387,17 +543,19 @@ const _pending = DocumentPublicationMutation(
   expectedGeneration: 2,
 );
 
-DocumentPublication _publication(DocumentPublicationVisibility visibility) =>
-    DocumentPublication(
-      documentId: 'document',
-      publicId: 'public-document',
-      version: 2,
-      visibility: visibility,
-      sourceMutationId: 'saved-mutation',
-      url: visibility == DocumentPublicationVisibility.published
-          ? Uri.parse('https://public.example/p/public-document')
-          : null,
-    );
+DocumentPublication _publication(
+  DocumentPublicationVisibility visibility, {
+  String documentId = 'document',
+}) => DocumentPublication(
+  documentId: documentId,
+  publicId: 'public-document',
+  version: 2,
+  visibility: visibility,
+  sourceMutationId: 'saved-mutation',
+  url: visibility == DocumentPublicationVisibility.published
+      ? Uri.parse('https://public.example/p/public-document')
+      : null,
+);
 
 class _Fixture {
   _Fixture(this.container, this.store, this.draftRepository);
@@ -451,10 +609,36 @@ Future<void> _flush(ProviderContainer container) async {
   }
 }
 
+Future<void> _replaceOwner(
+  _Fixture fixture,
+  _Repository repository,
+  _Store store,
+) async {
+  fixture.container.updateOverrides([
+    documentPublicationRepositoryProvider.overrideWithValue(repository),
+    documentPublicationOperationStoreFactoryProvider.overrideWithValue(
+      (_) => store,
+    ),
+    accountSessionProvider.overrideWithValue(
+      const AsyncData(AuthUser(uid: 'second-owner')),
+    ),
+    portfolioDraftRepositoryProvider.overrideWithValue(fixture.draftRepository),
+    portfolioSyncStateProvider.overrideWithValue(
+      const PortfolioSyncState(
+        status: PortfolioSyncStatus.synced,
+        confirmedMutationId: 'saved-mutation',
+      ),
+    ),
+  ]);
+  await _flush(fixture.container);
+}
+
 class _Store implements DocumentPublicationOperationStore {
   DocumentPublicationMutation? pending;
   bool failWrite = false;
   bool failRead = false;
+  bool failClear = false;
+  Future<void> Function()? beforeWrite;
   @override
   Future<DocumentPublicationMutation?> read() async {
     if (failRead) {
@@ -467,6 +651,7 @@ class _Store implements DocumentPublicationOperationStore {
 
   @override
   Future<void> write(DocumentPublicationMutation mutation) async {
+    await beforeWrite?.call();
     if (failWrite) {
       throw const DocumentPublicationFailure(
         DocumentPublicationFailureKind.storage,
@@ -476,7 +661,14 @@ class _Store implements DocumentPublicationOperationStore {
   }
 
   @override
-  Future<void> clear() async => pending = null;
+  Future<void> clear() async {
+    if (failClear) {
+      throw const DocumentPublicationFailure(
+        DocumentPublicationFailureKind.storage,
+      );
+    }
+    pending = null;
+  }
 }
 
 class _Repository implements DocumentPublicationRepository {
