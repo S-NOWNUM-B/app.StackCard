@@ -1,6 +1,7 @@
 'use client';
 import type { User } from 'firebase/auth';
-import { firebaseServices } from './firebase';
+import { firebaseConfig, firebaseServices } from './firebase';
+import { safeApiEndpoint } from './api-endpoint';
 import {
   checkPublicationResult,
   type Inventory,
@@ -52,22 +53,18 @@ function failureMessage(code: string): string {
     )[code] ?? 'Действие не завершено. Проверьте результат перед повтором.'
   );
 }
-function endpointUrl() {
+export function publicationEndpoint() {
   const endpoint = process.env.NEXT_PUBLIC_PUBLICATION_API_URL;
   if (!endpoint) throw new Error('Публикация пока недоступна. Попробуйте позднее.');
-  const url = new URL(endpoint);
-  if (
-    url.protocol !== 'https:' &&
-    !(
-      process.env.NEXT_PUBLIC_USE_EMULATORS === 'true' &&
-      ['localhost', '127.0.0.1'].includes(url.hostname)
-    )
-  )
-    throw new Error('Сервис публикации недоступен.');
-  return endpoint;
+  const demo =
+    process.env.NEXT_PUBLIC_USE_EMULATORS === 'true' &&
+    !!firebaseConfig().projectId?.startsWith('demo-');
+  const checked = safeApiEndpoint(endpoint, demo);
+  if (!checked) throw new Error('Сервис публикации недоступен.');
+  return checked;
 }
 export async function publicationRequest<T>(user: User, body: Record<string, unknown>): Promise<T> {
-  const endpoint = endpointUrl();
+  const endpoint = publicationEndpoint();
   if (firebaseServices().auth.currentUser?.uid !== user.uid) throw new Error('Аккаунт изменился.');
   const token = await user.getIdToken(true);
   if (firebaseServices().auth.currentUser?.uid !== user.uid) throw new Error('Аккаунт изменился.');
@@ -79,6 +76,8 @@ export async function publicationRequest<T>(user: User, body: Record<string, unk
     },
     body: JSON.stringify(body),
     cache: 'no-store',
+    credentials: 'omit',
+    redirect: 'error',
     signal: AbortSignal.timeout(20000),
   });
   const result = await response.json();
@@ -108,11 +107,13 @@ export async function recoverAccountDeletion(receipt: {
   )
     throw new Error('Некорректная квитанция удаления.');
   const body = { action: 'deletionStatus', ...receipt };
-  const response = await fetch(endpointUrl(), {
+  const response = await fetch(publicationEndpoint(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
     cache: 'no-store',
+    credentials: 'omit',
+    redirect: 'error',
     signal: AbortSignal.timeout(20000),
   });
   const result = await response.json();

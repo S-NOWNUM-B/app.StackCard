@@ -62,7 +62,9 @@ test('download page retains release status and browser entry without unavailable
 });
 
 test('public share panel always exposes Copy without self-open or an unverified Share capability', () => {
-  const markup = renderToStaticMarkup(createElement(ShareActions, { title: 'Portfolio' }));
+  const markup = renderToStaticMarkup(
+    createElement(ShareActions, { title: 'Portfolio', publicId: 'a'.repeat(32) }),
+  );
   assert.match(markup, /Постоянный адрес документа/);
   assert.match(markup, />Копировать</);
   assert.doesNotMatch(markup, /<a|>Открыть<|>Поделиться</);

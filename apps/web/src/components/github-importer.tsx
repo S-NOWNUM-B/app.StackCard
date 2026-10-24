@@ -34,7 +34,12 @@ export function GitHubImporter({
     generation = useRef(0);
   useEffect(() => {
     setSelected(new Set());
-    setPages(username ? readGitHubCache(localStorage, ownerUid, username) : []);
+    try {
+      setPages(username ? readGitHubCache(localStorage, ownerUid, username) : []);
+    } catch {
+      // Браузер может запрещать даже получение localStorage; сеть остаётся доступной.
+      setPages([]);
+    }
     setCached(true);
     if (username) void load(1, true);
     return () => {

@@ -8,7 +8,6 @@ import {
   clone,
   equal,
   emptyContent,
-  createDocument,
   attachment,
   migrateMainPortfolio,
   mainDocument,

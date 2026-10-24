@@ -21,6 +21,7 @@ import {
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { firebaseConfig, firebaseServices } from './firebase';
+import { safeApiEndpoint } from './api-endpoint';
 import {
   ContactError,
   checkContactAccepted,
@@ -33,18 +34,13 @@ export function contactEndpoint(): string {
   const endpoint = process.env.NEXT_PUBLIC_CONTACT_INBOX_API_URL;
   if (!endpoint)
     throw new ContactError('Форма связи временно недоступна.', 'configuration-required');
-  const url = new URL(endpoint);
   const demo =
     process.env.NEXT_PUBLIC_USE_EMULATORS === 'true' &&
-    firebaseConfig().projectId?.startsWith('demo-');
-  if (
-    url.username ||
-    url.password ||
-    (url.protocol !== 'https:' &&
-      !(demo && url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname)))
-  )
+    !!firebaseConfig().projectId?.startsWith('demo-');
+  const checked = safeApiEndpoint(endpoint, demo);
+  if (!checked)
     throw new ContactError('Форма связи временно недоступна.', 'configuration-required');
-  return endpoint;
+  return checked;
 }
 export function contactConfigured(): boolean {
   try {
@@ -83,6 +79,8 @@ export async function submitContact(submission: ContactSubmission): Promise<void
     headers,
     body: JSON.stringify({ action: 'submit', ...submission }),
     cache: 'no-store',
+    credentials: 'omit',
+    redirect: 'error',
     signal: AbortSignal.timeout(20000),
   });
   const result = await response.json();
