@@ -13,6 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import '../tool/performance/fixture.dart';
+
 void main() {
   setUpAll(() async {
     final font = FontLoader('Manrope');
@@ -73,6 +75,208 @@ void main() {
     expect(find.bySemanticsLabel('Изменить порядок раздела'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'large editor mounts bounded rows and preserves fields across scroll and Save',
+    (tester) async {
+      final repository = await _largeRepository();
+      final original = (await repository.read())!;
+      await _open(tester, repository);
+      expect(find.byType(CustomScrollView), findsOneWidget);
+      expect(find.byType(ReorderableListView), findsNothing);
+      int mounted(String prefix) => find
+          .byWidgetPredicate(
+            (widget) =>
+                widget.key is ValueKey<String> &&
+                (widget.key! as ValueKey<String>).value.startsWith(prefix),
+            skipOffstage: false,
+          )
+          .evaluate()
+          .length;
+      expect(mounted('main.editor.skill.item.'), lessThan(40));
+      expect(mounted('main.editor.project.'), lessThan(40));
+      expect(mounted('main.record.experience-'), lessThan(25));
+      expect(mounted('main.record.education-'), lessThan(20));
+      await _enter(tester, 'name', 'Изменённый автор');
+      final nameController = tester
+          .widget<TextFormField>(
+            find.descendant(
+              of: find.byKey(const Key('main.editor.name')),
+              matching: find.byType(TextFormField),
+            ),
+          )
+          .controller;
+      for (final key in [
+        'main.editor.skill.remove.199',
+        'main.editor.project.project-199',
+        'main.record.experience-29',
+        'main.record.education-19',
+      ]) {
+        await _ensureVisible(tester, find.byKey(ValueKey(key)));
+        expect(mounted('main.editor.skill.item.'), lessThan(40));
+        expect(mounted('main.editor.project.'), lessThan(40));
+        expect(mounted('main.record.experience-'), lessThan(25));
+        expect(mounted('main.record.education-'), lessThan(20));
+        expect(tester.takeException(), isNull);
+      }
+      expect((await repository.read())!.revision, original.revision);
+      await _ensureVisible(tester, find.byKey(const Key('main.editor.name')));
+      final field = tester.widget<TextFormField>(
+        find.descendant(
+          of: find.byKey(const Key('main.editor.name')),
+          matching: find.byType(TextFormField),
+        ),
+      );
+      expect(field.controller, same(nameController));
+      expect(field.controller!.text, 'Изменённый автор');
+      await _tap(tester, 'main.editor.save');
+      final saved = (await repository.read())!;
+      expect(saved.revision, original.revision + 1);
+      final main = mainPortfolioDocument(saved.content!)!;
+      expect(main.content.profile.name, 'Изменённый автор');
+      expect(
+        main.content.skills,
+        mainPortfolioDocument(original.content!)!.content.skills,
+      );
+      expect(main.projects, mainPortfolioDocument(original.content!)!.projects);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final cancel in [false, true]) {
+    testWidgets(
+      'large project drag autoscroll retains its placeholder and clears cache cancel=$cancel',
+      (tester) async {
+        final repository = await _largeRepository();
+        final before = (await repository.read())!;
+        final container = await _open(tester, repository);
+        final handle = find.byKey(const Key('main.editor.drag.project-0'));
+        await _ensureVisible(tester, handle);
+        await Scrollable.ensureVisible(tester.element(handle), alignment: .2);
+        await tester.pumpAndSettle();
+        final scroll = tester.state<ScrollableState>(_editorScrollable());
+        final initialOffset = scroll.position.pixels;
+        final initialCache = tester
+            .widget<CustomScrollView>(
+              find.byKey(const Key('main.editor.scroll')),
+            )
+            .scrollCacheExtent;
+        final gesture = await tester.startGesture(
+          tester.getCenter(handle),
+          pointer: 1,
+        );
+        await tester.pump(const Duration(milliseconds: 700));
+        expect(
+          tester
+              .widget<CustomScrollView>(
+                find.byKey(const Key('main.editor.scroll')),
+              )
+              .scrollCacheExtent,
+          isNot(initialCache),
+        );
+        if (cancel) {
+          // Cancel постороннего пальца не завершает уже начатый drag первого.
+          final viewport = tester.getRect(
+            find.byKey(const Key('main.editor.scroll')),
+          );
+          final second = await tester.startGesture(
+            Offset(viewport.right - 2, tester.getCenter(handle).dy),
+            pointer: 2,
+          );
+          await second.cancel();
+          await tester.pump(const Duration(milliseconds: 400));
+          expect(
+            tester
+                .widget<CustomScrollView>(
+                  find.byKey(const Key('main.editor.scroll')),
+                )
+                .scrollCacheExtent,
+            isNot(initialCache),
+          );
+        }
+        final bottom =
+            tester.getRect(find.byKey(const Key('main.editor.scroll'))).bottom -
+            8;
+        await gesture.moveTo(Offset(tester.getCenter(handle).dx, bottom));
+        for (var frame = 0; frame < 100; frame++) {
+          await tester.pump(const Duration(milliseconds: 40));
+          if (tester.takeException() case final Object error) fail('$error');
+        }
+        expect(scroll.position.pixels - initialOffset, greaterThan(1500));
+        expect(
+          tester
+              .widget<CustomScrollView>(
+                find.byKey(const Key('main.editor.scroll')),
+              )
+              .scrollCacheExtent,
+          isNot(initialCache),
+        );
+        expect(
+          tester
+              .widget<CustomScrollView>(
+                find.byKey(const Key('main.editor.scroll')),
+              )
+              .scrollCacheExtent!
+              .value
+              .isFinite,
+          isTrue,
+        );
+        if (cancel) {
+          await gesture.cancel();
+        } else {
+          await gesture.up();
+        }
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<CustomScrollView>(
+                find.byKey(const Key('main.editor.scroll')),
+              )
+              .scrollCacheExtent,
+          initialCache,
+        );
+        expect(
+          find
+              .byWidgetPredicate(
+                (widget) =>
+                    widget.key is ValueKey<String> &&
+                    (widget.key! as ValueKey<String>).value.startsWith(
+                      'main.editor.project.',
+                    ),
+                skipOffstage: false,
+              )
+              .evaluate()
+              .length,
+          lessThan(40),
+        );
+        expect((await repository.read())!.revision, before.revision);
+        final working = mainPortfolioDocument(
+          container.read(portfolioDraftControllerProvider).content!,
+        )!;
+        if (cancel) {
+          expect(
+            working.projects,
+            mainPortfolioDocument(before.content!)!.projects,
+          );
+        } else {
+          expect(
+            working.projects.indexWhere(
+              (item) => item.projectId == 'project-0',
+            ),
+            greaterThan(10),
+          );
+          await _tap(tester, 'main.editor.save');
+          expect(
+            mainPortfolioDocument((await repository.read())!.content!)!
+                .projects,
+            working.projects,
+          );
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   testWidgets(
     'experience and education modal changes persist only with main Save',
@@ -392,6 +596,95 @@ void main() {
         'two',
       );
       expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Library delete leaves the mounted editor safe until explicit reload',
+    (tester) async {
+      final projects = [
+        for (final id in ['one', 'two'])
+          PortfolioProject(
+            id: id,
+            title: 'Проект $id',
+            description: '',
+            technologies: const [],
+          ),
+      ];
+      final repository = await _repository(
+        name: 'Сохранённый автор',
+        projects: projects,
+        attachments: const [
+          PortfolioProjectAttachment(projectId: 'one'),
+          PortfolioProjectAttachment(projectId: 'two'),
+        ],
+      );
+      final before = (await repository.read())!;
+      final container = await _open(tester, repository);
+      await _ensureVisible(
+        tester,
+        find.byKey(const Key('main.editor.project.one')),
+      );
+      final controller = container.read(
+        portfolioDraftControllerProvider.notifier,
+      );
+      expect(
+        await controller.deleteProject(
+          projects.first,
+          expectedRepository: repository,
+        ),
+        isTrue,
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final missing = find.byKey(
+        const Key('main.editor.project.one'),
+        skipOffstage: false,
+      );
+      expect(missing, findsOneWidget);
+      expect(tester.widget(missing), isA<SizedBox>());
+      expect(
+        tester
+            .widget<StackCardButton>(find.byKey(const Key('main.editor.save')))
+            .onPressed,
+        isNull,
+      );
+      final deleted = (await repository.read())!;
+      expect(deleted.revision, before.revision + 1);
+      expect(deleted.content!.projects, [projects.last]);
+      expect(
+        mainPortfolioDocument(deleted.content!)!.projects
+            .map((item) => item.projectId),
+        ['two'],
+      );
+      final reload = find.text('Открыть сохранённую версию');
+      await _ensureVisible(tester, reload);
+      await tester.tap(reload);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(
+        find.byKey(const Key('main.editor.project.one'), skipOffstage: false),
+        findsNothing,
+      );
+      await _ensureVisible(
+        tester,
+        find.byKey(const Key('main.editor.project.two')),
+      );
+      expect(find.text('Проект two'), findsOneWidget);
+      expect(
+        tester
+            .widget<StackCardButton>(find.byKey(const Key('main.editor.save')))
+            .onPressed,
+        isNotNull,
+      );
+      final reloaded = (await repository.read())!;
+      expect(reloaded.revision, deleted.revision);
+      expect(reloaded.content, deleted.content);
+      expect(reloaded.notes, before.notes);
+      expect(
+        mainPortfolioDocument(reloaded.content!)!.content.profile.name,
+        'Сохранённый автор',
+      );
     },
   );
 
@@ -915,6 +1208,10 @@ void main() {
     );
     await _open(tester, repository, textScale: 2);
     if (const bool.fromEnvironment('UPDATE_SINGLE_PORTFOLIO_PREVIEWS')) {
+      await _ensureVisible(
+        tester,
+        find.byKey(const Key('main.editor.projects')),
+      );
       await Scrollable.ensureVisible(
         tester.element(find.byKey(const Key('main.editor.projects'))),
         alignment: 0.5,
@@ -1043,6 +1340,16 @@ Future<MemoryPortfolioDraftRepository> _repository({
   return repository;
 }
 
+Future<MemoryPortfolioDraftRepository> _largeRepository() async {
+  final repository = MemoryPortfolioDraftRepository();
+  await repository.save(
+    performanceWorkspace(),
+    expectedRevision: 0,
+    notes: 'private',
+  );
+  return repository;
+}
+
 Widget _app(Widget home, {double textScale = 1}) => MaterialApp(
   theme: StackCardTheme.light,
   locale: const Locale('ru'),
@@ -1148,6 +1455,7 @@ Future<void> _ensureVisible(WidgetTester tester, Finder finder) async {
       finder,
       300,
       scrollable: _editorScrollable(),
+      maxScrolls: 200,
     );
   }
   await tester.ensureVisible(finder);

@@ -29,6 +29,8 @@ class BuilderTagsEditor extends StatelessWidget {
     this.iconName,
     this.headerLeading,
     this.onReorder,
+    this.onReorderStart,
+    this.onReorderEnd,
     this.sliver = false,
   });
 
@@ -46,6 +48,8 @@ class BuilderTagsEditor extends StatelessWidget {
   final bool sliver;
   final Widget? headerLeading;
   final void Function(int oldIndex, int newIndex)? onReorder;
+  final ValueChanged<int>? onReorderStart;
+  final ValueChanged<int>? onReorderEnd;
 
   Widget _label(BuildContext context, int index) {
     if (onEdit == null) return StackCardTechnologyBadge(label: items[index]);
@@ -142,31 +146,27 @@ class BuilderTagsEditor extends StatelessWidget {
     if (enabled) onReorder!(oldIndex, newIndex);
   }
 
-  Widget _sliver(BuildContext context) => DecoratedSliver(
-    decoration: BoxDecoration(
-      color: context.colors.surface,
-      border: Border.all(color: context.colors.border),
-      borderRadius: BorderRadius.circular(StackCardRadius.large),
-    ),
-    sliver: SliverPadding(
-      padding: const EdgeInsets.all(StackCardSpacing.lg),
-      sliver: SliverMainAxisGroup(
-        slivers: [
-          SliverToBoxAdapter(child: _header(context)),
-          if (items.isNotEmpty) ...[
-            const SliverToBoxAdapter(
-              child: SizedBox(height: StackCardSpacing.md),
-            ),
-            SliverReorderableList(
-              itemCount: items.length,
-              itemBuilder: _reorderableItem,
-              onReorderItem: _reorder,
-              proxyDecorator: (child, index, animation) =>
-                  Material(type: MaterialType.transparency, child: child),
-            ),
-          ],
+  Widget _sliver(BuildContext context) => StackCardCard.sliver(
+    outlined: true,
+    padding: const EdgeInsets.all(StackCardSpacing.lg),
+    child: SliverMainAxisGroup(
+      slivers: [
+        SliverToBoxAdapter(child: _header(context)),
+        if (items.isNotEmpty) ...[
+          const SliverToBoxAdapter(
+            child: SizedBox(height: StackCardSpacing.md),
+          ),
+          SliverReorderableList(
+            itemCount: items.length,
+            itemBuilder: _reorderableItem,
+            onReorderItem: _reorder,
+            onReorderStart: onReorderStart,
+            onReorderEnd: onReorderEnd,
+            proxyDecorator: (child, index, animation) =>
+                Material(type: MaterialType.transparency, child: child),
+          ),
         ],
-      ),
+      ],
     ),
   );
 
@@ -191,6 +191,8 @@ class BuilderTagsEditor extends StatelessWidget {
                     itemCount: items.length,
                     itemBuilder: _reorderableItem,
                     onReorderItem: _reorder,
+                    onReorderStart: onReorderStart,
+                    onReorderEnd: onReorderEnd,
                   )
                 else
                   Wrap(

@@ -221,6 +221,92 @@ void main() {
     expect(h.content.profile.name, 'Guest name');
   });
 
+  testWidgets('Open avatar menu cannot start a picker for a different owner', (
+    tester,
+  ) async {
+    final old = _MediaRepository();
+    final next = _MediaRepository('other');
+    final picker = _Picker();
+    final h = await _pump(tester, media: old, picker: picker);
+    await _tap(tester, 'media_avatar_menu');
+    h.container.read(_currentRepositoryProvider.notifier).select(next);
+    await tester.pump();
+    await _tap(tester, 'media_gallery');
+    expect(picker.calls, 0);
+    expect(old.uploads, 0);
+    expect(next.uploads, 0);
+    expect(h.content.profile.avatarPath, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Open avatar menu cannot replace a newer avatar in same owner', (
+    tester,
+  ) async {
+    final media = _MediaRepository();
+    final picker = _Picker();
+    var paths = <String>[];
+    late StateSetter update;
+    await _pump(
+      tester,
+      media: media,
+      picker: picker,
+      editor: Scaffold(
+        body: StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return PortfolioMediaEditor(
+              paths: paths,
+              onChanged: (value) => setState(() => paths = value),
+              onBusyChanged: (_) {},
+            );
+          },
+        ),
+      ),
+    );
+    await _tap(tester, 'media_avatar_menu');
+    final newer = _path('owner', 'c');
+    update(() => paths = [newer]);
+    await tester.pump();
+    await _tap(tester, 'media_gallery');
+    expect(picker.calls, 0);
+    expect(media.uploads, 0);
+    expect(paths, [newer]);
+  });
+
+  testWidgets('Avatar change clears a failed upload and its stale retry', (
+    tester,
+  ) async {
+    final media = _MediaRepository()..failNext = true;
+    var paths = <String>[];
+    late StateSetter update;
+    await _pump(
+      tester,
+      media: media,
+      editor: Scaffold(
+        body: StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return PortfolioMediaEditor(
+              paths: paths,
+              onChanged: (value) => setState(() => paths = value),
+              onBusyChanged: (_) {},
+            );
+          },
+        ),
+      ),
+    );
+    await _tap(tester, 'media_gallery');
+    expect(find.byKey(const ValueKey('media_retry')), findsOneWidget);
+    final newer = _path('owner', 'c');
+    update(() => paths = [newer]);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('media_retry')), findsNothing);
+    expect(find.byKey(const ValueKey('media_upload_error')), findsNothing);
+    expect(find.byKey(const ValueKey('media_prepared_preview')), findsNothing);
+    expect(media.uploads, 1);
+    expect(paths, [newer]);
+  });
+
   testWidgets(
     'UID change suppresses stale prepared preview and upload result',
     (tester) async {

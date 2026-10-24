@@ -341,7 +341,6 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
     _ => PortfolioMediaEditor(
       key: _media,
       paths: _avatarPath.isEmpty ? const [] : [_avatarPath],
-      maxImages: 1,
       titleKey: 'media.avatar',
       hasExternalAvatar: !_avatarChanged && _profile.avatarUrl.isNotEmpty,
       emptyState: !_avatarChanged && _profile.avatarUrl.isNotEmpty

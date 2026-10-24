@@ -442,7 +442,6 @@ class _SettingsBaseEditorScreenState
     PortfolioMediaEditor(
       key: _media,
       titleKey: 'media.avatar',
-      maxImages: 1,
       paths: _data!.profile.avatarPath.isEmpty
           ? const []
           : [_data!.profile.avatarPath],

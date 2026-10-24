@@ -310,52 +310,70 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
             ? () => _shareOptions(document.id)
             : null,
       );
-      return ListView(
+      return CustomScrollView(
         key: const Key('home.savedPortfolio'),
-        padding: const EdgeInsets.all(StackCardSpacing.lg),
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) =>
-                constraints.maxWidth >= 360 &&
-                    MediaQuery.textScalerOf(context).scale(1) <= 1.3
-                ? Row(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(StackCardSpacing.lg),
+            sliver: SliverMainAxisGroup(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Column(
                     children: [
-                      Expanded(child: download),
-                      const SizedBox(width: 8),
-                      Expanded(child: share),
+                      LayoutBuilder(
+                        builder: (context, constraints) =>
+                            constraints.maxWidth >= 360 &&
+                                MediaQuery.textScalerOf(context).scale(1) <= 1.3
+                            ? Row(
+                                children: [
+                                  Expanded(child: download),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: share),
+                                ],
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  download,
+                                  const SizedBox(height: 8),
+                                  share,
+                                ],
+                              ),
+                      ),
+                      const SizedBox(height: StackCardSpacing.xl),
+                      if (!nonempty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: StackCardSpacing.xl,
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                'Портфолио пока пустое',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              const SizedBox(height: StackCardSpacing.sm),
+                              Text(
+                                workspace?.documents.isNotEmpty == true &&
+                                        document == null
+                                    ? 'Откройте Редактор и выберите основу из прежних документов.'
+                                    : 'Заполните портфолио в Редакторе и нажмите «Сохранить».',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: context.colors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [download, const SizedBox(height: 8), share],
                   ),
-          ),
-          const SizedBox(height: StackCardSpacing.xl),
-          if (nonempty)
-            MainPortfolioContentView(content: saved)
-          else
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: StackCardSpacing.xl,
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'Портфолио пока пустое',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: StackCardSpacing.sm),
-                  Text(
-                    workspace?.documents.isNotEmpty == true && document == null
-                        ? 'Откройте Редактор и выберите основу из прежних документов.'
-                        : 'Заполните портфолио в Редакторе и нажмите «Сохранить».',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: context.colors.textSecondary),
-                  ),
-                ],
-              ),
+                ),
+                if (nonempty) MainPortfolioContentView.sliver(content: saved),
+              ],
             ),
+          ),
         ],
       );
     },

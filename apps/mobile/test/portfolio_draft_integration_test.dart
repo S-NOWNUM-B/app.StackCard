@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_stackcard/core/state/app_settings.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
-import 'package:app_stackcard/features/profile/profile.dart';
 import 'package:app_stackcard/features/projects/projects.dart';
 import 'package:app_stackcard/main.dart';
 import 'package:flutter/material.dart';
@@ -53,24 +52,24 @@ Future<MemoryPortfolioDraftRepository> _repository() async {
 }
 
 void main() {
-  test('Cold concurrent read models await one nonempty draft read without fallback or cancellation', () async {
+  test('Cold concurrent Projects and controller await one draft read without fallback or cancellation', () async {
     final pending = Completer<PortfolioDraft?>();
     final repository = _PendingDraftRepository(pending.future);
-    final profileSource = _UnusedProfileRepository();
     final projectsSource = _UnusedProjectsRepository();
     final container = ProviderContainer(
       overrides: [
         portfolioDraftRepositoryProvider.overrideWithValue(repository),
-        profileRepositoryProvider.overrideWithValue(profileSource),
         projectsRepositoryProvider.overrideWithValue(projectsSource),
       ],
     );
     addTearDown(container.dispose);
-    final profileFuture = container.read(profileProvider.future);
+    final controller = container.read(
+      portfolioDraftControllerProvider.notifier,
+    );
+    final draftFuture = controller.ensureLoaded();
     final projectsFuture = container.read(projectsProvider.future);
     await Future<void>.delayed(Duration.zero);
     expect(repository.readCalls, 1);
-    expect(profileSource.calls, 0);
     expect(projectsSource.calls, 0);
     pending.complete(
       PortfolioDraft(
@@ -81,15 +80,16 @@ void main() {
         content: _content(),
       ),
     );
+    await draftFuture.timeout(const Duration(seconds: 5));
+    expect(container.read(portfolioDraftControllerProvider).loaded, isTrue);
     expect(
-      (await profileFuture.timeout(const Duration(seconds: 5))).name,
+      container.read(portfolioDraftControllerProvider).content!.profile.name,
       'Taylor Ray',
     );
     expect(
       (await projectsFuture.timeout(const Duration(seconds: 5))).first.id,
       'p1',
     );
-    expect(profileSource.calls, 0);
     expect(projectsSource.calls, 0);
     expect(repository.readCalls, 1);
   });
@@ -97,18 +97,16 @@ void main() {
   test('A late failed initial draft read never calls demo sources or silently retries', () async {
     final pending = Completer<PortfolioDraft?>();
     final repository = _PendingDraftRepository(pending.future);
-    final profileSource = _UnusedProfileRepository();
     final projectsSource = _UnusedProjectsRepository();
     final container = ProviderContainer(
       overrides: [
         portfolioDraftRepositoryProvider.overrideWithValue(repository),
-        profileRepositoryProvider.overrideWithValue(profileSource),
         projectsRepositoryProvider.overrideWithValue(projectsSource),
       ],
     );
     addTearDown(container.dispose);
-    final profileFailure = expectLater(
-      container.read(profileProvider.future),
+    final draftFailure = expectLater(
+      container.read(portfolioDraftControllerProvider.notifier).ensureLoaded(),
       throwsA(isA<PortfolioDraftFailure>()),
     );
     final projectsFailure = expectLater(
@@ -119,16 +117,19 @@ void main() {
     pending.completeError(
       const PortfolioDraftFailure(PortfolioDraftFailureKind.corrupted),
     );
-    await Future.wait([profileFailure, projectsFailure])
+    await Future.wait([draftFailure, projectsFailure])
         .timeout(const Duration(seconds: 5));
     await container.pump();
-    expect(container.read(profileProvider).error, isA<PortfolioDraftFailure>());
+    expect(
+      container.read(portfolioDraftControllerProvider).failure?.kind,
+      PortfolioDraftFailureKind.corrupted,
+    );
+    expect(container.read(portfolioDraftControllerProvider).loaded, isFalse);
     expect(
       container.read(projectsProvider).error,
       isA<PortfolioDraftFailure>(),
     );
     expect(repository.readCalls, 1);
-    expect(profileSource.calls, 0);
     expect(projectsSource.calls, 0);
   });
 
@@ -149,7 +150,9 @@ void main() {
       );
       await Future.wait([
         expectLater(
-          container.read(profileProvider.future),
+          container
+              .read(portfolioDraftControllerProvider.notifier)
+              .ensureLoaded(),
           throwsA(typedFailure),
         ),
         expectLater(
@@ -160,7 +163,10 @@ void main() {
       expect(repository.readCalls, 1);
       repository.failRead = false;
       await container.read(portfolioDraftControllerProvider.notifier).load();
-      expect((await container.read(profileProvider.future)).name, 'Taylor Ray');
+      expect(
+        container.read(portfolioDraftControllerProvider).content!.profile.name,
+        'Taylor Ray',
+      );
       expect((await container.read(projectsProvider.future)).first.id, 'p1');
     },
   );
@@ -203,41 +209,49 @@ void main() {
     );
   }
 
-  test(
-    'Working draft drives profile, projects and featured without extra writes',
-    () async {
-      final repository = await _repository();
-      final container = ProviderContainer(
-        overrides: [
-          portfolioDraftRepositoryProvider.overrideWithValue(repository),
-        ],
-      );
-      addTearDown(container.dispose);
-      final controller = container.read(
-        portfolioDraftControllerProvider.notifier,
-      );
-      await controller.load();
-      final profile = await container.read(profileProvider.future);
-      expect(profile.name, 'Taylor Ray');
-      expect(profile.readiness.percent, 100);
-      final projects = await container.read(projectsProvider.future);
-      expect(projects.map((item) => item.id), ['p1', 'p2']);
-      expect(selectFeaturedProjects(projects).map((item) => item.id), ['p1']);
-      controller.updateContent(
-        _content().copyWith(
-          profile: _content().profile.copyWith(name: 'Morgan Lane'),
-        ),
-      );
-      expect(
-        (await container.read(profileProvider.future)).name,
-        'Morgan Lane',
-      );
-      expect((await repository.read())!.content!.profile.name, 'Taylor Ray');
-      await controller.save();
-      expect((await repository.read())!.content!.profile.name, 'Morgan Lane');
-      expect((await repository.read())!.notes, 'Private notebook');
-    },
-  );
+  test('Working draft drives current projections and changes only on explicit Save', () async {
+    final repository = await _repository();
+    final container = ProviderContainer(
+      overrides: [
+        portfolioDraftRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(
+      portfolioDraftControllerProvider.notifier,
+    );
+    await controller.load();
+    expect(
+      container.read(portfolioDraftControllerProvider).content!.profile.name,
+      'Taylor Ray',
+    );
+    final projects = await container.read(projectsProvider.future);
+    expect(projects.map((item) => item.id), ['p1', 'p2']);
+    expect(selectFeaturedProjects(projects).map((item) => item.id), ['p1']);
+    controller.updateContent(
+      _content().copyWith(
+        profile: _content().profile.copyWith(name: 'Morgan Lane'),
+      ),
+    );
+    expect(
+      container.read(portfolioDraftControllerProvider).content!.profile.name,
+      'Morgan Lane',
+    );
+    expect((await repository.read())!.content!.profile.name, 'Taylor Ray');
+    expect((await repository.read())!.revision, 1);
+    expect(
+      container.read(portfolioDraftControllerProvider).hasUnsavedChanges,
+      isTrue,
+    );
+    await controller.save();
+    expect((await repository.read())!.content!.profile.name, 'Morgan Lane');
+    expect((await repository.read())!.notes, 'Private notebook');
+    expect((await repository.read())!.revision, 2);
+    expect(
+      container.read(portfolioDraftControllerProvider).hasUnsavedChanges,
+      isFalse,
+    );
+  });
 
   test('Project filters do not alter featured or the saved draft', () async {
     final repository = await _repository();
@@ -358,15 +372,6 @@ class _PendingDraftRepository implements PortfolioDraftRepository {
     required int expectedRevision,
     required String notes,
   }) async => throw UnimplementedError();
-}
-
-class _UnusedProfileRepository implements ProfileRepository {
-  int calls = 0;
-  @override
-  Future<Profile> getProfile() async {
-    calls++;
-    throw StateError('Draft must gate the demo profile');
-  }
 }
 
 class _UnusedProjectsRepository implements ProjectsRepository {

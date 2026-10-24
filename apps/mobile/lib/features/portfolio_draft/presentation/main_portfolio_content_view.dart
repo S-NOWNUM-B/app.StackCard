@@ -17,15 +17,22 @@ import 'portfolio_contact_visual.dart';
 
 /// Готовое основное портфолио: только непустое содержимое, без controls редактора.
 class MainPortfolioContentView extends ConsumerWidget {
-  const MainPortfolioContentView({super.key, required this.content});
+  const MainPortfolioContentView({super.key, required this.content})
+    : _sliver = false;
+
+  const MainPortfolioContentView.sliver({super.key, required this.content})
+    : _sliver = true;
 
   final PortfolioContent content;
+  final bool _sliver;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = content.profile;
     final text = Theme.of(context).textTheme;
-    final projects = content.projects.where((project) => project.visible);
+    final projects = content.projects
+        .where((project) => project.visible)
+        .toList();
     final links = content.links.where(
       (link) => link.visible && link.publishAllowed,
     );
@@ -93,18 +100,20 @@ class MainPortfolioContentView extends ConsumerWidget {
     if (header.isNotEmpty) {
       // Шапка профиля отделена от разделов отдельной карточкой.
       sections.add(
-        StackCardCard(
-          key: const Key('main.portfolio.header'),
-          elevated: true,
-          padding: const EdgeInsets.all(StackCardSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var index = 0; index < header.length; index++) ...[
-                if (index != 0) const SizedBox(height: StackCardSpacing.sm),
-                header[index],
+        _adapt(
+          StackCardCard(
+            key: const Key('main.portfolio.header'),
+            elevated: true,
+            padding: const EdgeInsets.all(StackCardSpacing.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var index = 0; index < header.length; index++) ...[
+                  if (index != 0) const SizedBox(height: StackCardSpacing.sm),
+                  header[index],
+                ],
               ],
-            ],
+            ),
           ),
         ),
       );
@@ -169,40 +178,45 @@ class MainPortfolioContentView extends ConsumerWidget {
       orderedSections[PortfolioBlockKind.featuredProjects] = _section(
         context,
         'Реализованные проекты',
-        _separated(context, [
-          for (final project in projects) _MainProjectRow(project: project),
-        ]),
+        const [],
         key: 'projects',
+        itemCount: projects.length,
+        itemBuilder: (context, index) =>
+            _MainProjectRow(project: projects[index]),
       );
     }
     if (content.experience.isNotEmpty) {
       orderedSections[PortfolioBlockKind.experience] = _section(
         context,
         'Опыт работы',
-        _separated(context, [
-          for (final entry in content.experience)
-            _entry(context, entry.role, [
-              entry.organization,
-              entry.period,
-              entry.description,
-            ]),
-        ]),
+        const [],
         key: 'experience',
+        itemCount: content.experience.length,
+        itemBuilder: (context, index) {
+          final entry = content.experience[index];
+          return _entry(context, entry.role, [
+            entry.organization,
+            entry.period,
+            entry.description,
+          ], key: 'experience.${entry.id}');
+        },
       );
     }
     if (content.education.isNotEmpty) {
       orderedSections[PortfolioBlockKind.education] = _section(
         context,
         'Образование',
-        _separated(context, [
-          for (final entry in content.education)
-            _entry(context, entry.institution, [
-              entry.qualification,
-              entry.period,
-              entry.description,
-            ]),
-        ]),
+        const [],
         key: 'education',
+        itemCount: content.education.length,
+        itemBuilder: (context, index) {
+          final entry = content.education[index];
+          return _entry(context, entry.institution, [
+            entry.qualification,
+            entry.period,
+            entry.description,
+          ], key: 'education.${entry.id}');
+        },
       );
     }
     for (final kind in mainPortfolioSectionOrder(content)) {
@@ -218,24 +232,40 @@ class MainPortfolioContentView extends ConsumerWidget {
       );
     }
     if (sections.isEmpty) {
-      return Padding(
-        key: const Key('main.portfolio.empty'),
-        padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.xl),
-        child: Column(
-          children: [
-            Text(
-              'Портфолио пока пустое',
-              style: text.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: StackCardSpacing.sm),
-            Text(
-              'Откройте вкладку «Редактор»',
-              style: text.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-          ],
+      return _adapt(
+        Padding(
+          key: const Key('main.portfolio.empty'),
+          padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.xl),
+          child: Column(
+            children: [
+              Text(
+                'Портфолио пока пустое',
+                style: text.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: StackCardSpacing.sm),
+              Text(
+                'Откройте вкладку «Редактор»',
+                style: text.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
+      );
+    }
+    if (_sliver) {
+      return SliverMainAxisGroup(
+        key: const Key('main.portfolio.content'),
+        slivers: [
+          for (var index = 0; index < sections.length; index++) ...[
+            if (index != 0)
+              const SliverToBoxAdapter(
+                child: SizedBox(height: StackCardSpacing.lg),
+              ),
+            sections[index],
+          ],
+        ],
       );
     }
     return Column(
@@ -250,73 +280,109 @@ class MainPortfolioContentView extends ConsumerWidget {
     );
   }
 
-  /// Раздел — отдельная карточка с маркером и линией под заголовком.
+  Widget _adapt(Widget child) =>
+      _sliver ? SliverToBoxAdapter(child: child) : child;
+
+  /// Одна геометрия секции для обычного preview и ленивой Home.
   Widget _section(
     BuildContext context,
     String title,
     List<Widget> children, {
     required String key,
+    int itemCount = 0,
+    IndexedWidgetBuilder? itemBuilder,
   }) {
-    final colors = context.colors;
+    final heading = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 4,
+              height: 20,
+              decoration: BoxDecoration(
+                color: context.colors.primary,
+                borderRadius: BorderRadius.circular(StackCardRadius.capsule),
+              ),
+            ),
+            const SizedBox(width: StackCardSpacing.sm),
+            Expanded(
+              child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.md),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: context.colors.borderSubtle,
+          ),
+        ),
+      ],
+    );
+    Widget row(BuildContext context, int index) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (index != 0)
+          Divider(
+            height: StackCardSpacing.lg,
+            thickness: 1,
+            color: context.colors.borderSubtle,
+          ),
+        itemBuilder!(context, index),
+      ],
+    );
+    if (_sliver) {
+      return StackCardCard.sliver(
+        key: ValueKey('main.section.$key'),
+        outlined: true,
+        child: SliverMainAxisGroup(
+          slivers: [
+            SliverToBoxAdapter(child: heading),
+            if (itemBuilder != null)
+              SliverList.builder(itemCount: itemCount, itemBuilder: row)
+            else
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: children,
+                ),
+              ),
+          ],
+        ),
+      );
+    }
     return StackCardCard(
       key: ValueKey('main.section.$key'),
       outlined: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 4,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: colors.primary,
-                  borderRadius: BorderRadius.circular(StackCardRadius.capsule),
-                ),
-              ),
-              const SizedBox(width: StackCardSpacing.sm),
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: StackCardSpacing.md),
-            child: Divider(height: 1, thickness: 1, color: colors.borderSubtle),
-          ),
+          heading,
           ...children,
+          for (var index = 0; index < itemCount; index++) row(context, index),
         ],
       ),
     );
   }
 
-  /// Тонкая линия между записями одного раздела.
-  List<Widget> _separated(BuildContext context, List<Widget> items) => [
-    for (var index = 0; index < items.length; index++) ...[
-      if (index != 0)
-        Divider(
-          height: StackCardSpacing.lg,
-          thickness: 1,
-          color: context.colors.borderSubtle,
-        ),
-      items[index],
+  Widget _entry(
+    BuildContext context,
+    String title,
+    List<String> details, {
+    required String key,
+  }) => Column(
+    key: ValueKey('main.$key'),
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(title, style: Theme.of(context).textTheme.titleMedium),
+      for (final detail in details.where((value) => value.isNotEmpty)) ...[
+        const SizedBox(height: StackCardSpacing.xs),
+        Text(detail, style: Theme.of(context).textTheme.bodyMedium),
+      ],
     ],
-  ];
-
-  Widget _entry(BuildContext context, String title, List<String> details) =>
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          for (final detail in details.where((value) => value.isNotEmpty)) ...[
-            const SizedBox(height: StackCardSpacing.xs),
-            Text(detail, style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ],
-      );
+  );
 }
 
 class _MainProjectRow extends ConsumerWidget {

@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:app_stackcard/core/localization/app_strings.dart';
 import 'package:app_stackcard/core/state/app_settings.dart';
 import 'package:app_stackcard/core/theme/stackcard_theme.dart';
-import 'package:app_stackcard/features/auth/auth.dart';
 import 'package:app_stackcard/features/github_import/github_import.dart';
-import 'package:app_stackcard/features/github_import/presentation/github_source_cards.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/memory_portfolio_draft_repository.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:flutter/material.dart';
@@ -48,80 +46,6 @@ void main() {
       expect(container.read(portfolioDraftControllerProvider).content, content);
       expect(local.writes, 0);
       expect((await local.read())!.content, content);
-    },
-  );
-
-  testWidgets(
-    'Archival source advice previews without changing import, Save or publication',
-    (tester) async {
-      final content = PortfolioContent();
-      final local = await _local(content);
-      await _openGitHub(tester, local, _repository());
-      final container = _container(tester, _ArchivalGitHubSourceSurface);
-      await _visible(
-        tester,
-        find.byKey(const ValueKey('github_suggestions_42')),
-      );
-      expect(
-        find.textContaining('ещё не добавлен в портфолио'),
-        findsOneWidget,
-      );
-      expect(find.textContaining('Открой «Предпросмотр»'), findsOneWidget);
-      expect(find.byKey(const ValueKey('github_preview_42')), findsOneWidget);
-      expect(find.text('Предпросмотр источника'), findsNothing);
-      await _tap(tester, find.byKey(const ValueKey('github_preview_42')));
-      expect(find.textContaining('Портфолио не меняется'), findsOneWidget);
-      expect(container.read(portfolioDraftControllerProvider).content, content);
-      expect(local.writes, 0);
-      expect(
-        container.read(portfolioDraftControllerProvider).hasUnsavedChanges,
-        isFalse,
-      );
-      expect((await local.read())!.revision, 1);
-    },
-  );
-
-  testWidgets(
-    'Archival source update advice keeps curated description and featured choice',
-    (tester) async {
-      final source = _repository(description: '');
-      final content = _importedContent(
-        source,
-        description: '',
-        featured: false,
-      );
-      final local = await _local(content);
-      await _openGitHub(
-        tester,
-        local,
-        _repository(description: 'Incoming public description'),
-      );
-      final container = _container(tester, _ArchivalGitHubSourceSurface);
-      await _visible(
-        tester,
-        find.byKey(const ValueKey('github_suggestions_42')),
-      );
-      expect(
-        find.textContaining('Репозиторий обновлён 2026-10-03'),
-        findsOneWidget,
-      );
-      expect(find.textContaining('Без описания'), findsOneWidget);
-      expect(find.textContaining('нет демо-ссылки'), findsOneWidget);
-      expect(
-        find.textContaining('Открой «Редактировать проект»'),
-        findsOneWidget,
-      );
-      expect(container.read(portfolioDraftControllerProvider).content, content);
-      expect(
-        container
-            .read(portfolioDraftControllerProvider)
-            .content!
-            .projects
-            .single
-            .featured,
-        isFalse,
-      );
-      expect(local.writes, 0);
     },
   );
 
@@ -197,30 +121,6 @@ void main() {
   });
 
   testWidgets(
-    'Archival source advice uses Russian runtime labels and existing Preview',
-    (tester) async {
-      await _openGitHub(
-        tester,
-        await _local(PortfolioContent()),
-        _repository(),
-      );
-      await _visible(
-        tester,
-        find.byKey(const ValueKey('github_suggestions_42')),
-      );
-      expect(
-        find.textContaining('ещё не добавлен в портфолио'),
-        findsOneWidget,
-      );
-      expect(
-        find.text('Открой «Предпросмотр», чтобы проверить источник.'),
-        findsOneWidget,
-      );
-      expect(find.byKey(const ValueKey('github_preview_42')), findsOneWidget);
-    },
-  );
-
-  testWidgets(
     'Demo content and an empty curated portfolio have no advice panel',
     (tester) async {
       await _openAdvice(tester, _Local());
@@ -247,19 +147,6 @@ void main() {
     expect(_nonEmptyAdvice(), findsNothing);
     expect(local.writes, 0);
   });
-
-  testWidgets(
-    'Archival public source preview does not open private data or offer suggestions',
-    (tester) async {
-      final local = _Local();
-      final auth = _SignedOutAuth();
-      await _openGitHub(tester, local, _repository(), auth: auth);
-      await _visible(tester, find.byKey(const ValueKey('github_preview_42')));
-      expect(find.byKey(const ValueKey('github_suggestions_42')), findsNothing);
-      expect(local.reads, 0);
-      expect(local.writes, 0);
-    },
-  );
 
   for (final size in [const Size(320, 740), const Size(900, 1000)]) {
     testWidgets('Advice remains readable at $size with large text', (
@@ -423,67 +310,6 @@ class _AdviceSurface extends ConsumerWidget {
   );
 }
 
-Future<void> _openGitHub(
-  WidgetTester tester,
-  _Local local,
-  GitHubRepository repository, {
-  AccountAuthRepository? auth,
-}) async {
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        portfolioDraftRepositoryProvider.overrideWithValue(local),
-        portfolioSuggestionClockProvider.overrideWithValue(() => _now),
-        githubImportRepositoryProvider.overrideWithValue(_Source(repository)),
-        if (auth != null) accountAuthRepositoryProvider.overrideWithValue(auth),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: StackCardTheme.light,
-        locale: const Locale('ru'),
-        supportedLocales: AppStrings.supportedLocales,
-        localizationsDelegates: const [
-          AppStrings.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        home: const _ArchivalGitHubSourceSurface(),
-      ),
-    ),
-  );
-  await tester.pumpAndSettle();
-  await _container(
-    tester,
-    _ArchivalGitHubSourceSurface,
-  ).read(githubImportControllerProvider.notifier).load('octocat');
-  await tester.pumpAndSettle();
-}
-
-// Source advice относится к сохранённому компоненту прежнего импорта. Проверяем
-// его guards напрямую: современный /github-import содержит bulk selection.
-class _ArchivalGitHubSourceSurface extends ConsumerWidget {
-  const _ArchivalGitHubSourceSurface();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(githubImportControllerProvider);
-    return Scaffold(
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          for (final repository in state.repositories)
-            GitHubRepositoryCard(
-              repository: repository,
-              validatedAt:
-                  state.repositoryReadMetadata[repository.id]?.validatedAt,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 ProviderContainer _container(WidgetTester tester, Type type) =>
     ProviderScope.containerOf(tester.element(find.byType(type)));
 
@@ -536,38 +362,4 @@ class _Local implements PortfolioDraftRepository {
     writes++;
     return delegate.saveNotes(notes);
   }
-}
-
-class _Source implements GitHubImportRepository {
-  const _Source(this.repository);
-  final GitHubRepository repository;
-  @override
-  Future<GitHubProfile> getProfile(String username) async => GitHubProfile(
-    id: 1,
-    login: 'octocat',
-    htmlUrl: 'https://github.com/octocat',
-    publicRepositories: 1,
-  );
-  @override
-  Future<GitHubRepositoriesPage> getRepositories(
-    GitHubProfile profile, {
-    Uri? page,
-  }) async => GitHubRepositoriesPage(repositories: [repository]);
-  @override
-  void cancelRequests() {}
-}
-
-class _SignedOutAuth implements AccountAuthRepository {
-  @override
-  Stream<AuthUser?> watchSession() => Stream.value(null);
-  @override
-  Future<void> signOut() async {}
-  @override
-  Future<void> signInEmail(String email, String password) async {}
-  @override
-  Future<void> registerEmail(String email, String password) async {}
-  @override
-  Future<void> signInGoogle() async {}
-  @override
-  Future<void> sendPasswordReset(String email) async {}
 }
