@@ -26,6 +26,7 @@ before(async () => {
   // Исключаем случайный live Admin access при запуске без Emulator Suite.
   assert.ok(process.env.FIRESTORE_EMULATOR_HOST);
   assert.ok(process.env.FIREBASE_STORAGE_EMULATOR_HOST);
+  assert.match(process.env.FIREBASE_AUTH_EMULATOR_HOST ?? '', /^(?:127\.0\.0\.1|localhost):[0-9]+$/);
   setLogLevel('silent');
   app = initializeApp({ projectId, storageBucket: `${projectId}.appspot.com` }, 'publication-service-test');
   database = getFirestore(app); bucket = getStorage(app).bucket();
@@ -175,6 +176,44 @@ test('Firestore-only account deletion requires explicit verified cutover and del
   assert.equal(recovered.status, 'completed');
 });
 
+test('empty account deletes through available demo Storage and recovers its receipt after actual Auth deletion', async () => {
+  const uid = 'empty-delete-owner', auth = getAuth(app);
+  await auth.createUser({ uid });
+  try {
+    assert.equal((await database.doc(`accounts/${uid}/drafts/current`).get()).exists, false);
+    const api = service({ auth });
+    const request = { action: 'deleteAccount', operationId: 'empty-delete', expectedGeneration: 0, recoveryKey };
+    const result = await api.execute(uid, request, { auth_time: Math.floor(instant() / 1000) });
+    assert.equal(result.status, 'completed');
+    await assert.rejects(auth.getUser(uid), (error) => error.code === 'auth/user-not-found');
+    assert.equal((await database.doc(`accounts/${uid}`).get()).data().lifecycleState, 'deleted');
+    const receipt = { action: 'deletionStatus', ownerUid: uid, operationId: request.operationId, recoveryKey };
+    assert.deepEqual(await api.execute(null, receipt), result);
+    assert.equal((await api.execute(null, { ...receipt, recoveryKey: 'b'.repeat(64) })).status, 'unknown');
+    assert.equal((await database.doc(`accounts/${uid}/drafts/current`).get()).exists, false);
+  } finally {
+    await auth.deleteUser(uid).catch((error) => { if (error.code !== 'auth/user-not-found') throw error; });
+  }
+});
+
+test('empty bucketless account remains blocked before lock even after cutover and preserves unproven legacy bytes', async () => {
+  const uid = 'empty-guard-owner', auth = getAuth(app);
+  await auth.createUser({ uid });
+  const orphan = `accounts/${uid}/media/${'a'.repeat(32)}.jpg`;
+  await bucket.file(orphan).save(jpeg, { metadata: { contentType: 'image/jpeg' } });
+  try {
+    const api = service({ auth, bucket: null, firestoreMediaOnlyAccountsSince: '2026-01-01T00:00:00.000Z' });
+    await assert.rejects(api.execute(uid, {
+      action: 'deleteAccount', operationId: 'empty-bucketless-delete', expectedGeneration: 0, recoveryKey,
+    }, { auth_time: Math.floor(instant() / 1000) }), rejected('storage-unavailable'));
+    assert.equal((await auth.getUser(uid)).uid, uid);
+    assert.equal((await database.doc(`accounts/${uid}`).get()).exists, false);
+    assert.equal((await database.doc(`accounts/${uid}/drafts/current`).get()).exists, false);
+    assert.equal((await database.collection(`accounts/${uid}/publicationOperations`).get()).empty, true);
+    assert.equal((await bucket.file(orphan).exists())[0], true);
+  } finally { await auth.deleteUser(uid); }
+});
+
 test('without Storage text-only publication and withdrawal work, photos fail before journal writes', async () => {
   await saveFixture();
   const api = service({ bucket: null });
@@ -271,6 +310,46 @@ test('concurrent separate publishes use CAS, at most one operation commits', asy
   assert.equal(results.filter((result) => result.status === 'fulfilled').length, 1);
   assert.equal(results.find((result) => result.status === 'rejected').reason.code, 'conflict');
   assert.equal((await database.collection('publicDocuments').get()).size, 1);
+});
+
+test('retry of a rejected Publish cleans copied media after a transient cleanup failure without publishing', async () => {
+  await saveFixture({ media: true });
+  let deletionAttempts = 0, copiedPath;
+  const faultyBucket = {
+    file(path) {
+      const file = bucket.file(path);
+      if (path === privatePath) return {
+        getMetadata: (...args) => file.getMetadata(...args),
+        async download(...args) {
+          const bytes = await file.download(...args);
+          // Имитируем Save с другого клиента между prepare и финальным CAS.
+          await database.doc('accounts/owner/drafts/current').update({ mutationId: 'newer-save' });
+          return bytes;
+        },
+      };
+      copiedPath = path;
+      return {
+        save: (...args) => file.save(...args),
+        async delete(...args) {
+          if (++deletionAttempts === 1) throw new Error('temporary cleanup failure');
+          return file.delete(...args);
+        },
+      };
+    },
+  };
+  const api = service({ bucket: faultyBucket });
+  await assert.rejects(api.execute('owner', request()), rejected('conflict'));
+  assert.equal((await bucket.file(copiedPath).exists())[0], true);
+  assert.equal((await database.collection('publicDocuments').get()).empty, true);
+  const journalRef = database.doc('accounts/owner/publicationOperations/publish-operation');
+  assert.deepEqual((await journalRef.get()).data().cleanupPaths, [copiedPath]);
+
+  await assert.rejects(api.execute('owner', request()), rejected('conflict'));
+  assert.equal((await bucket.file(copiedPath).exists())[0], false);
+  assert.deepEqual((await journalRef.get()).data().cleanupPaths, []);
+  assert.equal((await journalRef.get()).data().status, 'failed');
+  assert.equal((await database.collection('publicDocuments').get()).empty, true);
+  assert.equal((await bucket.file(privatePath).exists())[0], true);
 });
 
 test('public JPEG is sanitized, token-free, version-bound and revoked by real Storage Rules', async () => {
