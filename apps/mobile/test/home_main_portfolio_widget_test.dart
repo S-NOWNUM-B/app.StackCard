@@ -90,7 +90,7 @@ void main() {
       // Описание выровнено по внутреннему отступу карточки раздела (с рамкой 1px).
       expect(
         tester.getRect(bio).left,
-        tester.getRect(find.byKey(const Key('main.section.bio'))).left +
+        _topLeft(tester, find.byKey(const Key('main.section.bio'))).dx +
             StackCardSpacing.cardPadding +
             1,
       );
@@ -100,6 +100,100 @@ void main() {
           matchesGoldenFile('/private/tmp/stackcard-home-profile-order.png'),
         );
       }
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('Home mounts bounded rows and reaches the last saved entries', (
+    tester,
+  ) async {
+    await _open(tester, saved: _largeWorkspace(200));
+    expect(find.byType(Scrollable), findsOneWidget);
+    Finder rows(String kind) => find.byWidgetPredicate(
+      (widget) =>
+          widget.key is ValueKey<String> &&
+          (widget.key! as ValueKey<String>).value.startsWith('main.$kind.'),
+      skipOffstage: false,
+    );
+    expect(rows('project').evaluate().length, lessThan(15));
+    expect(rows('experience').evaluate().length, lessThan(15));
+    expect(rows('education').evaluate().length, lessThan(15));
+    for (final key in [
+      'project.project199',
+      'experience.job29',
+      'education.school19',
+    ]) {
+      await _visible(tester, find.byKey(ValueKey('main.$key')));
+      expect(find.byKey(ValueKey('main.$key')), findsOneWidget);
+      expect(
+        tester
+            .getRect(find.byKey(ValueKey('main.$key')))
+            .overlaps(const Rect.fromLTWH(0, 0, 390, 844)),
+        isTrue,
+      );
+      expect(rows('project').evaluate().length, lessThan(15));
+      expect(rows('experience').evaluate().length, lessThan(15));
+      expect(rows('education').evaluate().length, lessThan(15));
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets(
+    'Home replaces scrolled content and preserves new section and row order',
+    (tester) async {
+      final container = await _open(tester, saved: _largeWorkspace(60));
+      await _visible(tester, find.byKey(const Key('main.project.project59')));
+      final small = _largeWorkspace(2);
+      final document = small.documents.single;
+      final updated = small.copyWith(
+        projects: [
+          for (final project in small.projects)
+            project.copyWith(title: 'Новый ${project.id}'),
+        ],
+        documents: [
+          document.copyWith(
+            projects: document.projects.reversed.toList(),
+            content: document.content.copyWith(
+              blocks: const [
+                PortfolioBlock(kind: PortfolioBlockKind.education),
+                PortfolioBlock(kind: PortfolioBlockKind.featuredProjects),
+                PortfolioBlock(kind: PortfolioBlockKind.experience),
+              ],
+            ),
+          ),
+        ],
+      );
+      (container.read(
+        portfolioDraftControllerProvider.notifier,
+      ) as _DraftController).replaceSaved(updated);
+      await tester.pumpAndSettle();
+      tester.state<ScrollableState>(find.byType(Scrollable)).position.jumpTo(0);
+      await tester.pumpAndSettle();
+      expect(
+        _topLeft(
+          tester,
+          find.byKey(const Key('main.section.education'), skipOffstage: false),
+        ).dy,
+        lessThan(
+          _topLeft(
+            tester,
+            find.byKey(const Key('main.section.projects'), skipOffstage: false),
+          ).dy,
+        ),
+      );
+      await _visible(tester, find.byKey(const Key('main.project.project0')));
+      expect(find.text('Новый project0'), findsOneWidget);
+      expect(find.text('Новый project1', skipOffstage: false), findsOneWidget);
+      expect(
+        _topLeft(
+          tester,
+          find.byKey(const Key('main.project.project1'), skipOffstage: false),
+        ).dy,
+        lessThan(
+          _topLeft(tester, find.byKey(const Key('main.project.project0'))).dy,
+        ),
+      );
+      expect(find.byKey(const Key('main.project.project59')), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
@@ -193,27 +287,42 @@ void main() {
       );
       await _open(tester, saved: saved, working: working);
 
-      final sections = [
-        find.byKey(const Key('main.portfolio.bio')),
-        for (final key in [
-          'education',
-          'links',
-          'projects',
-          'experience',
-          'skills',
-        ])
-          find.byKey(ValueKey('main.section.$key')),
-      ];
-      for (var index = 1; index < sections.length; index++) {
-        expect(
-          tester.getTopLeft(sections[index - 1]).dy,
-          lessThan(tester.getTopLeft(sections[index]).dy),
+      final positions = <double>[];
+      for (final title in [
+        'О себе',
+        'Образование',
+        'Контакты и ссылки',
+        'Реализованные проекты',
+        'Опыт работы',
+        'Навыки',
+      ]) {
+        final heading = find.text(title);
+        await _visible(tester, heading);
+        positions.add(
+          tester
+                  .state<ScrollableState>(find.byType(Scrollable))
+                  .position
+                  .pixels +
+              tester.getTopLeft(heading).dy,
         );
       }
-      expect(find.text('Реализованные проекты'), findsOneWidget);
-      expect(find.text('Опыт работы'), findsOneWidget);
+      for (var index = 1; index < positions.length; index++) {
+        expect(positions[index - 1], lessThan(positions[index]));
+      }
+      tester.state<ScrollableState>(find.byType(Scrollable)).position.jumpTo(0);
+      await tester.pumpAndSettle();
+      await _visible(tester, find.byKey(const Key('main.project.first')));
       expect(
-        tester.getTopLeft(find.byKey(const Key('main.project.second'))).dy,
+        find.text('Реализованные проекты', skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(find.text('Опыт работы', skipOffstage: false), findsOneWidget);
+      expect(
+        tester
+            .getTopLeft(
+              find.byKey(const Key('main.project.second'), skipOffstage: false),
+            )
+            .dy,
         lessThan(
           tester.getTopLeft(find.byKey(const Key('main.project.first'))).dy,
         ),
@@ -382,14 +491,24 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(
-      tester.getTopLeft(find.byKey(const Key('main.section.education'))).dy,
+      tester
+          .getTopLeft(
+            find.byKey(
+              const Key('main.section.education'),
+              skipOffstage: false,
+            ),
+          )
+          .dy,
       lessThan(
         tester.getTopLeft(find.byKey(const Key('main.section.legacyText'))).dy,
       ),
     );
     expect(find.text('Прежний дополнительный текст'), findsOneWidget);
     for (final key in ['links', 'skills', 'projects', 'experience']) {
-      expect(find.byKey(ValueKey('main.section.$key')), findsNothing);
+      expect(
+        find.byKey(ValueKey('main.section.$key'), skipOffstage: false),
+        findsNothing,
+      );
     }
     expect(tester.takeException(), isNull);
   });
@@ -850,9 +969,7 @@ void main() {
     );
     expect(find.byType(StackCardButton), findsNWidgets(2));
     expect(tester.takeException(), isNull);
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('main.project.project')),
-    );
+    await _visible(tester, find.byKey(const ValueKey('main.project.project')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('main.project.project')), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -1056,6 +1173,53 @@ final _pdfBytes = Uint8List.fromList(
 const _legacyAvatarUrl = 'https://images.example.com/saved-avatar.jpg';
 final _legacyAvatarBytes = Uint8List.fromList([1, 2, 3]);
 
+PortfolioContent _largeWorkspace(int projectCount) {
+  final base = _workspace('Ленивое портфолио');
+  final projects = [
+    for (var index = 0; index < projectCount; index++)
+      PortfolioProject(
+        id: 'project$index',
+        title: 'Проект $index',
+        description: 'Описание проекта $index',
+        technologies: const [],
+      ),
+  ];
+  final document = base.documents.single;
+  return base.copyWith(
+    projects: projects,
+    documents: [
+      document.copyWith(
+        projects: [
+          for (final project in projects)
+            PortfolioProjectAttachment(projectId: project.id),
+        ],
+        content: document.content.copyWith(
+          experience: [
+            for (var index = 0; index < 30; index++)
+              Experience(
+                id: 'job$index',
+                role: 'Работа $index',
+                organization: 'Компания',
+                period: '2025–2026',
+                description: 'Разработка',
+              ),
+          ],
+          education: [
+            for (var index = 0; index < 20; index++)
+              Education(
+                id: 'school$index',
+                institution: 'Школа $index',
+                qualification: 'Software Engineering',
+                period: '2023–2027',
+                description: 'Обучение',
+              ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
 Future<void> _openProjectView(
   WidgetTester tester, {
   required _Links links,
@@ -1241,11 +1405,24 @@ Future<ProviderContainer> _open(
   return container;
 }
 
+Offset _topLeft(WidgetTester tester, Finder finder) {
+  final render = tester.element(finder).findRenderObject()!;
+  return MatrixUtils.transformPoint(render.getTransformTo(null), Offset.zero);
+}
+
+Future<void> _visible(WidgetTester tester, Finder finder) async {
+  if (finder.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(finder, 500, maxScrolls: 200);
+  }
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+}
+
 StackCardButton _button(WidgetTester tester, String key) =>
     tester.widget<StackCardButton>(find.byKey(ValueKey(key)));
 Future<void> _tap(WidgetTester tester, String key, {bool settle = true}) async {
   final finder = find.byKey(ValueKey(key));
-  await tester.ensureVisible(finder);
+  await _visible(tester, finder);
   await tester.tap(finder);
   if (key == 'home.share') {
     await tester.pump(const Duration(milliseconds: 300));

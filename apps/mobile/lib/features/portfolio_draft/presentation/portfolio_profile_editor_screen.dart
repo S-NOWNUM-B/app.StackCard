@@ -144,7 +144,6 @@ class _PortfolioProfileEditorScreenState
                   PortfolioMediaEditor(
                     key: _mediaKey,
                     titleKey: 'media.avatar',
-                    maxImages: 1,
                     paths: _avatarPaths,
                     onChanged: (paths) => setState(() => _avatarPaths = paths),
                     onBusyChanged: (busy) => setState(() => _mediaBusy = busy),

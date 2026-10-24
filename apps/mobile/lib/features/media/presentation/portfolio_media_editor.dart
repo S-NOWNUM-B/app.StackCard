@@ -19,7 +19,6 @@ class PortfolioMediaEditor extends ConsumerStatefulWidget {
     required this.paths,
     required this.onChanged,
     required this.onBusyChanged,
-    this.maxImages = 1,
     this.titleKey = 'media.avatar',
     this.enabled = true,
     this.emptyState,
@@ -29,7 +28,6 @@ class PortfolioMediaEditor extends ConsumerStatefulWidget {
   final List<String> paths;
   final ValueChanged<List<String>> onChanged;
   final ValueChanged<bool> onBusyChanged;
-  final int maxImages;
   final String titleKey;
   final bool enabled;
   final Widget? emptyState;
@@ -55,16 +53,19 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
   @override
   void didUpdateWidget(covariant PortfolioMediaEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_busy &&
-        (!listEquals(oldWidget.paths, widget.paths) ||
-            oldWidget.hasExternalAvatar != widget.hasExternalAvatar)) {
+    if (!listEquals(oldWidget.paths, widget.paths) ||
+        oldWidget.hasExternalAvatar != widget.hasExternalAvatar) {
+      final wasBusy = _busy;
       _generation++;
       _busy = false;
       _prepared = null;
       _failure = null;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) widget.onBusyChanged(false);
-      });
+      _operationRepository = null;
+      if (wasBusy) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) widget.onBusyChanged(false);
+        });
+      }
     }
   }
 
@@ -211,11 +212,11 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
   }
 
   Future<void> _menu(List<String> paths) async {
-    if (_busy ||
-        !widget.enabled ||
-        ref.read(portfolioMediaRepositoryProvider) == null) {
-      return;
-    }
+    final repository = ref.read(portfolioMediaRepositoryProvider);
+    if (_busy || !widget.enabled || repository == null) return;
+    final generation = _generation;
+    final initialPaths = List.of(widget.paths);
+    final initialExternalAvatar = widget.hasExternalAvatar;
     final selection = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
@@ -257,7 +258,15 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
         ),
       ),
     );
-    if (!mounted) return;
+    // Меню принадлежит тому owner и аватару, для которых оно было открыто.
+    if (!mounted ||
+        !widget.enabled ||
+        generation != _generation ||
+        !identical(repository, ref.read(portfolioMediaRepositoryProvider)) ||
+        !listEquals(initialPaths, widget.paths) ||
+        initialExternalAvatar != widget.hasExternalAvatar) {
+      return;
+    }
     if (selection == 'gallery') await _pick(PortfolioImageSource.gallery);
     if (selection == 'camera') await _pick(PortfolioImageSource.camera);
     if (selection == 'remove' && listEquals(paths, widget.paths)) {

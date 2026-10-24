@@ -543,7 +543,6 @@ class _PortfolioDocumentEditorScreenState
                                 if (_content!.profile.avatarPath.isNotEmpty)
                                   _content!.profile.avatarPath,
                               ],
-                              maxImages: 1,
                               titleKey: 'documentEditor.photo',
                               enabled: !_saving,
                               onBusyChanged: (busy) {

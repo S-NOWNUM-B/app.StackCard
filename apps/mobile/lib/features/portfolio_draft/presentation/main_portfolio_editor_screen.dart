@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,6 +79,11 @@ class _MainPortfolioEditorScreenState
     extends ConsumerState<_MainPortfolioEditorBody> {
   final _formKey = GlobalKey<FormState>();
   final _mediaKey = GlobalKey<PortfolioMediaEditorState>();
+  final _scrollController = ScrollController();
+  double? _dragOrigin;
+  double? _dragCacheExtent;
+  Timer? _dragCleanup;
+  final _activePointers = <int>{};
   PortfolioDraftRepository? _repository;
   PortfolioDocument? _expected;
   PortfolioContent? _buffer;
@@ -100,6 +107,7 @@ class _MainPortfolioEditorScreenState
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_extendDragCache);
     _navigation = ref.read(mainPortfolioEditorNavigationProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _navigation!.attach(_navigationGuard);
@@ -108,6 +116,8 @@ class _MainPortfolioEditorScreenState
 
   @override
   void dispose() {
+    _dragCleanup?.cancel();
+    _scrollController.dispose();
     final navigation = _navigation;
     final guard = _navigationGuard;
     WidgetsBinding.instance.addPostFrameCallback(
@@ -115,6 +125,41 @@ class _MainPortfolioEditorScreenState
     );
     disposeBuilderFieldControllers(_fields);
     super.dispose();
+  }
+
+  void _startDrag(int index) {
+    if (!_scrollController.hasClients) return;
+    _dragCleanup?.cancel();
+    setState(() {
+      _dragOrigin = _scrollController.offset;
+      _dragCacheExtent = _scrollController.position.viewportDimension * 2;
+    });
+  }
+
+  void _extendDragCache() {
+    final origin = _dragOrigin;
+    if (origin == null || !_scrollController.hasClients) return;
+    final viewport = _scrollController.position.viewportDimension;
+    if (viewport <= 0) return;
+    final needed = (_scrollController.offset - origin).abs() + viewport * 2;
+    if (needed > (_dragCacheExtent ?? 0)) {
+      // Placeholder остаётся в cache при долгой edge-прокрутке; рост конечный.
+      setState(() => _dragCacheExtent = (needed / viewport).ceil() * viewport);
+    }
+  }
+
+  void _finishDrag([int? index]) {
+    if (_dragOrigin == null) return;
+    _dragCleanup?.cancel();
+    // SDK сначала завершает 250ms drop animation, затем освобождает placeholder.
+    _dragCleanup = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _dragOrigin = null;
+          _dragCacheExtent = null;
+        });
+      }
+    });
   }
 
   (Object?, String?, bool, bool) _owner({bool watch = false}) {
@@ -714,103 +759,127 @@ class _MainPortfolioEditorScreenState
       body = Form(
         key: _formKey,
         // Порядок разделов фиксирован; записи переставляются внутри раздела.
-        child: ListView(
-          key: const Key('main.editor.scroll'),
-          padding: const EdgeInsets.all(StackCardSpacing.lg),
-          scrollCacheExtent: const ScrollCacheExtent.viewport(3),
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_dirty || _saved) ...[
-                  Text(
-                    _dirty
-                        ? 'Есть несохранённые изменения'
-                        : 'Изменения сохранены',
-                    key: const Key('main.editor.status'),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: StackCardSpacing.lg),
-                ],
-                if (_conflict) ...[
-                  Text(
-                    'Сохранённая версия изменилась. Ваш ввод сохранён в редакторе.',
-                    style: TextStyle(color: context.colors.error),
-                  ),
-                  StackCardButton(
-                    label: 'Открыть сохранённую версию',
-                    onPressed: _reload,
-                  ),
-                  const SizedBox(height: StackCardSpacing.lg),
-                ],
-                if (_saveError) ...[
-                  Text(
-                    'Не удалось сохранить. Повторите попытку.',
-                    key: const Key('main.editor.error'),
-                    style: TextStyle(color: context.colors.error),
-                  ),
-                  const SizedBox(height: StackCardSpacing.lg),
-                ],
-                PortfolioMediaEditor(
-                  key: _mediaKey,
-                  maxImages: 1,
-                  titleKey: 'media.avatar',
-                  paths: [
-                    if (_buffer!.profile.avatarPath.isNotEmpty)
-                      _buffer!.profile.avatarPath,
-                  ],
-                  enabled: !_saving,
-                  hasExternalAvatar: _buffer!.profile.avatarUrl.isNotEmpty,
-                  emptyState: _buffer!.profile.avatarUrl.isEmpty
-                      ? null
-                      : StackCardAvatar(
-                          size: 128,
-                          url: _buffer!.profile.avatarUrl,
-                        ),
-                  onBusyChanged: (value) {
-                    if (mounted) setState(() => _mediaBusy = value);
-                  },
-                  onChanged: (paths) {
-                    if (!_sameOwner) return;
-                    setState(
-                      () => _buffer = _buffer!.copyWith(
-                        profile: _buffer!.profile.copyWith(
-                          avatarPath: paths.firstOrNull ?? '',
-                          avatarUrl: '',
-                        ),
+        child: Listener(
+          onPointerDown: (event) => _activePointers.add(event.pointer),
+          onPointerUp: (event) {
+            _activePointers.remove(event.pointer);
+            if (_activePointers.isEmpty) _finishDrag();
+          },
+          onPointerCancel: (event) {
+            _activePointers.remove(event.pointer);
+            if (_activePointers.isEmpty) _finishDrag();
+          },
+          child: CustomScrollView(
+            key: const Key('main.editor.scroll'),
+            controller: _scrollController,
+            scrollCacheExtent: _dragCacheExtent == null
+                ? const ScrollCacheExtent.viewport(.5)
+                : ScrollCacheExtent.pixels(_dragCacheExtent!),
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(StackCardSpacing.lg),
+                sliver: SliverMainAxisGroup(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_dirty || _saved) ...[
+                            Text(
+                              _dirty
+                                  ? 'Есть несохранённые изменения'
+                                  : 'Изменения сохранены',
+                              key: const Key('main.editor.status'),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(height: StackCardSpacing.lg),
+                          ],
+                          if (_conflict) ...[
+                            Text(
+                              'Сохранённая версия изменилась. Ваш ввод сохранён в редакторе.',
+                              style: TextStyle(color: context.colors.error),
+                            ),
+                            StackCardButton(
+                              label: 'Открыть сохранённую версию',
+                              onPressed: _reload,
+                            ),
+                            const SizedBox(height: StackCardSpacing.lg),
+                          ],
+                          if (_saveError) ...[
+                            Text(
+                              'Не удалось сохранить. Повторите попытку.',
+                              key: const Key('main.editor.error'),
+                              style: TextStyle(color: context.colors.error),
+                            ),
+                            const SizedBox(height: StackCardSpacing.lg),
+                          ],
+                          PortfolioMediaEditor(
+                            key: _mediaKey,
+                            titleKey: 'media.avatar',
+                            paths: [
+                              if (_buffer!.profile.avatarPath.isNotEmpty)
+                                _buffer!.profile.avatarPath,
+                            ],
+                            enabled: !_saving,
+                            hasExternalAvatar:
+                                _buffer!.profile.avatarUrl.isNotEmpty,
+                            emptyState: _buffer!.profile.avatarUrl.isEmpty
+                                ? null
+                                : StackCardAvatar(
+                                    size: 128,
+                                    url: _buffer!.profile.avatarUrl,
+                                  ),
+                            onBusyChanged: (value) {
+                              if (mounted) setState(() => _mediaBusy = value);
+                            },
+                            onChanged: (paths) {
+                              if (!_sameOwner) return;
+                              setState(
+                                () => _buffer = _buffer!.copyWith(
+                                  profile: _buffer!.profile.copyWith(
+                                    avatarPath: paths.firstOrNull ?? '',
+                                    avatarUrl: '',
+                                  ),
+                                ),
+                              );
+                              _changed();
+                            },
+                          ),
+                          const SizedBox(height: StackCardSpacing.lg),
+                          _field('name', 'Имя', 100),
+                          _field('headline', 'Должность', 160),
+                          _field('locationText', 'Город / Страна', 200),
+                          _field('bio', 'О себе', 4000, multiline: true),
+                        ],
                       ),
-                    );
-                    _changed();
-                  },
+                    ),
+                    for (
+                      var index = 0;
+                      index < mainPortfolioSectionKinds.length;
+                      index++
+                    )
+                      _editorSection(workspace!, index),
+                    SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_buffer!.resumeText.isNotEmpty) ...[
+                            _title('Дополнительно'),
+                            _field(
+                              'legacyText',
+                              'Дополнительный текст',
+                              20000,
+                              multiline: true,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: StackCardSpacing.lg),
-                _field('name', 'Имя', 100),
-                _field('headline', 'Должность', 160),
-                _field('locationText', 'Город / Страна', 200),
-                _field('bio', 'О себе', 4000, multiline: true),
-              ],
-            ),
-            for (
-              var index = 0;
-              index < mainPortfolioSectionKinds.length;
-              index++
-            )
-              _editorSection(workspace!, index),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_buffer!.resumeText.isNotEmpty) ...[
-                  _title('Дополнительно'),
-                  _field(
-                    'legacyText',
-                    'Дополнительный текст',
-                    20000,
-                    multiline: true,
-                  ),
-                ],
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -1000,6 +1069,9 @@ class _MainPortfolioEditorScreenState
     final section = switch (kind) {
       PortfolioBlockKind.links => BuilderTagsEditor(
         key: const Key('main.editor.contacts'),
+        sliver: true,
+        onReorderStart: _startDrag,
+        onReorderEnd: _finishDrag,
         title: 'Контакты и ссылки',
         items: _buffer!.links.map((link) => link.label).toList(),
         keyPrefix: 'main.editor.contact',
@@ -1028,6 +1100,9 @@ class _MainPortfolioEditorScreenState
       ),
       PortfolioBlockKind.skills => BuilderTagsEditor(
         key: const Key('main.editor.skills'),
+        sliver: true,
+        onReorderStart: _startDrag,
+        onReorderEnd: _finishDrag,
         title: 'Навыки',
         items: _buffer!.skills.map((skill) => skill.name).toList(),
         keyPrefix: 'main.editor.skill',
@@ -1118,12 +1193,12 @@ class _MainPortfolioEditorScreenState
           );
         },
       ),
-      _ => const SizedBox.shrink(),
+      _ => const SliverToBoxAdapter(),
     };
-    return Padding(
+    return SliverPadding(
       key: ValueKey('main.editor.section.${kind.name}'),
       padding: const EdgeInsets.only(bottom: StackCardSpacing.xl),
-      child: section,
+      sliver: section,
     );
   }
 
@@ -1135,70 +1210,52 @@ class _MainPortfolioEditorScreenState
     required int count,
     required Widget Function(int index) itemBuilder,
     required void Function(int oldIndex, int newIndex) onReorder,
-  }) => StackCardCard(
+    Key? cardKey,
+  }) => StackCardCard.sliver(
+    key: cardKey,
     outlined: true,
     padding: const EdgeInsets.all(StackCardSpacing.lg),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        BuilderSectionHeader(
-          title: title,
-          action: IconButton(
-            key: ValueKey(addKey),
-            tooltip: 'Добавить запись',
-            onPressed: _busy ? null : onAdd,
-            icon: const StackCardIcon(name: 'plus'),
+    child: SliverMainAxisGroup(
+      slivers: [
+        SliverToBoxAdapter(
+          child: BuilderSectionHeader(
+            title: title,
+            action: IconButton(
+              key: ValueKey(addKey),
+              tooltip: 'Добавить запись',
+              onPressed: _busy ? null : onAdd,
+              icon: const StackCardIcon(name: 'plus'),
+            ),
           ),
         ),
         if (count > 0) ...[
-          const SizedBox(height: StackCardSpacing.md),
-          // Вложенный список: запись двигается только внутри своего раздела.
-          ReorderableListView.builder(
+          const SliverToBoxAdapter(
+            child: SizedBox(height: StackCardSpacing.md),
+          ),
+          SliverReorderableList(
             key: ValueKey(orderKey),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            buildDefaultDragHandles: false,
-            padding: EdgeInsets.zero,
             itemCount: count,
             itemBuilder: (_, index) => itemBuilder(index),
             onReorderItem: onReorder,
+            onReorderStart: _startDrag,
+            onReorderEnd: _finishDrag,
+            proxyDecorator: (child, index, animation) =>
+                Material(type: MaterialType.transparency, child: child),
           ),
         ],
       ],
     ),
   );
 
-  Widget _projectsEditor(PortfolioContent workspace) => StackCardCard(
-    key: const Key('main.editor.projects'),
-    outlined: true,
-    padding: const EdgeInsets.all(StackCardSpacing.lg),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        BuilderSectionHeader(
-          title: 'Реализованные проекты',
-          action: IconButton(
-            key: const Key('main.editor.addProject'),
-            tooltip: 'Добавить проект',
-            onPressed: _busy ? null : _addProjects,
-            icon: const StackCardIcon(name: 'plus'),
-          ),
-        ),
-        if (_projects.isNotEmpty) ...[
-          const SizedBox(height: StackCardSpacing.md),
-          ReorderableListView.builder(
-            key: const Key('main.editor.projectOrder'),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            buildDefaultDragHandles: false,
-            padding: EdgeInsets.zero,
-            itemCount: _projects.length,
-            itemBuilder: (_, index) => _projectRow(workspace, index),
-            onReorderItem: _reorderProject,
-          ),
-        ],
-      ],
-    ),
+  Widget _projectsEditor(PortfolioContent workspace) => _recordsEditor(
+    'Реализованные проекты',
+    'main.editor.addProject',
+    _addProjects,
+    orderKey: 'main.editor.projectOrder',
+    count: _projects.length,
+    cardKey: const Key('main.editor.projects'),
+    onReorder: _reorderProject,
+    itemBuilder: (index) => _projectRow(workspace, index),
   );
 
   Widget _projectRow(PortfolioContent workspace, int index) {
@@ -1206,7 +1263,12 @@ class _MainPortfolioEditorScreenState
     final project = workspace.projects
         .where((item) => item.id == attachment.projectId)
         .firstOrNull;
-    if (project == null) return const SizedBox.shrink();
+    if (project == null) {
+      // Scoped Library delete не сбрасывает локальный buffer до явного reload.
+      return SizedBox.shrink(
+        key: ValueKey('main.editor.project.${attachment.projectId}'),
+      );
+    }
     final handle = Semantics(
       label: 'Изменить порядок проекта ${project.title}',
       hint: 'Удерживайте точки и перетащите',
