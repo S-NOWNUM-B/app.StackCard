@@ -725,6 +725,78 @@ void main() {
   );
 
   testWidgets(
+    'failed Save from exit confirmation keeps editor input and explicit retry saves it',
+    (tester) async {
+      final memory = await _repository(name: 'Сохранённое имя');
+      final before = (await memory.read())!;
+      final repository = _FailsOnce(memory);
+      final container = await _open(tester, repository);
+      await _enter(tester, 'name', 'Несохранённое имя');
+      var leaving = container.read(mainPortfolioEditorNavigationProvider)!();
+      await tester.pumpAndSettle();
+      await _tap(tester, 'main.editor.leave.save');
+      expect(await leaving, isFalse);
+      expect(find.byType(MainPortfolioEditorScreen), findsOneWidget);
+      expect(find.byKey(const Key('main.editor.error')), findsOneWidget);
+      expect(_value(tester, 'main.editor.name'), 'Несохранённое имя');
+      expect((await memory.read())!.revision, before.revision);
+      expect(
+        mainPortfolioDocument((await memory.read())!.content!)!
+            .content
+            .profile
+            .name,
+        'Сохранённое имя',
+      );
+      leaving = container.read(mainPortfolioEditorNavigationProvider)!();
+      await tester.pumpAndSettle();
+      await _tap(tester, 'main.editor.leave.save');
+      expect(await leaving, isTrue);
+      expect((await memory.read())!.revision, before.revision + 1);
+      expect(
+        mainPortfolioDocument((await memory.read())!.content!)!
+            .content
+            .profile
+            .name,
+        'Несохранённое имя',
+      );
+      expect((await memory.read())!.notes, 'private');
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final action in ['save', 'discard']) {
+    testWidgets('old exit confirmation $action cannot mutate the next owner', (
+      tester,
+    ) async {
+      final first = await _repository(name: 'Первый владелец');
+      final second = await _repository(name: 'Второй владелец');
+      final firstBefore = (await first.read())!;
+      final secondBefore = (await second.read())!;
+      final container = await _open(tester, first);
+      await _enter(tester, 'name', 'Секрет первого владельца');
+      final leaving = container.read(mainPortfolioEditorNavigationProvider)!();
+      await tester.pumpAndSettle();
+      expect(find.byKey(Key('main.editor.leave.$action')), findsOneWidget);
+      container.updateOverrides([
+        portfolioDraftRepositoryProvider.overrideWithValue(second),
+      ]);
+      await tester.pumpAndSettle();
+      expect(_value(tester, 'main.editor.name'), 'Второй владелец');
+      expect(find.text('Секрет первого владельца'), findsNothing);
+      await _tap(tester, 'main.editor.leave.$action');
+      expect(await leaving, isFalse);
+      expect((await first.read())!.revision, firstBefore.revision);
+      expect((await second.read())!.revision, secondBefore.revision);
+      expect(_value(tester, 'main.editor.name'), 'Второй владелец');
+      expect(
+        container.read(portfolioDraftControllerProvider).hasUnsavedChanges,
+        isFalse,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets(
     'fresh editor initializes main without attaching existing library projects',
     (tester) async {
       final repository = MemoryPortfolioDraftRepository();

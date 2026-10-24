@@ -1,0 +1,479 @@
+{
+  "date": "2026-10-24",
+  "scope": "Post-Phase19 user-requested coverage audit and regression tests; no runtime, dependencies, denominator or CI threshold changes",
+  "status": "completed",
+  "baseline": {
+    "coveredLines": 13492,
+    "executableLines": 15530,
+    "linePercent": 86.87701223438506,
+    "reportedFiles": 175,
+    "runtimeDartFiles": 207,
+    "unreportedFiles": [
+      "lib/core/localization/auth_strings.dart",
+      "lib/core/localization/builder_form_strings.dart",
+      "lib/core/localization/builder_integration_strings.dart",
+      "lib/core/localization/builder_strings.dart",
+      "lib/core/localization/document_editor_strings.dart",
+      "lib/core/localization/document_publication_strings.dart",
+      "lib/core/localization/draft_strings.dart",
+      "lib/core/localization/github_strings.dart",
+      "lib/core/localization/github_sync_strings.dart",
+      "lib/core/localization/inbox_strings.dart",
+      "lib/core/localization/location_strings.dart",
+      "lib/core/localization/media_strings.dart",
+      "lib/core/localization/mobile_parity_strings.dart",
+      "lib/core/localization/settings_management_strings.dart",
+      "lib/core/localization/suggestion_strings.dart",
+      "lib/core/localization/sync_strings.dart",
+      "lib/core/localization/workspace_strings.dart",
+      "lib/core/theme/stackcard_tokens.dart",
+      "lib/features/auth/auth.dart",
+      "lib/features/auth/domain/auth_repository.dart",
+      "lib/features/github_import/domain/github_import_repository.dart",
+      "lib/features/github_import/github_import.dart",
+      "lib/features/inbox/inbox.dart",
+      "lib/features/media/media.dart",
+      "lib/features/notifications/notifications.dart",
+      "lib/features/portfolio/portfolio.dart",
+      "lib/features/portfolio_draft/portfolio_draft.dart",
+      "lib/features/profile/domain/profile_repository.dart",
+      "lib/features/profile/profile.dart",
+      "lib/features/projects/domain/projects_repository.dart",
+      "lib/features/projects/projects.dart",
+      "lib/features/settings/developer_profile_screen.dart"
+    ],
+    "runtimeSourceSha256": "1617e52320adcc530413897fbed576b4b1ae71c9f258075f34213243f31c51d6",
+    "lcovSha256": "4af5073bd5ff2a18874ee929fe5d1c552de1b7e971cd7393a60daf8da9f3191b",
+    "scope": "Executable DA lines reported by Flutter; no filters. Unreported files listed separately.",
+    "minimumExclusive": 40,
+    "passed": true
+  },
+  "classificationCounts": {
+    "abstract_repository_contract": 4,
+    "constant_design_tokens": 1,
+    "constant_translation_catalog": 17,
+    "export_only": 9,
+    "unreachable_legacy_widget": 1
+  },
+  "reviewedFiles": [
+    {
+      "path": "lib/core/localization/auth_strings.dart",
+      "sha256": "48b12f21e9bae4ed93cd1a0a5994ea3b36f1ce1581f395adc306abdad91eec4b",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianAuthStrings",
+        "englishAuthStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/builder_form_strings.dart",
+      "sha256": "b2a35568292883b9459140acb7585b9b198a710db95a3a1653acf195fb3e8242",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "builderFormRussianStrings",
+        "builderFormEnglishStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/builder_integration_strings.dart",
+      "sha256": "fb791f854b5c0a92dd5e4a98f44214895135ac51a3466c7a1445043d1421ab43",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "builderIntegrationRussianStrings",
+        "builderIntegrationEnglishStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/builder_strings.dart",
+      "sha256": "fc1839fd1b9182684501716cc6bb7598e5a936321b483b20280a56c6901f9265",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "builderRussianStrings",
+        "builderEnglishStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/document_editor_strings.dart",
+      "sha256": "565e9ca94d461ee572cd450c25806b447d80c1c4019b2f9dfb2cae0577699dd8",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianDocumentEditorStrings",
+        "englishDocumentEditorStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/document_publication_strings.dart",
+      "sha256": "c6073b0fd7857ce8f4dc910c8deb08d4806277e6c18d7dddb09a08f4ff3c1a0a",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianDocumentPublicationStrings",
+        "englishDocumentPublicationStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/draft_strings.dart",
+      "sha256": "1fb9277a271aba17be2da479988b4b2f5ff5b18ca5a4f574af53a4e62aafbd07",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianDraftStrings",
+        "englishDraftStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/github_strings.dart",
+      "sha256": "793aecd93068046abe8b9ff6d3f4376f56b3f27e9600cdd331878c42fbefa223",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianGitHubStrings",
+        "englishGitHubStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/github_sync_strings.dart",
+      "sha256": "47c4786887fa6bab6536ce2bca8b8e8f88086ae56ad45c1de4ea5ce97abd504f",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianGitHubSyncStrings",
+        "englishGitHubSyncStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/inbox_strings.dart",
+      "sha256": "64743224564856ed0d4c761694b597def76dc7a3209c9da25d6da70e829a0bd7",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianInboxStrings",
+        "englishInboxStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/location_strings.dart",
+      "sha256": "2f7bf69942402cb358ba63700201d73c015e8da900f676dc93dc626035ea5343",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianLocationStrings",
+        "englishLocationStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/media_strings.dart",
+      "sha256": "2516d763ce08107aa09ba98d41aae62c25bbd278575c6f9da0561ff925a7982f",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianMediaStrings",
+        "englishMediaStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/mobile_parity_strings.dart",
+      "sha256": "6a0daf05b3c808489b5e62138a733ebd1aa648b423b18062372d2c65378b3884",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianMobileParityStrings",
+        "englishMobileParityStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/settings_management_strings.dart",
+      "sha256": "6d99f76ae8bf055937a5bffcd97b428d9b4beeff7fa114e2712757d91a22478e",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianSettingsManagementStrings",
+        "englishSettingsManagementStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/suggestion_strings.dart",
+      "sha256": "ebb9255a754b19a40215f7a72783e83ea956c93f93de9f9a56f0c496aefcd980",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianSuggestionStrings",
+        "englishSuggestionStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/sync_strings.dart",
+      "sha256": "99c62ba1152960684c1e77521b516662baeeec7a9dc21345cb3e199399c97693",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianSyncStrings",
+        "englishSyncStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/localization/workspace_strings.dart",
+      "sha256": "6eb43cfacd53fa95a49c896823b503b7a9234b87b67fb1060ebaed367a51df93",
+      "reason": "Constant maps consumed by AppStrings; no executable functions; values are already checked by catalog parity/parameters tests.",
+      "declarations": [
+        "russianWorkspaceStrings",
+        "englishWorkspaceStrings"
+      ],
+      "evidence": [
+        "lib/core/localization/app_strings.dart",
+        "test/localization_test.dart"
+      ],
+      "classification": "constant_translation_catalog"
+    },
+    {
+      "path": "lib/core/theme/stackcard_tokens.dart",
+      "sha256": "74af34352b6e57cf78778ee6951d3854dcfb3ac315c0c2246f12373205619952",
+      "reason": "Static const values only, no executable methods. Existing shared widget/responsive/contrast tests exercise their consumers.",
+      "classification": "constant_design_tokens"
+    },
+    {
+      "path": "lib/features/auth/auth.dart",
+      "sha256": "efe33625f3fb756ff30beaa3b91e3731bbdc287aa7efe2ef0cb8f99ac6dd27bf",
+      "reason": "Public barrel only; executable implementation lives in exported files. Importing this file solely for coverage adds no behavior check.",
+      "classification": "export_only"
+    },
+    {
+      "path": "lib/features/auth/domain/auth_repository.dart",
+      "sha256": "564194654af3d82271143190bfc4a3debbfd052674b34bc2b06100c8639bea75",
+      "reason": "Method signatures only, no implementation body. Behavior is checked through implementations and controller/provider suites.",
+      "classification": "abstract_repository_contract"
+    },
+    {
+      "path": "lib/features/github_import/domain/github_import_repository.dart",
+      "sha256": "f967b915e4ac59af8c478b0e7f751bf4314dc9f320c7e22c5ebbd28cd1182fb6",
+      "reason": "Method signatures only, no implementation body. Behavior is checked through implementations and controller/provider suites.",
+      "classification": "abstract_repository_contract"
+    },
+    {
+      "path": "lib/features/github_import/github_import.dart",
+      "sha256": "b4256052746bbfc095afce5197b2cd74af75468c278a394c5994d522f5585cff",
+      "reason": "Public barrel only; executable implementation lives in exported files. Importing this file solely for coverage adds no behavior check.",
+      "classification": "export_only"
+    },
+    {
+      "path": "lib/features/inbox/inbox.dart",
+      "sha256": "f83e33a20d071ba30aa3dbd900247f5d7cbd962df80fb327d387326c14ca462a",
+      "reason": "Public barrel only; executable implementation lives in exported files. Importing this file solely for coverage adds no behavior check.",
+      "classification": "export_only"
+    },
+    {
+      "path": "lib/features/media/media.dart",
+      "sha256": "1ce60eeb1a813f88ce5f78529fbbe70161ac149dbf268c1a1d4eb10947567912",
+      "reason": "Public barrel only; executable implementation lives in exported files. Importing this file solely for coverage adds no behavior check.",
+      "classification": "export_only"
+    },
+    {
+      "path": "lib/features/notifications/notifications.dart",
+      "sha256": "4d6a1888dc4dad42cd61ff9e0f559d55111be2245be8833a18d907b8fbcc0ecd",
+      "reason": "Public barrel only; executable implementation lives in exported files. Importing this file solely for coverage adds no behavior check.",
+      "classification": "export_only"
+    },
+    {
+      "path": "lib/features/portfolio/portfolio.dart",
+      "sha256": "cfe34d17b0b7c41bf5a5290a095282f707a5dcc35c095e1bf500e8b9920ecf43",
+      "reason": "Public barrel only; executable implementation lives in exported files. Importing this file solely for coverage adds no behavior check.",
+      "classification": "export_only"
+    },
+    {
+      "path": "lib/features/portfolio_draft/portfolio_draft.dart",
+      "sha256": "92de1d29ba700c3a27745f4f35cd75e3ae37864e29f67bf5c8e5a017e05d21da",
+      "reason": "Public barrel only; executable implementation lives in exported files. Importing this file solely for coverage adds no behavior check.",
+      "classification": "export_only"
+    },
+    {
+      "path": "lib/features/profile/domain/profile_repository.dart",
+      "sha256": "ada59728c4a1fb9204efca87972fead8be06146b025675220a34e05857bdba93",
+      "reason": "Method signatures only, no implementation body. Behavior is checked through implementations and controller/provider suites.",
+      "classification": "abstract_repository_contract"
+    },
+    {
+      "path": "lib/features/profile/profile.dart",
+      "sha256": "09e45f63384e9b016327f84d0faf8e0c87ba518962c25544c4c25e019cbf5747",
+      "reason": "Public barrel only; executable implementation lives in exported files. Importing this file solely for coverage adds no behavior check.",
+      "classification": "export_only"
+    },
+    {
+      "path": "lib/features/projects/domain/projects_repository.dart",
+      "sha256": "b0e7ec85beebea62a35b449602ce6ddd0ce9efbb9afb810f838709c5fbc136c5",
+      "reason": "Method signatures only, no implementation body. Behavior is checked through implementations and controller/provider suites.",
+      "classification": "abstract_repository_contract"
+    },
+    {
+      "path": "lib/features/projects/projects.dart",
+      "sha256": "0533798147c9aa47d59a609d4a18c48ba464a290f735576f9abb58b9076dc8af",
+      "reason": "Public barrel only; executable implementation lives in exported files. Importing this file solely for coverage adds no behavior check.",
+      "classification": "export_only"
+    },
+    {
+      "path": "lib/features/settings/developer_profile_screen.dart",
+      "sha256": "b5d8b9b0cc7a35faa767e28992bdac85ecd4352ec056d7a05d6415c97c6574d4",
+      "reason": "Legacy widget has executable logic but no references/imports/instantiations in lib/test/integration_test/tool/test_driver. Current /settings/profile and /settings/contacts routes redirect to main Editor. Retained without deletion or artificial mounting tests.",
+      "referencesOutsideFile": [],
+      "evidence": [
+        "lib/app/app_router.dart",
+        "test/account_navigation_test.dart"
+      ],
+      "classification": "unreachable_legacy_widget"
+    }
+  ],
+  "addedRegressionTests": {
+    "count": 13,
+    "main_portfolio_controller_test.dart": [
+      "unexpected read/save failure preserves durable data, working profile and notes; explicit retry",
+      "owner changes during authoritative Save read; no writes to either account",
+      "CAS rejects concurrent durable change between read and write without losing local input"
+    ],
+    "document_publication_controller_test.dart": [
+      "journal clear fails after server ACK; recover by status without duplicate POST",
+      "completed ACK with foreign operationId or documentId is rejected",
+      "Delete ACK without deleted tombstone never removes private document",
+      "owner change while journal write waits prevents POST; old journal is isolated",
+      "late previous owner inventory cannot resurrect a revoked public URL"
+    ],
+    "main_portfolio_editor_widget_test.dart": [
+      "failed Save in exit dialog prevents leaving and retains input until successful explicit retry",
+      "old owner exit Save/Discard confirmations cannot mutate next owner"
+    ]
+  },
+  "validation": {
+    "focusedSuite": {
+      "tests": 63,
+      "status": "passed"
+    },
+    "fullSuite": {
+      "status": "passed",
+      "tests": 1399
+    },
+    "coverageChecker": "unchanged; actual executable DA denominator, no exclusions",
+    "nativeAndLive": "not rerun: changes affect only host tests and evidence, Phase19 native results remain separate",
+    "staticAnalysis": "PASS no issues",
+    "format": "PASS all336 Flutter source/test/tool files"
+  },
+  "coverageAfter": {
+    "coveredLines": 13495,
+    "executableLines": 15530,
+    "linePercent": 86.89632968448164,
+    "reportedFiles": 175,
+    "runtimeDartFiles": 207,
+    "unreportedFiles": [
+      "lib/core/localization/auth_strings.dart",
+      "lib/core/localization/builder_form_strings.dart",
+      "lib/core/localization/builder_integration_strings.dart",
+      "lib/core/localization/builder_strings.dart",
+      "lib/core/localization/document_editor_strings.dart",
+      "lib/core/localization/document_publication_strings.dart",
+      "lib/core/localization/draft_strings.dart",
+      "lib/core/localization/github_strings.dart",
+      "lib/core/localization/github_sync_strings.dart",
+      "lib/core/localization/inbox_strings.dart",
+      "lib/core/localization/location_strings.dart",
+      "lib/core/localization/media_strings.dart",
+      "lib/core/localization/mobile_parity_strings.dart",
+      "lib/core/localization/settings_management_strings.dart",
+      "lib/core/localization/suggestion_strings.dart",
+      "lib/core/localization/sync_strings.dart",
+      "lib/core/localization/workspace_strings.dart",
+      "lib/core/theme/stackcard_tokens.dart",
+      "lib/features/auth/auth.dart",
+      "lib/features/auth/domain/auth_repository.dart",
+      "lib/features/github_import/domain/github_import_repository.dart",
+      "lib/features/github_import/github_import.dart",
+      "lib/features/inbox/inbox.dart",
+      "lib/features/media/media.dart",
+      "lib/features/notifications/notifications.dart",
+      "lib/features/portfolio/portfolio.dart",
+      "lib/features/portfolio_draft/portfolio_draft.dart",
+      "lib/features/profile/domain/profile_repository.dart",
+      "lib/features/profile/profile.dart",
+      "lib/features/projects/domain/projects_repository.dart",
+      "lib/features/projects/projects.dart",
+      "lib/features/settings/developer_profile_screen.dart"
+    ],
+    "runtimeSourceSha256": "1617e52320adcc530413897fbed576b4b1ae71c9f258075f34213243f31c51d6",
+    "lcovSha256": "e04799f7de9edd180ebe966c7111ee543404275996de1f6ca0e1b8e06e6287e8",
+    "scope": "Executable DA lines reported by Flutter; no filters. Unreported files listed separately.",
+    "minimumExclusive": 40,
+    "passed": true
+  },
+  "coverageChange": {
+    "additionalCoveredLines": 3,
+    "percentagePoints": 0.01931745009657959,
+    "runtimeSourceUnchanged": true,
+    "denominatorUnchanged": true,
+    "unreportedInventoryUnchanged": true
+  }
+}

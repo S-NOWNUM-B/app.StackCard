@@ -36,6 +36,20 @@
 
 ## Статус и границы текущей работы
 
+**2026-10-24: дополнительный аудит Flutter coverage завершён по запросу пользователя.**
+Проверены все32 файла вне LCOV:17 constant translation catalogs,9 export-only
+barrels,4 abstract repository contracts,1 constant token file и1 неиспользуемый
+legacy `DeveloperProfileScreen`. Последний не импортируется/не открывается runtime;
+старые settings/profile/contact URL переводятся в main Editor, что проверяется
+existing navigation tests. Файлы не исключались из checker и не удалялись ради метрики.
+Добавлены13 регрессий: ошибки scoped Save/read и CAS, owner transition во время
+Save/journal/inventory/exit confirmation, отказ очистки publication journal и
+status recovery без повторного POST, чужие ACK IDs и Delete без tombstone.
+Focused63 и полный1399 tests PASS, analyze/format PASS. LCOV13495/15530 =86,90%
+(было13492/15530 =86,88%); runtime source hash, denominator и список32 unreported
+не изменились. [Пофайловый аудит и результаты](evidence/phase19/coverage-audit.json).
+Runtime/dependencies/CI threshold не менялись; native/live suites повторно не запускались.
+
 **2026-10-24: Phase19 — Production hardening завершена.** Бесплатная opt-in
 диагностика доставлена и проверена в Android/iOS Crashlytics Console: фиксированный
 код, очищенный stack, без app UID/contact/token/private content. Исправлены HTTP

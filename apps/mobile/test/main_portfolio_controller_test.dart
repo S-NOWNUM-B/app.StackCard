@@ -30,6 +30,178 @@ ProviderContainer _scope(PortfolioDraftRepository repository) {
 }
 
 void main() {
+  for (final stage in ['read', 'save']) {
+    test(
+      'Main Save unexpected $stage failure retains private input and retries explicitly',
+      () async {
+        final memory = MemoryPortfolioDraftRepository();
+        final original = _doc('main', 'Saved');
+        await memory.save(
+          PortfolioContent(mainPortfolioId: 'main', documents: [original]),
+          expectedRevision: 0,
+          notes: 'Saved private note',
+        );
+        final repository = _ControlledRepository(memory);
+        final scope = _scope(repository);
+        final controller = scope.read(
+          portfolioDraftControllerProvider.notifier,
+        );
+        await controller.load();
+        final edited = original.copyWith(
+          content: original.content.copyWith(
+            profile: const PortfolioProfile(name: 'Working input'),
+          ),
+        );
+        controller.updateContent(
+          scope
+              .read(portfolioDraftControllerProvider)
+              .content!
+              .copyWith(documents: [edited]),
+        );
+        controller.updateNotes('Unsaved private note');
+        if (stage == 'read') {
+          repository.beforeRead = () async =>
+              throw StateError('private storage details');
+        } else {
+          repository.beforeSave = () async =>
+              throw StateError('private storage details');
+        }
+        expect(
+          await controller.saveMainPortfolio(
+            edited,
+            expectedDocument: original,
+            expectedRepository: repository,
+          ),
+          isFalse,
+        );
+        final failed = scope.read(portfolioDraftControllerProvider);
+        expect(failed.failure?.kind, PortfolioDraftFailureKind.unavailable);
+        expect(failed.saving, isFalse);
+        expect(failed.hasUnsavedChanges, isTrue);
+        expect(mainPortfolioDocument(failed.content!), edited);
+        expect(failed.notes, 'Unsaved private note');
+        expect(
+          mainPortfolioDocument((await memory.read())!.content!),
+          original,
+        );
+        expect((await memory.read())!.revision, 1);
+        repository.beforeRead = null;
+        repository.beforeSave = null;
+        expect(
+          await controller.saveMainPortfolio(
+            edited,
+            expectedDocument: original,
+            expectedRepository: repository,
+          ),
+          isTrue,
+        );
+        expect(mainPortfolioDocument((await memory.read())!.content!), edited);
+        expect((await memory.read())!.revision, 2);
+        expect((await memory.read())!.notes, 'Saved private note');
+        expect(
+          scope.read(portfolioDraftControllerProvider).notes,
+          'Unsaved private note',
+        );
+      },
+    );
+  }
+
+  test('Owner replacement during authoritative Main Save read prevents both writes', () async {
+    final memory = MemoryPortfolioDraftRepository();
+    final original = _doc('main', 'First owner');
+    await memory.save(
+      PortfolioContent(mainPortfolioId: 'main', documents: [original]),
+      expectedRevision: 0,
+      notes: 'First private note',
+    );
+    final repository = _ControlledRepository(memory);
+    final scope = _scope(repository);
+    final controller = scope.read(portfolioDraftControllerProvider.notifier);
+    await controller.load();
+    final reading = Completer<void>();
+    final release = Completer<void>();
+    repository.beforeRead = () async {
+      reading.complete();
+      await release.future;
+    };
+    final saving = controller.saveMainPortfolio(
+      original,
+      expectedDocument: original,
+      expectedRepository: repository,
+    );
+    await reading.future;
+    final second = MemoryPortfolioDraftRepository();
+    scope.updateOverrides([
+      portfolioDraftRepositoryProvider.overrideWithValue(second),
+    ]);
+    await scope.pump();
+    await scope.read(portfolioDraftControllerProvider.notifier).load();
+    release.complete();
+    expect(await saving, isFalse);
+    expect(repository.saveCalls, 0);
+    expect((await memory.read())!.revision, 1);
+    expect(await second.read(), isNull);
+    expect(scope.read(portfolioDraftControllerProvider).notes, isEmpty);
+    expect(scope.read(portfolioDraftControllerProvider).content, isNull);
+  });
+
+  test('Concurrent durable change between Main Save read and write rejects CAS without losing input', () async {
+    final memory = MemoryPortfolioDraftRepository();
+    final original = _doc('main', 'Saved');
+    final workspace = PortfolioContent(
+      mainPortfolioId: 'main',
+      documents: [original],
+    );
+    await memory.save(workspace, expectedRevision: 0, notes: 'Private note');
+    final repository = _ControlledRepository(memory);
+    final scope = _scope(repository);
+    final controller = scope.read(portfolioDraftControllerProvider.notifier);
+    await controller.load();
+    final edited = original.copyWith(
+      content: original.content.copyWith(
+        profile: const PortfolioProfile(name: 'Local edit'),
+      ),
+    );
+    controller.updateContent(workspace.copyWith(documents: [edited]));
+    final remote = original.copyWith(
+      content: original.content.copyWith(
+        profile: const PortfolioProfile(name: 'Other device'),
+      ),
+    );
+    repository.beforeSave = () async {
+      await memory.save(
+        workspace.copyWith(documents: [remote]),
+        expectedRevision: 1,
+        notes: 'Other device note',
+      );
+    };
+    expect(
+      await controller.saveMainPortfolio(
+        edited,
+        expectedDocument: original,
+        expectedRepository: repository,
+      ),
+      isFalse,
+    );
+    expect((await memory.read())!.revision, 2);
+    expect(mainPortfolioDocument((await memory.read())!.content!), remote);
+    expect((await memory.read())!.notes, 'Other device note');
+    expect(
+      mainPortfolioDocument(
+        scope.read(portfolioDraftControllerProvider).content!,
+      ),
+      edited,
+    );
+    expect(
+      scope.read(portfolioDraftControllerProvider).failure?.kind,
+      PortfolioDraftFailureKind.conflict,
+    );
+    expect(
+      scope.read(portfolioDraftControllerProvider).hasUnsavedChanges,
+      isTrue,
+    );
+  });
+
   test('Selected legacy document keeps ID/kind/archive without merging conflicting texts', () async {
     final repository = MemoryPortfolioDraftRepository();
     final a = _doc('a', 'Первый');
@@ -671,6 +843,36 @@ final class _DelayedRepository implements PortfolioDraftRepository {
   }) async {
     started.complete();
     await release.future;
+    return delegate.save(
+      content,
+      expectedRevision: expectedRevision,
+      notes: notes,
+    );
+  }
+}
+
+final class _ControlledRepository implements PortfolioDraftRepository {
+  _ControlledRepository(this.delegate);
+  final PortfolioDraftRepository delegate;
+  Future<void> Function()? beforeRead;
+  Future<void> Function()? beforeSave;
+  var saveCalls = 0;
+  @override
+  Future<PortfolioDraft?> read() async {
+    await beforeRead?.call();
+    return delegate.read();
+  }
+
+  @override
+  Future<PortfolioDraft> saveNotes(String notes) => delegate.saveNotes(notes);
+  @override
+  Future<PortfolioDraft> save(
+    PortfolioContent content, {
+    required int expectedRevision,
+    required String notes,
+  }) async {
+    saveCalls++;
+    await beforeSave?.call();
     return delegate.save(
       content,
       expectedRevision: expectedRevision,
