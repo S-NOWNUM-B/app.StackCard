@@ -1,0 +1,189 @@
+{
+  "date": "2026-10-24",
+  "project": "stackcard-dev-snownumb",
+  "baseCommit": "f266a3cab2cc360ba37bc0d6af3f19b824a69000",
+  "status": "passed_email_password_live_sync",
+  "actualEnvironment": {
+    "web": "Normal Next.js production build on local loopback, isolated headless Chrome, real Firebase client SDK",
+    "authEmulator": false,
+    "firestoreEmulator": false,
+    "androidHarnessExecuted": true,
+    "ordinaryAndroidAppChanged": true,
+    "ordinaryAndroidAppRestored": true,
+    "androidDevice": "emulator-5554",
+    "androidApplicationId": "dev.snownumb.stackcard"
+  },
+  "observed": {
+    "realEmailPasswordRegistration": "passed",
+    "firstCloudDraft": "passed after approved Rules update",
+    "webOnboardingAndSignInRestore": "passed",
+    "crossClientSync": "passed actual Next/Chrome and Android SDK with real Firebase",
+    "disposableAccountsAndDraftsDeleted": true,
+    "credentialsIncluded": false
+  },
+  "rulesReadback": {
+    "release": "projects/stackcard-dev-snownumb/releases/cloud.firestore",
+    "ruleset": "projects/stackcard-dev-snownumb/rulesets/866a7467-0413-4892-b04b-e2c16d33d577",
+    "updatedAt": "2026-10-10T04:12:16.725118Z",
+    "liveSupportedSchemas": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "currentWriterSchema": 7,
+    "liveSha256": "1f0169d543a189b2374c3f20e85c961b5f89e27f64a53f8ae2fe9da96bf36189",
+    "repositorySha256": "f24f9e0349966b12333fc55aa2cb7265767f0a342da10115c86551fb4c6b84b4"
+  },
+  "preparedCorrection": {
+    "source": "firebase/firestore.rules",
+    "sourceChanged": false,
+    "firestoreEmulatorRulesTests": {
+      "passed": 32,
+      "failed": 0
+    },
+    "firebaseRulesApiCompileOnly": {
+      "httpStatus": 200,
+      "issues": []
+    },
+    "published": true,
+    "reason": "Owner explicitly authorized Firestore Rules only on2026-10-24"
+  },
+  "remaining": [
+    "Google OAuth deferred by owner until APK testing",
+    "Real email delivery needs an accessible test mailbox"
+  ],
+  "excluded": [
+    "hosting",
+    "release",
+    "Functions",
+    "Storage",
+    "indexes",
+    "billing",
+    "Git publication"
+  ],
+  "publishedCorrection": {
+    "release": "projects/stackcard-dev-snownumb/releases/cloud.firestore",
+    "ruleset": "projects/stackcard-dev-snownumb/rulesets/ba14b24c-f173-4f02-98ec-e1defcc2ac80",
+    "updatedAt": "2026-10-24T14:40:35.968962Z",
+    "sameAsRepository": true,
+    "sha256": "f24f9e0349966b12333fc55aa2cb7265767f0a342da10115c86551fb4c6b84b4"
+  },
+  "diagnosticRuns": [
+    {
+      "afterRulesDeployment": true,
+      "passed": [
+        "real-web-registration-onboarding-sign-in-and-server-restore",
+        "real-android-read-web-save",
+        "real-web-read-android-and-save-roundtrip",
+        "android-offline-save-stays-local-before-ack",
+        "real-web-read-durable-android-outbox-and-account-isolation"
+      ],
+      "failure": "Immediate raw SDK foreign read after Auth switch returned a snapshot before Firestore identity B was independently proven; application old-A repository correctly refused access. Added positive server-B proof before the strict foreign denial assertion.",
+      "cleanup": true,
+      "ordinaryAppRestored": true
+    }
+  ],
+  "initialFailure": {
+    "realEmailPasswordRegistration": "passed: identitytoolkit accounts:signUp returned HTTP 200",
+    "firstCloudDraft": "failed: actual Firestore documents:commit returned HTTP 403 permission-denied",
+    "webOnboarding": "blocked before first step",
+    "crossClientSync": "not accepted: blocked before Android stage",
+    "disposableAccountsAndDraftsDeleted": true,
+    "credentialsIncluded": false
+  },
+  "acceptanceRun": {
+    "project": "stackcard-dev-snownumb",
+    "run": "f3858e57d6dcf12a2232c94179aec4ff",
+    "passed": [
+      "real-web-registration-onboarding-sign-in-and-server-restore",
+      "real-android-read-web-save",
+      "real-web-read-android-and-save-roundtrip",
+      "android-offline-save-stays-local-before-ack",
+      "real-web-read-durable-android-outbox-and-account-isolation",
+      "real-android-account-isolation-and-foreign-rules-denial",
+      "android-live-harness-completed"
+    ],
+    "cleanup": true,
+    "google": "deferred by user",
+    "emailDelivery": "no test mailbox",
+    "native": [
+      {
+        "checkpoint": "native_read_actual_web_seed",
+        "pid": 13114,
+        "phase": "native"
+      },
+      {
+        "checkpoint": "native_save_actual_server_ack",
+        "pid": 13114,
+        "phase": "native"
+      },
+      {
+        "checkpoint": "native_listener_actual_web_roundtrip",
+        "pid": 13114,
+        "phase": "native"
+      },
+      {
+        "checkpoint": "native_offline_exact_hive_outbox_restore",
+        "pid": 13114,
+        "phase": "native"
+      },
+      {
+        "checkpoint": "native_reconnected_actual_server_ack",
+        "pid": 13114,
+        "phase": "native"
+      },
+      {
+        "checkpoint": "native_server_b_identity_proven",
+        "pid": 13114,
+        "phase": "native"
+      },
+      {
+        "checkpoint": "native_uid_switch_actual_rules_and_local_isolation",
+        "pid": 13114,
+        "phase": "native"
+      },
+      {
+        "checkpoint": "cleanup",
+        "pid": 13114,
+        "phase": "cleanup",
+        "repositoriesClosed": true,
+        "storageClosed": true,
+        "writerStopped": true,
+        "namedSignedOut": true,
+        "namedAppDeleted": true,
+        "ownerDraftAbsent": true,
+        "ownerAuthDeleted": true,
+        "ownerSdkClosed": true,
+        "foreignDraftAbsent": true,
+        "foreignAuthDeleted": true,
+        "foreignSdkClosed": true,
+        "isolatedFilesDeleted": true,
+        "defaultSessionPreserved": true
+      },
+      {
+        "checkpoint": "all_pass",
+        "pid": 13114,
+        "phase": "native"
+      }
+    ],
+    "ordinaryAppRestored": true
+  },
+  "verification": {
+    "firestoreRulesTests": {
+      "passed": 32,
+      "failed": 0
+    },
+    "nativeHarnessAnalyze": "passed",
+    "nativeHarnessFormat": "passed",
+    "browserHarnessSyntaxAndFormat": "passed",
+    "serverIdentityBoundary": "Old A repository immediately refuses access; B own server read proves transport identity before strict A denial",
+    "offlineBoundary": "Exact Hive bytes/outbox reopen in same process, not a process restart"
+  },
+  "harnessSha256": {
+    "apps/web/tool/testing/live-cross-client.cjs": "e072b7478498cb9c812d82121bd78ec00f31bc305c0de99e84e20905348113db",
+    "apps/mobile/integration_test/cross_client_live_runtime_test.dart": "d6a159b5734eb1d2c16aa393852a113c6d20cc1f75359a5ab6557bbbfe613cd3"
+  }
+}
