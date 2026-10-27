@@ -17,6 +17,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/dialog_text_fit.dart';
+
 void main() {
   setUpAll(() async {
     final font = FontLoader('Manrope');
@@ -1148,6 +1150,28 @@ void main() {
       contacts.map((contact) => Uri.parse(contact.url)).toList(),
     );
   });
+  for (final size in dialogTextFitSizes) {
+    testWidgets(
+      'share choice dialog scrolls full text at text scale 2 on ${size.width.toInt()}x${size.height.toInt()}',
+      (tester) async {
+        useDialogTextFitSize(tester, size);
+        await _open(
+          tester,
+          saved: _workspace('Saved'),
+          publication: _PublicationController(published: true),
+          textScale: 2,
+        );
+        await tester.ensureVisible(find.byKey(const Key('home.share')));
+        await tester.tap(find.byKey(const Key('home.share')));
+        await tester.pumpAndSettle();
+        await expectDialogTextScrollable(tester, [
+          'Поделиться портфолио',
+          'Отправьте публичную ссылку или покажите карточку с QR-кодом.',
+        ]);
+        expect(find.text('Визитка и QR'), findsOneWidget);
+      },
+    );
+  }
   testWidgets(
     'share menu opens Developer Card without publishing or adding a Home action',
     (tester) async {
@@ -1156,8 +1180,8 @@ void main() {
       expect(find.byType(StackCardButton), findsNWidgets(2));
       await tester.tap(find.byKey(const Key('home.share')));
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('Developer Card и QR'), findsOneWidget);
-      await tester.tap(find.text('Developer Card и QR'));
+      expect(find.text('Визитка и QR'), findsOneWidget);
+      await tester.tap(find.text('Визитка и QR'));
       await tester.pumpAndSettle();
       expect(find.byType(DeveloperCardScreen), findsOneWidget);
       expect(publication.actions, isEmpty);

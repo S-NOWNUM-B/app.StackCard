@@ -22,6 +22,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'support/dialog_text_fit.dart';
+
 class _AuthRepository implements AccountAuthRepository {
   final requests = <String>[];
   final sessions = StreamController<AuthUser?>.broadcast();
@@ -758,11 +760,46 @@ void main() {
       expect(repository.requests, isEmpty);
       await _tap(tester, key);
       await tester.pump(const Duration(milliseconds: 300));
-      await tester.tap(find.text('Подтвердить'));
+      await tester.tap(find.text('Продолжить без сохранения'));
       await tester.pumpAndSettle();
       expect(repository.requests, [operation]);
       expect(find.text('Destination home'), findsOneWidget);
     });
+  }
+
+  for (final size in dialogTextFitSizes) {
+    testWidgets(
+      'Unsaved changes dialog scrolls full text at text scale 2 on ${size.width.toInt()}x${size.height.toInt()}',
+      (tester) async {
+        useDialogTextFitSize(tester, size);
+        final repository = _AuthRepository();
+        await _pumpAuth(tester, repository, textScale: 2);
+        final scope = ProviderScope.containerOf(
+          tester.element(find.byType(SignInScreen)),
+        );
+        scope.read(guestAccessProvider.notifier).enter();
+        await tester.pumpAndSettle();
+        final subscription = scope.listen(
+          portfolioDraftControllerProvider,
+          (_, _) {},
+        );
+        addTearDown(subscription.close);
+        await tester.pumpAndSettle();
+        scope
+            .read(portfolioDraftControllerProvider.notifier)
+            .editNotes('Unsaved guest notes');
+        await _tap(tester, 'account.google');
+        // Кнопка формы показывает индикатор, пока открыт диалог: без pumpAndSettle.
+        await tester.pump(const Duration(milliseconds: 300));
+        await expectDialogTextScrollable(tester, [
+          'Есть несохранённые изменения',
+          'При смене аккаунта несохранённые изменения будут потеряны.',
+        ]);
+        expect(find.text('Продолжить без сохранения'), findsOneWidget);
+        expect(find.text('Подтвердить'), findsNothing);
+        expect(repository.requests, isEmpty);
+      },
+    );
   }
 
   for (final locale in [const Locale('ru'), const Locale('en')]) {

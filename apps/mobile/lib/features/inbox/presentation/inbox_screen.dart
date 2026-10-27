@@ -174,7 +174,7 @@ class _InboxRequestScreenState extends ConsumerState<InboxRequestScreen> {
                   const SizedBox(height: StackCardSpacing.lg),
                   SelectableText(request.message),
                   const SizedBox(height: StackCardSpacing.md),
-                  Text(request.createdAt.toLocal().toString()),
+                  Text(_formatCreatedAt(context, request.createdAt)),
                   const SizedBox(height: StackCardSpacing.lg),
                   if (request.unread && _failure == null)
                     StackCardButton(
@@ -192,6 +192,14 @@ class _InboxRequestScreenState extends ConsumerState<InboxRequestScreen> {
       ),
     );
   }
+}
+
+// Дата и время заявки в локали приложения, как в остальных экранах.
+String _formatCreatedAt(BuildContext context, DateTime createdAt) {
+  final local = createdAt.toLocal();
+  final localizations = MaterialLocalizations.of(context);
+  return '${localizations.formatShortDate(local)} '
+      '${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(local))}';
 }
 
 class _InboxFailureView extends StatelessWidget {

@@ -542,7 +542,7 @@ void main() {
     await _tap(tester, find.byKey(_sessionAction), settle: false);
     await _tap(
       tester,
-      find.widgetWithText(StackCardButton, _strings.tr('common.confirm')),
+      find.widgetWithText(StackCardButton, _strings.tr('account.discard')),
     );
     expect(auth.signOutCalls, 1);
     expect(find.byType(SignInScreen), findsOneWidget);
