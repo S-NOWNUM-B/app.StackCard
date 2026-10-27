@@ -17,14 +17,14 @@ export function useSession() {
           setSession({
             user: null,
             loading: false,
-            error: 'Не удалось восстановить вход. Перезагрузите страницу.',
+            error: 'Не удалось восстановить вход. Перезагрузите страницу',
           }),
       );
     } catch (error) {
       setSession({
         user: null,
         loading: false,
-        error: error instanceof Error ? error.message : 'Ошибка настройки Firebase.',
+        error: error instanceof Error ? error.message : 'Ошибка настройки Firebase',
       });
     }
   }, []);

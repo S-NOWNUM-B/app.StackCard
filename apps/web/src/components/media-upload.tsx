@@ -3,6 +3,7 @@ import type { User } from 'firebase/auth';
 import { useState, useEffect, useRef } from 'react';
 import { firebaseServices } from '@/lib/firebase';
 import { safeHttpUrl } from '@/lib/model';
+import { userErrorMessage } from '@/lib/workspace-state';
 import {
   portfolioMediaRepository,
   prepareAvatar,
@@ -28,7 +29,7 @@ function useAvatar(user: User, path: string) {
       })
       .catch(() => {
         if (!cancelled && firebaseServices().auth.currentUser?.uid === user.uid)
-          setError('Фотография недоступна. Повторите попытку.');
+          setError('Фотография недоступна. Повторите попытку');
       });
     return () => {
       cancelled = true;
@@ -115,11 +116,7 @@ export function AvatarEditor({
       onChange(uploaded);
     } catch (failure) {
       if (valid())
-        setError(
-          failure instanceof Error
-            ? failure.message
-            : 'Не удалось загрузить фотографию. Повторите попытку.',
-        );
+        setError(userErrorMessage(failure, 'Не удалось загрузить фотографию. Повторите попытку'));
     } finally {
       if (alive.current && generation.current === operation) {
         setBusy(false);

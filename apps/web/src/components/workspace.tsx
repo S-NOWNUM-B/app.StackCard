@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from './auth-session';
 import { Button, Field, Header, Icon, LinkButton, Notice } from './ui';
+import { InlineIcon } from './inline-icon';
+import { DeveloperCardDialog } from './developer-card';
 import { ContentEditor } from './content-editor';
 import { AttachmentsEditor, emptyProject, ProjectForm } from './project-editor';
 import { GitHubImporter } from './github-importer';
@@ -15,6 +17,13 @@ import { useConfirmation } from './confirmation-dialog';
 import { readAvatarBytes, readLegacyAvatarBytes } from '@/lib/portfolio-media-repository';
 import { firebaseServices } from '@/lib/firebase';
 import { loadDraft, saveDraft } from '@/lib/draft-repository';
+import {
+  decodeWorkspaceHash,
+  joinMessages,
+  sameConfirmationContext,
+  userErrorMessage,
+} from '@/lib/workspace-state';
+import { pdfAvatarSource } from '@/lib/portfolio-pdf';
 import {
   inventory,
   publicationRequest,
@@ -33,6 +42,8 @@ import {
 import {
   clone,
   advancePersonalization,
+  BasisConflictError,
+  ContractError,
   emptyContent,
   equal,
   resolveDocument,
@@ -68,8 +79,7 @@ const canonicalGitHub = (value: string) => {
     return null;
   }
 };
-const errorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : 'Действие не завершено. Повторите попытку.';
+const errorMessage = (error: unknown) => userErrorMessage(error);
 export function ownerView(value: string): View {
   if (
     /^(home|projects|editor|github-import|settings|inbox|inbox\/[a-f0-9]{32}|project\/[A-Za-z0-9_-]+)$/.test(
@@ -115,7 +125,7 @@ export function Workspace({ initialView = 'home' }: { initialView?: string }) {
   return <OwnerWorkspace key={session.user.uid} user={session.user} initialView={initialView} />;
 }
 function OwnerWorkspace({ user, initialView }: { user: User; initialView: string }) {
-  const { confirm, confirmation } = useConfirmation();
+  const { confirm, choose, confirmation } = useConfirmation();
   const [basis, setBasis] = useState<DraftEnvelope | null>(null),
     [content, setContent] = useState<WorkspaceContent>(emptyContent),
     [notes, setNotes] = useState(''),
@@ -136,7 +146,11 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     [shareChoice, setShareChoice] = useState(false),
     [manualShareUrl, setManualShareUrl] = useState(''),
     [githubInput, setGitHubInput] = useState(''),
-    [avatarBusy, setAvatarBusy] = useState(false);
+    [avatarBusy, setAvatarBusy] = useState(false),
+    [conflict, setConflict] = useState(false),
+    [shareMenu, setShareMenu] = useState(false),
+    [cardOpen, setCardOpen] = useState(false),
+    [editorMode, setEditorMode] = useState<'form' | 'preview'>('form');
   const shareDialog = useRef<HTMLElement | null>(null);
   const initializationAttempt = useRef<{
     mutationId: string;
@@ -151,6 +165,12 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     previousContent?: WorkspaceContent;
     githubInput?: string;
   } | null>(null);
+  const migrationAttempt = useRef<{
+    mutationId: string;
+    basis: DraftEnvelope | null;
+    content: WorkspaceContent;
+    notes: string;
+  } | null>(null);
   const scopedAttempt = useRef<{
     mutationId: string;
     basis: DraftEnvelope | null;
@@ -161,7 +181,8 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   const input = useRef({ content, notes });
   input.current = { content, notes };
   const activeUid = useRef(user.uid),
-    shareAfter = useRef(false);
+    // Действие после подтверждённой публикации: отправить ссылку или открыть визитку.
+    afterPublish = useRef<'share' | 'card' | null>(null);
   const dirty =
     !equal(content, basis?.content ?? emptyContent()) ||
     notes !== (basis?.notes ?? '') ||
@@ -209,7 +230,12 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   async function confirmAction(message: string, title?: string) {
     const captured = confirmationContext.current;
     const accepted = await confirm(message, title);
-    return accepted && owned() && equal(captured, confirmationContext.current);
+    if (!accepted || !owned()) return false;
+    if (!sameConfirmationContext(captured, confirmationContext.current, equal)) {
+      setMessage('Данные изменились во время подтверждения. Повторите действие');
+      return false;
+    }
+    return true;
   }
   async function refreshInventory() {
     if (!owned()) return;
@@ -242,13 +268,9 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
           };
         }
         const attempt = initializationAttempt.current;
-        saved = await saveDraft(
-          user,
-          saved,
-          attempt.content,
-          saved?.notes ?? '',
-          attempt.mutationId,
-        );
+        saved = (
+          await saveDraft(user, saved, attempt.content, saved?.notes ?? '', attempt.mutationId)
+        ).draft;
         if (!currentRead()) return;
       }
       initializationAttempt.current = null;
@@ -258,6 +280,8 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       setNotes(saved.notes);
       saveAttempt.current = null;
       scopedAttempt.current = null;
+      migrationAttempt.current = null;
+      setConflict(false);
     } catch (e) {
       if (currentRead()) {
         setError(errorMessage(e));
@@ -271,10 +295,11 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     activeUid.current = user.uid;
     void reload();
     void refreshInventory();
+    // Битый hash ведёт на главный вид и не блокирует чтение квитанции.
+    if (window.location.hash.length > 1)
+      setView(ownerView(decodeWorkspaceHash(window.location.hash)));
     try {
       setPending(readPublicationReceipt(localStorage, operationKey));
-      const hash = decodeURIComponent(window.location.hash.slice(1));
-      if (hash) setView(ownerView(hash));
     } catch (e) {
       setReceiptError(errorMessage(e));
     }
@@ -310,31 +335,27 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     let navigationVersion = 0;
     async function history() {
       const version = ++navigationVersion;
-      const next = ownerView(decodeURIComponent(window.location.hash.slice(1)));
+      const next = ownerView(decodeWorkspaceHash(window.location.hash));
       if (busy || avatarBusy) {
         window.history.replaceState(null, '', `/workspace#${view}`);
         return;
       }
-      const accepted =
-        !dirtyRef.current ||
-        (await confirmAction('Есть несохранённые изменения. Отбросить их и перейти?'));
+      // Пока идёт выбор, адрес возвращается к текущему виду; переход только после решения.
+      if (dirtyRef.current) window.history.replaceState(null, '', `/workspace#${view}`);
+      const accepted = await resolveUnsavedRef.current();
       if (version !== navigationVersion || !owned()) return;
       if (!accepted) {
         window.history.replaceState(null, '', `/workspace#${view}`);
         return;
       }
-      if (dirtyRef.current) {
-        setContent(clone(basis?.content ?? emptyContent()));
-        setGitHubInput(basis?.content?.githubUsername ?? '');
-        setNotes(basis?.notes ?? '');
-        saveAttempt.current = null;
-      }
+      window.history.replaceState(null, '', `/workspace#${next}`);
       setView(next);
     }
-    window.addEventListener('popstate', history);
+    const listener = () => void history().catch((e) => setError(errorMessage(e)));
+    window.addEventListener('popstate', listener);
     return () => {
       navigationVersion++;
-      window.removeEventListener('popstate', history);
+      window.removeEventListener('popstate', listener);
     };
   }, [view, busy, avatarBusy, basis]);
   useEffect(() => {
@@ -369,20 +390,11 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   }, [shareChoice]);
   async function navigate(next: View, preserve = false) {
     if (busy || avatarBusy) return;
-    if (
-      !preserve &&
-      dirty &&
-      !(await confirmAction('Есть несохранённые изменения. Отбросить их и перейти?'))
-    )
-      return;
+    if (!preserve && dirty && !(await resolveUnsaved())) return;
     if (!owned()) return;
-    if (!preserve && dirty) {
-      setContent(clone(basis?.content ?? emptyContent()));
-      setGitHubInput(basis?.content?.githubUsername ?? '');
-      setNotes(basis?.notes ?? '');
-      saveAttempt.current = null;
-    }
     setView(next);
+    setEditorMode('form');
+    window.scrollTo({ top: 0 });
     setSearch('');
     window.history.pushState(null, '', `/workspace#${next}`);
   }
@@ -401,13 +413,13 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   }
   async function commitScoped(next: WorkspaceContent) {
     if (busy || avatarBusy || !owned() || blocked)
-      throw new Error('Дождитесь завершения предыдущего действия.');
+      throw new Error('Дождитесь завершения предыдущего действия');
     setBusy(true);
     setError('');
     try {
       let attempt = scopedAttempt.current;
       if (attempt && !equal(next, attempt.content))
-        throw new Error('Сначала подтвердите незавершённое изменение библиотеки кнопкой выше.');
+        throw new Error('Сначала подтвердите незавершённое изменение библиотеки кнопкой выше');
       if (!attempt) {
         const previous = clone(basis?.content ?? emptyContent());
         attempt = {
@@ -419,13 +431,24 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         };
         scopedAttempt.current = attempt;
       }
-      const saved = await saveDraft(
-        user,
-        attempt.basis,
-        attempt.content,
-        attempt.notes,
-        attempt.mutationId,
-      );
+      let result: Awaited<ReturnType<typeof saveDraft>>;
+      try {
+        result = await saveDraft(
+          user,
+          attempt.basis,
+          attempt.content,
+          attempt.notes,
+          attempt.mutationId,
+        );
+      } catch (e) {
+        // Definitive отказ: повтор того же attempt снова упрётся в тот же basis.
+        if (owned() && e instanceof ContractError) {
+          scopedAttempt.current = null;
+          if (e instanceof BasisConflictError) setConflict(true);
+        }
+        throw e;
+      }
+      const { draft: saved, superseded } = result;
       if (!owned()) return;
       setBasis(saved);
       setContent((working) => rebaseLibraryChange(saved.content!, attempt.previous, working));
@@ -435,16 +458,21 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
           : current,
       );
       scopedAttempt.current = null;
-      setMessage('Изменения библиотеки сохранены. Публичная версия не изменилась.');
+      setMessage(
+        superseded
+          ? 'Изменения библиотеки сохранены. На сервере уже есть более новая версия с другого устройства, она стала основой формы'
+          : 'Изменения библиотеки сохранены. Публичная версия не изменилась',
+      );
     } finally {
       if (owned()) setBusy(false);
     }
   }
-  async function save() {
-    if (blocked || busy || avatarBusy || !owned()) return;
+  // true — форма совпадает с подтверждённой версией и уход со страницы ничего не теряет.
+  async function save(): Promise<boolean> {
+    if (blocked || busy || avatarBusy || !owned()) return false;
     if (scopedAttempt.current) {
-      setError('Сначала подтвердите незавершённое изменение библиотеки кнопкой выше.');
-      return;
+      setError('Сначала подтвердите незавершённое изменение библиотеки кнопкой выше');
+      return false;
     }
     setBusy(true);
     setSaving(true);
@@ -463,14 +491,14 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         };
         saveAttempt.current = attempt;
       }
-      const saved = await saveDraft(
+      const { draft: saved, superseded } = await saveDraft(
         user,
         attempt.basis,
         attempt.content,
         attempt.notes,
         attempt.mutationId,
       );
-      if (!owned()) return;
+      if (!owned()) return false;
       const hasNewerInput =
         !equal(input.current.content, attempt.content) || input.current.notes !== attempt.notes;
       setBasis(saved);
@@ -478,25 +506,93 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         equal(current, attempt.content) ? (saved.content ?? emptyContent()) : current,
       );
       setNotes((current) => (current === attempt.notes ? saved.notes : current));
-      saveAttempt.current = null;
-      setMessage(
-        hasNewerInput
-          ? 'Сохранение подтверждено. Более поздние правки остались в форме; сохраните их отдельно.'
-          : 'Сохранено и подтверждено сервером. Публикация не изменилась.',
-      );
-    } catch (e) {
-      if (owned())
-        setError(
-          errorMessage(e) +
-            (saveAttempt.current
-              ? ' Повтор Save подтвердит предыдущую версию; более поздние правки останутся в форме.'
-              : ''),
+      if (superseded)
+        setGitHubInput((current) =>
+          canonicalGitHub(current) === attempt.content.githubUsername
+            ? (saved.content?.githubUsername ?? '')
+            : current,
         );
+      saveAttempt.current = null;
+      setConflict(false);
+      setMessage(
+        superseded
+          ? hasNewerInput
+            ? 'Сохранение подтверждено, но на сервере уже есть более новая версия с другого устройства. Более поздние правки остались в форме, Save заменит ими серверную версию'
+            : 'Сохранение подтверждено, но на сервере уже есть более новая версия с другого устройства. Форма показывает её'
+          : hasNewerInput
+            ? 'Сохранение подтверждено. Более поздние правки остались в форме; сохраните их отдельно'
+            : 'Сохранено и подтверждено сервером. Публикация не изменилась',
+      );
+      return !hasNewerInput && !superseded;
+    } catch (e) {
+      if (!owned()) return false;
+      // Definitive отказ: attempt со старым basis больше не повторяем.
+      if (e instanceof ContractError) saveAttempt.current = null;
+      if (e instanceof BasisConflictError) setConflict(true);
+      setError(
+        saveAttempt.current
+          ? joinMessages(
+              errorMessage(e),
+              'Повтор Save подтвердит предыдущую версию; более поздние правки останутся в форме',
+            )
+          : errorMessage(e),
+      );
+      return false;
     } finally {
       if (owned()) {
         setBusy(false);
         setSaving(false);
       }
+    }
+  }
+  function resetToBasis() {
+    setContent(clone(basis?.content ?? emptyContent()));
+    setGitHubInput(basis?.content?.githubUsername ?? '');
+    setNotes(basis?.notes ?? '');
+    saveAttempt.current = null;
+  }
+  // Уход с несохранёнными правками: «Отмена / Не сохранять / Сохранить», как в design contract.
+  async function resolveUnsaved(): Promise<boolean> {
+    if (!dirtyRef.current) return true;
+    const captured = confirmationContext.current;
+    const choice = await choose(
+      'Без сохранения изменения будут потеряны',
+      'Сохранить изменения?',
+      'Не сохранять',
+      'Сохранить',
+    );
+    if (choice === 'cancel' || !owned()) return false;
+    if (!sameConfirmationContext(captured, confirmationContext.current, equal)) {
+      setMessage('Данные изменились во время подтверждения. Повторите действие');
+      return false;
+    }
+    if (choice === 'confirm') return save();
+    resetToBasis();
+    return true;
+  }
+  const resolveUnsavedRef = useRef(resolveUnsaved);
+  resolveUnsavedRef.current = resolveUnsaved;
+  // Явный выход из конфликта: новая basis с сервера, несохранённая форма не трогается.
+  async function loadServerBasis() {
+    if (busy || avatarBusy || !owned()) return;
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const server = await loadDraft(user);
+      if (!owned()) return;
+      if (!server?.content) throw new Error('Серверная версия недоступна. Повторите попытку');
+      setBasis(server);
+      saveAttempt.current = null;
+      scopedAttempt.current = null;
+      setConflict(false);
+      setMessage(
+        'Серверная версия загружена как основа. Ваши правки остались в форме, Save заменит ими серверную версию',
+      );
+    } catch (e) {
+      if (owned()) setError(errorMessage(e));
+    } finally {
+      if (owned()) setBusy(false);
     }
   }
   function storePending(operation: PendingOperation | null, completedOperationId?: string) {
@@ -517,21 +613,22 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     if (result.status !== 'completed') {
       setMessage(
         result.status === 'pending'
-          ? 'Операция выполняется. Проверьте статус.'
-          : 'Результат пока неизвестен. Проверьте статус или повторите ту же операцию.',
+          ? 'Операция выполняется. Проверьте статус'
+          : 'Результат пока неизвестен. Проверьте статус или повторите ту же операцию',
       );
       return;
     }
     if (result.publication?.documentId !== operation.documentId)
-      throw new Error('Сервис подтвердил другой документ.');
+      throw new Error('Сервис подтвердил другой документ');
     storePending(null, operation.operationId);
-    setMessage('Сервер подтвердил операцию.');
+    setMessage('Сервер подтвердил операцию');
     await refreshInventory();
     if (!owned()) return;
-    if (shareAfter.current && result.publication?.state === 'published') {
-      shareAfter.current = false;
+    const after = afterPublish.current;
+    afterPublish.current = null;
+    if (after === 'share' && result.publication?.state === 'published')
       await sharePublication(result.publication);
-    }
+    if (after === 'card' && result.publication?.state === 'published') setCardOpen(true);
   }
 
   async function perform(operation: PendingOperation, recovery = false) {
@@ -547,7 +644,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         if (!owned()) return;
         if (status.status === 'completed' || status.status === 'pending') {
           if (status.action !== operation.action)
-            throw new Error('Сервис подтвердил другую операцию.');
+            throw new Error('Сервис подтвердил другую операцию');
           await completeOperation(status, operation);
           return;
         }
@@ -562,13 +659,17 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
           await refreshInventory();
           if (!owned()) return;
           setError(
-            errorMessage(e) +
-              ' Операция отклонена; введённые данные сохранены. Сверьте серверную версию перед повтором.',
+            joinMessages(
+              errorMessage(e),
+              'Операция отклонена; введённые данные сохранены. Сверьте серверную версию перед повтором',
+            ),
           );
         } else
           setError(
-            errorMessage(e) +
-              ' Статус операции можно проверить; новая операция пока заблокирована.',
+            joinMessages(
+              errorMessage(e),
+              'Статус операции можно проверить; новая операция пока заблокирована',
+            ),
           );
       }
     } finally {
@@ -577,7 +678,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   }
   async function beginPublication(action: PendingOperation['action'], confirmed = false) {
     if (!activeDocument || !basis || !publications || pending || receiptError || busy) {
-      shareAfter.current = false;
+      afterPublish.current = null;
       return;
     }
     const p = activePublication;
@@ -585,17 +686,17 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       action === 'publish' &&
       !confirmed &&
       !(await confirmAction(
-        'Опубликовать текущую сохранённую версию? Введённые контакты и фотография станут доступны по постоянной ссылке.',
+        'Опубликовать текущую сохранённую версию? Введённые контакты и фотография станут доступны по постоянной ссылке',
         'Опубликовать портфолио?',
       ))
     ) {
-      shareAfter.current = false;
+      afterPublish.current = null;
       return;
     }
     if (
       action === 'unpublish' &&
       !(await confirmAction(
-        'Снять документ с публикации? Постоянный адрес сохранится, содержимое станет недоступно.',
+        'Снять документ с публикации? Постоянный адрес сохранится, содержимое станет недоступно',
         'Снять с публикации?',
       ))
     )
@@ -603,7 +704,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     if (
       action === 'deleteDocument' &&
       !(await confirmAction(
-        'Удалить документ и отозвать его публичную страницу? Это действие нельзя отменить.',
+        'Удалить документ и отозвать его публичную страницу? Это действие нельзя отменить',
         'Удалить документ?',
       ))
     )
@@ -630,38 +731,38 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   }
   async function sharePublication(publication: Publication) {
     if (publication.state !== 'published' || !publication.url || !safeHttpUrl(publication.url))
-      throw new Error('Нет подтверждённой публичной ссылки.');
+      throw new Error('Нет подтверждённой публичной ссылки');
     if (!owned()) return;
     try {
       if (navigator.share) {
         await navigator.share({ title: 'Портфолио', url: publication.url });
-        if (owned()) setMessage('Ссылка отправлена.');
+        if (owned()) setMessage('Ссылка отправлена');
       } else {
         await navigator.clipboard.writeText(publication.url);
-        if (owned()) setMessage('Ссылка скопирована.');
+        if (owned()) setMessage('Ссылка скопирована');
       }
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') return;
       if (owned()) {
         setManualShareUrl(publication.url);
-        setMessage('Скопируйте постоянную ссылку ниже.');
+        setMessage('Скопируйте постоянную ссылку ниже');
       }
     }
   }
   function share() {
-    shareAfter.current = false;
+    afterPublish.current = null;
     setError('');
     if (!basis || !savedMain) {
-      setError('Сначала сохраните портфолио.');
+      setError('Сначала сохраните портфолио');
       return;
     }
     if (!publications) {
-      setError(publicationError || 'Не удалось проверить публичную версию. Повторите проверку.');
+      setError(publicationError || 'Не удалось проверить публичную версию. Повторите проверку');
       void refreshInventory();
       return;
     }
     if (pending || receiptError) {
-      setError('Сначала восстановите незавершённую операцию публикации.');
+      setError('Сначала восстановите незавершённую операцию публикации');
       return;
     }
     if (activePublication?.state === 'published') {
@@ -672,8 +773,8 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       void sharePublication(activePublication).catch((e) => setError(errorMessage(e)));
       return;
     }
-    shareAfter.current = true;
-    beginPublication('publish');
+    afterPublish.current = 'share';
+    void beginPublication('publish');
   }
   async function download() {
     if (busy || !savedMain || !owned()) return;
@@ -682,14 +783,20 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     try {
       const captured = resolveDocument(savedWorkspace, savedMain),
         owner = user.uid;
-      const avatarBytes = captured.profile.avatarPath
-        ? await readAvatarBytes(user, captured.profile.avatarPath)
-        : captured.profile.avatarUrl
-          ? await readLegacyAvatarBytes(user, captured.profile.avatarUrl)
-          : undefined;
+      // Скрытый профиль не читает фото; недоступная legacy-ссылка даёт PDF без фото.
+      const avatar = pdfAvatarSource(captured);
+      let avatarBytes: Uint8Array | undefined,
+        omitAvatar = false;
+      if (avatar && 'path' in avatar) avatarBytes = await readAvatarBytes(user, avatar.path);
+      else if (avatar)
+        try {
+          avatarBytes = await readLegacyAvatarBytes(user, avatar.url);
+        } catch {
+          omitAvatar = true;
+        }
       if (!owned() || owner !== user.uid) return;
       const { generatePortfolioPdf } = await import('@/lib/portfolio-pdf');
-      const blob = await generatePortfolioPdf(captured, { avatarBytes });
+      const blob = await generatePortfolioPdf(captured, { avatarBytes, omitAvatar });
       if (!owned()) return;
       const url = URL.createObjectURL(blob),
         link = document.createElement('a');
@@ -697,7 +804,11 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       link.download = 'StackCard-portfolio.pdf';
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 30000);
-      setMessage('PDF подготовлен для скачивания.');
+      setMessage(
+        omitAvatar
+          ? 'PDF подготовлен без фотографии: браузер не смог загрузить её по старой ссылке. Загрузите фото заново в редакторе'
+          : 'PDF подготовлен для скачивания',
+      );
     } catch (e) {
       if (owned()) setError(errorMessage(e));
     } finally {
@@ -709,17 +820,45 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     setBusy(true);
     setError('');
     try {
-      const migrated = migrateMainPortfolio(content, migrationChoice);
-      const saved = await saveDraft(user, basis, migrated, notes, `web-migrate-${uid()}`);
+      // Повтор после неизвестного ответа подтверждает ту же операцию переноса.
+      let attempt = migrationAttempt.current;
+      if (!attempt) {
+        attempt = {
+          mutationId: `web-migrate-${uid()}`,
+          basis,
+          content: clone(
+            validateWorkspace(migrateMainPortfolio(content, migrationChoice), user.uid),
+          ),
+          notes,
+        };
+        migrationAttempt.current = attempt;
+      }
+      const { draft: saved } = await saveDraft(
+        user,
+        attempt.basis,
+        attempt.content,
+        attempt.notes,
+        attempt.mutationId,
+      );
       if (!owned()) return;
+      migrationAttempt.current = null;
       setBasis(saved);
       setContent(saved.content!);
+      setNotes(saved.notes);
       setMigrationPreview(false);
       setMessage(
-        'Основное портфолио сохранено. Прежние данные сохранены для восстановления; публикация не изменилась.',
+        'Основное портфолио сохранено. Прежние данные сохранены для восстановления; публикация не изменилась',
       );
     } catch (e) {
-      if (owned()) setError(errorMessage(e));
+      if (!owned()) return;
+      if (e instanceof ContractError) migrationAttempt.current = null;
+      setError(
+        e instanceof BasisConflictError
+          ? 'Данные изменились на другом устройстве. Загрузите серверную версию и выберите основу заново'
+          : migrationAttempt.current
+            ? joinMessages(errorMessage(e), 'Повтор подтвердит ту же операцию переноса')
+            : errorMessage(e),
+      );
     } finally {
       if (owned()) setBusy(false);
     }
@@ -751,7 +890,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         };
         saveAttempt.current = attempt;
       }
-      const saved = await saveDraft(
+      const { draft: saved } = await saveDraft(
         user,
         attempt.basis,
         attempt.content,
@@ -774,11 +913,14 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         window.history.replaceState(null, '', '/workspace#home');
       }
     } catch (e) {
-      if (owned())
-        setError(
-          errorMessage(e) +
-            (saveAttempt.current ? ' Повторное действие подтвердит предыдущий шаг.' : ''),
-        );
+      if (!owned()) return;
+      if (e instanceof ContractError) saveAttempt.current = null;
+      if (e instanceof BasisConflictError) setConflict(true);
+      setError(
+        saveAttempt.current
+          ? joinMessages(errorMessage(e), 'Повторное действие подтвердит предыдущий шаг')
+          : errorMessage(e),
+      );
     } finally {
       if (owned()) setBusy(false);
     }
@@ -791,22 +933,24 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
   async function importProjects(sources: GitHubSource[]) {
     await commitScoped(importGitHubProjects(basis?.content ?? emptyContent(), sources));
   }
-  async function removeProject(id: string) {
+  async function removeProject(id: string): Promise<boolean> {
     if (
       !(await confirmAction(
-        'Удалить проект из StackCard и убрать из портфолио? Репозиторий GitHub сохранится. Если проект опубликован, обновите публичную версию отдельно.',
+        'Удалить проект из StackCard и убрать из портфолио? Репозиторий GitHub сохранится. Если проект опубликован, обновите публичную версию отдельно',
         'Удалить проект?',
       ))
     )
-      return;
+      return false;
     if (!savedWorkspace.projects.some((p) => p.id === id)) {
       update(deleteLibraryProject(content, id));
-      return;
+      return true;
     }
     try {
       await commitScoped(deleteLibraryProject(savedWorkspace, id));
+      return true;
     } catch (e) {
       if (owned()) setError(errorMessage(e));
+      return false;
     }
   }
   const photo = workingMain ? (
@@ -844,6 +988,12 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       onChange={(e) => setGitHubInput(e.target.value)}
     />
   );
+  const savedHasContent = !!savedMain && portfolioHasContent(savedWorkspace, savedMain);
+  const query = search.trim().toLowerCase();
+  const shownProjects = content.projects.filter((p) =>
+    `${p.title} ${p.description} ${p.technologies.join(' ')}`.toLowerCase().includes(query),
+  );
+  const attachedIds = new Set(workingMain?.projects.map((a) => a.projectId) ?? []);
   const previewCandidate =
     migrationNeeded && migrationPreview ? migrateMainPortfolio(content, migrationChoice) : null;
   const showSave =
@@ -852,7 +1002,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     !inboxView &&
     (view === 'editor' || view === 'projects' || view.startsWith('project/'));
   return (
-    <div className="workspace single-portfolio-workspace">
+    <div className="workspace single-portfolio-workspace" data-view={view.split('/')[0]}>
       <Header
         context="workspace"
         actions={
@@ -861,7 +1011,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
             variant="quiet"
             aria-label="Настройки"
             aria-current={view === 'settings' ? 'page' : undefined}
-            disabled={busy || avatarBusy}
+            disabled={busy || avatarBusy || onboarding || migrationNeeded}
             onClick={() => navigate('settings')}
           >
             <Icon name="settings" />
@@ -899,17 +1049,20 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
           {error && <Notice error>{error}</Notice>}
           {message && <Notice>{message}</Notice>}
           {loading ? (
-            <Notice>Загружаем сохранённую версию…</Notice>
+            <div className="workspace-loading" role="status">
+              <span className="spinner" aria-hidden="true" />
+              Загружаем сохранённую версию…
+            </div>
           ) : blocked ? (
-            <>
-              <p>Не удалось прочитать совместимые данные. Введённые данные не заменены.</p>
+            <section className="status-card stack">
+              <p>Не удалось прочитать совместимые данные. Введённые данные не заменены</p>
               <Button onClick={() => void reload()}>Повторить чтение</Button>
-            </>
+            </section>
           ) : (
             <>
               {scopedAttempt.current && (
                 <section className="stack">
-                  <Notice>Нужно подтвердить результат предыдущего изменения библиотеки.</Notice>
+                  <Notice>Нужно подтвердить результат предыдущего изменения библиотеки</Notice>
                   <Button
                     disabled={busy || avatarBusy}
                     onClick={() => {
@@ -933,17 +1086,33 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                 </section>
               )}
               {receiptError && <Notice error>{receiptError}</Notice>}
+              {conflict && !migrationNeeded && (
+                <section className="status-card stack" role="alert">
+                  <p>
+                    <strong>Версия на сервере изменилась.</strong> Ваш ввод остался в форме.
+                    Загрузите серверную версию как основу, затем сохраните правки
+                  </p>
+                  <Button
+                    variant="secondary"
+                    disabled={busy || avatarBusy}
+                    onClick={() => void loadServerBasis()}
+                  >
+                    Загрузить серверную версию, сохранив правки
+                  </Button>
+                </section>
+              )}
               {migrationNeeded ? (
                 <section className="stack">
                   <h1>Выберите основу портфолио</h1>
                   <p className="muted">
                     Перенесём один источник без смешивания текстов. Прежние данные и постоянные
-                    ссылки сохранятся.
+                    ссылки сохранятся
                   </p>
                   <label className="project-row">
                     <input
                       type="radio"
                       name="migration"
+                      disabled={busy || !!migrationAttempt.current}
                       checked={migrationChoice === null}
                       onChange={() => {
                         setMigrationChoice(null);
@@ -957,6 +1126,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                       <input
                         type="radio"
                         name="migration"
+                        disabled={busy || !!migrationAttempt.current}
                         checked={migrationChoice === d.id}
                         onChange={() => {
                           setMigrationChoice(d.id);
@@ -979,13 +1149,21 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                       preview
                     />
                   )}
-                  <Button disabled={busy || !migrationPreview} onClick={() => void migrate()}>
-                    Использовать выбранную основу
-                  </Button>
+                  <div className="dialog-actions">
+                    <Button variant="secondary" disabled={busy} onClick={() => void reload()}>
+                      Загрузить серверную версию
+                    </Button>
+                    <Button disabled={busy || !migrationPreview} onClick={() => void migrate()}>
+                      Использовать выбранную основу
+                    </Button>
+                  </div>
                 </section>
               ) : onboarding && workingMain ? (
-                <section className="stack personalization">
+                <section className="stack personalization view-enter">
                   <p className="muted">Шаг {content.personalization.step + 1} из 4</p>
+                  <div className="stepper" aria-hidden="true">
+                    <span style={{ width: `${(content.personalization.step + 1) * 25}%` }} />
+                  </div>
                   <h1>
                     {
                       ['GitHub', 'Имя и должность', 'О себе', 'Фотография'][
@@ -1025,24 +1203,6 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                           })
                         }
                       />
-                    </>
-                  ) : content.personalization.step === 2 ? (
-                    <>
-                      <Field
-                        label="Краткое описание"
-                        textarea
-                        value={workingMain.content.profile.bio}
-                        maxLength={4000}
-                        onChange={(e) =>
-                          updateDocument({
-                            ...workingMain,
-                            content: {
-                              ...workingMain.content,
-                              profile: { ...workingMain.content.profile, bio: e.target.value },
-                            },
-                          })
-                        }
-                      />
                       <Field
                         label="Город / страна"
                         value={workingMain.content.profile.locationText}
@@ -1057,6 +1217,24 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                                 locationText: e.target.value,
                                 publishLocation: true,
                               },
+                            },
+                          })
+                        }
+                      />
+                    </>
+                  ) : content.personalization.step === 2 ? (
+                    <>
+                      <Field
+                        label="О себе"
+                        textarea
+                        value={workingMain.content.profile.bio}
+                        maxLength={4000}
+                        onChange={(e) =>
+                          updateDocument({
+                            ...workingMain,
+                            content: {
+                              ...workingMain.content,
+                              profile: { ...workingMain.content.profile, bio: e.target.value },
                             },
                           })
                         }
@@ -1081,12 +1259,23 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
               ) : (
                 <fieldset className="workspace-fieldset" disabled={busy && !saving}>
                   {view === 'home' && (
-                    <section className="stack portfolio-home">
+                    <section className="stack portfolio-home view-enter">
+                      <div className="view-heading">
+                        <h1>Главная</h1>
+                        <p className="muted">Сохранённая версия портфолио</p>
+                      </div>
                       <div className="portfolio-actions">
-                        <Button disabled={busy || !savedMain} onClick={() => void download()}>
+                        <Button
+                          variant="secondary"
+                          disabled={busy || !savedHasContent}
+                          onClick={() => void download()}
+                        >
                           Скачать портфолио
                         </Button>
-                        <Button variant="secondary" disabled={busy || !savedMain} onClick={share}>
+                        <Button
+                          disabled={busy || !savedHasContent}
+                          onClick={() => setShareMenu(true)}
+                        >
                           Поделиться
                         </Button>
                       </div>
@@ -1100,62 +1289,143 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                           {manualShareUrl}
                         </a>
                       )}
-                      {publicationError && <Notice error>{publicationError}</Notice>}
-                      {savedMain && (
-                        <DocumentView
-                          content={documentPreview(savedWorkspace, savedMain)}
-                          kind="portfolio"
-                          modernPortfolio
-                          profilePhoto={
-                            savedMain.content.profile.avatarPath ? (
-                              <PrivateImage
-                                user={user}
-                                path={savedMain.content.profile.avatarPath}
-                              />
-                            ) : undefined
+                      {savedMain && savedHasContent && (
+                        <PublicationPanel
+                          publication={activePublication}
+                          loaded={!!publications}
+                          error={publicationError}
+                          outdated={
+                            activePublication?.state === 'published' &&
+                            activePublication.sourceMutationId !== basis?.mutationId
                           }
-                          preview
+                          disabled={busy || !!pending || !!receiptError}
+                          onRetry={() => void refreshInventory()}
+                          onPublish={() => void beginPublication('publish')}
+                          onUnpublish={() => void beginPublication('unpublish')}
+                          onCard={() => setCardOpen(true)}
+                          onCopied={setMessage}
                         />
                       )}
-                      {savedMain && !portfolioHasContent(savedWorkspace, savedMain) && (
-                        <div className="empty-portfolio">
-                          <p>Портфолио пока пустое</p>
-                          <p className="muted">Откройте вкладку «Редактор», чтобы заполнить его.</p>
+                      {savedMain && savedHasContent ? (
+                        <div className="paper-frame">
+                          <DocumentView
+                            content={documentPreview(savedWorkspace, savedMain)}
+                            kind="portfolio"
+                            modernPortfolio
+                            profilePhoto={
+                              savedMain.content.profile.avatarPath ? (
+                                <PrivateImage
+                                  user={user}
+                                  path={savedMain.content.profile.avatarPath}
+                                />
+                              ) : undefined
+                            }
+                            preview
+                          />
+                        </div>
+                      ) : (
+                        <div className="empty-state">
+                          <span className="empty-state-icon">
+                            <Icon name="file-text" size={32} />
+                          </span>
+                          <p className="empty-state-title">Портфолио пока пустое</p>
+                          <p className="muted">
+                            Заполните портфолио в Редакторе и нажмите «Сохранить»
+                          </p>
+                          <Button onClick={() => navigate('editor')}>Открыть редактор</Button>
                         </div>
                       )}
                     </section>
                   )}
                   {view === 'editor' && workingMain && (
-                    <>
-                      <h1>Редактор</h1>
-                      <ContentEditor
-                        content={workingMain.content}
-                        onChange={(next) => updateDocument({ ...workingMain, content: next })}
-                        photo={photo}
-                        projects={
-                          <AttachmentsEditor
-                            workspace={content}
-                            document={workingMain}
-                            onChange={updateDocument}
-                            onIconChange={(id, iconId) =>
-                              update({
-                                ...content,
-                                projects: content.projects.map((p) =>
-                                  p.id === id ? { ...p, iconId } : p,
-                                ),
-                              })
+                    <section className={`editor-layout view-enter mode-${editorMode}`}>
+                      <div className="editor-column">
+                        <div className="view-heading editor-heading">
+                          <h1>Редактор</h1>
+                          <div className="mode-switch" role="group" aria-label="Режим редактора">
+                            <Button
+                              variant="quiet"
+                              aria-pressed={editorMode === 'form'}
+                              onClick={() => setEditorMode('form')}
+                            >
+                              Форма
+                            </Button>
+                            <Button
+                              variant="quiet"
+                              aria-pressed={editorMode === 'preview'}
+                              onClick={() => setEditorMode('preview')}
+                            >
+                              Предпросмотр
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="editor-form">
+                          <ContentEditor
+                            content={workingMain.content}
+                            onChange={(next) => updateDocument({ ...workingMain, content: next })}
+                            photo={photo}
+                            projects={
+                              <AttachmentsEditor
+                                workspace={content}
+                                document={workingMain}
+                                onChange={updateDocument}
+                                onIconChange={(id, iconId) =>
+                                  update({
+                                    ...content,
+                                    projects: content.projects.map((p) =>
+                                      p.id === id ? { ...p, iconId } : p,
+                                    ),
+                                  })
+                                }
+                                onProjects={() => navigate('projects')}
+                              />
                             }
-                            onProjects={() => navigate('projects')}
                           />
-                        }
-                      />
-                    </>
+                        </div>
+                      </div>
+                      <aside className="editor-preview" aria-label="Предпросмотр портфолио">
+                        <div className="editor-preview-label">
+                          <span>Предпросмотр</span>
+                          <span className={`status-pill${dirty ? ' is-dirty' : ''}`}>
+                            {dirty ? 'Не сохранено' : 'Совпадает с сохранённым'}
+                          </span>
+                        </div>
+                        <div className="paper-frame">
+                          {portfolioHasContent(content, workingMain) ? (
+                            <DocumentView
+                              content={documentPreview(content, workingMain)}
+                              kind="portfolio"
+                              modernPortfolio
+                              profilePhoto={
+                                workingMain.content.profile.avatarPath ? (
+                                  <PrivateImage
+                                    user={user}
+                                    path={workingMain.content.profile.avatarPath}
+                                  />
+                                ) : undefined
+                              }
+                              preview
+                            />
+                          ) : (
+                            <p className="muted editor-preview-empty">
+                              Здесь появится портфолио, когда вы заполните первые поля
+                            </p>
+                          )}
+                        </div>
+                      </aside>
+                    </section>
                   )}
                   {view === 'projects' && (
-                    <section className="stack">
-                      <h1>Проекты</h1>
-                      <div className="row">
+                    <section className="stack view-enter">
+                      <div className="view-heading">
+                        <h1>Проекты</h1>
+                        <p className="muted">
+                          Библиотека проектов. В портфолио попадают только выбранные в Редакторе
+                        </p>
+                      </div>
+                      <div className="portfolio-actions">
                         <Button variant="secondary" onClick={() => navigate('github-import', true)}>
+                          <Icon name="github" size={20} />
                           Импортировать из GitHub
                         </Button>
                         <Button
@@ -1165,52 +1435,74 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                             navigate(`project/${p.id}`, true);
                           }}
                         >
+                          <Icon name="plus" size={20} />
                           Создать проект
                         </Button>
                       </div>
-                      <Field
-                        label="Поиск по библиотеке"
-                        type="search"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                      />
-                      {content.projects
-                        .filter((p) =>
-                          `${p.title} ${p.description}`
-                            .toLowerCase()
-                            .includes(search.toLowerCase()),
-                        )
-                        .map((p) => (
-                          <article className="project-row library-project" key={p.id}>
-                            <Icon name={p.iconId ?? 'folder'} />
-                            <div className="project-copy">
-                              <strong>{p.title}</strong>
-                              {p.description && <p>{p.description}</p>}
-                            </div>
-                            <div className="project-actions">
+                      {content.projects.length > 0 && (
+                        <label className="field search-field">
+                          <span className="visually-hidden">Поиск по библиотеке</span>
+                          <Icon name="search" size={20} />
+                          <input
+                            type="search"
+                            placeholder="Поиск по библиотеке"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                          />
+                        </label>
+                      )}
+                      <div className="library-grid">
+                        {shownProjects.map((p) => (
+                          <article className="library-card" key={p.id}>
+                            <div className="library-card-top">
+                              <span className="library-card-icon">
+                                <Icon name={p.iconId ?? 'folder'} />
+                              </span>
+                              <div className="project-copy">
+                                <strong>{p.title || 'Без названия'}</strong>
+                                {p.description && <p className="muted">{p.description}</p>}
+                                <small className="source-badge">
+                                  {p.source === 'github' ? 'GitHub' : 'Вручную'}
+                                  {attachedIds.has(p.id) ? ' · В портфолио' : ''}
+                                </small>
+                              </div>
                               <Button
                                 variant="quiet"
-                                onClick={() => navigate(`project/${p.id}`, true)}
-                              >
-                                Редактировать
-                              </Button>
-                              <Button
-                                variant="quiet"
-                                className="text-danger"
+                                className="record-editor-action"
+                                aria-label={`Удалить проект ${p.title}`}
+                                title="Удалить проект"
                                 onClick={() => void removeProject(p.id)}
                               >
-                                Удалить
+                                <InlineIcon name="x" size={20} />
                               </Button>
                             </div>
+                            <Button
+                              variant="secondary"
+                              className="library-card-edit"
+                              onClick={() => navigate(`project/${p.id}`, true)}
+                            >
+                              Редактировать
+                            </Button>
                           </article>
                         ))}
-                      {content.projects.length === 0 && <p>Проектов пока нет</p>}
-                      {content.projects.length > 0 &&
-                        !content.projects.some((p) =>
-                          `${p.title} ${p.description}`
-                            .toLowerCase()
-                            .includes(search.toLowerCase()),
-                        ) && <p>Ничего не найдено</p>}
+                      </div>
+                      {content.projects.length === 0 && (
+                        <div className="empty-state">
+                          <span className="empty-state-icon">
+                            <Icon name="folder" size={32} />
+                          </span>
+                          <p className="empty-state-title">Проектов пока нет</p>
+                          <p className="muted">
+                            Импортируйте репозитории из GitHub или создайте проект вручную
+                          </p>
+                        </div>
+                      )}
+                      {content.projects.length > 0 && shownProjects.length === 0 && (
+                        <div className="empty-state">
+                          <p className="empty-state-title">Ничего не найдено</p>
+                          <p className="muted">Измените запрос поиска</p>
+                        </div>
+                      )}
                     </section>
                   )}
                   {view === 'github-import' && (
@@ -1223,21 +1515,53 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                       onBack={() => navigate('projects', true)}
                     />
                   )}
-                  {view.startsWith('project/') && project && (
+                  {view.startsWith('project/') && !project && (
                     <section className="stack">
-                      <Button variant="quiet" onClick={() => navigate('projects')}>
+                      <h1>Проект не найден</h1>
+                      <p className="muted">Возможно, он удалён на другом устройстве</p>
+                      <Button variant="secondary" onClick={() => navigate('projects', true)}>
                         Назад к проектам
                       </Button>
-                      <h1>Редактор проекта</h1>
-                      <ProjectForm
-                        project={project}
-                        onChange={(next) =>
-                          update({
-                            ...content,
-                            projects: content.projects.map((p) => (p.id === next.id ? next : p)),
+                    </section>
+                  )}
+                  {view.startsWith('project/') && project && (
+                    <section className="stack view-enter project-view">
+                      <Button
+                        variant="quiet"
+                        className="back-link"
+                        onClick={() => navigate('projects')}
+                      >
+                        <Icon name="arrow-left" size={20} />
+                        Назад к проектам
+                      </Button>
+                      <div className="view-heading">
+                        <h1>Редактор проекта</h1>
+                        {project.source === 'github' && (
+                          <p className="muted">Импортирован из GitHub. Ваши правки сохраняются</p>
+                        )}
+                      </div>
+                      <div className="editor-card project-card">
+                        <ProjectForm
+                          project={project}
+                          onChange={(next) =>
+                            update({
+                              ...content,
+                              projects: content.projects.map((p) => (p.id === next.id ? next : p)),
+                            })
+                          }
+                        />
+                      </div>
+                      <Button
+                        variant="quiet"
+                        className="text-danger"
+                        onClick={() =>
+                          void removeProject(project.id).then((removed) => {
+                            if (removed) navigate('projects', true);
                           })
                         }
-                      />
+                      >
+                        Удалить проект
+                      </Button>
                     </section>
                   )}
                   {view === 'settings' && (
@@ -1267,9 +1591,9 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                                 localStorage.key(i),
                               ).filter((key): key is string => !!key?.startsWith(prefix));
                               keys.forEach((key) => localStorage.removeItem(key));
-                              setMessage('Кэш GitHub очищен. Проекты и портфолио сохранены.');
+                              setMessage('Кэш GitHub очищен. Проекты и портфолио сохранены');
                             } catch {
-                              setError('Не удалось очистить кэш браузера.');
+                              setError('Не удалось очистить кэш браузера');
                             }
                           }}
                         >
@@ -1282,7 +1606,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                           Входящие
                         </Button>
                         <p className="muted">
-                          Push-уведомления в web не подключены. Входящие работают независимо от них.
+                          Push-уведомления в web не подключены. Входящие работают независимо от них
                         </p>
                       </section>
                       <section className="editor-group stack">
@@ -1323,12 +1647,25 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         </main>
       </div>
       {showSave && (
-        <footer className="workspace-footer" inert={shareChoice}>
-          <small className="muted">{dirty ? 'Есть несохранённые изменения' : 'Сохранено'}</small>
+        <footer
+          className={`workspace-footer save-bar${dirty ? ' is-dirty' : ''}`}
+          inert={shareChoice}
+          aria-label="Сохранение"
+        >
+          <span className="save-status" role="status">
+            <span className="save-dot" aria-hidden="true" />
+            {saving
+              ? 'Сохраняем…'
+              : conflict
+                ? 'Конфликт версий'
+                : dirty
+                  ? 'Не сохранено'
+                  : 'Сохранено'}
+          </span>
           <div className="dialog-actions">
             <Button
               variant="secondary"
-              disabled={busy || avatarBusy}
+              disabled={busy || avatarBusy || !dirty}
               onClick={async () => {
                 if (dirty && !(await confirmAction('Отбросить несохранённые изменения?'))) return;
                 if (!owned()) return;
@@ -1337,11 +1674,44 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
             >
               Отмена
             </Button>
-            <Button disabled={busy || avatarBusy || loading || blocked} onClick={() => void save()}>
+            <Button
+              disabled={
+                busy ||
+                avatarBusy ||
+                loading ||
+                blocked ||
+                conflict ||
+                (!dirty && !saveAttempt.current)
+              }
+              onClick={() => void save()}
+            >
               {saving ? 'Сохраняем…' : 'Сохранить'}
             </Button>
           </div>
         </footer>
+      )}
+      {shareMenu && (
+        <ShareMenu
+          onClose={() => setShareMenu(false)}
+          onLink={() => {
+            setShareMenu(false);
+            share();
+          }}
+          onCard={() => {
+            setShareMenu(false);
+            setCardOpen(true);
+          }}
+        />
+      )}
+      {cardOpen && (
+        <DeveloperCardDialog
+          publication={activePublication}
+          onClose={() => setCardOpen(false)}
+          onPublish={() => {
+            afterPublish.current = 'card';
+            void beginPublication('publish');
+          }}
+        />
       )}
       {shareChoice && (
         <div className="dialog-backdrop">
@@ -1354,7 +1724,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
           >
             <h2 id="share-title">Обновить публичное портфолио?</h2>
             <p>
-              Сохранённая версия изменилась. Можно обновить её или отправить существующую ссылку.
+              Сохранённая версия изменилась. Можно обновить её или отправить существующую ссылку
             </p>
             <div className="dialog-actions">
               <Button variant="secondary" onClick={() => setShareChoice(false)}>
@@ -1364,7 +1734,10 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                 variant="secondary"
                 onClick={() => {
                   setShareChoice(false);
-                  if (activePublication) void sharePublication(activePublication);
+                  if (activePublication)
+                    void sharePublication(activePublication).catch((e) =>
+                      setError(errorMessage(e)),
+                    );
                 }}
               >
                 Отправить существующую
@@ -1372,7 +1745,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
               <Button
                 onClick={() => {
                   setShareChoice(false);
-                  shareAfter.current = true;
+                  afterPublish.current = 'share';
                   void beginPublication('publish', true);
                 }}
               >
@@ -1403,5 +1776,165 @@ export function portfolioHasContent(
     p.experience.length ||
     p.education.length ||
     p.links.length,
+  );
+}
+
+// Меню «Поделиться» как в mobile: ссылка или визитка с QR, «Отмена» последней.
+function ShareMenu({
+  onClose,
+  onLink,
+  onCard,
+}: {
+  onClose: () => void;
+  onLink: () => void;
+  onCard: () => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const current = dialog.current;
+    if (current && !current.open) current.showModal();
+  }, []);
+  return (
+    <dialog
+      ref={dialog}
+      className="dialog share-menu"
+      aria-labelledby="share-menu-title"
+      onClose={onClose}
+    >
+      <div className="stack">
+        <h2 id="share-menu-title">Поделиться портфолио</h2>
+        <p className="muted">Отправьте публичную ссылку или покажите карточку с QR-кодом</p>
+        <div className="share-menu-actions">
+          <Button onClick={onLink}>Отправить ссылку</Button>
+          <Button variant="secondary" onClick={onCard}>
+            Визитка и QR
+          </Button>
+          <Button variant="quiet" onClick={() => dialog.current?.close()}>
+            Отмена
+          </Button>
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
+// Состояние публикации сохранённой версии: ссылка, обновление и снятие.
+function PublicationPanel({
+  publication,
+  loaded,
+  error,
+  outdated,
+  disabled,
+  onRetry,
+  onPublish,
+  onUnpublish,
+  onCard,
+  onCopied,
+}: {
+  publication: Publication | undefined;
+  loaded: boolean;
+  error: string;
+  outdated: boolean;
+  disabled: boolean;
+  onRetry: () => void;
+  onPublish: () => void;
+  onUnpublish: () => void;
+  onCard: () => void;
+  onCopied: (message: string) => void;
+}) {
+  const published = publication?.state === 'published' && !!publication.url;
+  if (!loaded)
+    return (
+      <section className="publication-panel" aria-label="Публикация">
+        {error ? (
+          <>
+            <p className="publication-title">Не удалось проверить публикацию</p>
+            <p className="muted">{error}</p>
+            <Button variant="secondary" onClick={onRetry}>
+              Повторить проверку
+            </Button>
+          </>
+        ) : (
+          <p className="muted" role="status">
+            Проверяем публикацию…
+          </p>
+        )}
+      </section>
+    );
+  return (
+    <section
+      className={`publication-panel${published ? ' is-published' : ''}`}
+      aria-label="Публикация"
+    >
+      <div className="publication-head">
+        <span className="publication-dot" aria-hidden="true" />
+        <p className="publication-title">
+          {published
+            ? 'Опубликовано'
+            : publication?.state === 'unpublished'
+              ? 'Публикация снята'
+              : 'Не опубликовано'}
+        </p>
+      </div>
+      {published ? (
+        <>
+          <a
+            className="publication-link"
+            href={publication!.url!}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {publication!.url}
+          </a>
+          {outdated && (
+            <p className="muted">
+              Есть более новая сохранённая версия. Публичная страница обновится только после
+              публикации
+            </p>
+          )}
+          <div className="publication-actions">
+            <Button
+              variant="secondary"
+              onClick={() =>
+                void navigator.clipboard
+                  ?.writeText(publication!.url!)
+                  .then(() => onCopied('Ссылка скопирована'))
+                  .catch(() => onCopied('Скопируйте ссылку вручную'))
+              }
+            >
+              <InlineIcon name="copy" size={20} />
+              Копировать
+            </Button>
+            <Button variant="secondary" onClick={onCard}>
+              Визитка и QR
+            </Button>
+            {outdated && (
+              <Button disabled={disabled} onClick={onPublish}>
+                Обновить публикацию
+              </Button>
+            )}
+            <Button
+              variant="quiet"
+              className="text-danger"
+              disabled={disabled}
+              onClick={onUnpublish}
+            >
+              Снять с публикации
+            </Button>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="muted">
+            Публикация сделает сохранённую версию доступной всем, у кого есть ссылка
+          </p>
+          <div className="publication-actions">
+            <Button disabled={disabled} onClick={onPublish}>
+              Опубликовать
+            </Button>
+          </div>
+        </>
+      )}
+    </section>
   );
 }

@@ -18,6 +18,11 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { firebaseServices } from '@/lib/firebase';
 import {
+  registrationPasswordIssues,
+  registrationPasswordMaximumLength,
+  registrationPasswordMinimumLength,
+} from '@/lib/registration-password';
+import {
   inventory,
   publicationRequest,
   recoverAccountDeletion,
@@ -38,57 +43,73 @@ export function canUnlinkProvider(
   return ids.includes(providerId) && ids.length > 1;
 }
 
+// Новый пароль проходит ту же политику, что и регистрация (mobile RegistrationPasswordPolicy).
+export function passwordChangeIssue(
+  password: string,
+  confirmation: string,
+  email: string,
+): string | null {
+  const issues = registrationPasswordIssues(password, email);
+  if (issues.has('tooShort') || issues.has('tooLong'))
+    return `Пароль должен содержать от ${registrationPasswordMinimumLength} до ${registrationPasswordMaximumLength} символов`;
+  if (issues.has('tooCommon'))
+    return 'Пароль слишком простой: выберите пароль без очевидных слов и повторений';
+  if (issues.has('matchesEmail')) return 'Пароль должен отличаться от почты и её имени';
+  if (password !== confirmation) return 'Подтверждение пароля должно совпадать';
+  return null;
+}
+
 export function accountErrorMessage(error: unknown): string {
   const code =
     typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : '';
   switch (code) {
     case 'auth/invalid-credential':
     case 'auth/wrong-password':
-      return 'Не удалось подтвердить вход. Проверьте текущий пароль.';
+      return 'Не удалось подтвердить вход. Проверьте текущий пароль';
     case 'auth/requires-recent-login':
     case 'auth/user-token-expired':
     case 'reauthentication-required':
-      return 'Подтвердите вход ещё раз перед этим действием.';
+      return 'Подтвердите вход ещё раз перед этим действием';
     case 'auth/email-already-in-use':
     case 'auth/credential-already-in-use':
-      return 'Этот способ входа уже используется другим аккаунтом.';
+      return 'Этот способ входа уже используется другим аккаунтом';
     case 'auth/provider-already-linked':
-      return 'Этот способ входа уже подключён. Обновите список.';
+      return 'Этот способ входа уже подключён. Обновите список';
     case 'auth/no-such-provider':
-      return 'Способ входа уже отключён. Обновите список.';
+      return 'Способ входа уже отключён. Обновите список';
     case 'auth/invalid-email':
-      return 'Введите корректную почту.';
+      return 'Введите корректную почту';
     case 'auth/weak-password':
     case 'auth/password-does-not-meet-requirements':
-      return 'Пароль не соответствует требованиям Firebase. Выберите более надёжный пароль.';
+      return 'Пароль не соответствует требованиям Firebase. Выберите более надёжный пароль';
     case 'auth/too-many-requests':
-      return 'Слишком много попыток. Повторите позднее.';
+      return 'Слишком много попыток. Повторите позднее';
     case 'auth/network-request-failed':
-      return 'Нет подключения. Проверьте сеть и повторите.';
+      return 'Нет подключения. Проверьте сеть и повторите';
     case 'auth/popup-closed-by-user':
     case 'auth/cancelled-popup-request':
-      return 'Подтверждение входа отменено.';
+      return 'Подтверждение входа отменено';
     case 'auth/popup-blocked':
-      return 'Браузер заблокировал окно Google. Разрешите всплывающее окно и повторите.';
+      return 'Браузер заблокировал окно Google. Разрешите всплывающее окно и повторите';
     case 'auth/operation-not-allowed':
     case 'auth/unauthorized-domain':
-      return 'Этот способ входа недоступен в настройках Firebase.';
+      return 'Этот способ входа недоступен в настройках Firebase';
     case 'account/last-provider':
-      return 'Нельзя отключить последний способ входа. Сначала подключите другой.';
+      return 'Нельзя отключить последний способ входа. Сначала подключите другой';
     case 'account/password-required':
-      return 'Введите текущий пароль для подтверждения входа.';
+      return 'Введите текущий пароль для подтверждения входа';
     case 'account/unsupported-provider':
-      return 'Повторный вход через этот провайдер здесь недоступен.';
+      return 'Повторный вход через этот провайдер здесь недоступен';
     case 'account/storage':
-      return 'Не удалось сохранить запрос удаления на этом устройстве. Удаление не начато.';
+      return 'Не удалось сохранить запрос удаления на этом устройстве. Удаление не начато';
     case 'account/journal-invalid':
-      return 'Локальная запись удаления повреждена. Новый запрос не создан; требуется восстановление записи.';
+      return 'Локальная запись удаления повреждена. Новый запрос не создан; требуется восстановление записи';
     case 'account/stale-owner':
-      return 'Аккаунт изменился. Действие остановлено.';
+      return 'Аккаунт изменился. Действие остановлено';
     case 'account/invalid-response':
-      return 'Сервис не подтвердил результат удаления. Проверьте статус перед повтором.';
+      return 'Сервис не подтвердил результат удаления. Проверьте статус перед повтором';
     default:
-      return 'Не удалось выполнить действие. Проверьте подключение и настройки сервиса, затем повторите.';
+      return 'Не удалось выполнить действие. Проверьте подключение и настройки сервиса, затем повторите';
   }
 }
 
@@ -247,7 +268,7 @@ export function ApplicationPreferences({ children }: { children?: ReactNode }) {
     try {
       setReduceMotion(localStorage.getItem('stackcard.reducedMotion') === 'true');
     } catch {
-      setError('Настройка браузера недоступна для чтения.');
+      setError('Настройка браузера недоступна для чтения');
     }
     return () => media.removeEventListener('change', changed);
   }, []);
@@ -258,7 +279,7 @@ export function ApplicationPreferences({ children }: { children?: ReactNode }) {
     try {
       localStorage.setItem('stackcard.reducedMotion', String(value));
     } catch {
-      setError('Выбор применён, но не сохранён в браузере.');
+      setError('Выбор применён, но не сохранён в браузере');
     }
   }
   return (
@@ -273,7 +294,7 @@ export function ApplicationPreferences({ children }: { children?: ReactNode }) {
           onChange={(e) => preference(e.target.checked)}
         />
       </label>
-      {systemReduced && <p className="muted">Анимации сокращены по настройке системы.</p>}
+      {systemReduced && <p className="muted">Анимации сокращены по настройке системы</p>}
       {error && <Notice error>{error}</Notice>}
       {children}
     </section>
@@ -362,13 +383,13 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
       setDeletionStatus(result.status);
       setMessage(
         result.status === 'pending'
-          ? 'Удаление ещё выполняется. Сохранён тот же запрос для продолжения.'
-          : 'Результат удаления не подтверждён. Сохранён прежний запрос; проверьте статус.',
+          ? 'Удаление ещё выполняется. Сохранён тот же запрос для продолжения'
+          : 'Результат удаления не подтверждён. Сохранён прежний запрос; проверьте статус',
       );
       return;
     }
     clearDeletionJournal(localStorage, journal);
-    setMessage('Сервис подтвердил удаление аккаунта и снятие документов с публикации.');
+    setMessage('Сервис подтвердил удаление аккаунта и снятие документов с публикации');
     await signOut(firebaseServices().auth);
     if (active.current) onSignedOut?.();
   }
@@ -383,7 +404,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
   }
   async function deleteAccount() {
     if (deleteConfirmation !== 'УДАЛИТЬ') {
-      setError('Введите УДАЛИТЬ для подтверждения.');
+      setError('Введите УДАЛИТЬ для подтверждения');
       return;
     }
     await run(async () => {
@@ -433,7 +454,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
         </div>
         <p className="muted">
           {verified ? 'Адрес подтверждён.' : 'Адрес ещё не подтверждён.'} Эта почта не публикуется в
-          документах.
+          документах
         </p>
         <div className="row">
           {!verified && email && (
@@ -444,7 +465,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
                 void run(async () => {
                   await sendEmailVerification(user);
                   assertActive();
-                  setMessage('Письмо отправлено. Подтвердите адрес и обновите статус.');
+                  setMessage('Письмо отправлено. Подтвердите адрес и обновите статус');
                 })
               }
             >
@@ -465,8 +486,8 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
           onChange={(e) => setCurrentPassword(e.target.value)}
           helper={
             passwordLinked
-              ? 'Пароль хранится только в этой форме и очищается после действия.'
-              : 'Для подтверждения откроется Google.'
+              ? 'Пароль хранится только в этой форме и очищается после действия'
+              : 'Для подтверждения откроется Google'
           }
         />
         <details className="editor-section">
@@ -485,7 +506,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
                 assertActive();
                 setNewEmail('');
                 setMessage(
-                  'Письмо отправлено на новый адрес. Почта для входа изменится после подтверждения.',
+                  'Письмо отправлено на новый адрес. Почта для входа изменится после подтверждения',
                 );
               });
             }}
@@ -515,10 +536,9 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
             className="stack"
             onSubmit={(e) => {
               e.preventDefault();
-              if (password.length < 8 || password !== confirmation) {
-                setError(
-                  'Пароль должен содержать минимум 8 символов; подтверждение должно совпадать.',
-                );
+              const issue = passwordChangeIssue(password, confirmation, user.email ?? '');
+              if (issue) {
+                setError(issue);
                 return;
               }
               void run(async () => {
@@ -533,7 +553,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
                 }
                 assertActive();
                 await refreshAccount();
-                setMessage(passwordLinked ? 'Пароль изменён.' : 'Вход по паролю подключён.');
+                setMessage(passwordLinked ? 'Пароль изменён' : 'Вход по паролю подключён');
               });
             }}
           >
@@ -588,7 +608,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
                   await unlink(user, id);
                   assertActive();
                   await refreshAccount();
-                  setMessage('Способ входа отключён.');
+                  setMessage('Способ входа отключён');
                 });
               }}
             >
@@ -596,7 +616,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
             </Button>
           </div>
         ))}
-        {providers.length <= 1 && <p className="muted">Последний способ входа нельзя отключить.</p>}
+        {providers.length <= 1 && <p className="muted">Последний способ входа нельзя отключить</p>}
         {!providers.includes('google.com') && (
           <Button
             variant="secondary"
@@ -606,7 +626,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
                 await linkWithPopup(user, new GoogleAuthProvider());
                 assertActive();
                 await refreshAccount();
-                setMessage('Google подключён к этому аккаунту.');
+                setMessage('Google подключён к этому аккаунту');
               })
             }
           >
@@ -616,16 +636,14 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
       </section>
       <section className="section stack" aria-labelledby="account-delete">
         <h3 id="account-delete">Удаление аккаунта</h3>
-        <p>
-          Удаление навсегда уберёт данные аккаунта и закроет доступ к опубликованным документам.
-        </p>
+        <p>Удаление навсегда уберёт данные аккаунта и закроет доступ к опубликованным документам</p>
         {deletion && (
           <>
             <Notice>
               Запрос удаления сохранён.{' '}
               {deletionStatus === 'pending'
-                ? 'Очистка ещё выполняется.'
-                : 'Новый запрос не создаётся до проверки прежнего.'}
+                ? 'Очистка ещё выполняется'
+                : 'Новый запрос не создаётся до проверки прежнего'}
             </Notice>
             <Button
               variant="secondary"
@@ -722,12 +740,12 @@ export function AccountDeletionRecovery() {
             (item) => item.operationId !== journal.operationId || item.uid !== journal.uid,
           ),
         );
-        setMessage('Сервис подтвердил удаление аккаунта и снятие документов с публикации.');
+        setMessage('Сервис подтвердил удаление аккаунта и снятие документов с публикации');
       } else
         setMessage(
           result.status === 'pending'
-            ? 'Удаление ещё выполняется. Можно продолжить тот же запрос.'
-            : 'Сервис ещё не подтвердил начало удаления. Войдите в тот же аккаунт для повтора сохранённого запроса.',
+            ? 'Удаление ещё выполняется. Можно продолжить тот же запрос'
+            : 'Сервис ещё не подтвердил начало удаления. Войдите в тот же аккаунт для повтора сохранённого запроса',
         );
     } catch (failure) {
       if (active.current) setError(accountErrorMessage(failure));
@@ -741,7 +759,7 @@ export function AccountDeletionRecovery() {
       <h1>Статус удаления аккаунта</h1>
       <p>
         Здесь можно проверить ранее подтверждённое удаление с этого браузера. Вход и создание нового
-        запроса не выполняются автоматически.
+        запроса не выполняются автоматически
       </p>
       {error && <Notice error>{error}</Notice>}
       {message && <Notice>{message}</Notice>}
@@ -774,7 +792,7 @@ export function AccountDeletionRecovery() {
       ))}
       {loading && <Notice>Проверяем сохранённые запросы…</Notice>}
       {!loading && !journals.length && !error && (
-        <Notice>В этом браузере нет сохранённого запроса удаления.</Notice>
+        <Notice>В этом браузере нет сохранённого запроса удаления</Notice>
       )}
       <LinkButton href="/sign-in">Перейти ко входу</LinkButton>
       {confirmation}

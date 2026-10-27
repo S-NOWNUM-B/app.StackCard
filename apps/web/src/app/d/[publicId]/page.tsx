@@ -92,7 +92,7 @@ export default async function PublicDocumentPage({ params }: Props) {
         <main id="main" className="container">
           <section className="section stack">
             <h1>Не удалось загрузить документ</h1>
-            <p>Проверьте соединение и попробуйте открыть страницу снова.</p>
+            <p>Проверьте соединение и попробуйте открыть страницу снова</p>
             <LinkButton href={`/d/${publicId}`}>Повторить</LinkButton>
           </section>
         </main>

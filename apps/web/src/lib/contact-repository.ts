@@ -33,13 +33,12 @@ let appCheck: AppCheck | undefined;
 export function contactEndpoint(): string {
   const endpoint = process.env.NEXT_PUBLIC_CONTACT_INBOX_API_URL;
   if (!endpoint)
-    throw new ContactError('Форма связи временно недоступна.', 'configuration-required');
+    throw new ContactError('Форма связи временно недоступна', 'configuration-required');
   const demo =
     process.env.NEXT_PUBLIC_USE_EMULATORS === 'true' &&
     !!firebaseConfig().projectId?.startsWith('demo-');
   const checked = safeApiEndpoint(endpoint, demo);
-  if (!checked)
-    throw new ContactError('Форма связи временно недоступна.', 'configuration-required');
+  if (!checked) throw new ContactError('Форма связи временно недоступна', 'configuration-required');
   return checked;
 }
 export function contactConfigured(): boolean {
@@ -67,7 +66,7 @@ export async function submitContact(submission: ContactSubmission): Promise<void
   if (!demo) {
     const siteKey = process.env.NEXT_PUBLIC_APP_CHECK_SITE_KEY;
     if (!siteKey)
-      throw new ContactError('Форма связи временно недоступна.', 'configuration-required');
+      throw new ContactError('Форма связи временно недоступна', 'configuration-required');
     appCheck ??= initializeAppCheck(firebaseServices().app, {
       provider: new ReCaptchaEnterpriseProvider(siteKey),
       isTokenAutoRefreshEnabled: false,
@@ -87,17 +86,17 @@ export async function submitContact(submission: ContactSubmission): Promise<void
   if (!response.ok) {
     const code = typeof result.error?.code === 'string' ? result.error.code : 'unavailable';
     const messages: Record<string, string> = {
-      'invalid-data': 'Проверьте имя, почту и сообщение.',
-      'rate-limited': 'Лимит обращений достигнут. Попробуйте позднее.',
-      'document-unavailable': 'Документ больше не принимает обращения.',
-      'contact-unavailable': 'Документ больше не принимает обращения.',
-      'not-found': 'Документ больше не принимает обращения.',
-      'app-check-required': 'Не удалось проверить отправку. Попробуйте ещё раз.',
-      'configuration-required': 'Форма связи временно недоступна.',
-      conflict: 'Изменился результат отправки. Повторите прежнюю попытку.',
+      'invalid-data': 'Проверьте имя, почту и сообщение',
+      'rate-limited': 'Лимит обращений достигнут. Попробуйте позднее',
+      'document-unavailable': 'Документ больше не принимает обращения',
+      'contact-unavailable': 'Документ больше не принимает обращения',
+      'not-found': 'Документ больше не принимает обращения',
+      'app-check-required': 'Не удалось проверить отправку. Попробуйте ещё раз',
+      'configuration-required': 'Форма связи временно недоступна',
+      conflict: 'Изменился результат отправки. Повторите прежнюю попытку',
     };
     throw new ContactError(
-      messages[code] ?? 'Ответ не подтверждён. Повторите отправку с этой страницы.',
+      messages[code] ?? 'Ответ не подтверждён. Повторите отправку с этой страницы',
       code,
     );
   }
@@ -106,7 +105,7 @@ export async function submitContact(submission: ContactSubmission): Promise<void
 function owner(user: User) {
   const services = firebaseServices();
   if (services.auth.currentUser?.uid !== user.uid)
-    throw new ContactError('Аккаунт изменился.', 'owner-changed');
+    throw new ContactError('Аккаунт изменился', 'owner-changed');
   return collection(services.firestore, 'accounts', user.uid, 'contactRequests');
 }
 export async function loadInbox(user: User, after?: QueryDocumentSnapshot) {
@@ -119,19 +118,19 @@ export async function loadInbox(user: User, after?: QueryDocumentSnapshot) {
   return { requests, cursor: snapshot.docs.at(-1), hasMore: snapshot.size === 50 };
 }
 export async function loadContactRequest(user: User, requestId: string) {
-  if (!/^[a-f0-9]{32}$/.test(requestId)) throw new ContactError('Обращение не найдено.');
+  if (!/^[a-f0-9]{32}$/.test(requestId)) throw new ContactError('Обращение не найдено');
   const snapshot = await getDocFromServer(doc(owner(user), requestId));
   owner(user);
   return snapshot.exists() ? parseContactRequest(snapshot.data(), snapshot.id) : null;
 }
 export async function markContactRead(user: User, requestId: string) {
-  if (!/^[a-f0-9]{32}$/.test(requestId)) throw new ContactError('Обращение не найдено.');
+  if (!/^[a-f0-9]{32}$/.test(requestId)) throw new ContactError('Обращение не найдено');
   const reference = doc(owner(user), requestId);
   await runTransaction(firebaseServices().firestore, async (transaction) => {
     owner(user);
     const snapshot = await transaction.get(reference);
     owner(user);
-    if (!snapshot.exists()) throw new ContactError('Обращение не найдено.');
+    if (!snapshot.exists()) throw new ContactError('Обращение не найдено');
     const request = parseContactRequest(snapshot.data(), snapshot.id);
     if (!request.readAt) transaction.update(reference, { readAt: serverTimestamp() });
   });

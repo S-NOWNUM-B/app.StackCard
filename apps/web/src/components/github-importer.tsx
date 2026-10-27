@@ -72,7 +72,7 @@ export function GitHubImporter({
     } catch (e) {
       if (token === generation.current) {
         setFailedLoad({ page, replace });
-        setError(e instanceof Error ? e.message : 'Не удалось загрузить GitHub.');
+        setError(e instanceof Error ? e.message : 'Не удалось загрузить GitHub');
       }
     } finally {
       clearTimeout(timeout);
@@ -87,7 +87,7 @@ export function GitHubImporter({
       await onImport(repositories.filter((r) => selected.has(r.repositoryId)));
       setSelected(new Set());
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не удалось сохранить проекты.');
+      setError(e instanceof Error ? e.message : 'Не удалось сохранить проекты');
     } finally {
       setBusy(false);
     }
@@ -111,9 +111,7 @@ export function GitHubImporter({
       <h1>Импортировать из GitHub</h1>
       {!username ? (
         <>
-          <p className="muted">
-            Добавьте GitHub-профиль в настройках, чтобы импортировать проекты.
-          </p>
+          <p className="muted">Добавьте GitHub-профиль в настройках, чтобы импортировать проекты</p>
           <Button onClick={onSettings}>Открыть настройки</Button>
         </>
       ) : (
@@ -130,10 +128,10 @@ export function GitHubImporter({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          {cached && pages.length > 0 && <Notice>Показана доступная кешированная копия.</Notice>}
+          {cached && pages.length > 0 && <Notice>Показана доступная кешированная копия</Notice>}
           {pages.at(-1)?.hasNext && (
             <p className="muted">
-              Поиск охватывает только загруженные страницы. Загрузите остальные репозитории.
+              Поиск охватывает только загруженные страницы. Загрузите остальные репозитории
             </p>
           )}
           {shown.map((r) => (

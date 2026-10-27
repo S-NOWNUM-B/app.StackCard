@@ -35,28 +35,28 @@ export function validateContact(input: ContactInput): ContactInput {
     email = input.email.trim().toLowerCase(),
     message = input.message.replace(/\r\n?/g, '\n').trim();
   if (!name || name.length > 100 || /[\x00-\x1f\x7f]/.test(name))
-    throw new ContactError('Введите имя длиной до 100 символов.');
+    throw new ContactError('Введите имя длиной до 100 символов');
   if (!email || email.length > 254 || !safePublicHref(`mailto:${email}`, 'email'))
-    throw new ContactError('Введите корректную почту.');
+    throw new ContactError('Введите корректную почту');
   if (!message || message.length > 4000 || /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(message))
-    throw new ContactError('Введите сообщение длиной до 4000 символов.');
-  if (input.website !== '') throw new ContactError('Не удалось отправить сообщение.');
+    throw new ContactError('Введите сообщение длиной до 4000 символов');
+  if (input.website !== '') throw new ContactError('Не удалось отправить сообщение');
   return { name, email, message, website: '' };
 }
 export function checkContactAccepted(value: unknown, requestId: string): void {
   if (!value || typeof value !== 'object' || Array.isArray(value))
-    throw new ContactError('Не удалось подтвердить отправку.', 'unknown');
+    throw new ContactError('Не удалось подтвердить отправку', 'unknown');
   const result = value as Record<string, unknown>;
   if (
     Object.keys(result).length !== 2 ||
     result.status !== 'accepted' ||
     result.requestId !== requestId
   )
-    throw new ContactError('Не удалось подтвердить отправку.', 'unknown');
+    throw new ContactError('Не удалось подтвердить отправку', 'unknown');
 }
 export function parseContactRequest(value: unknown, requestId: string): ContactRequest {
   const fail = (): never => {
-    throw new ContactError('Формат обращения не поддерживается.');
+    throw new ContactError('Формат обращения не поддерживается');
   };
   if (!value || typeof value !== 'object' || Array.isArray(value)) return fail();
   const d = value as Record<string, unknown>;

@@ -2,6 +2,9 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { equal } from '@/lib/model';
 import { Button, Field, Icon, Notice } from './ui';
+import { EditorCard } from './editor-card';
+import { InlineIcon } from './inline-icon';
+import { SortableList } from './sortable-list';
 
 export type RecordField<T> = {
   key: Extract<keyof T, string>;
@@ -20,17 +23,18 @@ export function saveEditorRecord<T extends { id: string }>(
   for (const field of fields) {
     const value = draft[field.key];
     if (typeof value !== 'string' || value.length > field.maxLength)
-      throw new Error(`«${field.label}»: максимум ${field.maxLength} символов.`);
-    if (field.required && !value.trim()) throw new Error(`Заполните «${field.label}».`);
+      throw new Error(`«${field.label}»: максимум ${field.maxLength} символов`);
+    if (field.required && !value.trim()) throw new Error(`Заполните «${field.label}»`);
   }
   if (!previous) return [...items, draft];
   const current = items.find((item) => item.id === previous.id);
   if (!current || !equal(current, previous))
-    throw new Error('Запись изменилась. Откройте её снова.');
+    throw new Error('Запись изменилась. Откройте её снова');
   return items.map((item) => (item.id === previous.id ? { ...item, ...draft, id: item.id } : item));
 }
 
 export function RecordEditor<T extends { id: string }>({
+  id,
   title,
   addLabel,
   editLabel,
@@ -40,7 +44,9 @@ export function RecordEditor<T extends { id: string }>({
   create,
   summary,
   onChange,
+  onMove,
 }: {
+  id?: string;
   title: string;
   addLabel: string;
   editLabel: string;
@@ -50,22 +56,26 @@ export function RecordEditor<T extends { id: string }>({
   create: () => T;
   summary: (item: T) => { title: string; detail: string };
   onChange: (items: T[]) => void;
+  onMove?: (from: number, to: number) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null),
     previous = useRef<T | null>(null),
     titleId = useId(),
     errorId = useId();
   const [draft, setDraft] = useState<T | null>(null),
-    [error, setError] = useState('');
+    [error, setError] = useState(''),
+    [session, setSession] = useState(0);
   useEffect(() => {
     const current = dialog.current;
     if (!draft || !current) return;
     if (!current.open) current.showModal();
     current.querySelector<HTMLInputElement>('input')?.focus();
-  }, [draft?.id]);
+  }, [session]);
 
   function open(item: T | null) {
+    // Состояние диалога задаётся только при открытии: асинхронный close event не сбрасывает новое.
     previous.current = item ? { ...item } : null;
+    setSession((value) => value + 1);
     setError('');
     setDraft(item ? { ...item } : create());
   }
@@ -75,14 +85,16 @@ export function RecordEditor<T extends { id: string }>({
       onChange(saveEditorRecord(items, previous.current, draft, fields));
       dialog.current?.close();
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : 'Не удалось сохранить.');
+      setError(failure instanceof Error ? failure.message : 'Не удалось сохранить');
       dialog.current?.querySelector<HTMLInputElement>('input')?.focus();
     }
   }
   return (
-    <div className="stack record-editor">
-      <div className="record-editor-heading">
-        <h2>{title}</h2>
+    <EditorCard
+      id={id}
+      title={title}
+      count={items.length}
+      action={
         <Button
           variant="quiet"
           className="record-editor-action"
@@ -92,13 +104,20 @@ export function RecordEditor<T extends { id: string }>({
         >
           <Icon name="plus" />
         </Button>
-      </div>
-      {items.length > 0 && (
-        <ul className="record-editor-list" aria-label={title}>
-          {items.map((item, index) => {
+      }
+    >
+      {items.length > 0 ? (
+        <SortableList
+          className="record-editor-list"
+          label={title}
+          items={items}
+          itemKey={(item) => item.id}
+          itemLabel={(item) => summary(item).title}
+          onMove={onMove}
+          renderItem={(item, index) => {
             const copy = summary(item);
             return (
-              <li className="record-editor-item" key={item.id}>
+              <div className="record-editor-item">
                 <Button
                   variant="quiet"
                   className="record-editor-summary"
@@ -119,34 +138,19 @@ export function RecordEditor<T extends { id: string }>({
                   title={`${removeLabel} ${copy.title}`}
                   onClick={() => onChange(items.filter((_, position) => position !== index))}
                 >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path d="m6 6 12 12M18 6 6 18" />
-                  </svg>
+                  <InlineIcon name="x" size={20} />
                 </Button>
-              </li>
+              </div>
             );
-          })}
-        </ul>
+          }}
+        />
+      ) : (
+        <p className="editor-empty muted">Пока пусто. Нажмите «+», чтобы добавить</p>
       )}
       <dialog
         ref={dialog}
         className="dialog record-editor-dialog"
         aria-labelledby={titleId}
-        onClose={() => {
-          previous.current = null;
-          setDraft(null);
-          setError('');
-        }}
         onKeyDown={(event) => {
           if (event.key !== 'Tab') return;
           const first = event.currentTarget.querySelector<HTMLInputElement>('input'),
@@ -198,6 +202,6 @@ export function RecordEditor<T extends { id: string }>({
           </div>
         </form>
       </dialog>
-    </div>
+    </EditorCard>
   );
 }

@@ -3,7 +3,7 @@ import { AccountDeletionRecovery } from '@/components/account-settings';
 import { Header } from '@/components/ui';
 
 export const metadata: Metadata = {
-  title: 'Удаление аккаунта | StackCard',
+  title: 'Удаление аккаунта',
   robots: { index: false, follow: false },
 };
 

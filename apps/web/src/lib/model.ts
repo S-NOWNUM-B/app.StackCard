@@ -156,8 +156,16 @@ export type DraftEnvelope = {
   updatedAt: unknown;
 };
 export class ContractError extends Error {
-  constructor(message = 'Данные имеют неподдерживаемый формат. Перезапись заблокирована.') {
+  constructor(message = 'Данные имеют неподдерживаемый формат. Перезапись заблокирована') {
     super(message);
+  }
+}
+// Definitive конфликт CAS: сервер принял другую версию после captured basis.
+export class BasisConflictError extends ContractError {
+  constructor() {
+    super(
+      'База обновлена на другом устройстве. Ваша правка сохранена в форме. Загрузите серверную версию и повторите Save',
+    );
   }
 }
 export const clone = <T>(value: T): T => structuredClone(value);
@@ -234,7 +242,7 @@ export function createDocument(
   now = new Date(),
 ): PortfolioDocument {
   if (content.documents.length >= 20)
-    throw new ContractError('Можно сохранить не больше 20 документов.');
+    throw new ContractError('Можно сохранить не больше 20 документов');
   return {
     id: uid(),
     title,
@@ -265,7 +273,7 @@ export function resolveDocument(
     ...clone(document.content),
     projects: document.projects.map((a) => {
       const p = workspace.projects.find((p) => p.id === a.projectId);
-      if (!p) throw new ContractError('Проект отсутствует в Library.');
+      if (!p) throw new ContractError('Проект отсутствует в Library');
       return {
         ...clone(p),
         title: a.titleOverride ?? p.title,
@@ -360,7 +368,7 @@ const keys = (value: Record<string, unknown>, allowed: string[]) => {
 };
 const str = (value: unknown, max: number, required = false): string => {
   if (typeof value !== 'string' || value.length > max || (required && !value.trim()))
-    throw new ContractError('Проверьте обязательные поля и длину текста.');
+    throw new ContractError('Проверьте обязательные поля и длину текста');
   return value;
 };
 const bool = (value: unknown, fallback?: boolean): boolean => {
@@ -374,7 +382,7 @@ const list = (value: unknown, max = 10000): unknown[] => {
 };
 const ids = <T extends { id: string }>(items: T[]): T[] => {
   if (new Set(items.map((i) => i.id)).size !== items.length)
-    throw new ContractError('Повторяющиеся ID.');
+    throw new ContractError('Повторяющиеся ID');
   return items;
 };
 const date = (value: unknown): string => {
@@ -411,7 +419,7 @@ function decodeProfile(raw: unknown, version: number, owner: string): Profile {
   ]);
   const username = str(p.username, 30);
   if (username && !/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(username))
-    throw new ContractError('Username: 3–30 строчных латинских символов, цифр или дефисов.');
+    throw new ContractError('Username: 3–30 строчных латинских символов, цифр или дефисов');
   const avatarUrl = str(p.avatarUrl, 2048);
   if (avatarUrl && !safeHttpUrl(avatarUrl)) throw new ContractError();
   const avatarPath = str(p.avatarPath ?? '', 300);
@@ -433,7 +441,7 @@ function mediaPath(path: string, owner: string) {
     (!/^accounts\/[^/]+\/media\/[0-9a-f]{32}\.jpg$/.test(path) ||
       !path.startsWith(`accounts/${owner}/media/`))
   )
-    throw new ContractError('Изображение принадлежит другому аккаунту.');
+    throw new ContractError('Изображение принадлежит другому аккаунту');
 }
 function decodeBase(raw: unknown, version: number, owner: string): BaseData {
   const x = map(raw);
@@ -484,7 +492,7 @@ function decodeBase(raw: unknown, version: number, owner: string): BaseData {
       if (!(version >= 6 ? linkKinds : linkKinds.slice(0, 4)).includes(kind))
         throw new ContractError();
       const url = str(l.url, 2048, true);
-      if (!safeContactUrl(url, kind)) throw new ContractError('Некорректная ссылка контакта.');
+      if (!safeContactUrl(url, kind)) throw new ContractError('Некорректная ссылка контакта');
       return {
         id: str(l.id, 200, true),
         label: str(l.label, 80, true),
@@ -524,7 +532,7 @@ function decodeProject(raw: unknown, version: number, owner: string): Project {
   const repositoryUrl = str(p.repositoryUrl, 2048),
     liveUrl = str(p.liveUrl, 2048);
   if ((repositoryUrl && !safeHttpUrl(repositoryUrl)) || (liveUrl && !safeHttpUrl(liveUrl)))
-    throw new ContractError('Некорректный URL проекта.');
+    throw new ContractError('Некорректный URL проекта');
   const imagePaths = list(p.imagePaths ?? [], 6).map((x) => {
     const path = str(x, 300, true);
     mediaPath(path, owner);
@@ -719,7 +727,7 @@ function decodeContent(
           new Set(attachments.map((a) => a.projectId)).size !== attachments.length ||
           attachments.some((a) => !projects.some((p) => p.id === a.projectId))
         )
-          throw new ContractError('Нарушена связь документа с Library.');
+          throw new ContractError('Нарушена связь документа с Library');
         let baseSnapshot: BaseData | undefined;
         if (d.baseSnapshot != null) {
           keys(map(d.baseSnapshot), ['profile', 'skills', 'experience', 'education', 'links']);
@@ -746,19 +754,19 @@ function decodeContent(
           !result.documents.some((r) => r.id === d.attachedResumeId && r.kind === 'resume')),
     )
   )
-    throw new ContractError('Неверная связь с резюме.');
+    throw new ContractError('Неверная связь с резюме');
   if (documents && version >= 7) {
     if (!('mainPortfolioId' in x) || !('githubUsername' in x) || !('personalization' in x))
       throw new ContractError();
     result.mainPortfolioId = nullable(x.mainPortfolioId, 200, true);
     if (result.mainPortfolioId && !result.documents.some((d) => d.id === result.mainPortfolioId))
-      throw new ContractError('Основное портфолио отсутствует.');
+      throw new ContractError('Основное портфолио отсутствует');
     result.githubUsername = str(x.githubUsername ?? '', 39);
     if (
       result.githubUsername &&
       normalizeGitHubUsername(result.githubUsername) !== result.githubUsername
     )
-      throw new ContractError('Некорректный GitHub-профиль.');
+      throw new ContractError('Некорректный GitHub-профиль');
     const personalization = map(x.personalization ?? { status: 'notRequired', step: 0 });
     keys(personalization, ['status', 'step']);
     if (
@@ -767,7 +775,7 @@ function decodeContent(
       (personalization.step as number) < 0 ||
       (personalization.step as number) > 3
     )
-      throw new ContractError('Некорректный прогресс персонализации.');
+      throw new ContractError('Некорректный прогресс персонализации');
     result.personalization = {
       status: personalization.status as WorkspaceContent['personalization']['status'],
       step: personalization.step as number,
@@ -865,9 +873,7 @@ export function assertWriteBasis(current: DraftEnvelope | null, basis: DraftEnve
         !equal(current.content, basis.content) ||
         current.notes !== basis.notes))
   )
-    throw new ContractError(
-      'База обновлена на другом устройстве. Ваша правка сохранена в форме. Перезагрузите серверную версию перед повторным Save.',
-    );
+    throw new BasisConflictError();
 }
 export type BaseChange = {
   id: string;
@@ -1028,7 +1034,7 @@ export function applyDocumentBaseReview(
     !equal(review.document, currentDocument)
   )
     throw new ContractError(
-      'Аккаунт, сохранённая база или документ изменились. Откройте сравнение заново.',
+      'Аккаунт, сохранённая база или документ изменились. Откройте сравнение заново',
     );
   return acceptBaseChanges(review.base, review.document, selected);
 }
@@ -1036,7 +1042,7 @@ export function applyDocumentBaseReview(
 function decodeIconId(value: unknown): ProjectIconId {
   if (value == null) return 'folder';
   if (!projectIconIds.includes(value as ProjectIconId))
-    throw new ContractError('Выберите встроенную иконку проекта.');
+    throw new ContractError('Выберите встроенную иконку проекта');
   return value as ProjectIconId;
 }
 export function normalizeGitHubUsername(value: string): string {
@@ -1045,7 +1051,7 @@ export function normalizeGitHubUsername(value: string): string {
   if (url) name = url[1];
   if (!name) return '';
   if (!/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/.test(name) || name.includes('--'))
-    throw new ContractError('Введите username или ссылку https://github.com/username.');
+    throw new ContractError('Введите username или ссылку https://github.com/username');
   return name.toLowerCase();
 }
 export function mainDocument(workspace: WorkspaceContent): PortfolioDocument | undefined {
@@ -1099,9 +1105,9 @@ export function migrateMainPortfolio(
   selectedId: string | null,
   now = new Date(),
 ): WorkspaceContent {
-  if (workspace.mainPortfolioId) throw new ContractError('Основное портфолио уже выбрано.');
+  if (workspace.mainPortfolioId) throw new ContractError('Основное портфолио уже выбрано');
   const source = selectedId ? workspace.documents.find((d) => d.id === selectedId) : undefined;
-  if (selectedId && !source) throw new ContractError('Документ для переноса отсутствует.');
+  if (selectedId && !source) throw new ContractError('Документ для переноса отсутствует');
   const original =
     source ?? createDocument({ ...workspace, documents: [] }, 'portfolio', 'Портфолио', now);
   const candidate = clone(original);

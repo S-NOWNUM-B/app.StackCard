@@ -16,7 +16,7 @@ export function ShareActions({ title, publicId }: { title: string; publicId: str
   function selectLink() {
     input.current?.focus();
     input.current?.select();
-    setStatus('Выделите и скопируйте адрес страницы.');
+    setStatus('Выделите и скопируйте адрес страницы');
   }
   async function copy() {
     try {
@@ -25,7 +25,7 @@ export function ShareActions({ title, publicId }: { title: string; publicId: str
         return;
       }
       await navigator.clipboard.writeText(url);
-      setStatus('Ссылка скопирована.');
+      setStatus('Ссылка скопирована');
     } catch {
       selectLink();
     }
@@ -34,7 +34,7 @@ export function ShareActions({ title, publicId }: { title: string; publicId: str
     if (!navigator.share) return;
     try {
       await navigator.share({ title, url });
-      setStatus('Ссылка отправлена.');
+      setStatus('Ссылка отправлена');
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
       selectLink();

@@ -50,8 +50,8 @@ export function ContactForm({ publicId }: { publicId: string }) {
       attempt.current = null;
       setMessage(
         newer
-          ? 'Обращение доставлено во входящие автора. Более поздний текст остался в форме.'
-          : 'Обращение доставлено во входящие автора.',
+          ? 'Обращение доставлено во входящие автора. Более поздний текст остался в форме'
+          : 'Обращение доставлено во входящие автора',
       );
     } catch (e) {
       if (!alive.current) return;
@@ -70,7 +70,7 @@ export function ContactForm({ publicId }: { publicId: string }) {
       setError(
         e instanceof ContactError
           ? e.message
-          : 'Результат отправки неизвестен. Повторите отправку с этой страницы.',
+          : 'Результат отправки неизвестен. Повторите отправку с этой страницы',
       );
     } finally {
       if (alive.current) setBusy(false);
@@ -79,9 +79,9 @@ export function ContactForm({ publicId }: { publicId: string }) {
   return (
     <section className="section stack" id="contact-me" aria-labelledby="contact-form-title">
       <h2 id="contact-form-title">Связаться с автором</h2>
-      <p className="muted">Имя, почту и сообщение увидит только автор этого документа.</p>
+      <p className="muted">Имя, почту и сообщение увидит только автор этого документа</p>
       {!configured ? (
-        <Notice>Форма связи временно недоступна. Используйте опубликованные контакты.</Notice>
+        <Notice>Форма связи временно недоступна. Используйте опубликованные контакты</Notice>
       ) : (
         <form
           className="stack"

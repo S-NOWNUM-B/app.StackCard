@@ -12,6 +12,8 @@ export type PortfolioPdfAssets = {
   boldFont: string;
   stockIconSvg: Record<string, string>;
   avatarBytes?: Uint8Array;
+  // Явный отказ от фото после неудачной загрузки legacy-ссылки.
+  omitAvatar?: boolean;
 };
 
 const iconIds = new Set([
@@ -51,9 +53,9 @@ function StockIcon({
   const { Svg, Path, Circle, Rect } = renderer;
   const selected = iconIds.has(id) ? id : 'folder';
   const source = assets.stockIconSvg[selected] ?? assets.stockIconSvg.folder;
-  if (!source) throw new Error('Не удалось подготовить иконку проекта для PDF.');
+  if (!source) throw new Error('Не удалось подготовить иконку проекта для PDF');
   const shapes = [...source.matchAll(/<(path|rect|circle)\s+([^>]+)\/>/g)];
-  if (!shapes.length) throw new Error('Иконка проекта имеет неподдерживаемый формат.');
+  if (!shapes.length) throw new Error('Иконка проекта имеет неподдерживаемый формат');
   return (
     <Svg viewBox="0 0 24 24" width={20} height={20}>
       {shapes.map((match, index) => {
@@ -133,8 +135,8 @@ export async function createPortfolioPdfDocument(
       safePublicHref(l.url, l.kind),
   );
   const hasAvatar = visible.has('profile') && !!(profile.avatarPath || profile.avatarUrl);
-  if (hasAvatar && !assets.avatarBytes?.length)
-    throw new Error('Не удалось получить фотографию для PDF. Попробуйте ещё раз.');
+  if (hasAvatar && !assets.avatarBytes?.length && !assets.omitAvatar)
+    throw new Error('Не удалось получить фотографию для PDF. Попробуйте ещё раз');
   if (
     assets.avatarBytes?.length &&
     (assets.avatarBytes.length < 4 ||
@@ -143,7 +145,7 @@ export async function createPortfolioPdfDocument(
       assets.avatarBytes.at(-2) !== 0xff ||
       assets.avatarBytes.at(-1) !== 0xd9)
   )
-    throw new Error('Фотография имеет неподдерживаемый формат. Попробуйте выбрать её ещё раз.');
+    throw new Error('Фотография имеет неподдерживаемый формат. Попробуйте выбрать её ещё раз');
   const paragraph = (value: string, key: string, style = body) =>
     value.trim() ? (
       <Text key={key} style={style}>
@@ -291,6 +293,6 @@ export async function renderPortfolioPdf(
   const { pdf } = await import('@react-pdf/renderer');
   const blob = await pdf(await createPortfolioPdfDocument(content, assets)).toBlob();
   if (blob.type !== 'application/pdf' || blob.size === 0 || blob.size > 20 * 1024 * 1024)
-    throw new Error('Не удалось создать PDF. Попробуйте ещё раз.');
+    throw new Error('Не удалось создать PDF. Попробуйте ещё раз');
   return blob;
 }

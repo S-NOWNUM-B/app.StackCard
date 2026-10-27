@@ -3,14 +3,21 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Button } from './ui';
 
-type Confirmation = { title: string; message: string };
+// Обычное подтверждение — «Отмена / Подтвердить»; выбор при уходе — «Отмена / Не сохранять / Сохранить».
+type Confirmation = {
+  title: string;
+  message: string;
+  discardLabel?: string;
+  confirmLabel?: string;
+};
+export type Choice = 'cancel' | 'discard' | 'confirm';
 
 export function ConfirmationDialog({
   request,
   onDecision,
 }: {
   request: Confirmation | null;
-  onDecision: (confirmed: boolean) => void;
+  onDecision: (choice: Choice) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null),
     titleId = useId(),
@@ -34,7 +41,7 @@ export function ConfirmationDialog({
       aria-describedby={messageId}
       onCancel={(event) => {
         event.preventDefault();
-        onDecision(false);
+        onDecision('cancel');
       }}
       onKeyDown={(event) => {
         if (event.key !== 'Tab') return;
@@ -55,10 +62,17 @@ export function ConfirmationDialog({
         <h2 id={titleId}>{request?.title}</h2>
         <p id={messageId}>{request?.message}</p>
         <div className="dialog-actions">
-          <Button variant="secondary" onClick={() => onDecision(false)}>
+          <Button variant="secondary" onClick={() => onDecision('cancel')}>
             Отмена
           </Button>
-          <Button onClick={() => onDecision(true)}>Подтвердить</Button>
+          {request?.discardLabel && (
+            <Button variant="secondary" onClick={() => onDecision('discard')}>
+              {request.discardLabel}
+            </Button>
+          )}
+          <Button onClick={() => onDecision('confirm')}>
+            {request?.confirmLabel ?? 'Подтвердить'}
+          </Button>
         </div>
       </div>
     </dialog>
@@ -67,26 +81,40 @@ export function ConfirmationDialog({
 
 export function useConfirmation() {
   const [request, setRequest] = useState<Confirmation | null>(null);
-  const pending = useRef<((confirmed: boolean) => void) | null>(null);
-  const confirm = useCallback((message: string, title = 'Подтверждение') => {
-    if (pending.current) return Promise.resolve(false);
-    return new Promise<boolean>((resolve) => {
+  const pending = useRef<((choice: Choice) => void) | null>(null);
+  const ask = useCallback((next: Confirmation) => {
+    if (pending.current) return Promise.resolve<Choice>('cancel');
+    return new Promise<Choice>((resolve) => {
       pending.current = resolve;
-      setRequest({ title, message });
+      setRequest(next);
     });
   }, []);
-  const decide = useCallback((confirmed: boolean) => {
+  const confirm = useCallback(
+    async (message: string, title = 'Подтверждение') =>
+      (await ask({ title, message })) === 'confirm',
+    [ask],
+  );
+  const choose = useCallback(
+    (message: string, title: string, discardLabel: string, confirmLabel: string) =>
+      ask({ title, message, discardLabel, confirmLabel }),
+    [ask],
+  );
+  const decide = useCallback((choice: Choice) => {
     const resolve = pending.current;
     pending.current = null;
     setRequest(null);
-    resolve?.(confirmed);
+    resolve?.(choice);
   }, []);
   useEffect(
     () => () => {
-      pending.current?.(false);
+      pending.current?.('cancel');
       pending.current = null;
     },
     [],
   );
-  return { confirm, confirmation: <ConfirmationDialog request={request} onDecision={decide} /> };
+  return {
+    confirm,
+    choose,
+    confirmation: <ConfirmationDialog request={request} onDecision={decide} />,
+  };
 }

@@ -36,7 +36,7 @@ const identifier = (value: unknown): value is string =>
   !/[\x00-\x1f/]/.test(value);
 const object = (value: unknown): Record<string, unknown> => {
   if (!value || typeof value !== 'object' || Array.isArray(value))
-    throw new Error('Некорректный ответ сервиса публикации.');
+    throw new Error('Некорректный ответ сервиса публикации');
   return value as Record<string, unknown>;
 };
 function publication(value: unknown): Publication {
@@ -49,13 +49,13 @@ function publication(value: unknown): Publication {
     !['published', 'unpublished', 'deleted'].includes(p.state as string) ||
     typeof p.sourceMutationId !== 'string'
   )
-    throw new Error('Некорректная публикация в ответе сервиса.');
+    throw new Error('Некорректная публикация в ответе сервиса');
   if (p.state === 'published') {
     let url: URL;
     try {
       url = new URL(p.url as string);
     } catch {
-      throw new Error('Некорректный публичный адрес.');
+      throw new Error('Некорректный публичный адрес');
     }
     if (
       !['http:', 'https:'].includes(url.protocol) ||
@@ -66,9 +66,9 @@ function publication(value: unknown): Publication {
       url.pathname !== `/d/${p.publicId}` ||
       p.version < 1
     )
-      throw new Error('Некорректный публичный адрес.');
+      throw new Error('Некорректный публичный адрес');
   } else if (p.url !== null)
-    throw new Error('Отозванная публикация не может иметь доступную ссылку.');
+    throw new Error('Отозванная публикация не может иметь доступную ссылку');
   return p as Publication;
 }
 export function parsePublicationMutation(value: unknown): PublicationMutation {
@@ -82,8 +82,71 @@ export function parsePublicationMutation(value: unknown): PublicationMutation {
     !integer(p.expectedVersion) ||
     !integer(p.expectedGeneration)
   )
-    throw new Error('Квитанция публикации повреждена. Новые операции заблокированы.');
+    throw new Error('Квитанция публикации повреждена. Новые операции заблокированы');
   return p as PublicationMutation;
+}
+export class PublicationError extends Error {
+  constructor(
+    message: string,
+    readonly code: string,
+  ) {
+    super(message);
+  }
+}
+export function isDefinitivePublicationError(error: unknown) {
+  return (
+    error instanceof PublicationError &&
+    [
+      'invalid-data',
+      'invalid-media',
+      'conflict',
+      'deleted',
+      'resource-exhausted',
+      'configuration-required',
+    ].includes(error.code)
+  );
+}
+function failureMessage(code: string): string {
+  return (
+    (
+      {
+        'invalid-data': 'Проверьте поля сохранённого документа',
+        'invalid-media':
+          'Не удалось подготовить изображения. Загрузите фото заново или выберите другой источник',
+        conflict: 'Данные изменились на другом устройстве. Сверьте серверную версию',
+        deleted: 'Документ уже удалён',
+        unauthenticated: 'Войдите снова и проверьте результат операции',
+        'account-deleting': 'Аккаунт удаляется. Новые действия временно недоступны',
+        'configuration-required': 'Публикация пока недоступна. Попробуйте позднее',
+        'reauthentication-required': 'Подтвердите вход повторно перед этим действием',
+        'resource-exhausted': 'Достигнут лимит документов или операций',
+      } as Record<string, string>
+    )[code] ?? 'Действие не завершено. Проверьте результат перед повтором'
+  );
+}
+// Не-JSON (HTML proxy, пустое тело) и null не должны превращаться в SyntaxError/TypeError.
+export async function readPublicationResponse(response: Response): Promise<unknown> {
+  let result: unknown = null;
+  try {
+    result = await response.json();
+  } catch {
+    result = null;
+  }
+  if (!response.ok) {
+    const error =
+      result && typeof result === 'object' && 'error' in result ? result.error : undefined;
+    const code =
+      error && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
+        ? error.code
+        : 'unavailable';
+    throw new PublicationError(failureMessage(code), code);
+  }
+  if (!result || typeof result !== 'object' || Array.isArray(result))
+    throw new PublicationError(
+      'Сервис публикации вернул некорректный ответ. Проверьте результат и повторите попытку',
+      'unavailable',
+    );
+  return result;
 }
 export function checkPublicationResult(value: unknown, body: Record<string, unknown>): void {
   const r = object(value);
@@ -93,36 +156,36 @@ export function checkPublicationResult(value: unknown, body: Record<string, unkn
       !Array.isArray(r.publications) ||
       !integer(r.lifecycleGeneration)
     )
-      throw new Error('Некорректный inventory публикаций.');
+      throw new Error('Некорректный inventory публикаций');
     const parsed = r.publications.map(publication);
     if (
       new Set(parsed.map((p) => p.documentId)).size !== parsed.length ||
       new Set(parsed.map((p) => p.publicId)).size !== parsed.length
     )
-      throw new Error('Повторяющаяся публикация в inventory.');
+      throw new Error('Повторяющаяся публикация в inventory');
     return;
   }
   if (
     !['completed', 'pending', 'unknown'].includes(r.status as string) ||
     r.operationId !== body.operationId
   )
-    throw new Error('Сервис не подтвердил запрошенную операцию.');
+    throw new Error('Сервис не подтвердил запрошенную операцию');
   if (r.status === 'unknown') return;
   const expected = body.action === 'deletionStatus' ? 'deleteAccount' : body.action;
   if (expected === 'status') {
     if (!['publish', 'unpublish', 'deleteDocument', 'deleteAccount'].includes(r.action as string))
-      throw new Error('Неподтверждённый тип операции.');
-  } else if (r.action !== expected) throw new Error('Сервис подтвердил другую операцию.');
+      throw new Error('Неподтверждённый тип операции');
+  } else if (r.action !== expected) throw new Error('Сервис подтвердил другую операцию');
   if (!integer(r.lifecycleGeneration))
-    throw new Error('Сервис не подтвердил версию жизненного цикла.');
+    throw new Error('Сервис не подтвердил версию жизненного цикла');
   if (r.status === 'completed' && r.action !== 'deleteAccount') {
     const p = publication(r.publication);
     if (body.documentId !== undefined && p.documentId !== body.documentId)
-      throw new Error('Сервис подтвердил другой документ.');
+      throw new Error('Сервис подтвердил другой документ');
     // Квитанция доказывает завершённое действие; metadata отражает уже текущее состояние.
     // После потерянного Publish ACK другой клиент мог успеть снять публикацию.
     if (r.action === 'deleteDocument' && p.state !== 'deleted')
-      throw new Error('Сервис не подтвердил удаление документа.');
+      throw new Error('Сервис не подтвердил удаление документа');
   }
 }
 export type ReceiptStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -141,11 +204,11 @@ export function writePublicationReceipt(
   parsePublicationMutation(operation);
   const previous = readPublicationReceipt(store, key);
   if (previous && JSON.stringify(previous) !== JSON.stringify(operation))
-    throw new Error('В другой вкладке уже начата операция. Сначала восстановите её результат.');
+    throw new Error('В другой вкладке уже начата операция. Сначала восстановите её результат');
   const serialized = JSON.stringify(operation);
   store.setItem(key, serialized);
   if (store.getItem(key) !== serialized)
-    throw new Error('Не удалось сохранить квитанцию. Запрос не отправлен.');
+    throw new Error('Не удалось сохранить квитанцию. Запрос не отправлен');
 }
 export function clearPublicationReceipt(
   store: ReceiptStorage,
@@ -157,6 +220,6 @@ export function clearPublicationReceipt(
   store.removeItem(key);
   const remaining = readPublicationReceipt(store, key);
   if (remaining?.operationId === completedOperationId)
-    throw new Error('Не удалось удалить завершённую квитанцию.');
+    throw new Error('Не удалось удалить завершённую квитанцию');
   return remaining;
 }
