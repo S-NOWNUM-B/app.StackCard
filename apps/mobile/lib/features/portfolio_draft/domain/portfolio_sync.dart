@@ -24,6 +24,7 @@ final class PortfolioSyncState {
     this.failure,
     this.lastSyncedAt,
     this.confirmedMutationId,
+    this.serverSnapshotReceived = false,
   });
 
   final PortfolioSyncStatus status;
@@ -32,6 +33,10 @@ final class PortfolioSyncState {
 
   /// Только exact ACK текущего durable snapshot разрешает явный Publish.
   final String? confirmedMutationId;
+
+  /// Сервер прислал snapshot в этой сессии; cache/pending события не считаются.
+  /// Только после него пустой локальный cache можно считать пустым аккаунтом.
+  final bool serverSnapshotReceived;
 }
 
 /// A whole-document mutation. Revision is local to one device, not a clock.

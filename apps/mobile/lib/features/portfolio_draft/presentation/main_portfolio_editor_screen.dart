@@ -20,6 +20,7 @@ import '../../media/media.dart';
 import '../../projects/projects.dart';
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_draft_repository.dart';
+import '../domain/portfolio_sync.dart';
 import '../domain/portfolio_validation.dart';
 import '../portfolio_draft_providers.dart';
 import 'builder_editor_widgets.dart';
@@ -88,6 +89,8 @@ class _MainPortfolioEditorScreenState
   PortfolioDocument? _expected;
   PortfolioContent? _buffer;
   Map<String, TextEditingController>? _fields;
+  // Последний известный текст полей: смена selection/фокуса не является правкой.
+  final _fieldTexts = <String, String>{};
   List<PortfolioProjectAttachment> _projects = [];
   final _iconUpdates = <String, String>{};
   (Object?, String?, bool, bool)? _initialOwner;
@@ -200,9 +203,27 @@ class _MainPortfolioEditorScreenState
       'locationText': TextEditingController(text: profile.locationText),
       'legacyText': TextEditingController(text: document.content.resumeText),
     };
+    _fieldTexts
+      ..clear()
+      ..addAll({
+        for (final entry in _fields!.entries) entry.key: entry.value.text,
+      });
     for (final field in _fields!.values) {
-      field.addListener(_changed);
+      field.addListener(_textChanged);
     }
+  }
+
+  void _textChanged() {
+    final fields = _fields;
+    if (fields == null) return;
+    var changed = false;
+    for (final entry in fields.entries) {
+      if (_fieldTexts[entry.key] != entry.value.text) {
+        _fieldTexts[entry.key] = entry.value.text;
+        changed = true;
+      }
+    }
+    if (changed) _changed();
   }
 
   void _invalidateOwner() {
@@ -212,9 +233,10 @@ class _MainPortfolioEditorScreenState
     _projects = [];
     _iconUpdates.clear();
     for (final field in _fields?.values ?? <TextEditingController>[]) {
-      field.removeListener(_changed);
+      field.removeListener(_textChanged);
       field.clear();
     }
+    _fieldTexts.clear();
     _dirty = false;
   }
 
@@ -232,7 +254,7 @@ class _MainPortfolioEditorScreenState
         ),
       ),
       projects: _projects,
-      updatedAt: DateTime.now().toUtc(),
+      updatedAt: _expected!.editedAt(DateTime.now()),
       clearAttachedResumeId: true,
     );
   }
@@ -326,6 +348,7 @@ class _MainPortfolioEditorScreenState
         await showDialog<bool>(
               context: context,
               builder: (context) => AlertDialog(
+                scrollable: true,
                 title: const Text('Открыть сохранённую версию?'),
                 content: const Text('Несохранённые изменения будут отменены.'),
                 actions: [
@@ -363,6 +386,7 @@ class _MainPortfolioEditorScreenState
       final action = await showDialog<String>(
         context: context,
         builder: (context) => AlertDialog(
+          scrollable: true,
           title: const Text('Сохранить изменения?'),
           content: const Text('Без сохранения изменения будут потеряны.'),
           actions: [
@@ -657,16 +681,30 @@ class _MainPortfolioEditorScreenState
   String _createId() =>
       ref.read(portfolioDraftControllerProvider.notifier).createId();
 
+  static bool _emptyWorkspace(PortfolioContent workspace) =>
+      workspace.documents.isEmpty &&
+      workspace.profile == const PortfolioProfile() &&
+      workspace.skills.isEmpty &&
+      workspace.experience.isEmpty &&
+      workspace.education.isEmpty &&
+      workspace.links.isEmpty &&
+      workspace.resumeText.isEmpty;
+
+  /// ADR0001: пустой offline cache синхронизируемого аккаунта не доказывает
+  /// пустоту облака. Guest/local repository подтверждения не требует.
+  bool _accountConfirmed({bool watch = false}) {
+    final sync = watch
+        ? ref.watch(portfolioSyncRepositoryProvider)
+        : ref.read(portfolioSyncRepositoryProvider);
+    if (sync == null) return true;
+    return (watch
+            ? ref.watch(portfolioSyncStateProvider)
+            : ref.read(portfolioSyncStateProvider))
+        .serverSnapshotReceived;
+  }
+
   void _initializeEmpty(PortfolioContent workspace) {
-    if (_initializing ||
-        _ownerInvalid ||
-        workspace.documents.isNotEmpty ||
-        workspace.profile != const PortfolioProfile() ||
-        workspace.skills.isNotEmpty ||
-        workspace.experience.isNotEmpty ||
-        workspace.education.isNotEmpty ||
-        workspace.links.isNotEmpty ||
-        workspace.resumeText.isNotEmpty) {
+    if (_initializing || _ownerInvalid || !_emptyWorkspace(workspace)) {
       return;
     }
     _initializing = true;
@@ -677,6 +715,10 @@ class _MainPortfolioEditorScreenState
           _ownerInvalid ||
           owner != _owner() ||
           !identical(repository, ref.read(portfolioDraftRepositoryProvider))) {
+        return;
+      }
+      if (!_accountConfirmed()) {
+        setState(() => _initializing = false);
         return;
       }
       final success = await ref
@@ -710,14 +752,60 @@ class _MainPortfolioEditorScreenState
     });
     final workspace = state.content;
     final main = workspace == null ? null : mainPortfolioDocument(workspace);
-    if (state.canEdit && main == null && !_initializing && !_saveError) {
+    final confirmed = _accountConfirmed(watch: true);
+    // Новое устройство ждёт первый server snapshot, а не создаёт пустой main.
+    final awaitingServer =
+        state.canEdit &&
+        main == null &&
+        !confirmed &&
+        _emptyWorkspace(workspace ?? PortfolioContent());
+    if (state.canEdit &&
+        main == null &&
+        confirmed &&
+        !_initializing &&
+        !_saveError) {
       _initializeEmpty(workspace ?? PortfolioContent());
     }
     if (_fields == null && main != null && !_ownerInvalid) {
       _initialize(workspace!, main);
+    } else if (_fields != null &&
+        !_dirty &&
+        !_busy &&
+        !_ownerInvalid &&
+        state.canEdit &&
+        !state.saving) {
+      // Чистый редактор живёт в IndexedStack: изменение сохранённого main
+      // (удаление проекта, remote update) применяется без ложного конфликта.
+      final saved = mainPortfolioDocument(
+        state.draft?.content ?? PortfolioContent(),
+      );
+      if (saved != null && saved != _expected) {
+        disposeBuilderFieldControllers(_fields);
+        _initialize(state.draft!.content!, saved);
+        _iconUpdates.clear();
+        _saveError = false;
+      }
     }
     Widget body;
-    if (_ownerInvalid || state.loading || _initializing) {
+    final syncFailed =
+        awaitingServer &&
+        ref.watch(portfolioSyncStateProvider).status ==
+            PortfolioSyncStatus.error;
+    if (syncFailed) {
+      body = _scrollableStatus(
+        StackCardStateView(
+          kind: StackCardViewState.error,
+          title: 'Не удалось загрузить портфолио',
+          onRetry: () {
+            final sync = ref.read(portfolioSyncRepositoryProvider);
+            if (sync != null) unawaited(sync.retry());
+          },
+        ),
+      );
+    } else if (_ownerInvalid ||
+        state.loading ||
+        _initializing ||
+        awaitingServer) {
       body = _scrollableStatus(
         const StackCardStateView(
           kind: StackCardViewState.loading,

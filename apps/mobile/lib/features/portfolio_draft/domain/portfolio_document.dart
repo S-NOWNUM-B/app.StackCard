@@ -98,6 +98,12 @@ final class PortfolioDocument {
   final List<PortfolioProjectAttachment> projects;
   final String? attachedResumeId;
 
+  /// Время правки не раньше createdAt: сдвиг часов назад не ломает структуру.
+  DateTime editedAt(DateTime now) {
+    final utc = now.toUtc();
+    return utc.isBefore(createdAt) ? createdAt : utc;
+  }
+
   PortfolioDocument copyWith({
     String? id,
     String? title,

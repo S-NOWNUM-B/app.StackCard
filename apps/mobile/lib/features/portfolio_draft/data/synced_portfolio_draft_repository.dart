@@ -39,6 +39,7 @@ final class SyncedPortfolioDraftRepository
   _SendingMutation? _sending;
   bool _initialized = false;
   bool _needsServerRefresh = false;
+  bool _serverSnapshotReceived = false;
   bool _disposed = false;
   PortfolioSyncState _state = const PortfolioSyncState(
     status: PortfolioSyncStatus.loading,
@@ -208,6 +209,12 @@ final class SyncedPortfolioDraftRepository
       );
       return;
     }
+    await _applyServerSnapshot(remote);
+    // Только успешно применённый server snapshot подтверждает состояние аккаунта.
+    _markServerSnapshot();
+  }
+
+  Future<void> _applyServerSnapshot(CloudPortfolioDraft? remote) async {
     final local = await _local.read();
     if (!_active) return;
     await _reconcile(local, await _metadata.read());
@@ -371,6 +378,7 @@ final class SyncedPortfolioDraftRepository
       status: PortfolioSyncStatus.error,
       failure: failure,
       lastSyncedAt: _state.lastSyncedAt,
+      serverSnapshotReceived: _serverSnapshotReceived,
     );
     _states.add(_state);
     if (failure.kind == PortfolioSyncFailureKind.network ||
@@ -395,6 +403,21 @@ final class SyncedPortfolioDraftRepository
               _record?.pending == false
           ? _record?.mutationId
           : null,
+      serverSnapshotReceived: _serverSnapshotReceived,
+    );
+    _states.add(_state);
+  }
+
+  void _markServerSnapshot() {
+    if (!_active || _serverSnapshotReceived) return;
+    _serverSnapshotReceived = true;
+    // Флаг публикуется без смены статуса и retry timer текущего состояния.
+    _state = PortfolioSyncState(
+      status: _state.status,
+      failure: _state.failure,
+      lastSyncedAt: _state.lastSyncedAt,
+      confirmedMutationId: _state.confirmedMutationId,
+      serverSnapshotReceived: true,
     );
     _states.add(_state);
   }

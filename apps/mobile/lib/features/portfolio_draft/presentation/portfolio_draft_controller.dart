@@ -214,7 +214,7 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
                       ))
                     attachment,
               ],
-              updatedAt: now,
+              updatedAt: source.editedAt(now),
               clearAttachedResumeId: true,
             );
       return _withDocument(workspace, document).copyWith(
@@ -388,7 +388,7 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
                 workspace,
                 main.copyWith(
                   content: main.content.copyWith(profile: profile),
-                  updatedAt: DateTime.now().toUtc(),
+                  updatedAt: main.editedAt(DateTime.now()),
                 ),
               );
         return next.copyWith(
@@ -611,7 +611,11 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
       return;
     }
     final content = state.content;
-    if (content == null) return;
+    // Tombstone давно удалённого документа не меняет workspace и не блокирует Save.
+    if (content == null ||
+        !content.documents.any((document) => document.id == documentId)) {
+      return;
+    }
     state = state.copyWith(
       content: _withoutDocument(content, documentId),
       remoteUpdateAvailable: true,
