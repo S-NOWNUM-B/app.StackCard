@@ -17,9 +17,10 @@ export function isFirestoreOnlyAccount({ cutoff, creationTime, draft, account, p
   if (!Array.isArray(content.documents) || content.documents.length > 1
       || (content.documents.length === 1 && content.documents[0].id !== content.mainPortfolioId)
       || (content.projects ?? []).some((project) => project.imagePaths?.length)) return false;
+  // Pending без media/cleanup не оставляет Storage bytes: lock запрещает её finish,
+  // а deleteAccount помечает её failed и удаляет её publicDocument.
   return !publications.some((publication) => publication.mediaPaths?.length)
-    && !operations.some((operation) => operation.media?.length || operation.cleanupPaths?.length
-      || (operation.status === 'pending' && operation.action !== 'deleteAccount'));
+    && !operations.some((operation) => operation.media?.length || operation.cleanupPaths?.length);
 }
 
 export function workspaceAvatarPaths(content) {
