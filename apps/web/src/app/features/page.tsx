@@ -60,9 +60,9 @@ export default function FeaturesPage() {
         eyebrow="Возможности StackCard"
         title={
           <>
-            Одно портфолио.
+            Одно портфолио
             <br />
-            <em>Всё, что вы сделали</em>
+            <em>Вся ваша работа</em>
           </>
         }
         description="Три раздела — «Главная», «Проекты» и «Редактор». Без нескольких копий одного и того же: вы ведёте одно основное портфолио и решаете, когда им поделиться"
@@ -97,7 +97,7 @@ export default function FeaturesPage() {
         <div className="stack" data-reveal>
           <span className="numbered-label">02 / Одно портфолио</span>
           <h2 className="section-heading" id="single-title">
-            Одна версия.
+            Одна версия
             <br />
             Всегда под рукой
           </h2>
@@ -141,7 +141,7 @@ export default function FeaturesPage() {
         <div className="stack" data-reveal>
           <span className="numbered-label">03 / Ваш контроль</span>
           <h2 className="section-heading" id="control-title">
-            Сначала подготовьте.
+            Сначала подготовьте
             <br />
             Потом поделитесь
           </h2>
@@ -175,7 +175,7 @@ export default function FeaturesPage() {
         <div className="stack" data-reveal>
           <span className="numbered-label">04 / Один аккаунт</span>
           <h2 className="section-heading" id="sync-title">
-            Браузер и телефон.
+            Браузер и телефон
             <br />
             Одни данные
           </h2>

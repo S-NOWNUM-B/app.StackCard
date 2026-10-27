@@ -18,7 +18,7 @@ export default function ExamplesPage() {
         eyebrow="Пример портфолио"
         title={
           <>
-            Одно портфолио.
+            Одно портфолио
             <br />
             <em>Ссылка и PDF</em>
           </>
@@ -128,9 +128,9 @@ export default function ExamplesPage() {
         <div className="stack" data-reveal>
           <span className="numbered-label">02 / Ваша версия</span>
           <h2 className="section-heading" id="your-version-title">
-            Форма готова.
+            Форма готова
             <br />
-            История — ваша
+            История за вами
           </h2>
         </div>
         <div className="stack" data-reveal>

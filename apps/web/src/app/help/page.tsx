@@ -26,7 +26,7 @@ export default function HelpPage() {
         eyebrow="Помощь и первые шаги"
         title={
           <>
-            Меньше вопросов.
+            Меньше вопросов
             <br />
             <em>Больше ясности</em>
           </>
@@ -98,7 +98,7 @@ export default function HelpPage() {
           <section data-reveal id="documents" aria-labelledby="documents-title">
             <span className="numbered-label">03 / Редактор и PDF</span>
             <h2 className="section-heading" id="documents-title">
-              Сохраните то, чем готовы поделиться
+              Сохраните готовое к показу
             </h2>
             <p>
               В кабинете три раздела: «Главная», «Проекты» и «Редактор». Основное портфолио одно.
@@ -120,7 +120,7 @@ export default function HelpPage() {
           <section data-reveal id="publication" aria-labelledby="publication-title">
             <span className="numbered-label">04 / Публикация</span>
             <h2 className="section-heading" id="publication-title">
-              Сохранить и поделиться — разные шаги
+              Сохранить и поделиться в два шага
             </h2>
             <ol className="feature-list">
               <li>
