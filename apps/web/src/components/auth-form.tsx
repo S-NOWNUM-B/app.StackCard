@@ -99,8 +99,8 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
     if (!google && mode === 'register' && (issues.size || password !== confirmation)) {
       setError(
         issues.size
-          ? 'Пароль не соответствует правилам ниже.'
-          : 'Подтверждение пароля должно совпадать.',
+          ? 'Пароль не соответствует правилам ниже'
+          : 'Подтверждение пароля должно совпадать',
       );
       return;
     }
@@ -125,16 +125,16 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
       else
         setError(
           code === 'auth/popup-closed-by-user'
-            ? 'Вход отменён.'
+            ? 'Вход отменён'
             : code === 'auth/too-many-requests'
-              ? 'Слишком много попыток. Попробуйте позднее.'
+              ? 'Слишком много попыток. Попробуйте позднее'
               : code === 'auth/network-request-failed'
-                ? 'Нет подключения. Проверьте сеть и повторите.'
+                ? 'Нет подключения. Проверьте сеть и повторите'
                 : ['auth/weak-password', 'auth/password-does-not-meet-requirements'].includes(
                       code ?? '',
                     )
-                  ? 'Пароль не соответствует требованиям сервиса. Выберите другой пароль.'
-                  : 'Не удалось выполнить действие. Проверьте данные и повторите попытку.',
+                  ? 'Пароль не соответствует требованиям сервиса. Выберите другой пароль'
+                  : 'Не удалось выполнить действие. Проверьте данные и повторите попытку',
         );
     } finally {
       setBusy(false);
@@ -158,7 +158,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
         {accepted ? (
           <>
             <p>
-              Если аккаунт с этой почтой существует, вы получите письмо для восстановления пароля.
+              Если аккаунт с этой почтой существует, вы получите письмо для восстановления пароля
             </p>
             <LinkButton href={`/sign-in${returnQuery}`}>Вернуться ко входу</LinkButton>
           </>
@@ -230,7 +230,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' | 'reset' }) {
                   invalid={confirmation.length > 0 && password !== confirmation}
                 />
                 {confirmation.length > 0 && password !== confirmation && (
-                  <Notice error>Пароли не совпадают.</Notice>
+                  <Notice error>Пароли не совпадают</Notice>
                 )}
               </>
             )}

@@ -5,7 +5,7 @@ export default function NotFound() {
       <Header />
       <main id="main" className="container stack">
         <h1>Страница недоступна</h1>
-        <p>Ссылка не найдена или документ снят с публикации.</p>
+        <p>Ссылка не найдена или публикация отозвана</p>
         <LinkButton href="/">На главную</LinkButton>
       </main>
     </>

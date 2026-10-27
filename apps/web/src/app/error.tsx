@@ -6,7 +6,7 @@ export default function ErrorPage({ reset }: { reset: () => void }) {
       <Header />
       <main id="main" className="container stack">
         <h1>Не удалось загрузить страницу</h1>
-        <p>Проверьте подключение и повторите попытку.</p>
+        <p>Проверьте подключение и повторите попытку</p>
         <Button onClick={reset}>Повторить</Button>
       </main>
     </>

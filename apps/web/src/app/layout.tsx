@@ -3,10 +3,11 @@ import Script from 'next/script';
 import './globals.css';
 export const metadata: Metadata = {
   title: {
-    default: 'StackCard — резюме и портфолио',
+    default: 'StackCard — портфолио разработчика',
     template: '%s · StackCard',
   },
-  description: 'Профессиональная база, проекты и независимые резюме и портфолио.',
+  description:
+    'Одно портфолио разработчика: проекты из GitHub, настоящий PDF и публикация по постоянной ссылке',
   icons: {
     icon: {
       url: '/branding/stackcard-v2-app-icon-mono-dark.svg',

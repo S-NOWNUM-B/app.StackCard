@@ -5,39 +5,45 @@ import Link from 'next/link';
 import { exampleDocumentContent } from './document-view';
 import { Icon, TechnologyBadges } from './ui';
 
+// Демонстрация одного основного портфолио: публичный вид и PDF из сохранённой версии.
+// Маркетинговое правило: последнее предложение блока без точки.
+const withoutFinalPeriod = (text: string) => text.replace(/\.$/, '');
+
 export function ProductDemo() {
-  const [kind, setKind] = useState<'portfolio' | 'resume'>('portfolio');
-  const content = exampleDocumentContent(kind, true);
+  const [view, setView] = useState<'portfolio' | 'pdf'>('portfolio');
+  const content = exampleDocumentContent('resume', true);
   return (
     <div className="product-scene">
       <div className="floating-paper floating-resume" aria-hidden="true">
-        <span className="mini-label">РЕЗЮМЕ / 01</span>
+        <span className="mini-label">PDF / СОХРАНЁННАЯ ВЕРСИЯ</span>
         <strong>Алекс Морган</strong>
-        <span>Разработчик интерфейсов</span>
+        <span>Flutter- и веб-разработчик</span>
         <hr />
-        <b>Опыт и навыки</b>
+        <b>Навыки и проекты</b>
         <div className="paper-lines">
           <i />
           <i />
           <i />
         </div>
-        <b>Избранные проекты</b>
+        <b>Опыт и образование</b>
         <div className="paper-lines">
           <i />
           <i />
         </div>
       </div>
       <div className="floating-paper floating-project" aria-hidden="true">
-        <span className="mini-label">БИБЛИОТЕКА ПРОЕКТОВ</span>
-        <div className="project-glyph">{'{ }'}</div>
-        <strong>Atlas UI Kit</strong>
-        <span>React · TypeScript</span>
+        <span className="mini-label">ИМПОРТ ИЗ GITHUB</span>
+        <div className="project-glyph">
+          <Icon name="github" size={28} />
+        </div>
+        <strong>Выбрано 2 из 3</strong>
+        <ul className="floating-checklist">
+          <li className="is-checked">atlas-ui-kit</li>
+          <li className="is-checked">pocket-tasks</li>
+          <li>playground</li>
+        </ul>
         <hr />
-        <span>
-          Одна работа.
-          <br />
-          Разные истории.
-        </span>
+        <span>Импортировать выбранные</span>
       </div>
       <div className="product-window">
         <div className="demo-toolbar">
@@ -58,7 +64,7 @@ export function ProductDemo() {
               height={16}
             />
             <span className="mini-label">РАБОЧЕЕ ПРОСТРАНСТВО</span>
-            <Link href="/workspace#home">
+            <Link href="/workspace#home" className="selected">
               <Icon name="home" size={16} />
               Главная
             </Link>
@@ -66,7 +72,7 @@ export function ProductDemo() {
               <Icon name="folder" size={16} />
               Проекты
             </Link>
-            <Link href="/workspace#editor" className="selected">
+            <Link href="/workspace#editor">
               <Icon name="panels-top-left" size={16} />
               Редактор
             </Link>
@@ -81,37 +87,35 @@ export function ProductDemo() {
           <div className="demo-content">
             <div className="demo-heading">
               <div>
-                <span className="mini-label">МОИ ДОКУМЕНТЫ</span>
-                <h2>Ваша работа в деталях.</h2>
+                <span className="mini-label">ГЛАВНАЯ</span>
+                <h2>Ваше портфолио</h2>
               </div>
               <Link href="/workspace#editor" className="demo-add" aria-label="Открыть редактор">
-                <Icon name="plus" size={18} />
+                <Icon name="pencil" size={18} />
               </Link>
             </div>
-            <div className="demo-switch" aria-label="Вид демонстрационного документа">
+            <div className="demo-switch" aria-label="Вид демонстрационного портфолио">
               <button
                 type="button"
-                aria-pressed={kind === 'portfolio'}
-                onClick={() => setKind('portfolio')}
+                aria-pressed={view === 'portfolio'}
+                onClick={() => setView('portfolio')}
               >
                 Портфолио
               </button>
-              <button
-                type="button"
-                aria-pressed={kind === 'resume'}
-                onClick={() => setKind('resume')}
-              >
-                Резюме
+              <button type="button" aria-pressed={view === 'pdf'} onClick={() => setView('pdf')}>
+                PDF
               </button>
             </div>
-            <div className="demo-document">
+            <div className="demo-document" key={view}>
               <div className="demo-document-head">
                 <div>
                   <span className="mini-label">
-                    {kind === 'portfolio' ? 'ПОРТФОЛИО РАЗРАБОТЧИКА' : 'РЕЗЮМЕ РАЗРАБОТЧИКА'}
+                    {view === 'portfolio' ? 'ОСНОВНОЕ ПОРТФОЛИО' : 'PDF · A4'}
                   </span>
                   <h3>{content.profile.name}</h3>
-                  <p>{content.profile.headline}</p>
+                  <p>
+                    {content.profile.headline} · {content.profile.locationText}
+                  </p>
                 </div>
                 <img
                   src="/images/demo-portrait.png"
@@ -120,17 +124,17 @@ export function ProductDemo() {
                   height={58}
                 />
               </div>
-              <p className="demo-bio">{content.profile.bio}</p>
-              {kind === 'portfolio' ? (
+              <p className="demo-bio">{withoutFinalPeriod(content.profile.bio)}</p>
+              {view === 'portfolio' ? (
                 <div className="demo-projects">
                   {content.projects.slice(0, 2).map((project, index) => (
                     <div key={project.id}>
                       <div className={`demo-project-cover cover-${index}`}>
                         <span>{index === 0 ? 'Aa' : '</>'}</span>
-                        <span>{index === 0 ? 'ДИЗАЙН-СИСТЕМА' : 'ИНСТРУМЕНТЫ РАЗРАБОТКИ'}</span>
+                        <span>{index === 0 ? 'ДИЗАЙН-СИСТЕМА' : 'ИМПОРТ ИЗ GITHUB'}</span>
                       </div>
                       <h4>{project.title}</h4>
-                      <p>{project.description}</p>
+                      <p>{withoutFinalPeriod(project.description)}</p>
                       <TechnologyBadges items={project.technologies.slice(0, 2)} />
                     </div>
                   ))}
@@ -147,14 +151,21 @@ export function ProductDemo() {
                         </p>
                       </div>
                     ))}
+                    <span className="mini-label demo-pdf-label">ОБРАЗОВАНИЕ</span>
+                    {content.education.slice(0, 1).map((item) => (
+                      <div key={item.id}>
+                        <b>{item.qualification}</b>
+                        <p>{item.period}</p>
+                      </div>
+                    ))}
                   </div>
                   <div>
-                    <span className="mini-label">ТЕХНОЛОГИИ</span>
+                    <span className="mini-label">НАВЫКИ</span>
                     <TechnologyBadges items={content.skills.map((item) => item.name).slice(0, 4)} />
                   </div>
                 </div>
               )}
-              <Link className="demo-open" href={`/examples/${kind}`}>
+              <Link className="demo-open" href="/examples/portfolio">
                 Открыть полный пример <span aria-hidden="true">↗</span>
               </Link>
             </div>
