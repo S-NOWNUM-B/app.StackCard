@@ -600,7 +600,7 @@ void main() {
   );
 
   testWidgets(
-    'Library delete leaves the mounted editor safe until explicit reload',
+    'Library delete keeps a dirty mounted editor safe until explicit reload',
     (tester) async {
       final projects = [
         for (final id in ['one', 'two'])
@@ -625,6 +625,9 @@ void main() {
         tester,
         find.byKey(const Key('main.editor.project.one')),
       );
+      // Несохранённый ввод: чистый редактор сам применяет новый saved main,
+      // а dirty сохраняет buffer и keyed placeholder до явного reload.
+      await _enter(tester, 'name', 'Несохранённый ввод');
       final controller = container.read(
         portfolioDraftControllerProvider.notifier,
       );
@@ -660,6 +663,8 @@ void main() {
       final reload = find.text('Открыть сохранённую версию');
       await _ensureVisible(tester, reload);
       await tester.tap(reload);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Подтвердить'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(
