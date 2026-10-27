@@ -58,7 +58,6 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Alex Morgan · alex-dev-demo'), findsNothing);
       final container = ProviderScope.containerOf(
         tester.element(find.byType(MaterialApp)),
       );

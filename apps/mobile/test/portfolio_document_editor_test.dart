@@ -951,7 +951,7 @@ Future<MemoryPortfolioDraftRepository> _repository({
   final repository = MemoryPortfolioDraftRepository();
   final base = PortfolioContent(
     profile: const PortfolioProfile(
-      name: 'Alex Morgan',
+      name: 'Demo Author',
       headline: 'Fullstack Developer',
     ),
     projects: [

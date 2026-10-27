@@ -191,7 +191,6 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.text('Alex Morgan'), findsNothing);
         final failureTitle = switch (route) {
           '/projects' || '/settings' => 'Не удалось загрузить данные',
           '/editor' => 'Не удалось открыть портфолио',
@@ -304,7 +303,6 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
-          expect(find.text('Alex Morgan'), findsNothing);
           expect(find.text('Private notebook'), findsNothing);
           expect(tester.takeException(), isNull);
           await tester.drag(

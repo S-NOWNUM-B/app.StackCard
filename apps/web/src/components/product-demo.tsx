@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { exampleDocumentContent } from './document-view';
+import { DEMO_PROFILE_NAME, exampleDocumentContent } from './document-view';
 import { Icon, TechnologyBadges } from './ui';
 
 // Демонстрация одного основного портфолио: публичный вид и PDF из сохранённой версии.
@@ -16,7 +16,7 @@ export function ProductDemo() {
     <div className="product-scene">
       <div className="floating-paper floating-resume" aria-hidden="true">
         <span className="mini-label">PDF / СОХРАНЁННАЯ ВЕРСИЯ</span>
-        <strong>Алекс Морган</strong>
+        <strong>{DEMO_PROFILE_NAME}</strong>
         <span>Flutter- и веб-разработчик</span>
         <hr />
         <b>Навыки и проекты</b>
@@ -77,9 +77,9 @@ export function ProductDemo() {
               Редактор
             </Link>
             <div className="demo-account">
-              <span className="initials">AM</span>
+              <span className="initials">ВИ</span>
               <div>
-                <b>Алекс Морган</b>
+                <b>{DEMO_PROFILE_NAME}</b>
                 <span>Пример профиля</span>
               </div>
             </div>
@@ -119,7 +119,7 @@ export function ProductDemo() {
                 </div>
                 <img
                   src="/images/demo-portrait.png"
-                  alt="Фото вымышленного Алекс Морган"
+                  alt="Демонстрационное фото профиля"
                   width={58}
                   height={58}
                 />
