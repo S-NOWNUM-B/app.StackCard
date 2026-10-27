@@ -1,94 +1,50 @@
 import type { Metadata } from 'next';
-import { exampleDocumentContent } from '@/components/document-view';
 import { MarketingPage, PageIntro, StartSection } from '@/components/marketing';
 import { Icon, LinkButton, TechnologyBadges } from '@/components/ui';
+import { mainPortfolioExample } from './main-portfolio-example';
 
 export const metadata: Metadata = {
-  title: 'Примеры резюме и портфолио',
+  title: 'Пример портфолио',
   description:
-    'Посмотрите, как одна профессиональная база превращается в резюме и портфолио. Демонстрационные документы StackCard.',
+    'Посмотрите, как основное портфолио StackCard выглядит по публичной ссылке и в PDF. Демонстрационные данные',
 };
 
 export default function ExamplesPage() {
-  const resume = exampleDocumentContent('resume');
-  const portfolio = exampleDocumentContent('portfolio');
+  const portfolio = mainPortfolioExample();
 
   return (
     <MarketingPage>
       <PageIntro
-        eyebrow="Примеры документов"
+        eyebrow="Пример портфолио"
         title={
           <>
-            Две формы.
+            Одно портфолио.
             <br />
-            <em>Одна история.</em>
+            <em>Ссылка и PDF</em>
           </>
         }
-        description="Посмотрите, как выглядит готовое представление в StackCard. Резюме помогает быстро познакомиться с опытом; портфолио — подробнее раскрыть работы."
+        description="Посмотрите, как выглядит готовый результат в StackCard. Публичная страница и PDF собираются из одного основного портфолио"
       />
       <section className="marketing-section site-width" aria-labelledby="examples-title">
-        <span className="numbered-label">01 / Посмотрите в действии</span>
-        <h2 className="section-heading" id="examples-title">
-          Выберите, с чего начать.
+        <span className="numbered-label" data-reveal>
+          01 / Посмотрите в действии
+        </span>
+        <h2 className="section-heading" id="examples-title" data-reveal>
+          Две формы одной истории
         </h2>
-        <p className="section-lead">
-          Алекс Морган и работы ниже — вымышленные демонстрационные данные. Это примеры, а не
-          публикации пользователей.
+        <p className="section-lead" data-reveal>
+          Алекс Морган и работы ниже — вымышленные демонстрационные данные. Это пример, а не
+          публикация пользователя
         </p>
         <div className="example-grid">
-          <article className="example-card">
-            <div className="example-paper stack" aria-label="Фрагмент демонстрационного резюме">
-              <div className="stack">
-                <span className="eyebrow">Резюме</span>
-                <h3>{resume.profile.name}</h3>
-                <p className="muted">{resume.profile.headline}</p>
-              </div>
-              <hr />
-              <div className="stack">
-                <h4>Технологии</h4>
-                <TechnologyBadges items={resume.skills.map((skill) => skill.name)} />
-              </div>
-              <div className="stack">
-                <h4>Опыт</h4>
-                {resume.experience.map((experience) => (
-                  <div key={experience.id}>
-                    <strong>{experience.role}</strong>
-                    <p className="muted">
-                      {experience.organization} · {experience.period}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <div className="stack">
-                <h4>Образование</h4>
-                {resume.education.map((education) => (
-                  <div key={education.id}>
-                    <strong>{education.qualification}</strong>
-                    <p className="muted">{education.institution}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="stack">
-              <span className="numbered-label">01 / Опыт и навыки</span>
-              <h2>Резюме</h2>
-              <p>
-                Короткое представление для знакомства: роль, технологии, опыт, образование и
-                выбранные проекты.
-              </p>
-              <div className="marketing-actions">
-                <LinkButton href="/examples/resume" variant="primary">
-                  Открыть резюме <Icon name="arrow-up" size={16} />
-                </LinkButton>
-              </div>
-            </div>
-          </article>
-          <article className="example-card">
+          <article className="example-card" data-reveal>
             <div className="example-paper stack" aria-label="Фрагмент демонстрационного портфолио">
               <div className="stack">
-                <span className="eyebrow">Портфолио</span>
+                <span className="eyebrow">Публичная страница</span>
                 <h3>{portfolio.profile.name}</h3>
-                <p className="muted">{portfolio.profile.headline}</p>
+                <p className="muted">
+                  {portfolio.profile.headline} · {portfolio.profile.locationText}
+                </p>
               </div>
               <hr />
               <div className="stack">
@@ -103,15 +59,62 @@ export default function ExamplesPage() {
               </div>
             </div>
             <div className="stack">
-              <span className="numbered-label">02 / Работы и результаты</span>
-              <h2>Портфолио</h2>
+              <span className="numbered-label">01 / По ссылке</span>
+              <h2>Публичное портфолио</h2>
               <p>
-                Больше пространства для проектов: описания работ, используемые технологии и ваше
-                профессиональное направление.
+                Профиль, контакты, навыки, проекты, опыт и образование. Открывается по постоянной
+                ссылке после публикации
               </p>
               <div className="marketing-actions">
                 <LinkButton href="/examples/portfolio" variant="primary">
-                  Открыть портфолио <Icon name="arrow-up" size={16} />
+                  Открыть пример <Icon name="arrow-up" size={16} />
+                </LinkButton>
+              </div>
+            </div>
+          </article>
+          <article className="example-card" data-reveal>
+            <div className="example-paper stack" aria-label="Фрагмент демонстрационного PDF">
+              <div className="stack">
+                <span className="eyebrow">PDF · A4</span>
+                <h3>{portfolio.profile.name}</h3>
+                <p className="muted">{portfolio.profile.headline}</p>
+              </div>
+              <hr />
+              <div className="stack">
+                <h4>Навыки</h4>
+                <TechnologyBadges items={portfolio.skills.map((skill) => skill.name)} />
+              </div>
+              <div className="stack">
+                <h4>Опыт</h4>
+                {portfolio.experience.map((experience) => (
+                  <div key={experience.id}>
+                    <strong>{experience.role}</strong>
+                    <p className="muted">
+                      {experience.organization} · {experience.period}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="stack">
+                <h4>Образование</h4>
+                {portfolio.education.map((education) => (
+                  <div key={education.id}>
+                    <strong>{education.qualification}</strong>
+                    <p className="muted">{education.institution}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="stack">
+              <span className="numbered-label">02 / Файлом</span>
+              <h2>PDF-портфолио</h2>
+              <p>
+                Настоящий PDF с текстом, ссылками и фото. Собирается из сохранённой версии,
+                публикация для него не нужна
+              </p>
+              <div className="marketing-actions">
+                <LinkButton href="/examples/portfolio#pdf" variant="primary">
+                  Подробнее о PDF <Icon name="arrow-up" size={16} />
                 </LinkButton>
               </div>
             </div>
@@ -122,23 +125,23 @@ export default function ExamplesPage() {
         className="marketing-section site-width split-section"
         aria-labelledby="your-version-title"
       >
-        <div className="stack">
+        <div className="stack" data-reveal>
           <span className="numbered-label">02 / Ваша версия</span>
           <h2 className="section-heading" id="your-version-title">
             Форма готова.
             <br />
-            История — ваша.
+            История — ваша
           </h2>
         </div>
-        <div className="stack">
+        <div className="stack" data-reveal>
           <p>
-            В кабинете документы создаются из вашей базы. Выберите секции, добавьте проекты и
-            измените формулировки под нужную задачу. Примеры помогают понять структуру; они не
-            добавляют вымышленные данные в ваш аккаунт.
+            В кабинете вы заполняете своё портфолио: импортируйте проекты из GitHub, добавьте опыт и
+            образование, сохраните и решите, когда публиковать. Пример помогает понять структуру и
+            не добавляет вымышленные данные в ваш аккаунт
           </p>
           <div className="marketing-actions">
             <LinkButton href="/help#documents">
-              Как создать документ <Icon name="arrow-up" size={16} />
+              Как собрать портфолио <Icon name="arrow-up" size={16} />
             </LinkButton>
           </div>
         </div>

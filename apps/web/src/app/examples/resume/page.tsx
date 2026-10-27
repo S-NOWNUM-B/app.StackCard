@@ -1,40 +1,6 @@
-import type { Metadata } from 'next';
-import { DocumentView, exampleDocumentContent } from '@/components/document-view';
-import { Header, LinkButton } from '@/components/ui';
+import { permanentRedirect } from 'next/navigation';
 
-export const metadata: Metadata = {
-  title: 'Демонстрационное резюме',
-  robots: { index: false, follow: false },
-};
+// Отдельного резюме больше нет (ADR 0005): старый адрес ведёт на пример основного портфолио и PDF.
 export default function ExampleResumePage() {
-  return (
-    <>
-      <Header
-        context="public"
-        links={[
-          { label: 'Проекты', href: '#projects' },
-          { label: 'Контакты', href: '#contacts' },
-        ]}
-      />
-      <main id="main" className="container">
-        <div className="public-resume stack">
-          <div className="stack public-page-label">
-            <p className="muted">Демонстрационное резюме</p>
-            <p className="muted">
-              Алекс Морган — вымышленный профиль из примера. Этот документ не является
-              опубликованным резюме пользователя.
-            </p>
-          </div>
-          <DocumentView kind="resume" content={exampleDocumentContent('resume')} />
-          <div className="section stack">
-            <h3>Создайте свою версию</h3>
-            <LinkButton href="/workspace" variant="primary">
-              Создать резюме
-            </LinkButton>
-            <LinkButton href="/examples/portfolio">Пример портфолио</LinkButton>
-          </div>
-        </div>
-      </main>
-    </>
-  );
+  permanentRedirect('/examples/portfolio#pdf');
 }

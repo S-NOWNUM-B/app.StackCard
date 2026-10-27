@@ -49,7 +49,7 @@ test('product demo uses actual workspace destinations while preserving both outp
   assert.match(markup, /aria-label="Открыть редактор"/);
   assert.doesNotMatch(markup, /\/workspace#(?:resumes|portfolios)/);
   assert.match(markup, /aria-pressed="true">Портфолио</);
-  assert.match(markup, /aria-pressed="false">Резюме</);
+  assert.match(markup, /aria-pressed="false">PDF</);
 });
 
 test('download page retains release status and browser entry without unavailable download actions', () => {

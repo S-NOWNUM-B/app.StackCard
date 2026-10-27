@@ -24,7 +24,7 @@ export function PageIntro({
   description: string;
 }) {
   return (
-    <section className="page-intro site-width">
+    <section className="page-intro site-width" data-intro>
       <span className="eyebrow">{eyebrow}</span>
       <h1>{title}</h1>
       <p>{description}</p>
@@ -34,19 +34,19 @@ export function PageIntro({
 
 export function StartSection() {
   return (
-    <section className="start-section site-width">
+    <section className="start-section site-width" data-reveal>
       <span className="eyebrow">Ваша следующая глава</span>
       <h2>
         Дайте вашей работе
         <br />
-        <em>хорошую форму.</em>
+        <em>хорошую форму</em>
       </h2>
-      <p>Одна профессиональная база. Столько версий, сколько нужно вам.</p>
+      <p>Одно портфолио, которое легко обновлять и удобно показывать</p>
       <div className="marketing-actions">
         <LinkButton href="/workspace" variant="primary">
           Открыть StackCard <Icon name="arrow-up" size={16} />
         </LinkButton>
-        <LinkButton href="/examples">Посмотреть примеры</LinkButton>
+        <LinkButton href="/examples">Посмотреть пример</LinkButton>
       </div>
     </section>
   );
@@ -67,7 +67,7 @@ export function SiteFooter() {
           </Link>
           <p>
             Всё, что вы создаёте.
-            <br />В одной профессиональной истории.
+            <br />В одной профессиональной истории
           </p>
         </div>
         <div>
@@ -92,7 +92,7 @@ export function SiteFooter() {
       </div>
       <div className="footer-bottom">
         <small>© {new Date().getFullYear()} StackCard</small>
-        <small>Сделано для тех, кто создаёт.</small>
+        <small>Сделано для тех, кто создаёт</small>
         <Link href="/help#publication">
           Вы управляете публикацией <span aria-hidden="true">↗</span>
         </Link>

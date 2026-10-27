@@ -5,51 +5,51 @@ import { Icon, LinkButton } from '@/components/ui';
 export const metadata: Metadata = {
   title: 'Возможности',
   description:
-    'Общая профессиональная база, библиотека проектов и независимые резюме и портфолио. Сохраняйте и публикуйте свою работу осознанно.',
+    'Одно основное портфолио, библиотека проектов с импортом из GitHub, настоящий PDF и публикация по постоянной ссылке',
 };
 
 const features = [
   {
-    id: 'base',
-    icon: 'user-round',
-    title: 'Профессиональная база',
+    id: 'home',
+    icon: 'home',
+    title: 'Главная',
     description:
-      'Профиль, навыки, опыт, образование и контакты в одном месте. Новый документ получает эти данные как отправную точку.',
+      'Сохранённая версия портфолио: профиль и только заполненные разделы. Отсюда скачивается PDF',
   },
   {
     id: 'projects',
     icon: 'folder',
     title: 'Библиотека проектов',
     description:
-      'Храните описание работы, свой вклад, технологии и ссылки. Один проект можно включать в разные резюме и портфолио.',
+      'Описание, свой вклад, технологии, ссылки и иконка из каталога. Проект хранится один раз и попадает в портфолио по вашему выбору',
   },
   {
-    id: 'resumes',
-    icon: 'file-text',
-    title: 'Несколько резюме',
+    id: 'github',
+    icon: 'github',
+    title: 'Импорт из GitHub',
     description:
-      'Создавайте версии под разные роли. Выбирайте секции, порядок проектов и формулировки для конкретного работодателя.',
+      'Укажите один GitHub-профиль, найдите репозитории по названию и описанию и импортируйте выбранные одним действием',
   },
   {
-    id: 'portfolios',
-    icon: 'panels-top-left',
-    title: 'Собственное портфолио',
-    description:
-      'Соберите выбранные работы в отдельную историю. Подчеркните важные проекты и добавьте ссылку на опубликованное резюме.',
-  },
-  {
-    id: 'document-editing',
+    id: 'editor',
     icon: 'pencil',
-    title: 'Правки под задачу',
+    title: 'Редактор',
     description:
-      'Меняйте название, описание и свой вклад внутри документа. Эти формулировки не заменяют проект в общей библиотеке.',
+      'Профиль, контакты, навыки, проекты, опыт и образование. Все поля необязательны, изменения сохраняются кнопкой «Сохранить»',
   },
   {
-    id: 'publication',
-    icon: 'check',
-    title: 'Вы управляете результатом',
+    id: 'onboarding',
+    icon: 'user-round',
+    title: 'Знакомство за четыре шага',
     description:
-      'Просмотрите документ, сохраните изменения и отдельно опубликуйте их. Черновик остаётся вашим рабочим пространством.',
+      'GitHub, имя с должностью и городом, рассказ о себе и фото. Любой шаг можно пропустить и вернуться к нему позже',
+  },
+  {
+    id: 'pdf',
+    icon: 'file-text',
+    title: 'Настоящий PDF',
+    description:
+      'Файл с текстом, ссылками и фото собирается из сохранённой версии. Публикация для него не нужна',
   },
 ];
 
@@ -60,24 +60,27 @@ export default function FeaturesPage() {
         eyebrow="Возможности StackCard"
         title={
           <>
-            Одна база.
+            Одно портфолио.
             <br />
-            <em>Ваши разные стороны.</em>
+            <em>Всё, что вы сделали</em>
           </>
         }
-        description="Всё, что вы умеете и создаёте, уже связано. StackCard помогает собрать из этого нужное представление — без заполнения профиля с нуля каждый раз."
+        description="Три раздела — «Главная», «Проекты» и «Редактор». Без нескольких копий одного и того же: вы ведёте одно основное портфолио и решаете, когда им поделиться"
       />
       <section className="marketing-section site-width" aria-labelledby="features-title">
-        <span className="numbered-label">01 / Рабочее пространство</span>
-        <h2 className="section-heading" id="features-title">
-          От опыта к готовому документу.
+        <span className="numbered-label" data-reveal>
+          01 / Рабочее пространство
+        </span>
+        <h2 className="section-heading" id="features-title" data-reveal>
+          От проекта до готового портфолио
         </h2>
-        <p className="section-lead">
-          База хранит факты. Документы помогают выбрать, какие из них рассказать.
+        <p className="section-lead" data-reveal>
+          Библиотека хранит работы. Редактор собирает из них историю, а главная показывает
+          сохранённый результат
         </p>
         <div className="feature-grid">
           {features.map((feature) => (
-            <article className="feature-item" id={feature.id} key={feature.id}>
+            <article className="feature-item" id={feature.id} key={feature.id} data-reveal>
               <span className="feature-icon">
                 <Icon name={feature.icon} />
               </span>
@@ -89,18 +92,18 @@ export default function FeaturesPage() {
       </section>
       <section
         className="marketing-section site-width split-section"
-        aria-labelledby="versions-title"
+        aria-labelledby="single-title"
       >
-        <div className="stack">
-          <span className="numbered-label">02 / Независимые версии</span>
-          <h2 className="section-heading" id="versions-title">
-            Один опыт.
+        <div className="stack" data-reveal>
+          <span className="numbered-label">02 / Одно портфолио</span>
+          <h2 className="section-heading" id="single-title">
+            Одна версия.
             <br />
-            Разные акценты.
+            Всегда под рукой
           </h2>
           <p className="section-lead">
-            Резюме для вакансии фронтенд-разработчика и портфолио для клиента могут рассказывать о
-            вас по-разному.
+            Не нужно поддерживать несколько похожих документов. Главная, PDF и публичная страница
+            опираются на одно основное портфолио
           </p>
           <div className="marketing-actions">
             <LinkButton href="/use-cases">
@@ -108,23 +111,24 @@ export default function FeaturesPage() {
             </LinkButton>
           </div>
         </div>
-        <div className="stack">
+        <div className="stack" data-reveal>
           <ul className="feature-list">
             <li>
-              <strong>Начните с общей базы.</strong> Данные профиля становятся основой нового резюме
-              или портфолио.
+              <strong>Начните с того, что есть.</strong> Пустые поля не мешают сохранению —
+              дополняйте портфолио по мере роста
             </li>
             <li>
-              <strong>Соберите нужное представление.</strong> Выберите проекты, секции и
-              формулировки для этой версии.
+              <strong>Добавьте фото и город.</strong> Аватар загружается в профиль, город и страна
+              вводятся вручную. Геопозиция не запрашивается
             </li>
             <li>
-              <strong>Обновляйте выборочно.</strong> Изменение базы не переписывает готовые
-              документы. Вы сами принимаете нужные изменения.
+              <strong>Расставьте разделы.</strong> В мобильном приложении порядок контактов,
+              навыков, проектов, опыта и образования меняется перетаскиванием. Главная, PDF и
+              публичная страница сохраняют этот порядок
             </li>
             <li>
-              <strong>Сохраните библиотеку.</strong> Удаление проекта из документа убирает связь с
-              ним, а сама работа остаётся в библиотеке.
+              <strong>Сохраните прежние документы.</strong> Резюме и портфолио из прежней версии
+              остаются в архиве для восстановления и не публикуются автоматически
             </li>
           </ul>
         </div>
@@ -132,32 +136,62 @@ export default function FeaturesPage() {
       <section
         className="marketing-section site-width split-section"
         aria-labelledby="control-title"
+        id="publication"
       >
-        <div className="stack">
+        <div className="stack" data-reveal>
           <span className="numbered-label">03 / Ваш контроль</span>
           <h2 className="section-heading" id="control-title">
             Сначала подготовьте.
             <br />
-            Потом поделитесь.
+            Потом поделитесь
           </h2>
-          <p className="section-lead">Сохранение и публикация — два отдельных решения.</p>
+          <p className="section-lead">Сохранение и публикация — два отдельных решения</p>
         </div>
-        <div className="stack">
+        <div className="stack" data-reveal>
           <p>
-            Редактируйте документ и проверяйте результат в предпросмотре. Сохранение фиксирует вашу
-            работу в кабинете; оно не меняет публичную страницу.
+            «Сохранить» фиксирует работу в кабинете: главная и PDF берут эту версию. Публичная
+            страница при этом не меняется
           </p>
           <p>
-            Публикация открывает выбранную сохранённую версию по постоянной ссылке. Обновления
-            выходят отдельно, а доступ к документу можно отозвать.
+            Публикация открывает сохранённую версию по постоянной ссылке — она не меняется после
+            обновлений. Обновления выходят отдельным действием, а публикацию можно отозвать
           </p>
           <p>
-            Почта для входа не становится публичным контактом. Для контактов и местоположения вы
-            отдельно разрешаете публикацию.
+            В мобильном приложении опубликованное портфолио превращается в визитку с QR-кодом. Ею
+            можно поделиться через системное меню «Поделиться»
+          </p>
+          <p>
+            Почта для входа не становится публичным контактом. Контакты и местоположение
+            показываются только с вашего разрешения
           </p>
           <div className="marketing-actions">
             <LinkButton href="/help#publication">
               Как работает публикация <Icon name="arrow-up" size={16} />
+            </LinkButton>
+          </div>
+        </div>
+      </section>
+      <section className="marketing-section site-width split-section" aria-labelledby="sync-title">
+        <div className="stack" data-reveal>
+          <span className="numbered-label">04 / Один аккаунт</span>
+          <h2 className="section-heading" id="sync-title">
+            Браузер и телефон.
+            <br />
+            Одни данные
+          </h2>
+        </div>
+        <div className="stack" data-reveal>
+          <p className="section-lead">
+            Войдите по почте и паролю или через Google. Веб-кабинет и мобильное приложение для
+            Android и iOS работают с одним портфолио
+          </p>
+          <p>
+            Интерфейс светлый и на русском языке. Публичных сборок мобильного приложения пока нет —
+            актуальный статус на странице приложения
+          </p>
+          <div className="marketing-actions">
+            <LinkButton href="/download">
+              О приложении <Icon name="arrow-up" size={16} />
             </LinkButton>
           </div>
         </div>

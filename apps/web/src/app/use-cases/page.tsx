@@ -5,7 +5,7 @@ import { Icon, LinkButton, TechnologyBadges } from '@/components/ui';
 export const metadata: Metadata = {
   title: 'Для кого',
   description:
-    'Резюме для поиска работы, портфолио для клиентов и история учебных проектов. Соберите версию под свою задачу в StackCard.',
+    'Портфолио и PDF для поиска работы, ссылка для клиентов и первая история учебных проектов. Соберите своё портфолио в StackCard',
 };
 
 export default function UseCasesPage() {
@@ -17,56 +17,55 @@ export default function UseCasesPage() {
           <>
             Ваша работа.
             <br />
-            <em>Новый контекст.</em>
+            <em>Новый контекст</em>
           </>
         }
-        description="Вакансия, клиент или первый учебный проект. Хорошее представление начинается с выбора того, что важно именно сейчас."
+        description="Вакансия, клиент или первый учебный проект. Хорошее портфолио начинается с выбора того, что важно показать именно сейчас"
       />
       <section className="marketing-section site-width" aria-label="Сценарии использования">
-        <article className="editorial-row" id="career">
+        <article className="editorial-row" id="career" data-reveal>
           <span className="numbered-label">01 / Поиск работы</span>
           <div className="stack">
             <h2 className="section-heading">
-              Резюме под роль.
-              <br />А не на все случаи.
+              Портфолио к отклику.
+              <br />И PDF к письму
             </h2>
-            <p className="section-lead">Покажите работодателю опыт, который отвечает его задаче.</p>
+            <p className="section-lead">Покажите работодателю опыт, который отвечает его задаче</p>
             <p>
-              Создайте отдельную версию для фронтенд-, мобильной или фулстек-разработки. Оставьте
-              нужные навыки и проекты, измените описание своего вклада — общая база и остальные
-              документы сохранятся.
+              Соберите проекты, опыт, образование и навыки в одно портфолио. Прикрепите PDF к
+              отклику или отправьте постоянную ссылку — по ней откроется опубликованная версия
             </p>
             <ul className="feature-list">
-              <li>Выберите проекты, которые раскрывают нужные навыки.</li>
-              <li>Оставьте опыт, который относится к выбранной роли.</li>
-              <li>Проверьте контакты и предпросмотр перед публикацией.</li>
+              <li>Выберите проекты, которые раскрывают нужные навыки</li>
+              <li>Скачайте PDF из сохранённой версии — публикация для этого не нужна</li>
+              <li>Проверьте контакты перед публикацией</li>
             </ul>
             <div className="marketing-actions">
-              <LinkButton href="/examples/resume">
-                Посмотреть резюме <Icon name="arrow-up" size={16} />
+              <LinkButton href="/examples/portfolio">
+                Посмотреть пример <Icon name="arrow-up" size={16} />
               </LinkButton>
             </div>
           </div>
         </article>
-        <article className="editorial-row" id="clients">
+        <article className="editorial-row" id="clients" data-reveal>
           <span className="numbered-label">02 / Работа с клиентами</span>
           <div className="stack">
             <h2 className="section-heading">
               Проекты, которые
               <br />
-              объясняют ваш подход.
+              объясняют ваш подход
             </h2>
-            <p className="section-lead">Расскажите, какую задачу вы решили и что сделали лично.</p>
+            <p className="section-lead">Расскажите, какую задачу вы решили и что сделали лично</p>
             <p>
-              В портфолио можно сделать акцент на выбранных работах: описание результата,
-              технологии, ваш вклад, исходный код и работающая демоверсия. Один проект может
-              получить разные формулировки в разных документах.
+              Для каждой работы укажите результат, технологии, свой вклад, исходный код и
+              демоверсию. Отметьте избранные проекты и задайте их порядок — так клиент сразу увидит
+              главное
             </p>
             <TechnologyBadges items={['React', 'TypeScript', 'Flutter', 'Dart']} />
             <ul className="feature-list">
-              <li>Выберите работы, близкие к запросу клиента.</li>
-              <li>Объясните результат понятными словами.</li>
-              <li>Поделитесь опубликованной версией по одной ссылке.</li>
+              <li>Выберите работы, близкие к запросу клиента</li>
+              <li>Объясните результат понятными словами</li>
+              <li>Поделитесь опубликованным портфолио по одной ссылке</li>
             </ul>
             <div className="marketing-actions">
               <LinkButton href="/examples/portfolio">
@@ -75,27 +74,27 @@ export default function UseCasesPage() {
             </div>
           </div>
         </article>
-        <article className="editorial-row" id="learning">
+        <article className="editorial-row" id="learning" data-reveal>
           <span className="numbered-label">03 / Учёба и первые шаги</span>
           <div className="stack">
             <h2 className="section-heading">
               Первый проект —<br />
-              уже часть истории.
+              уже часть истории
             </h2>
-            <p className="section-lead">Начните с того, что есть. Дополняйте по мере роста.</p>
+            <p className="section-lead">Начните с того, что есть. Дополняйте по мере роста</p>
             <p>
               Курсовая, небольшой сервис, интерфейс или командная работа — всё это можно собрать в
               библиотеку. Укажите свою роль, технологии и то, чему научились. Опыт и образование
-              добавляйте в базу, а лучшие работы выбирайте для первого резюме.
+              добавьте в редакторе, а лучшие работы — в портфолио
             </p>
             <ul className="feature-list">
-              <li>Добавьте проект вручную, даже если у него нет публичного репозитория.</li>
-              <li>Отделите свой вклад от результата всей команды.</li>
-              <li>Соберите первую версию и обновляйте её осознанно.</li>
+              <li>Импортируйте учебные репозитории из своего GitHub-профиля</li>
+              <li>Добавьте проект вручную, даже если у него нет публичного репозитория</li>
+              <li>Заполните только то, что есть: пустые поля не мешают сохранению</li>
             </ul>
             <div className="marketing-actions">
               <LinkButton href="/workspace" variant="primary">
-                Собрать свою историю <Icon name="arrow-up" size={16} />
+                Собрать портфолио <Icon name="arrow-up" size={16} />
               </LinkButton>
               <LinkButton href="/help#getting-started">С чего начать</LinkButton>
             </div>
