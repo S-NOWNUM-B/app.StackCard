@@ -56,10 +56,10 @@ void main() {
         overrides: [authRepositoryProvider.overrideWithValue(repository)],
       );
       final controller = container.read(authControllerProvider.notifier);
-      final opened = controller.openDemo('alex@example.dev');
+      final opened = controller.openDemo('demo@example.com');
       container.dispose();
       repository.completions.single.complete(
-        DemoSession(email: 'alex@example.dev'),
+        DemoSession(email: 'demo@example.com'),
       );
       expect(await opened, isFalse);
     },
@@ -144,9 +144,9 @@ void main() {
     await tester.ensureVisible(find.text('Продолжить'));
     await tester.tap(find.text('Продолжить'));
     await tester.pump();
-    expect(repository.requests, ['alex@example.dev', 'alex@example.dev']);
+    expect(repository.requests, ['demo@example.com', 'demo@example.com']);
     repository.completions.last.complete(
-      DemoSession(email: 'alex@example.dev'),
+      DemoSession(email: 'demo@example.com'),
     );
     await tester.pumpAndSettle();
     expect(find.byType(SignInScreen), findsNothing);
@@ -156,7 +156,7 @@ void main() {
     );
     expect(
       container.read(authControllerProvider).requireValue?.email,
-      'alex@example.dev',
+      'demo@example.com',
     );
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(tester.takeException(), isNull);

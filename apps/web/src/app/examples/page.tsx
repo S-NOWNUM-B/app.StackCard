@@ -33,8 +33,8 @@ export default function ExamplesPage() {
           Две формы одной истории
         </h2>
         <p className="section-lead" data-reveal>
-          Алекс Морган и работы ниже — вымышленные демонстрационные данные. Это пример, а не
-          публикация пользователя
+          Имя, фото и работы ниже — демонстрационные данные. Это пример, а не публикация
+          пользователя
         </p>
         <div className="example-grid">
           <article className="example-card" data-reveal>

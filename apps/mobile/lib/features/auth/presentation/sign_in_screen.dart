@@ -24,7 +24,7 @@ class SignInScreen extends ConsumerStatefulWidget {
 
 class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _email = TextEditingController(text: 'alex@example.dev');
+  final _email = TextEditingController(text: 'demo@example.com');
   @override
   void dispose() {
     _email.dispose();
@@ -105,7 +105,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                             label: context.strings.tr(
                                               'auth.email',
                                             ),
-                                            hint: 'alex@example.dev',
+                                            hint: 'demo@example.com',
                                             controller: _email,
                                             enabled: !auth.isLoading,
                                             prefixIcon:

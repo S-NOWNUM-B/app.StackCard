@@ -242,14 +242,17 @@ export function DocumentView({
   );
 }
 
-// Вымышленный пример из макета. Он не попадает в owner data или publicDocuments.
+// Шаблонное имя демо-профиля: показывает, где будет имя пользователя.
+export const DEMO_PROFILE_NAME = 'Ваше имя';
+
+// Демонстрационный пример. Он не попадает в owner data или publicDocuments.
 export function exampleDocumentContent(
   kind: PublicDocumentKind,
   portrait = false,
 ): PublicDocumentContent {
   return {
     profile: {
-      name: 'Алекс Морган',
+      name: DEMO_PROFILE_NAME,
       username: '',
       headline: 'Flutter- и веб-разработчик',
       bio: 'Создаю понятные цифровые продукты: от небольших мобильных приложений до интерфейсов для веба. Люблю чистую типографику, продуманные детали и код, который легко поддерживать.',

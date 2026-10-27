@@ -140,7 +140,7 @@ export default function LandingPage() {
               </span>
               <div>
                 <span className="mini-label">ИМПОРТ ИЗ GITHUB</span>
-                <h3>github.com/alexmorgan</h3>
+                <h3>github.com/username</h3>
                 <p>Поиск по названию и описанию</p>
               </div>
             </div>

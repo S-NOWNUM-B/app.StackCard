@@ -21,7 +21,7 @@ export default function ExamplePortfolioPage() {
         <div className="stack public-page-label">
           <p className="muted">Демонстрационное портфолио</p>
           <p className="muted">
-            Алекс Морган и проекты — вымышленные примеры. Они не являются публикацией пользователя
+            Имя, фото и проекты — демонстрационные данные. Это не публикация пользователя
           </p>
         </div>
         <DocumentView kind="portfolio" content={mainPortfolioExample()} modernPortfolio preview />
