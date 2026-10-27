@@ -18,17 +18,17 @@ export function isOwnerMediaPath(path: string, uid: string): boolean {
 }
 
 function imageFailure(): Error {
-  return new Error('Не удалось прочитать фотографию. Выберите другой файл.');
+  return new Error('Не удалось прочитать фотографию. Выберите другой файл');
 }
 
 function mediaFailure(error: unknown): Error {
   if (error && typeof error === 'object' && 'code' in error) {
     const code = String(error.code);
     if (code.includes('permission-denied') || code.includes('unauthorized'))
-      return new Error('Нет доступа к фотографии. Откройте редактор своего аккаунта.');
+      return new Error('Нет доступа к фотографии. Откройте редактор своего аккаунта');
     if (code.includes('unauthenticated'))
-      return new Error('Войдите в аккаунт, чтобы добавить фотографию.');
-    return new Error('Фотография недоступна. Повторите попытку.');
+      return new Error('Войдите в аккаунт, чтобы добавить фотографию');
+    return new Error('Фотография недоступна. Повторите попытку');
   }
   return error instanceof Error ? error : imageFailure();
 }
@@ -106,7 +106,7 @@ export async function prepareAvatar(file: File): Promise<Uint8Array> {
     file.size > originalMaxBytes ||
     !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
   )
-    throw new Error('Выберите фотографию JPEG, PNG или WebP размером до 10 МБ.');
+    throw new Error('Выберите фотографию JPEG, PNG или WebP размером до 10 МБ');
   const original = new Uint8Array(await file.arrayBuffer());
   validateOriginalImage(original, file.type);
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
@@ -206,7 +206,7 @@ export class FirestorePortfolioMediaRepository {
     private readonly active: () => boolean,
     private readonly timeoutMs = 40_000,
   ) {
-    if (!ownerUid || ownerUid.includes('/')) throw new Error('Некорректный аккаунт.');
+    if (!ownerUid || ownerUid.includes('/')) throw new Error('Некорректный аккаунт');
   }
   private async wait<T>(promise: Promise<T>): Promise<T> {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -215,7 +215,7 @@ export class FirestorePortfolioMediaRepository {
         promise,
         new Promise<never>((_, reject) => {
           timer = setTimeout(
-            () => reject(new Error('Загрузка фотографии недоступна. Повторите попытку.')),
+            () => reject(new Error('Загрузка фотографии недоступна. Повторите попытку')),
             this.timeoutMs,
           );
         }),
@@ -227,7 +227,7 @@ export class FirestorePortfolioMediaRepository {
     }
   }
   private guard(path?: string) {
-    if (!this.active()) throw new Error('Аккаунт изменился. Откройте редактор заново.');
+    if (!this.active()) throw new Error('Аккаунт изменился. Откройте редактор заново');
     if (path !== undefined && !isOwnerMediaPath(path, this.ownerUid)) throw imageFailure();
   }
   async upload(bytes: Uint8Array): Promise<string> {
@@ -246,7 +246,7 @@ export class FirestorePortfolioMediaRepository {
     const document = await this.wait(this.transport.read(path));
     this.guard(path);
     if (document === null) {
-      if (!this.transport.legacyRead) throw new Error('Фотография недоступна.');
+      if (!this.transport.legacyRead) throw new Error('Фотография недоступна');
       const bytes = await this.wait(this.transport.legacyRead(path));
       this.guard(path);
       return bytes.slice();
@@ -266,13 +266,13 @@ export function portfolioMediaRepository(user: User): FirestorePortfolioMediaRep
     ownerUid = user.uid;
   const active = () => auth.currentUser?.uid === ownerUid;
   const guard = () => {
-    if (!active()) throw new Error('Аккаунт изменился.');
+    if (!active()) throw new Error('Аккаунт изменился');
   };
   const account = doc(firestore, 'accounts', ownerUid);
   const assertAccount = (data: Record<string, unknown> | undefined) => {
     guard();
     if (data && (data.lifecycleState ?? 'active') !== 'active')
-      throw new Error('Аккаунт недоступен.');
+      throw new Error('Аккаунт недоступен');
   };
   return new FirestorePortfolioMediaRepository(
     ownerUid,
@@ -289,7 +289,7 @@ export function portfolioMediaRepository(user: User): FirestorePortfolioMediaRep
           const reference = doc(firestore, path),
             previous = await transaction.get(reference);
           guard();
-          if (previous.exists()) throw new Error('Фотография уже существует.');
+          if (previous.exists()) throw new Error('Фотография уже существует');
           transaction.set(reference, data);
         });
       },
@@ -348,14 +348,14 @@ export async function fetchLegacyAvatarFile(
 ): Promise<File> {
   const failure = () =>
     new Error(
-      'Не удалось получить старую фотографию для PDF. Проверьте её доступность или выберите фотографию заново.',
+      'Не удалось получить старую фотографию для PDF. Проверьте её доступность или выберите фотографию заново',
     );
   if (!isSafeLegacyAvatarUrl(url)) throw failure();
   const controller = new AbortController();
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined,
     timer: ReturnType<typeof setTimeout> | undefined;
   const guard = () => {
-    if (!active()) throw new Error('Аккаунт изменился. Откройте редактор заново.');
+    if (!active()) throw new Error('Аккаунт изменился. Откройте редактор заново');
     if (controller.signal.aborted) throw failure();
   };
   async function read() {
@@ -423,8 +423,8 @@ export async function readLegacyAvatarBytes(user: User, url: string): Promise<Ui
   const owner = user.uid,
     active = () => firebaseServices().auth.currentUser?.uid === owner;
   const file = await fetchLegacyAvatarFile(url, { active });
-  if (!active()) throw new Error('Аккаунт изменился. Откройте редактор заново.');
+  if (!active()) throw new Error('Аккаунт изменился. Откройте редактор заново');
   const bytes = await prepareAvatar(file);
-  if (!active()) throw new Error('Аккаунт изменился. Откройте редактор заново.');
+  if (!active()) throw new Error('Аккаунт изменился. Откройте редактор заново');
   return bytes;
 }

@@ -20,7 +20,7 @@ let services: ReturnType<typeof initializeServices> | undefined;
 function initializeServices() {
   const config = firebaseConfig();
   if (!config.apiKey || !config.authDomain || !config.projectId || !config.appId)
-    throw new Error('Вход пока недоступен. Попробуйте позднее.');
+    throw new Error('Вход пока недоступен. Попробуйте позднее');
   const app =
     getApps().find((a) => a.name === 'stackcard-web') ?? initializeApp(config, 'stackcard-web');
   const auth = getAuth(app);
@@ -30,7 +30,7 @@ function initializeServices() {
   const storage = getStorage(app);
   if (process.env.NEXT_PUBLIC_USE_EMULATORS === 'true') {
     if (!config.projectId.startsWith('demo-'))
-      throw new Error('Эмуляторы разрешены только для demo Firebase проекта.');
+      throw new Error('Эмуляторы разрешены только для demo Firebase проекта');
     connectAuthEmulator(
       auth,
       process.env.NEXT_PUBLIC_AUTH_EMULATOR_URL ?? 'http://127.0.0.1:9099',
@@ -51,6 +51,6 @@ function initializeServices() {
 }
 export function firebaseServices() {
   if (typeof window === 'undefined')
-    throw new Error('Private Firebase client доступен только в браузере.');
+    throw new Error('Private Firebase client доступен только в браузере');
   return (services ??= initializeServices());
 }

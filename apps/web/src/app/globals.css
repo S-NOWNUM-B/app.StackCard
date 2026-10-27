@@ -2993,6 +2993,1051 @@ h2.section-heading,
   flex-shrink: 0;
 }
 
+/* Кабинет 2026-10-26: адаптивный редактор 320–1920. Телефон/планшет — одна колонка,
+   нижняя навигация и липкая панель Save; от 1024 — боковая навигация; от 1280 —
+   форма и живой предпросмотр рядом. Движение 180–240 ms, reduced motion отключает его. */
+.single-portfolio-workspace {
+  --nav-height: 80px;
+  --save-height: 64px;
+  --workspace-ease: cubic-bezier(0.2, 0, 0, 1);
+  background: #f8f9fb;
+}
+.single-portfolio-workspace .web-header {
+  min-height: 64px;
+  padding-block: 8px;
+}
+.single-portfolio-workspace .workspace-main {
+  width: min(100%, 760px);
+  overflow: visible;
+  padding: var(--xl) var(--lg) calc(var(--nav-height) + var(--save-height) + 48px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+.single-portfolio-workspace .workspace-fieldset {
+  gap: var(--lg);
+}
+.single-portfolio-workspace .workspace-nav .button {
+  min-height: 56px;
+  font-size: 12px;
+}
+.single-portfolio-workspace .workspace-nav .button:not(:disabled):active {
+  transform: scale(0.97);
+}
+.single-portfolio-workspace .workspace-nav .button,
+.single-portfolio-workspace .button {
+  transition:
+    background-color 180ms var(--workspace-ease),
+    border-color 180ms var(--workspace-ease),
+    color 180ms var(--workspace-ease),
+    transform 120ms var(--workspace-ease),
+    box-shadow 180ms var(--workspace-ease);
+}
+.single-portfolio-workspace .button.secondary:not(:disabled):hover {
+  border-color: var(--outline);
+}
+.single-portfolio-workspace .button:not(:disabled):active {
+  transform: scale(0.98);
+}
+.view-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--xs);
+}
+.view-heading h1 {
+  font-size: 28px;
+  letter-spacing: -0.6px;
+}
+.view-enter {
+  animation: workspace-enter 240ms var(--workspace-ease, ease-out) both;
+}
+@keyframes workspace-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.workspace-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--md);
+  padding: var(--xl);
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: workspace-spin 800ms linear infinite;
+}
+@keyframes workspace-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.status-card {
+  padding: var(--lg);
+  background: var(--surface);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-lg);
+}
+.single-portfolio-workspace .notice {
+  background: var(--surface);
+  animation: workspace-enter 180ms var(--workspace-ease, ease-out) both;
+}
+
+.single-portfolio-workspace .personalization {
+  width: min(100%, 480px);
+  margin: var(--lg) auto;
+  padding: var(--xl);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.stepper {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-elevated);
+  overflow: hidden;
+}
+.stepper > span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  border-radius: inherit;
+  transition: width 240ms var(--workspace-ease, ease-out);
+}
+.personalization .avatar-editor {
+  padding: var(--md) 0;
+}
+.single-portfolio-workspace .workspace-nav .button:disabled {
+  background: transparent;
+  border-color: transparent;
+  opacity: 0.5;
+}
+.single-portfolio-workspace .workspace-nav .button.active:disabled {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+/* Карточки разделов: единые отступы, счётчик, «+» и сворачивание. */
+.editor-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  scroll-margin-top: 72px;
+  min-width: 0;
+}
+.editor-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  min-height: 48px;
+}
+.editor-card-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.editor-card-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 var(--sm);
+  border-radius: 999px;
+  background: var(--surface-elevated);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.editor-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--xs);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.editor-card-actions .button {
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+}
+.editor-card-toggle .inline-icon {
+  transition: transform 240ms var(--workspace-ease, ease-out);
+}
+.is-collapsed .editor-card-toggle .inline-icon {
+  transform: rotate(-90deg);
+}
+.editor-card-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 240ms var(--workspace-ease, ease-out);
+}
+.is-collapsed .editor-card-collapse {
+  grid-template-rows: 0fr;
+}
+.editor-card-body {
+  min-height: 0;
+  overflow: hidden;
+  margin: -4px;
+  padding: var(--md) 4px 4px;
+  transition: opacity 180ms var(--workspace-ease, ease-out);
+}
+.is-collapsed .editor-card-body {
+  opacity: 0;
+}
+.editor-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--lg);
+}
+.editor-empty {
+  padding: var(--md);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+  font-size: 14px;
+}
+.single-portfolio-workspace .portfolio-editor {
+  gap: var(--lg);
+}
+.editor-slot {
+  display: contents;
+}
+
+/* Липкое оглавление редактора. */
+.editor-index {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  gap: var(--xs);
+  overflow-x: auto;
+  margin: 0 calc(var(--lg) * -1);
+  padding: var(--sm) var(--lg);
+  background: #f8f9fbf2;
+  scrollbar-width: none;
+}
+.editor-index::-webkit-scrollbar {
+  display: none;
+}
+.editor-index-link {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 var(--md);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font:
+    600 13px/1 Manrope,
+    sans-serif;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+}
+.editor-index-link:hover {
+  color: var(--text);
+  border-color: var(--outline);
+}
+.editor-index-link[aria-current='true'] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+/* Перестановка строк. */
+.sortable-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sortable-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--xs);
+  min-width: 0;
+  padding: var(--xs);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-elevated);
+  transition:
+    box-shadow 180ms var(--workspace-ease, ease-out),
+    background-color 180ms ease;
+}
+.sortable-item.is-dragging {
+  z-index: 5;
+  background: var(--surface);
+  box-shadow: 0 10px 28px #17181b24;
+}
+.sortable-content {
+  flex: 1;
+  min-width: 0;
+}
+.sortable-handle,
+.sortable-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+}
+.sortable-handle {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.is-dragging .sortable-handle {
+  cursor: grabbing;
+  color: var(--text);
+}
+.sortable-handle:hover,
+.sortable-step:not(:disabled):hover {
+  background: var(--surface);
+  color: var(--text);
+}
+.sortable-step:disabled {
+  opacity: 0.35;
+}
+.sortable-steps {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sortable-steps {
+    display: inline-flex;
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+  .sortable-item:hover .sortable-steps,
+  .sortable-item:focus-within .sortable-steps {
+    opacity: 1;
+  }
+  .sortable-step {
+    width: 36px;
+  }
+}
+.single-portfolio-workspace .tag-editor-list,
+.single-portfolio-workspace .record-editor-list {
+  display: flex;
+  flex-direction: column;
+}
+.single-portfolio-workspace .tag-editor-item,
+.single-portfolio-workspace .record-editor-item {
+  display: flex;
+  align-items: center;
+  gap: var(--xs);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.tag-editor-item .technology-chip {
+  flex: 1;
+}
+.single-portfolio-workspace .record-editor-summary {
+  min-height: 48px;
+  justify-content: space-between;
+  gap: var(--md);
+  padding: var(--sm);
+  border-radius: var(--radius-sm);
+}
+.single-portfolio-workspace .record-editor-summary:hover {
+  background: var(--surface);
+}
+.single-portfolio-workspace .record-editor-action,
+.single-portfolio-workspace .tag-editor-action {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+}
+.contact-summary {
+  justify-content: flex-start !important;
+}
+.contact-glyph,
+.library-card-icon,
+.attachment-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.single-portfolio-workspace .attachment-icon {
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+.record-editor-copy small,
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.attachment-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+  min-width: 0;
+}
+.attachment-row .icon-picker {
+  padding: var(--sm);
+  animation: workspace-enter 180ms var(--workspace-ease, ease-out) both;
+}
+.attachment-row .icon-picker .button {
+  min-height: 64px;
+  font-size: 12px;
+}
+
+/* Технологии: знак на ink-плашке, как в mobile каталоге. */
+.technology-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sm);
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 var(--xs);
+  font-size: 14px;
+  font-weight: 600;
+}
+.technology-chip-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.single-portfolio-workspace .technology-icon,
+.developer-card .technology-icon,
+.technology-suggestion .technology-icon {
+  background: var(--primary);
+}
+.technology-mask {
+  display: block;
+  width: 18px;
+  height: 18px;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+.technology-fallback {
+  filter: invert(1) !important;
+}
+.technology-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--xs);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.technology-suggestion {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  text-align: left;
+  transition: background-color 180ms ease;
+}
+.technology-suggestion:hover {
+  background: var(--surface-elevated);
+}
+
+/* Диалоги кабинета появляются мягко. */
+.single-portfolio-workspace dialog[open] {
+  animation: workspace-dialog 200ms var(--workspace-ease, ease-out) both;
+}
+.single-portfolio-workspace dialog::backdrop {
+  background: #17181b8c;
+}
+@keyframes workspace-dialog {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+.contact-editor-dialog,
+.share-menu,
+.developer-card-dialog,
+.project-selection-dialog {
+  margin: auto;
+  color: var(--text);
+}
+.project-selection {
+  display: flex;
+  flex-direction: column;
+  max-height: 50dvh;
+  overflow-y: auto;
+}
+.share-menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+}
+
+/* Главная: действия, публикация, бумажный лист портфолио. */
+.publication-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+  padding: var(--lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.publication-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+}
+.publication-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--outline);
+}
+.is-published .publication-dot {
+  background: var(--success);
+  box-shadow: 0 0 0 4px #16774722;
+}
+.publication-title {
+  font-weight: 700;
+}
+.publication-link {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.publication-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sm);
+}
+.publication-actions .button {
+  flex: 1 1 auto;
+}
+.paper-frame {
+  padding: var(--xl) var(--lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 10px #2027440a;
+  min-width: 0;
+}
+.paper-frame .document-paper {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sm);
+  padding: var(--xxl) var(--lg);
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--outline);
+  border-radius: var(--radius-lg);
+  animation: workspace-enter 240ms var(--workspace-ease, ease-out) both;
+}
+.empty-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--surface-elevated);
+}
+.empty-state-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+.empty-state .button {
+  margin-top: var(--sm);
+}
+
+/* Проекты: карточки библиотеки. */
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--md);
+}
+.library-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md);
+  padding: var(--md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+  animation: workspace-enter 240ms var(--workspace-ease, ease-out) both;
+}
+.library-card:hover {
+  border-color: var(--outline);
+  box-shadow: 0 4px 16px #2027440f;
+}
+.library-card-top {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--md);
+  min-width: 0;
+}
+.library-card .project-copy p {
+  font-size: 14px;
+}
+.source-badge {
+  color: var(--muted);
+  font-weight: 600;
+}
+.library-card-edit {
+  width: 100%;
+  border-color: var(--primary) !important;
+}
+.search-field {
+  position: relative;
+}
+.single-portfolio-workspace .search-field > .icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.single-portfolio-workspace .search-field input {
+  padding-left: 48px;
+}
+.back-link {
+  align-self: flex-start;
+  padding-inline: var(--sm);
+}
+.project-card {
+  padding: var(--xl) var(--lg);
+}
+.project-form .tag-editor-heading {
+  min-height: 48px;
+}
+
+/* Редактор и предпросмотр. */
+.editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--xl);
+  align-items: start;
+}
+.editor-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+  min-width: 0;
+}
+.editor-heading {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sm);
+}
+.single-portfolio-workspace .mode-switch {
+  display: inline-flex;
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.mode-switch .button {
+  min-height: 44px;
+  padding: 0 var(--md);
+  font-size: 13px;
+}
+.mode-switch .button[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.editor-preview {
+  display: none;
+  flex-direction: column;
+  gap: var(--sm);
+  min-width: 0;
+}
+.mode-preview .editor-preview {
+  display: flex;
+  animation: workspace-enter 240ms var(--workspace-ease, ease-out) both;
+}
+.mode-preview .editor-form {
+  display: none;
+}
+.editor-preview-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sm);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.status-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-elevated);
+  font-size: 12px;
+  font-weight: 600;
+}
+.status-pill.is-dirty {
+  background: #fff4e5;
+  color: #8a4b00;
+}
+.editor-preview-empty {
+  padding: var(--xl) 0;
+  text-align: center;
+}
+
+/* Панель Save: над нижней навигацией на телефоне, внизу колонки на десктопе. */
+.single-portfolio-workspace .workspace-footer.save-bar {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  bottom: calc(var(--nav-height) + 12px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(calc(100% - 32px), 728px);
+  margin: 0;
+  z-index: 35;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sm);
+  padding: var(--sm) var(--sm) var(--sm) var(--lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: #fffffff5;
+  box-shadow: 0 8px 28px #2027441a;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.single-portfolio-workspace .workspace-footer.save-bar.is-dirty {
+  border-color: var(--primary);
+}
+.save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sm);
+  font-size: 13px;
+  color: var(--muted);
+  min-width: 0;
+}
+.save-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--success);
+}
+.is-dirty .save-dot {
+  background: #d97706;
+  animation: workspace-pulse 1600ms ease-in-out 3;
+}
+@keyframes workspace-pulse {
+  50% {
+    box-shadow: 0 0 0 5px #d9770633;
+  }
+}
+.save-bar .dialog-actions {
+  margin-left: auto;
+}
+.save-bar .button {
+  min-height: 44px;
+}
+
+/* Визитка с QR. */
+.developer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sm);
+  padding: var(--xl) var(--lg);
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.developer-card-brand {
+  align-self: flex-start;
+  width: 117px;
+  height: auto;
+}
+.developer-card-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.developer-card-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-elevated);
+  font-size: 36px;
+  font-weight: 700;
+}
+.developer-card-technologies {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--xs) var(--sm);
+}
+.developer-card .technology-chip {
+  min-height: 32px;
+  font-size: 13px;
+}
+.technology-more {
+  min-width: 44px;
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 700;
+}
+.qr-code {
+  width: min(200px, 100%);
+  height: auto;
+  margin-top: var(--sm);
+}
+.developer-card-url {
+  font-size: 13px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.developer-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+}
+.developer-card-dialog {
+  max-height: 92dvh;
+}
+
+@media (max-width: 480px) {
+  .single-portfolio-workspace .workspace-footer.save-bar {
+    position: fixed;
+    margin: 0;
+    padding: var(--sm);
+  }
+  .single-portfolio-workspace .workspace-footer.save-bar {
+    flex-wrap: nowrap;
+    padding-left: var(--md);
+  }
+  .save-status {
+    flex: 1;
+    font-size: 12px;
+  }
+  .save-bar .dialog-actions {
+    flex-wrap: nowrap;
+    gap: var(--xs);
+  }
+  .save-bar .button {
+    padding-inline: var(--md);
+  }
+  .save-bar:not(.is-dirty) .button.secondary {
+    display: none;
+  }
+  .single-portfolio-workspace .workspace-main {
+    padding-inline: var(--md);
+  }
+  .editor-index {
+    margin-inline: calc(var(--md) * -1);
+    padding-inline: var(--md);
+  }
+  .editor-card {
+    padding: var(--md);
+  }
+  .paper-frame {
+    padding: var(--lg) var(--md);
+  }
+}
+@media (max-width: 360px) {
+  .single-portfolio-workspace .web-header {
+    padding-inline: var(--md);
+  }
+  .single-portfolio-workspace .workspace-nav {
+    inset-inline: 8px;
+    width: calc(100% - 16px);
+    gap: 4px;
+    padding: 4px;
+  }
+}
+
+/* От 1024: навигация слева, контент шире, Save внизу рабочей области. */
+@media (min-width: 1024px) {
+  .single-portfolio-workspace {
+    --nav-width: 232px;
+  }
+  .single-portfolio-workspace .web-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  .single-portfolio-workspace .workspace-body {
+    display: grid;
+    grid-template-columns: var(--nav-width) minmax(0, 1fr);
+  }
+  .single-portfolio-workspace .workspace-nav {
+    position: sticky;
+    top: 64px;
+    inset: auto;
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    height: calc(100dvh - 64px);
+    margin: 0;
+    padding: var(--xl) var(--md);
+    border: 0;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--surface);
+  }
+  .single-portfolio-workspace .workspace-nav .button {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--md);
+    min-height: 48px;
+    padding-inline: var(--lg);
+    font-size: 14px;
+  }
+  .single-portfolio-workspace .workspace-nav .button:not(.active):not(:disabled):hover {
+    background: var(--surface-elevated);
+  }
+  .single-portfolio-workspace .workspace-main {
+    width: min(100%, 880px);
+    padding: var(--xxl) var(--xxl) calc(var(--save-height) + 48px);
+  }
+  .single-portfolio-workspace[data-view='editor'] .workspace-main {
+    width: min(100%, 1480px);
+  }
+  .single-portfolio-workspace .workspace-footer.save-bar {
+    left: calc(var(--nav-width) + (100% - var(--nav-width)) / 2);
+    bottom: 16px;
+    width: min(calc(100% - var(--nav-width) - 64px), 816px);
+  }
+  .editor-index {
+    top: 64px;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+  .editor-card {
+    padding: var(--xl);
+    scroll-margin-top: 136px;
+  }
+  .paper-frame {
+    padding: var(--xxl);
+  }
+  .portfolio-actions {
+    grid-template-columns: repeat(2, minmax(0, max-content));
+  }
+  .portfolio-actions .button {
+    padding-inline: var(--xl);
+  }
+}
+@media (min-width: 1280px) {
+  .editor-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.85fr);
+  }
+  .editor-preview,
+  .mode-preview .editor-preview {
+    display: flex;
+    position: sticky;
+    top: 88px;
+    max-height: calc(100dvh - 176px);
+    animation: none;
+  }
+  .editor-preview .paper-frame {
+    overflow-y: auto;
+    padding: var(--xl);
+  }
+  .editor-form,
+  .mode-preview .editor-form {
+    display: block;
+  }
+  .single-portfolio-workspace .mode-switch {
+    display: none;
+  }
+}
+@media (min-width: 1600px) {
+  .editor-layout {
+    grid-template-columns: minmax(0, 760px) minmax(420px, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-enter,
+  .single-portfolio-workspace .notice,
+  .empty-state,
+  .library-card,
+  .single-portfolio-workspace dialog[open] {
+    animation: none;
+  }
+}
+@media print {
+  .single-portfolio-workspace .save-bar,
+  .editor-index {
+    display: none;
+  }
+}
+
 /* Маркетинг: доведённые состояния и сдержанное движение.
    Только opacity/translate/transform, 180–600 ms; reduced motion отключает декоративное. */
 /* Демо растёт по содержимому: подпись под ним не перекрывается. */

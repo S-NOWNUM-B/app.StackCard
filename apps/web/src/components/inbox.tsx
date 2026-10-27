@@ -10,7 +10,7 @@ import { ContactError, type ContactRequest } from '@/lib/contact-contract';
 function inboxMessage(error: unknown) {
   return error instanceof ContactError
     ? error.message
-    : 'Не удалось получить подтверждение от сервера. Проверьте соединение и повторите действие.';
+    : 'Не удалось получить подтверждение от сервера. Проверьте соединение и повторите действие';
 }
 
 export function Inbox({
@@ -102,8 +102,7 @@ export function Inbox({
         </Button>
       </div>
       <p className="muted">
-        Обращения из опубликованных документов. Они сохраняются здесь независимо от
-        push-уведомлений.
+        Обращения из опубликованных документов. Они сохраняются здесь независимо от push-уведомлений
       </p>
       {error && <Notice error>{error}</Notice>}
       {loading ? (
@@ -116,7 +115,7 @@ export function Inbox({
               {request.documentTitle} · {date(request.createdAt)}
             </p>
             <a href={`mailto:${request.email}`}>{request.email}</a>
-            <p className="muted">Имя и почта указаны отправителем и не подтверждены.</p>
+            <p className="muted">Имя и почта указаны отправителем и не подтверждены</p>
             <p className="contact-message">{request.message}</p>
             {request.readAt ? (
               <p className="muted">Прочитано {date(request.readAt)}</p>
@@ -127,14 +126,14 @@ export function Inbox({
             )}
           </>
         ) : (
-          !error && <Notice>Обращение не найдено или больше недоступно.</Notice>
+          !error && <Notice>Обращение не найдено или больше недоступно</Notice>
         )
       ) : (
         <>
           {!requests.length && !error && (
             <Notice>
               Пока нет обращений. Форма связи появится у опубликованного документа с открытой
-              почтой, телефоном или Telegram.
+              почтой, телефоном или Telegram
             </Notice>
           )}
           {requests.map((r) => (

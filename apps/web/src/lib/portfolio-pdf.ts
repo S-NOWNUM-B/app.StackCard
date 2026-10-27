@@ -1,6 +1,17 @@
 import type { DocumentContent } from './model';
 
-export type PortfolioPdfOptions = { avatarBytes?: Uint8Array };
+// omitAvatar: фото не удалось загрузить по legacy-ссылке, PDF строится без него.
+export type PortfolioPdfOptions = { avatarBytes?: Uint8Array; omitAvatar?: boolean };
+
+// Фото читается только для видимого профиля: private path первым, затем legacy URL.
+export function pdfAvatarSource(
+  content: DocumentContent,
+): { path: string } | { url: string } | null {
+  if (!content.blocks.some((block) => block.kind === 'profile' && block.visible)) return null;
+  if (content.profile.avatarPath) return { path: content.profile.avatarPath };
+  if (content.profile.avatarUrl) return { url: content.profile.avatarUrl };
+  return null;
+}
 
 // Тяжёлый renderer загружается только по явному действию «Скачать портфолио».
 export async function generatePortfolioPdf(
@@ -13,7 +24,7 @@ export async function generatePortfolioPdf(
     ids.map(async (id) => {
       const response = await fetch(`/icons/lucide/${id}.svg`);
       if (!response.ok)
-        throw new Error('Не удалось подготовить иконки для PDF. Попробуйте ещё раз.');
+        throw new Error('Не удалось подготовить иконки для PDF. Попробуйте ещё раз');
       return [id, await response.text()] as const;
     }),
   );
@@ -22,12 +33,13 @@ export async function generatePortfolioPdf(
     boldFont: '/fonts/Manrope-Bold.ttf',
     stockIconSvg: Object.fromEntries(entries),
     avatarBytes: options.avatarBytes,
+    omitAvatar: options.omitAvatar,
   });
 }
 
 export function downloadPortfolioPdf(blob: Blob, filename = 'stackcard-portfolio.pdf'): void {
   if (blob.type !== 'application/pdf' || blob.size === 0)
-    throw new Error('PDF не создан. Попробуйте ещё раз.');
+    throw new Error('PDF не создан. Попробуйте ещё раз');
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

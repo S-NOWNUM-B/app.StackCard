@@ -14,6 +14,14 @@ mobile Save. Profile остаётся первым, GitHub следует вме
 
 - Runtime — `apps/web/src/app`, shared controls — `src/components/ui.tsx`, tokens —
   `src/app/globals.css`.
+  Кабинет (2026-10-26) повторяет функции mobile Editor/Home/Projects, вёрстка своя:
+  разделы — `editor-card.tsx`, перестановка мышью/touch/клавиатурой —
+  `sortable-list.tsx`, каталог технологий — `src/lib/technology-catalog.ts`
+  (данные mobile `technology_catalog_data.dart`), QR визитки — `src/lib/qr-code.ts`.
+  Новую функцию mobile переносить в web вместе с ней.
+  Пунктуация владельца: в заголовках и в конце последнего предложения текстового
+  блока (абзац, подпись, кнопка, сообщение) точки нет; точки между предложениями
+  и знаки `?`/`!` сохраняются.
   Пары действий используют `.dialog-actions`: «Отмена» слева, основное действие
   справа; вся группа выровнена вправо. Подтверждения — shared
   [confirmation dialog](../../../apps/web/src/components/confirmation-dialog.tsx)

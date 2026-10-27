@@ -165,6 +165,15 @@ test('available validated legacy URL photo embeds in a real PDF without a media 
   );
 });
 
+test('unavailable legacy URL photo can be explicitly omitted without failing the PDF', async () => {
+  const content = seedDocument(emptyContent());
+  content.profile.avatarUrl = 'https://legacy.example.com/no-cors.jpg';
+  const blob = await renderPortfolioPdf(content, { ...(await assets()), omitAvatar: true });
+  const source = Buffer.from(await blob.arrayBuffer()).toString('latin1');
+  assert.ok(source.startsWith('%PDF-'));
+  assert.ok(!source.includes('/Subtype /Image'));
+});
+
 test('long Cyrillic PDF uses embedded font, multiple pages, URI links, avatar and all pinned icons', async () => {
   const content: DocumentContent = seedDocument(emptyContent());
   content.profile = {

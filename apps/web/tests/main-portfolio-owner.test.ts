@@ -353,7 +353,13 @@ test('owner skill tags share the technology dialog and editor sections follow th
     createElement(ContentEditor, {
       content,
       onChange: () => {},
-      projects: createElement('div', {}, 'Project attachments'),
+      projects: createElement(AttachmentsEditor, {
+        workspace,
+        document: mainDocument(workspace)!,
+        onChange: () => {},
+        onIconChange: () => {},
+        onProjects: () => {},
+      }),
     }),
   );
   const headings = [
@@ -516,7 +522,7 @@ test('experience and education render compact editable summaries, removal contro
   assert.ok(!html.includes('value="Unique degree"'));
   assert.ok(!html.includes('Private work description'));
   assert.ok(!html.includes('Private education description'));
-  assert.ok(html.indexOf('Город / страна') < html.indexOf('Описание'));
+  assert.ok(html.indexOf('Город / страна') < html.indexOf('О себе'));
 });
 test('scoped import keeps adjacent unsaved portfolio input and existing project manual overrides', () => {
   const previous = migrateMainPortfolio(emptyContent(), null),

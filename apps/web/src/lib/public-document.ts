@@ -497,7 +497,7 @@ export async function readPublicDocument(
   if (!isPublicId(publicId)) return null;
   const projectId = options.projectId ?? process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   if (!projectId || !/^[a-z][a-z0-9-]{4,62}$/.test(projectId))
-    throw new PublicDocumentUnavailable('Публичный reader не настроен.');
+    throw new PublicDocumentUnavailable('Публичный reader не настроен');
   let origin = 'https://firestore.googleapis.com';
   const emulator =
     options.emulatorOrigin ??
@@ -549,7 +549,7 @@ export async function readPublicDocument(
     return parsePublicDocument(decoded, publicId);
   } catch (error) {
     if (error instanceof PublicDocumentUnavailable) throw error;
-    throw new PublicDocumentUnavailable('Публичный документ временно недоступен.');
+    throw new PublicDocumentUnavailable('Публичный документ временно недоступен');
   }
 }
 
