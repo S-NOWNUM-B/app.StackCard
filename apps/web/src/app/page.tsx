@@ -15,10 +15,10 @@ export default function LandingPage() {
     <MarketingPage>
       <section className="landing-hero">
         <Link href="/about" className="hero-note">
-          <span className="status-dot" /> Для тех, кто создаёт <span aria-hidden="true">↗</span>
+          <span className="status-dot" /> Для авторов проектов <span aria-hidden="true">↗</span>
         </Link>
         <h1>
-          Ваша работа.
+          Ваша работа
           <br />
           <em>Ваша история</em>
         </h1>
@@ -50,9 +50,9 @@ export default function LandingPage() {
       </section>
       <section className="marketing-section site-width" id="features">
         <div className="section-heading" data-reveal>
-          <span className="eyebrow">Три раздела. Одно портфолио</span>
+          <span className="eyebrow">Три раздела и одно портфолио</span>
           <h2>
-            Всё связано.
+            Всё связано
             <br />
             <em>Всё по-вашему</em>
           </h2>
@@ -120,7 +120,7 @@ export default function LandingPage() {
           <div className="section-heading" data-reveal>
             <span className="eyebrow">Ваша работа говорит за вас</span>
             <h2>
-              Репозитории.
+              Репозитории
               <br />
               <em>Без копирования</em>
             </h2>
@@ -180,7 +180,7 @@ export default function LandingPage() {
         <div className="section-heading" data-reveal>
           <span className="eyebrow">Без сюрпризов</span>
           <h2>
-            Ваш черновик.
+            Ваш черновик
             <br />
             <em>Ваше решение</em>
           </h2>
@@ -214,9 +214,9 @@ export default function LandingPage() {
       </section>
       <section className="site-width application-teaser" data-reveal>
         <div>
-          <span className="eyebrow">Там, где вам удобно</span>
+          <span className="eyebrow">Где вам удобно</span>
           <h2>
-            Браузер и телефон.
+            Браузер и телефон
             <br />
             <em>Одни данные</em>
           </h2>

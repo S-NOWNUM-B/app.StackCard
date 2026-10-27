@@ -14,9 +14,9 @@ export default function DownloadPage() {
         eyebrow="StackCard на ваших устройствах"
         title={
           <>
-            Ваше портфолио.
+            Ваше портфолио
             <br />
-            <em>Там, где удобно</em>
+            <em>Где вам удобно</em>
           </>
         }
         description="Работайте в браузере уже сейчас. Мобильное приложение для Android и iOS развивается параллельно; публичных сборок для установки пока нет"
@@ -72,7 +72,7 @@ export default function DownloadPage() {
         <div className="stack" data-reveal>
           <span className="numbered-label">02 / Что будет в приложении</span>
           <h2 className="section-heading" id="mobile-title">
-            Тот же аккаунт.
+            Тот же аккаунт
             <br />
             Те же данные
           </h2>

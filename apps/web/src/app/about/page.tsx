@@ -15,9 +15,9 @@ export default function AboutPage() {
         eyebrow="О проекте StackCard"
         title={
           <>
-            Вы больше,
+            Не просто
             <br />
-            <em>чем список технологий</em>
+            <em>список технологий</em>
           </>
         }
         description="За каждым навыком стоит работа. За каждой работой — ваш вклад. StackCard помогает связать их в профессиональную историю, которую удобно рассказать"
@@ -26,7 +26,7 @@ export default function AboutPage() {
         <div className="stack" data-reveal>
           <span className="numbered-label">01 / Идея</span>
           <h2 className="section-heading" id="idea-title">
-            Собрать один раз.
+            Собрать один раз
             <br />
             Показывать везде
           </h2>
@@ -57,7 +57,7 @@ export default function AboutPage() {
           02 / Принципы
         </span>
         <h2 className="section-heading" id="principles-title" data-reveal>
-          Меньше повторов.
+          Меньше повторов
           <br />
           Больше собственного голоса
         </h2>
@@ -80,7 +80,7 @@ export default function AboutPage() {
           </article>
           <article className="feature-item" data-reveal>
             <span className="numbered-label">03</span>
-            <h3>Публикация — ваше решение</h3>
+            <h3>Публикация по вашему решению</h3>
             <p>
               Черновик остаётся рабочим пространством. Сохранение не заменяет публичную версию: вы
               решаете, когда поделиться обновлениями
@@ -95,9 +95,9 @@ export default function AboutPage() {
         <div className="stack" data-reveal>
           <span className="numbered-label">03 / Кто создаёт</span>
           <h2 className="section-heading" id="creator-title">
-            Из практики.
+            Из практики
             <br />
-            Для тех, кто делает
+            Для людей дела
           </h2>
         </div>
         <div className="stack" data-reveal>

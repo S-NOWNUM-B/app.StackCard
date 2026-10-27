@@ -12,10 +12,10 @@ export default function UseCasesPage() {
   return (
     <MarketingPage>
       <PageIntro
-        eyebrow="Для тех, кто создаёт"
+        eyebrow="Для авторов проектов"
         title={
           <>
-            Ваша работа.
+            Ваша работа
             <br />
             <em>Новый контекст</em>
           </>
@@ -27,7 +27,7 @@ export default function UseCasesPage() {
           <span className="numbered-label">01 / Поиск работы</span>
           <div className="stack">
             <h2 className="section-heading">
-              Портфолио к отклику.
+              Портфолио к отклику
               <br />И PDF к письму
             </h2>
             <p className="section-lead">Покажите работодателю опыт, который отвечает его задаче</p>
@@ -51,7 +51,7 @@ export default function UseCasesPage() {
           <span className="numbered-label">02 / Работа с клиентами</span>
           <div className="stack">
             <h2 className="section-heading">
-              Проекты, которые
+              Проекты
               <br />
               объясняют ваш подход
             </h2>
@@ -78,7 +78,8 @@ export default function UseCasesPage() {
           <span className="numbered-label">03 / Учёба и первые шаги</span>
           <div className="stack">
             <h2 className="section-heading">
-              Первый проект —<br />
+              Первый проект
+              <br />
               уже часть истории
             </h2>
             <p className="section-lead">Начните с того, что есть. Дополняйте по мере роста</p>
