@@ -139,7 +139,7 @@ class _DeveloperCardScreenState extends ConsumerState<DeveloperCardScreen> {
     final card = ref.watch(developerCardProvider(widget.documentId));
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Developer Card'),
+        title: const Text('Визитка'),
         leading: IconButton(
           tooltip: 'Назад',
           icon: const StackCardIcon(name: 'arrow-left'),

@@ -102,6 +102,7 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
   ) => showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
+      scrollable: true,
       title: Text(title),
       content: Text(message),
       actions: [
@@ -142,7 +143,7 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
       'Отправьте публичную ссылку или покажите карточку с QR-кодом.',
       [
         (value: 'share', label: 'Отправить ссылку'),
-        (value: 'card', label: 'Developer Card и QR'),
+        (value: 'card', label: 'Визитка и QR'),
       ],
     );
     if (!mounted || !_active(repository, uid)) return;

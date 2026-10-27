@@ -246,6 +246,7 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        scrollable: true,
         title: Text(context.strings.tr('settings.deleteAccount')),
         content: Text(_tr('deleteConfirm')),
         actions: [

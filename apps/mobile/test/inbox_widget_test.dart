@@ -222,6 +222,77 @@ void main() {
     },
   );
   testWidgets(
+    'Inbox detail shows localized date and time instead of raw DateTime',
+    (tester) async {
+      final createdAt = DateTime.utc(2026, 10, 9, 14, 3, 12);
+      final inbox = TestInbox(
+        'a',
+        items: [
+          ContactRequest(
+            requestId: requestId,
+            publicId: 'abcdef0123456789abcdef0123456789',
+            documentId: 'resume',
+            documentTitle: 'Published resume',
+            name: 'Visitor',
+            email: 'visitor@example.com',
+            message: 'Hello',
+            createdAt: createdAt,
+          ),
+        ],
+      );
+      await _open(
+        tester,
+        TestAuth(const AuthUser(uid: 'a')),
+        location: '/inbox/$requestId',
+        inboxes: {'a': inbox},
+      );
+      final context = tester.element(find.byType(InboxRequestScreen));
+      final localizations = MaterialLocalizations.of(context);
+      final local = createdAt.toLocal();
+      expect(
+        find.text(
+          '${localizations.formatShortDate(local)} '
+          '${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(local))}',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text(local.toString()), findsNothing);
+      expect(find.textContaining('.000'), findsNothing);
+    },
+  );
+  testWidgets(
+    'full Inbox refresh hides Load more until the new first page arrives',
+    (tester) async {
+      final pending = Completer<InboxPage>();
+      final cursor = InboxCursor(
+        ownerUid: 'a',
+        createdAt: DateTime.utc(2026, 10, 9),
+        requestId: requestId,
+      );
+      final inbox = TestInbox('a')
+        ..listing = (_) async =>
+            InboxPage(requests: [enquiry()], nextCursor: cursor);
+      await _open(
+        tester,
+        TestAuth(const AuthUser(uid: 'a')),
+        location: '/inbox',
+        inboxes: {'a': inbox},
+      );
+      expect(find.byKey(const Key('inbox.more')), findsOneWidget);
+      inbox.listing = (_) => pending.future;
+      await tester.ensureVisible(find.text('Обновить'));
+      await tester.tap(find.text('Обновить'));
+      await tester.pump();
+      expect(find.text('Visitor'), findsNothing);
+      expect(find.byKey(const Key('inbox.more')), findsNothing);
+      expect(inbox.cursors.last, isNull);
+      pending.complete(InboxPage(requests: [enquiry()], nextCursor: cursor));
+      await tester.pumpAndSettle();
+      expect(find.text('Visitor'), findsOneWidget);
+      expect(find.byKey(const Key('inbox.more')), findsOneWidget);
+    },
+  );
+  testWidgets(
     'Notifications shows one applicable action and keeps failed cleanup retry available',
     (tester) async {
       final messaging = TestMessaging();

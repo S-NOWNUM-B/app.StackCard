@@ -16,12 +16,14 @@ class AccountSettingsSection extends ConsumerWidget {
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
+            scrollable: true,
             title: Text(context.strings.tr('account.unsavedTitle')),
             content: Text(context.strings.tr('account.unsavedHint')),
             actions: [
               StackCardDialogActions(
                 onCancel: () => Navigator.pop(context, false),
                 onConfirm: () => Navigator.pop(context, true),
+                confirmLabel: context.strings.tr('account.discard'),
               ),
             ],
           ),

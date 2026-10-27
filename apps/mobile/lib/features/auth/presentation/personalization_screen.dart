@@ -262,6 +262,7 @@ class _PersonalizationScreenState extends ConsumerState<_PersonalizationBody> {
     final discard = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        scrollable: true,
         title: const Text('Отменить изменения?'),
         content: const Text(
           'Вы вернётесь к последнему сохранённому состоянию этого шага',

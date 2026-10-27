@@ -73,7 +73,8 @@ class InboxController extends Notifier<InboxState> {
     final old = state;
     state = InboxState(
       requests: more ? old.requests : const [],
-      cursor: old.cursor,
+      // Полное обновление начинает список заново: прежний cursor не показывает «Загрузить ещё».
+      cursor: more ? old.cursor : null,
       loading: !more,
       loadingMore: more,
       loaded: old.loaded,

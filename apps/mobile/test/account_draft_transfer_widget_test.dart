@@ -159,7 +159,9 @@ void main() {
       expect(auth.signOutCalls, 0);
       await tester.tap(find.byKey(const Key('account.sessionAction')));
       await tester.pump(const Duration(milliseconds: 300));
-      await tester.tap(find.widgetWithText(StackCardButton, 'Подтвердить'));
+      await tester.tap(
+        find.widgetWithText(StackCardButton, 'Продолжить без сохранения'),
+      );
       await tester.pumpAndSettle();
       expect(auth.signOutCalls, 1);
       expect(find.byType(SignInScreen), findsOneWidget);
