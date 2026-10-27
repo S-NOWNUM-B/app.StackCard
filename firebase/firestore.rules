@@ -10,9 +10,9 @@ service cloud.firestore {
     }
 
     function validMediaPath(path, uid) {
-      return path is string && (path == ''
-        || (path.matches('^accounts/[^/]+/media/[0-9a-f]{32}[.]jpg$')
-          && path.split('/')[1] == uid));
+      // Один RE2 matcher с quoted UID: `path` читается один раз; non-string
+      // вызывает evaluation error, то есть отказ.
+      return path.matches('^(' + documentMediaPattern(uid) + ')?$');
     }
 
     function validProfile(profile, uid, version) {
@@ -68,15 +68,18 @@ service cloud.firestore {
     }
 
     function validMainMetadata(content) {
+      // `let` пересчитывается при каждом обращении: дефолт null вместо map
+      // и объединённые проверки держат запас лимита выражений.
       let mainId = content.get('mainPortfolioId', null);
       let github = content.get('githubUsername', '');
-      let progress = content.get('personalization', {'status': 'notRequired', 'step': 0});
+      let progress = content.get('personalization', null);
       return (mainId == null || mainId.matches('^[^/]{1,200}$'))
         && github.size() <= 39
-        && (github == '' || github.matches('^[a-z0-9]+(-[a-z0-9]+)*$'))
-        && progress.keys().hasOnly(['status', 'step'])
-        && progress.status in ['notRequired', 'inProgress', 'completed']
-        && progress.step is int && progress.step >= 0 && progress.step <= 3
+        && github.matches('^([a-z0-9]+(-[a-z0-9]+)*)?$')
+        && (progress == null ? !('personalization' in content)
+          : (progress.keys().hasOnly(['status', 'step'])
+            && progress.status in ['notRequired', 'inProgress', 'completed']
+            && progress.step is int && progress.step in [0, 1, 2, 3]))
         && content.get('legacyMainSnapshot', {}) is map;
     }
 
@@ -91,60 +94,485 @@ service cloud.firestore {
     }
 
     function validReviewedDocuments(documents, uid, version, mainId, legacySnapshot, deleted) {
-      // Padding использует ссылки первого record;
-      // все исходные records остаются среди первых21 и не меняются.
-      // Фиксированные 44 разделителя отклоняют null, non-string и injected ';'.
-      let emptyContent = {'profile': {'avatarPath': ''}};
-      let empty = documents[0];
-      let padded = documents.size() == 21 ? documents : documents.concat([empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty]);
-      let archive = legacySnapshot == null ? empty : legacySnapshot;
+      // Функция на каждый размер списка: `let` в Rules пересчитывается при каждом
+      // обращении, а прежний padding до21 пересобирал concat на каждый индекс и
+      // упирался в лимит1000 выражений. Все исходные records проверяются явно.
+      return documents.size() <= (version >= 7 ? 21 : 20)
+        && validDocumentsOfSize(documents, documentMediaPattern(uid), mainId,
+          legacySnapshot == null ? documents[0] : legacySnapshot, deleted);
+    }
+
+    function documentMediaPattern(uid) {
       let escapedUid = uid.replace('\\\\E', '\\\\E\\\\\\\\E\\\\Q');
-      let media = 'accounts/\\Q' + escapedUid + '\\E/media/[0-9a-f]{32}[.]jpg';
-      let ids = [padded[0].id,
-        padded[1].id,
-        padded[2].id,
-        padded[3].id,
-        padded[4].id,
-        padded[5].id,
-        padded[6].id,
-        padded[7].id,
-        padded[8].id,
-        padded[9].id,
-        padded[10].id,
-        padded[11].id,
-        padded[12].id,
-        padded[13].id,
-        padded[14].id,
-        padded[15].id,
-        padded[16].id,
-        padded[17].id,
-        padded[18].id,
-        padded[19].id,
-        padded[20].id];
-      let paths = [padded[0].content.profile.avatarPath, padded[0].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[1].content.profile.avatarPath, padded[1].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[2].content.profile.avatarPath, padded[2].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[3].content.profile.avatarPath, padded[3].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[4].content.profile.avatarPath, padded[4].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[5].content.profile.avatarPath, padded[5].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[6].content.profile.avatarPath, padded[6].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[7].content.profile.avatarPath, padded[7].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[8].content.profile.avatarPath, padded[8].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[9].content.profile.avatarPath, padded[9].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[10].content.profile.avatarPath, padded[10].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[11].content.profile.avatarPath, padded[11].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[12].content.profile.avatarPath, padded[12].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[13].content.profile.avatarPath, padded[13].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[14].content.profile.avatarPath, padded[14].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[15].content.profile.avatarPath, padded[15].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[16].content.profile.avatarPath, padded[16].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[17].content.profile.avatarPath, padded[17].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[18].content.profile.avatarPath, padded[18].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[19].content.profile.avatarPath, padded[19].get('baseSnapshot', emptyContent).profile.avatarPath,
-        padded[20].content.profile.avatarPath, padded[20].get('baseSnapshot', emptyContent).profile.avatarPath,
+      return 'accounts/\\Q' + escapedUid + '\\E/media/[0-9a-f]{32}[.]jpg';
+    }
+
+    function validDocumentsOfSize(documents, media, mainId, archive, deleted) {
+      // Самые дорогие размеры20/21 выбираются первыми, остальные — бинарно.
+      return documents.size() >= 20
+        ? (documents.size() == 21 ? validDocuments21(documents, media, mainId, archive, deleted)
+          : validDocuments20(documents, media, mainId, archive, deleted))
+        : (documents.size() <= 10 ? (documents.size() <= 5 ? (documents.size() <= 3 ? (documents.size() <= 2 ? (documents.size() <= 1 ? validDocuments1(documents, media, mainId, archive, deleted) : validDocuments2(documents, media, mainId, archive, deleted)) : validDocuments3(documents, media, mainId, archive, deleted)) : (documents.size() <= 4 ? validDocuments4(documents, media, mainId, archive, deleted) : validDocuments5(documents, media, mainId, archive, deleted))) : (documents.size() <= 8 ? (documents.size() <= 7 ? (documents.size() <= 6 ? validDocuments6(documents, media, mainId, archive, deleted) : validDocuments7(documents, media, mainId, archive, deleted)) : validDocuments8(documents, media, mainId, archive, deleted)) : (documents.size() <= 9 ? validDocuments9(documents, media, mainId, archive, deleted) : validDocuments10(documents, media, mainId, archive, deleted)))) : (documents.size() <= 15 ? (documents.size() <= 13 ? (documents.size() <= 12 ? (documents.size() <= 11 ? validDocuments11(documents, media, mainId, archive, deleted) : validDocuments12(documents, media, mainId, archive, deleted)) : validDocuments13(documents, media, mainId, archive, deleted)) : (documents.size() <= 14 ? validDocuments14(documents, media, mainId, archive, deleted) : validDocuments15(documents, media, mainId, archive, deleted))) : (documents.size() <= 17 ? (documents.size() <= 16 ? validDocuments16(documents, media, mainId, archive, deleted) : validDocuments17(documents, media, mainId, archive, deleted)) : (documents.size() <= 18 ? validDocuments18(documents, media, mainId, archive, deleted) : validDocuments19(documents, media, mainId, archive, deleted)))));
+    }
+
+    function validDocuments1(documents, media, mainId, archive, deleted) {
+      // Фиксированные 4 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
         archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
         ''].join(';');
-      return documents is list && documents.size() <= (version >= 7 ? 21 : 20) && !ids.hasAny(deleted)
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){4}$');
+    }
+
+    function validDocuments2(documents, media, mainId, archive, deleted) {
+      // Фиксированные 6 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){6}$');
+    }
+
+    function validDocuments3(documents, media, mainId, archive, deleted) {
+      // Фиксированные 8 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){8}$');
+    }
+
+    function validDocuments4(documents, media, mainId, archive, deleted) {
+      // Фиксированные 10 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){10}$');
+    }
+
+    function validDocuments5(documents, media, mainId, archive, deleted) {
+      // Фиксированные 12 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){12}$');
+    }
+
+    function validDocuments6(documents, media, mainId, archive, deleted) {
+      // Фиксированные 14 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){14}$');
+    }
+
+    function validDocuments7(documents, media, mainId, archive, deleted) {
+      // Фиксированные 16 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){16}$');
+    }
+
+    function validDocuments8(documents, media, mainId, archive, deleted) {
+      // Фиксированные 18 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){18}$');
+    }
+
+    function validDocuments9(documents, media, mainId, archive, deleted) {
+      // Фиксированные 20 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){20}$');
+    }
+
+    function validDocuments10(documents, media, mainId, archive, deleted) {
+      // Фиксированные 22 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){22}$');
+    }
+
+    function validDocuments11(documents, media, mainId, archive, deleted) {
+      // Фиксированные 24 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id, documents[10].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[10].content.profile.avatarPath, documents[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){24}$');
+    }
+
+    function validDocuments12(documents, media, mainId, archive, deleted) {
+      // Фиксированные 26 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id, documents[10].id, documents[11].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[10].content.profile.avatarPath, documents[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[11].content.profile.avatarPath, documents[11].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){26}$');
+    }
+
+    function validDocuments13(documents, media, mainId, archive, deleted) {
+      // Фиксированные 28 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id, documents[10].id, documents[11].id, documents[12].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[10].content.profile.avatarPath, documents[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[11].content.profile.avatarPath, documents[11].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[12].content.profile.avatarPath, documents[12].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){28}$');
+    }
+
+    function validDocuments14(documents, media, mainId, archive, deleted) {
+      // Фиксированные 30 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id, documents[10].id, documents[11].id, documents[12].id, documents[13].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[10].content.profile.avatarPath, documents[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[11].content.profile.avatarPath, documents[11].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[12].content.profile.avatarPath, documents[12].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[13].content.profile.avatarPath, documents[13].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){30}$');
+    }
+
+    function validDocuments15(documents, media, mainId, archive, deleted) {
+      // Фиксированные 32 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id, documents[10].id, documents[11].id, documents[12].id, documents[13].id, documents[14].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[10].content.profile.avatarPath, documents[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[11].content.profile.avatarPath, documents[11].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[12].content.profile.avatarPath, documents[12].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[13].content.profile.avatarPath, documents[13].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[14].content.profile.avatarPath, documents[14].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){32}$');
+    }
+
+    function validDocuments16(documents, media, mainId, archive, deleted) {
+      // Фиксированные 34 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id, documents[10].id, documents[11].id, documents[12].id, documents[13].id, documents[14].id, documents[15].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[10].content.profile.avatarPath, documents[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[11].content.profile.avatarPath, documents[11].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[12].content.profile.avatarPath, documents[12].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[13].content.profile.avatarPath, documents[13].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[14].content.profile.avatarPath, documents[14].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[15].content.profile.avatarPath, documents[15].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){34}$');
+    }
+
+    function validDocuments17(documents, media, mainId, archive, deleted) {
+      // Фиксированные 36 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id, documents[10].id, documents[11].id, documents[12].id, documents[13].id, documents[14].id, documents[15].id, documents[16].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[10].content.profile.avatarPath, documents[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[11].content.profile.avatarPath, documents[11].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[12].content.profile.avatarPath, documents[12].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[13].content.profile.avatarPath, documents[13].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[14].content.profile.avatarPath, documents[14].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[15].content.profile.avatarPath, documents[15].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[16].content.profile.avatarPath, documents[16].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){36}$');
+    }
+
+    function validDocuments18(documents, media, mainId, archive, deleted) {
+      // Фиксированные 38 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id, documents[10].id, documents[11].id, documents[12].id, documents[13].id, documents[14].id, documents[15].id, documents[16].id, documents[17].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[10].content.profile.avatarPath, documents[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[11].content.profile.avatarPath, documents[11].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[12].content.profile.avatarPath, documents[12].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[13].content.profile.avatarPath, documents[13].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[14].content.profile.avatarPath, documents[14].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[15].content.profile.avatarPath, documents[15].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[16].content.profile.avatarPath, documents[16].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[17].content.profile.avatarPath, documents[17].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){38}$');
+    }
+
+    function validDocuments19(documents, media, mainId, archive, deleted) {
+      // Фиксированные 40 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id, documents[10].id, documents[11].id, documents[12].id, documents[13].id, documents[14].id, documents[15].id, documents[16].id, documents[17].id, documents[18].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[10].content.profile.avatarPath, documents[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[11].content.profile.avatarPath, documents[11].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[12].content.profile.avatarPath, documents[12].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[13].content.profile.avatarPath, documents[13].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[14].content.profile.avatarPath, documents[14].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[15].content.profile.avatarPath, documents[15].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[16].content.profile.avatarPath, documents[16].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[17].content.profile.avatarPath, documents[17].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[18].content.profile.avatarPath, documents[18].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){40}$');
+    }
+
+    function validDocuments20(documents, media, mainId, archive, deleted) {
+      // Фиксированные 42 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id, documents[10].id, documents[11].id, documents[12].id, documents[13].id, documents[14].id, documents[15].id, documents[16].id, documents[17].id, documents[18].id, documents[19].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[10].content.profile.avatarPath, documents[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[11].content.profile.avatarPath, documents[11].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[12].content.profile.avatarPath, documents[12].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[13].content.profile.avatarPath, documents[13].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[14].content.profile.avatarPath, documents[14].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[15].content.profile.avatarPath, documents[15].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[16].content.profile.avatarPath, documents[16].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[17].content.profile.avatarPath, documents[17].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[18].content.profile.avatarPath, documents[18].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[19].content.profile.avatarPath, documents[19].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
+        && (mainId == null || mainId in ids)
+        && paths.matches('^((' + media + ')?;){42}$');
+    }
+
+    function validDocuments21(documents, media, mainId, archive, deleted) {
+      // Фиксированные 44 разделителя отклоняют null, non-string и injected ';'.
+      let emptyContent = {'profile': {'avatarPath': ''}};
+      let ids = [documents[0].id, documents[1].id, documents[2].id, documents[3].id, documents[4].id, documents[5].id, documents[6].id, documents[7].id, documents[8].id, documents[9].id, documents[10].id, documents[11].id, documents[12].id, documents[13].id, documents[14].id, documents[15].id, documents[16].id, documents[17].id, documents[18].id, documents[19].id, documents[20].id];
+      let paths = [documents[0].content.profile.avatarPath, documents[0].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[1].content.profile.avatarPath, documents[1].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[2].content.profile.avatarPath, documents[2].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[3].content.profile.avatarPath, documents[3].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[4].content.profile.avatarPath, documents[4].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[5].content.profile.avatarPath, documents[5].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[6].content.profile.avatarPath, documents[6].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[7].content.profile.avatarPath, documents[7].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[8].content.profile.avatarPath, documents[8].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[9].content.profile.avatarPath, documents[9].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[10].content.profile.avatarPath, documents[10].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[11].content.profile.avatarPath, documents[11].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[12].content.profile.avatarPath, documents[12].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[13].content.profile.avatarPath, documents[13].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[14].content.profile.avatarPath, documents[14].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[15].content.profile.avatarPath, documents[15].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[16].content.profile.avatarPath, documents[16].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[17].content.profile.avatarPath, documents[17].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[18].content.profile.avatarPath, documents[18].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[19].content.profile.avatarPath, documents[19].get('baseSnapshot', emptyContent).profile.avatarPath,
+        documents[20].content.profile.avatarPath, documents[20].get('baseSnapshot', emptyContent).profile.avatarPath,
+        archive.content.profile.avatarPath, archive.get('baseSnapshot', emptyContent).profile.avatarPath,
+        ''].join(';');
+      return !ids.hasAny(deleted)
         && (mainId == null || mainId in ids)
         && paths.matches('^((' + media + ')?;){44}$');
     }
@@ -207,7 +635,7 @@ service cloud.firestore {
           && activeAccount(uid) && legacyAccount(uid);
         allow list: if false;
         allow create, update: if draftId == 'current' && owner(uid)
-          && (!exists(/databases/$(database)/documents/accounts/$(uid)/drafts/$(draftId))
+          && (resource == null
             || (resource.data.schemaVersion is int
               && resource.data.schemaVersion in [1, 2, 3, 4, 5, 6, 7]
               && resource.data.ownerUid == uid

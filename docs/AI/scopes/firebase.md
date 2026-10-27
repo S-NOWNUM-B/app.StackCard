@@ -83,7 +83,12 @@ Scope и фактическая приёмка остаются в [product spec
   ограничен20 в legacy,21 в schema7 с выбранным main; Rules проверяют owner media path каждого snapshot/baseSnapshot, codec —
   структуру, ID и Library/resume relations. Schema5 проверяет пару canonical avatar
   paths одним RE2 matcher с literal UID quoting, включая вложенный `\E`, чтобы
-  20 документов укладывались в бюджет выражений. Legacy отсутствие baseline key
+  20 документов укладывались в бюджет выражений. `let` и аргументы функций Rules
+  вычисляются при каждом обращении (лимит1000 на request), поэтому с 2026-10-27
+  каждый размер списка1–21 проверяется своей функцией `validDocumentsN` без
+  padding/concat; правка проверки документов меняет все21 одинаково. Regression
+  `firestore_rules.test.mjs` сохраняет повторный Save каждого размера с avatar,
+  baseSnapshot, архивом, tombstone и GitHub. Legacy отсутствие baseline key
   допускается; explicit null при новом cloud write отклоняется. Проверять
   adversarial UID и foreign path в последнем элементе. Новый document handler
   дополнительно рекурсивно валидирует nested структуру до public write. Public

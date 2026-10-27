@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-27",
+  "project": "stackcard-dev-snownumb",
+  "authorization": "Owner explicitly authorized publishing only the corrected firestore.rules to the existing dev project",
+  "defect": "Draft rule exceeded the Firestore limit of 1000 evaluated expressions: repeat Save with githubUsername after accounts/{uid} appeared returned permission-denied",
+  "cause": "Rules let bindings and function arguments are re-evaluated on every reference; padding documents to 21 rebuilt concat for each of 63 references",
+  "emulator": {
+    "regressionsRedOnOriginalRules": 2,
+    "firestoreRules": { "passed": 34, "failed": 0 },
+    "allRulesAndServices": { "passed": 92, "failed": 0 },
+    "headroomExpressions": { "documents1to2": "about 60", "documents20": "about 20", "documents21": "about 10" }
+  },
+  "rollbackBaseline": {
+    "ruleset": "projects/stackcard-dev-snownumb/rulesets/ba14b24c-f173-4f02-98ec-e1defcc2ac80",
+    "updatedAt": "2026-10-24T14:40:35.968962Z",
+    "sha256": "f24f9e0349966b12333fc55aa2cb7265767f0a342da10115c86551fb4c6b84b4"
+  },
+  "published": {
+    "release": "projects/stackcard-dev-snownumb/releases/cloud.firestore",
+    "ruleset": "projects/stackcard-dev-snownumb/rulesets/34559529-7304-4a52-a448-3db5850f074b",
+    "updatedAt": "2026-10-27T10:30:00.958325Z",
+    "sha256": "3df1113e9d05e832cbd8776b9a29dc5c92e48be6dd0a894e92e245c1d2f13cf4",
+    "sameAsRepository": true
+  },
+  "liveSaveCheck": {
+    "client": "Firebase web SDK 13.0.0 from Node, real Auth and Firestore, no emulators",
+    "accountDocument": "created with owner credentials as the publication backend would, then deleted",
+    "results": {
+      "create1": "allowed",
+      "update1AfterAccount": "allowed",
+      "update2AfterAccount": "allowed",
+      "update20AfterAccount": "allowed",
+      "update21AfterAccount": "allowed",
+      "foreignMediaPath": "permission-denied"
+    },
+    "disposableUserDraftAndAccountDeleted": true,
+    "credentialsIncluded": false
+  },
+  "excluded": ["hosting", "Functions", "Storage", "indexes", "release", "billing", "Git publication"]
+}

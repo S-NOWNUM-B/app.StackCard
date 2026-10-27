@@ -727,3 +727,78 @@ test('account deletion lock denies new, old and pending private writes', async (
     await assertFails(deleteDoc(doc(database(), 'accounts/alice/drafts/current')));
   }
 });
+
+// Repro 2026-10-27: после первой публикации trusted service создаёт accounts/{uid};
+// повторный Save обычного main (меньше 21 документа) с GitHub-профилем превышает
+// лимит 1000 выражений Rules (create/update @ draft rule) и получает PERMISSION_DENIED.
+test('schema7 repeat Save of one main document with GitHub stays valid after the account document appears', async () => {
+  const alice = database();
+  const value = modernWorkspace(1);
+  await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 7, content: value }));
+  await environment.withSecurityRulesDisabled((context) =>
+    setDoc(doc(context.firestore(), 'accounts/alice'), {
+      ownerUid: 'alice',
+      lifecycleState: 'active',
+      lifecycleGeneration: 1,
+      deletedDocumentIds: [],
+      updatedAt: Timestamp.now(),
+    }),
+  );
+  await assertSucceeds(
+    saveDraft(alice, 'alice', {
+      schemaVersion: 7,
+      mutationId: 'alice-mutation-2',
+      localRevision: 2,
+      content: value,
+    }),
+  );
+});
+
+// Rules проверяют каждый размер списка отдельной функцией; полный набор данных
+// (avatar, baseSnapshot, архив, tombstone, GitHub) держит запас лимита выражений.
+test('schema7 repeat Save stays within the expression budget for every document count and rejects foreign media or tombstones', async () => {
+  const alice = database();
+  const own = 'accounts/alice/media/abcdef0123456789abcdef0123456789.jpg';
+  const foreign = 'accounts/mallory/media/abcdef0123456789abcdef0123456789.jpg';
+  function heavy(count) {
+    const value = workspaceBaseReviews(count);
+    value.profile.avatarPath = own;
+    value.profile.publishLocation = true;
+    for (const document of value.documents) document.content.profile.avatarPath = own;
+    value.mainPortfolioId = value.documents.at(-1).id;
+    value.githubUsername = 'snow-numb';
+    value.personalization = { status: 'completed', step: 3 };
+    value.legacyMainSnapshot = structuredClone(value.documents[0]);
+    return value;
+  }
+  for (let count = 1; count <= 21; count++) {
+    await environment.clearFirestore();
+    await assertSucceeds(saveDraft(alice, 'alice', { schemaVersion: 7, content: heavy(count) }));
+    await environment.withSecurityRulesDisabled((context) =>
+      setDoc(doc(context.firestore(), 'accounts/alice'), {
+        ownerUid: 'alice', lifecycleState: 'active', lifecycleGeneration: 1,
+        deletedDocumentIds: ['removed-legacy'], updatedAt: Timestamp.now(),
+      }),
+    );
+    const update = (content) => saveDraft(alice, 'alice', {
+      schemaVersion: 7, mutationId: `alice-mutation-${count}`, localRevision: 2, content,
+    });
+    await assert.doesNotReject(() => assertSucceeds(update(heavy(count))), `heavy update ${count}`);
+    const foreignContent = heavy(count);
+    foreignContent.documents.at(-1).content.profile.avatarPath = foreign;
+    await assertFails(update(foreignContent));
+    const foreignBase = heavy(count);
+    foreignBase.documents.at(-1).baseSnapshot.profile.avatarPath = foreign;
+    await assertFails(update(foreignBase));
+    const missingMain = heavy(count);
+    missingMain.mainPortfolioId = 'not-a-document';
+    await assertFails(update(missingMain));
+    await environment.withSecurityRulesDisabled((context) =>
+      updateDoc(doc(context.firestore(), 'accounts/alice'), { deletedDocumentIds: [`resume-${count - 1}`] }),
+    );
+    await assertFails(update(heavy(count)));
+  }
+  const explicitNull = modernWorkspace(1);
+  explicitNull.personalization = null;
+  await assertFails(saveDraft(alice, 'alice', { schemaVersion: 7, mutationId: 'alice-null', localRevision: 3, content: explicitNull }));
+});
