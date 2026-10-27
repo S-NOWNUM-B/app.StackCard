@@ -346,11 +346,21 @@ export function createPublicationService({ database, bucket, auth, origin, emula
       let legacy = null;
       if (account?.username) legacy = await transaction.get(database.doc(`publicPortfolios/${account.username}`));
       const nextGeneration = generationOf(account) + 1;
+      const withdrawnPublicIds = new Set();
       for (const publication of publications.docs) {
         if (publication.data().state !== 'published') continue;
-        transaction.delete(publicRef(publication.data().publicId));
+        withdrawnPublicIds.add(publication.data().publicId);
         transaction.update(publication.ref, { state: 'deleted', url: null, version: publication.data().version + 1, mediaPaths: [], updatedAt: timestamp() });
       }
+      // Зависшая pending-операция атомично с lock становится terminal: retry не завершит
+      // её после cleanup, а её возможный publicDocument снимается вместе с остальными.
+      for (const stale of operations.docs) {
+        const data = stale.data();
+        if (data.status !== 'pending' || data.action === 'deleteAccount') continue;
+        if (data.publicId) withdrawnPublicIds.add(data.publicId);
+        transaction.update(stale.ref, { status: 'failed', errorCode: 'account-deleting', errorStatus: 409, publicDocument: null });
+      }
+      for (const publicId of withdrawnPublicIds) transaction.delete(publicRef(publicId));
       if (legacy?.data()?.ownerUid === uid) {
         transaction.delete(legacy.ref);
         transaction.delete(database.doc(`usernames/${account.username}`));

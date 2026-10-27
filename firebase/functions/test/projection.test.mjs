@@ -252,3 +252,21 @@ test('operation input rejects arbitrary client content and unsafe identifiers', 
     { action: 'inventory', uid: 'other' },
   ]) assert.throws(() => validateRequest(changed), PublicationError);
 });
+
+test('operation input rejects reserved Firestore document IDs before any database path is built', () => {
+  const publish = { action: 'publish', documentId: 'first', operationId: 'op', expectedMutationId: 'mutation', expectedVersion: 0, expectedGeneration: 0 };
+  const receipt = { action: 'deletionStatus', ownerUid: 'owner', operationId: 'op', recoveryKey: 'a'.repeat(64) };
+  for (const reserved of ['.', '..', '__x__', '____']) {
+    for (const changed of [
+      { ...publish, documentId: reserved }, { ...publish, operationId: reserved },
+      { action: 'status', operationId: reserved }, { ...receipt, ownerUid: reserved }, { ...receipt, operationId: reserved },
+    ]) {
+      assert.throws(() => validateRequest(changed), (error) => error instanceof PublicationError && error.httpStatus === 400);
+    }
+  }
+  // Похожие, но допустимые Firestore ID и mutation ID не ломаются.
+  for (const allowed of ['.first', 'a..b', '__x', 'x__', '_x_']) {
+    assert.doesNotThrow(() => validateRequest({ ...publish, documentId: allowed, operationId: allowed }));
+  }
+  assert.doesNotThrow(() => validateRequest({ ...publish, expectedMutationId: '__mutation__' }));
+});

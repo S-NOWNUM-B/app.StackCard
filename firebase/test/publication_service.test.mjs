@@ -176,6 +176,45 @@ test('Firestore-only account deletion requires explicit verified cutover and del
   assert.equal(recovered.status, 'completed');
 });
 
+test('bucketless deletion locks out a stale pending republish, withdraws its public copy and completes after lease', async () => {
+  await saveModernAvatar();
+  let clock = instant();
+  const options = { bucket: null, firestoreMediaOnlyAccountsSince: '2026-01-01T00:00:00.000Z', now: () => clock };
+  const published = await service(options).execute('owner', request());
+  const publicPath = `publicDocuments/${published.publication.publicId}`;
+  // Крах процесса после prepare/copy lease: finish и снятие lease не выполнились.
+  let transactions = 0;
+  const flaky = new Proxy(database, { get(target, key) {
+    if (key === 'runTransaction') return (callback) => {
+      transactions += 1;
+      if (transactions >= 3) return Promise.reject(new Error('transient'));
+      return target.runTransaction(callback);
+    };
+    const value = target[key];
+    return typeof value === 'function' ? value.bind(target) : value;
+  } });
+  const stale = request('publish', { operationId: 'stale-republish', expectedVersion: 1, expectedGeneration: 1 });
+  await assert.rejects(service({ ...options, database: flaky }).execute('owner', stale), /transient/);
+  assert.equal((await database.doc('accounts/owner/publicationOperations/stale-republish').get()).data().status, 'pending');
+  const api = service(options);
+  const deletion = { action: 'deleteAccount', operationId: 'stale-delete', expectedGeneration: 1, recoveryKey };
+  const locked = await api.execute('owner', deletion, { auth_time: Math.floor(clock / 1000) });
+  assert.equal(locked.status, 'pending');
+  assert.equal((await database.doc('accounts/owner').get()).data().lifecycleState, 'deleting');
+  assert.equal((await database.doc(publicPath).get()).exists, false);
+  const terminal = (await database.doc('accounts/owner/publicationOperations/stale-republish').get()).data();
+  assert.equal(terminal.status, 'failed'); assert.equal(terminal.errorCode, 'account-deleting');
+  // Retry той же операции после lock не может завершиться и вернуть публикацию.
+  await assert.rejects(api.execute('owner', stale), rejected('account-deleting'));
+  assert.equal((await database.doc(publicPath).get()).exists, false);
+  clock += 181_000;
+  const completed = await api.execute(null, { action: 'deletionStatus', ownerUid: 'owner', operationId: 'stale-delete', recoveryKey, retry: true });
+  assert.equal(completed.status, 'completed');
+  assert.equal((await database.doc('accounts/owner/publicationOperations/stale-republish').get()).exists, false);
+  assert.equal((await database.doc('accounts/owner/drafts/current').get()).exists, false);
+  assert.equal((await database.collection('publicDocuments').get()).empty, true);
+});
+
 test('empty account deletes through available demo Storage and recovers its receipt after actual Auth deletion', async () => {
   const uid = 'empty-delete-owner', auth = getAuth(app);
   await auth.createUser({ uid });

@@ -37,6 +37,13 @@ const id = (value) => {
   if (value.includes('/') || /[\x00-\x1f]/.test(value)) invalid();
   return value;
 };
+// Значение становится сегментом Firestore path: `.`, `..` и `__x__` зарезервированы
+// и дали бы INVALID_ARGUMENT (503 «outcome unknown») вместо детерминированного 400.
+const documentKey = (value) => {
+  id(value);
+  if (value === '.' || value === '..' || /^__.*__$/s.test(value)) invalid();
+  return value;
+};
 const unique = (items, key = 'id') => {
   const ids = items.map((item) => id(item[key]));
   if (new Set(ids).size !== ids.length) invalid();
@@ -313,11 +320,11 @@ export function validateRequest(value) {
   object(value, ['action', 'documentId', 'operationId', 'expectedMutationId', 'expectedVersion', 'expectedGeneration', 'ownerUid', 'recoveryKey', 'retry'], ['action']);
   enumeration(value.action, ['inventory', 'status', 'publish', 'unpublish', 'deleteDocument', 'deleteAccount', 'deletionStatus']);
   if (value.action === 'inventory') { if (Object.keys(value).length !== 1) invalid(); return value; }
-  id(value.operationId);
+  documentKey(value.operationId);
   if (value.action === 'status') { if (Object.keys(value).length !== 2) invalid(); return value; }
   if (value.action === 'deletionStatus') {
     object(value, ['action', 'ownerUid', 'operationId', 'recoveryKey', 'retry'], ['action', 'ownerUid', 'operationId', 'recoveryKey']);
-    id(value.ownerUid);
+    documentKey(value.ownerUid);
     if (typeof value.recoveryKey !== 'string' || value.recoveryKey.length !== 64 || !/^[0-9a-f]{64}$/.test(value.recoveryKey)) invalid();
     if (value.retry !== undefined) boolean(value.retry);
     return value;
@@ -326,7 +333,7 @@ export function validateRequest(value) {
   integer(value.expectedGeneration);
   if (value.action !== 'deleteAccount') {
     if (value.recoveryKey !== undefined) invalid();
-    id(value.documentId); integer(value.expectedVersion);
+    documentKey(value.documentId); integer(value.expectedVersion);
     if (value.action === 'publish') id(value.expectedMutationId);
     else if (value.expectedMutationId !== undefined) id(value.expectedMutationId);
   } else {

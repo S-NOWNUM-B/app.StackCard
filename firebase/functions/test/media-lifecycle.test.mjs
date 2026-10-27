@@ -22,8 +22,17 @@ test('Firestore-only lifecycle rejects old accounts, legacy archives, project im
     (v) => { v.draft.content.documents.push({ id: 'legacy' }); },
     (v) => { v.publications = [{ mediaPaths: ['publicMedia/old'] }]; },
     (v) => { v.operations = [{ status: 'completed', cleanupPaths: ['orphan'] }]; },
-    (v) => { v.operations = [{ status: 'pending', action: 'publish' }]; },
+    (v) => { v.operations = [{ status: 'pending', action: 'publish', media: [{ source: 'a', destination: 'b' }] }]; },
+    (v) => { v.operations = [{ status: 'pending', action: 'unpublish', cleanupPaths: ['orphan'] }]; },
   ]) { const value = fixture(); alter(value); assert.equal(isFirestoreOnlyAccount(value), false); }
+});
+
+test('stale pending operation without media or cleanup does not block bucketless deletion', () => {
+  for (const action of ['publish', 'unpublish', 'deleteDocument']) {
+    const value = fixture();
+    value.operations = [{ status: 'pending', action, media: [], cleanupPaths: [] }, { status: 'pending', action: 'publish' }];
+    assert.equal(isFirestoreOnlyAccount(value), true);
+  }
 });
 
 test('avatar references include baseline and omit duplicate/empty values', () => {

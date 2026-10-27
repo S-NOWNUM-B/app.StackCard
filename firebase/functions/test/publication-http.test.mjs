@@ -49,3 +49,17 @@ test('shared publication HTTP uses verified UID and preserves unknown scoped del
   const receipt = response(); await handler(request({ action: 'deletionStatus', ownerUid: 'verified-owner', operationId: 'unknown', recoveryKey: 'a'.repeat(64) }), receipt);
   assert.equal(receipt.statusCode, 200); assert.equal(receipt.value.status, 'unknown');
 });
+
+test('shared publication HTTP rejects reserved Firestore IDs as 400 without touching the database', async () => {
+  const database = { doc() { throw new Error('database must not be reached'); } };
+  const auth = { async verifyIdToken() { return { uid: 'verified-owner' }; } };
+  const handler = createPublicationHttpHandler({ database, auth, bucket: null, origin: 'https://stackcard.example' });
+  for (const body of [
+    { action: 'publish', documentId: '..', operationId: 'op', expectedMutationId: 'm', expectedVersion: 0, expectedGeneration: 0 },
+    { action: 'status', operationId: '__reserved__' },
+    { action: 'deletionStatus', ownerUid: '.', operationId: 'op', recoveryKey: 'a'.repeat(64) },
+  ]) {
+    const reply = response(); await handler(request(body, { authorization: 'Bearer signed-token' }), reply);
+    assert.equal(reply.statusCode, 400); assert.equal(reply.value.error.code, 'invalid-data');
+  }
+});
