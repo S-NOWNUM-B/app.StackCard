@@ -122,7 +122,7 @@ void main() {
     },
   );
   testWidgets(
-    'Settings opens standalone Inbox and Back retains three root destinations',
+    'Standalone Inbox route is not linked from Settings and Back retains three root destinations',
     (tester) async {
       final inbox = TestInbox('a');
       await _open(
@@ -146,7 +146,10 @@ void main() {
         ['Главная', 'Проекты', 'Редактор'],
       );
       await _tap(tester, find.byKey(const Key('app.settings')));
-      await _tap(tester, find.byKey(const Key('settings.group.inbox')));
+      // Пункта «Входящие» в настройках больше нет; экран остаётся по маршруту.
+      expect(find.byKey(const Key('settings.group.inbox')), findsNothing);
+      _router(tester).push('/inbox');
+      await tester.pumpAndSettle();
       expect(find.byType(InboxScreen), findsOneWidget);
       expect(find.byType(NavigationBar), findsNothing);
       await _tap(tester, find.byKey(const Key('inbox.request.$requestId')));

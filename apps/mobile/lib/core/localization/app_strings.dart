@@ -155,6 +155,10 @@ const russianAppStrings = <String, String>{
   "settings.localPreferencesNote": "Настройки сохраняются автоматически на этом устройстве. Они не меняют тему или содержимое портфолио.",
   "settings.notifications": "Уведомления",
   "settings.notificationsUnavailable": "Настройка уведомлений пока недоступна. Разрешения устройства не запрашиваются.",
+  "settings.theme": "Тема оформления",
+  "settings.theme.system": "Системная",
+  "settings.theme.light": "Светлая",
+  "settings.theme.dark": "Тёмная",
   "settings.reducedMotion": "Уменьшить анимации",
   "settings.reducedMotionUnavailable":
       "Отдельная настройка уменьшения анимаций пока недоступна.",
@@ -391,6 +395,10 @@ const englishAppStrings = <String, String>{
   "settings.localPreferencesNote": "Preferences are saved automatically on this device. They do not change portfolio theme or content.",
   "settings.notifications": "Notifications",
   "settings.notificationsUnavailable": "Notification preferences are unavailable. Device permissions are not requested.",
+  "settings.theme": "Appearance",
+  "settings.theme.system": "System",
+  "settings.theme.light": "Light",
+  "settings.theme.dark": "Dark",
   "settings.reducedMotion": "Reduce motion",
   "settings.reducedMotionUnavailable":
       "A separate reduced motion preference is unavailable.",

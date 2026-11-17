@@ -72,6 +72,10 @@ String safeAuthDestination(String? value) {
       path == '/settings/notifications' ||
       path == '/settings/github' ||
       path == '/settings/about' ||
+      path == '/health' ||
+      path == '/vacancy' ||
+      path == '/history' ||
+      RegExp(r'^/history/[0-9]+-[0-9]+$').hasMatch(path) ||
       path == '/inbox' ||
       RegExp(r'^/inbox/[0-9a-f]{32}$').hasMatch(path) ||
       path == '/settings/account' ||
@@ -150,6 +154,30 @@ GoRouter createAppRouter({
     return null;
   },
   routes: [
+    GoRoute(
+      name: 'vacancy',
+      path: '/vacancy',
+      builder: (_, _) => const VacancyMatchScreen(),
+    ),
+    GoRoute(
+      name: 'history',
+      path: '/history',
+      builder: (_, _) => const PortfolioHistoryScreen(),
+      routes: [
+        GoRoute(
+          name: 'historyVersion',
+          path: ':snapshotId',
+          builder: (_, state) => PortfolioHistoryVersionScreen(
+            snapshotId: state.pathParameters['snapshotId']!,
+          ),
+        ),
+      ],
+    ),
+    GoRoute(
+      name: 'health',
+      path: '/health',
+      builder: (_, _) => const PortfolioHealthScreen(),
+    ),
     GoRoute(
       name: 'inbox',
       path: '/inbox',

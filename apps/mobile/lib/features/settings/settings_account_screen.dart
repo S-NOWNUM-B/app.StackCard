@@ -421,6 +421,7 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
             ),
             StackCardButton(
               label: _tr('deleteCheck'),
+              role: StackCardButtonRole.secondary,
               loading: _busy,
               onPressed: _busy || publication == null
                   ? null
@@ -474,7 +475,7 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
                               (uid, repo) => repo.sendVerification(uid),
                               success: 'verificationSent',
                             ),
-                      role: StackCardButtonRole.quiet,
+                      role: StackCardButtonRole.secondary,
                     ),
                   if (security.hasPassword)
                     StackCardButton(
@@ -512,7 +513,7 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
                   else
                     StackCardButton(
                       label: _tr('unlinkPassword'),
-                      role: StackCardButtonRole.quiet,
+                      role: StackCardButtonRole.secondary,
                       unavailableReason: security.canUnlink('password')
                           ? null
                           : _tr('lastProvider'),
@@ -566,8 +567,7 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
             const SizedBox(height: StackCardSpacing.lg),
             StackCardButton(
               label: _tr('refreshAccount'),
-              loading: _busy,
-              role: StackCardButtonRole.quiet,
+              role: StackCardButtonRole.secondary,
               onPressed: _busy ? null : () => _load(uid, repository),
             ),
             if (_message != null)
@@ -588,6 +588,7 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
                   ),
                   const SizedBox(height: StackCardSpacing.md),
                   Text(_tr('deleteConfirm')),
+                  const SizedBox(height: StackCardSpacing.md),
                   if (_deletion == null)
                     StackCardButton(
                       key: const Key('settings.account.delete'),
@@ -605,6 +606,7 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
                   else ...[
                     StackCardButton(
                       label: _tr('deleteCheck'),
+                      role: StackCardButtonRole.secondary,
                       onPressed: _busy ? null : () => _checkDeletion(),
                     ),
                     StackCardButton(
@@ -714,10 +716,11 @@ class _AccountCredentialsDialogState extends State<_AccountCredentialsDialog> {
                     : context.strings.tr('account.passwordMismatch'),
               ),
             if (widget.allowGoogle)
-              TextButton(
+              StackCardButton(
+                label: 'Google',
+                role: StackCardButtonRole.secondary,
                 onPressed: () =>
                     Navigator.pop(context, const _AccountInput(google: true)),
-                child: const Text('Google'),
               ),
           ],
         ),

@@ -1,3 +1,5 @@
+import 'package:app_stackcard/core/state/app_settings.dart';
+import 'package:app_stackcard/core/state/settings_repository.dart';
 import 'package:app_stackcard/features/projects/projects.dart';
 import 'package:app_stackcard/main.dart';
 import 'package:flutter/material.dart';
@@ -149,35 +151,56 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Legacy system preference keeps white UI on OS brightness changes',
-    (tester) async {
-      tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
-      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-      await tester.pumpWidget(
-        const StackCardApp(
-          initialLocation: '/settings/appearance',
-          initialThemeMode: ThemeMode.system,
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
-        ThemeMode.light,
-      );
-      expect(
-        Theme.of(tester.element(find.text('Приложение'))).brightness,
-        Brightness.light,
-      );
+  testWidgets('System preference follows OS brightness changes', (
+    tester,
+  ) async {
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+    await tester.pumpWidget(
+      const StackCardApp(
+        initialLocation: '/settings/appearance',
+        initialThemeMode: ThemeMode.system,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.system,
+    );
+    Brightness current() =>
+        Theme.of(tester.element(find.text('Приложение'))).brightness;
+    expect(current(), Brightness.light);
 
-      tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
-      await tester.pumpAndSettle();
-      expect(
-        Theme.of(tester.element(find.text('Приложение'))).brightness,
-        Brightness.light,
-      );
-    },
-  );
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    await tester.pumpAndSettle();
+    expect(current(), Brightness.dark);
+  });
+
+  testWidgets('Theme selector switches the app and persists the choice', (
+    tester,
+  ) async {
+    final stored = <AppSettings>[];
+    await tester.pumpWidget(
+      StackCardApp(
+        initialLocation: '/settings/appearance',
+        settingsRepository: _MemorySettings(stored),
+      ),
+    );
+    await tester.pumpAndSettle();
+    Brightness current() =>
+        Theme.of(tester.element(find.text('Приложение'))).brightness;
+    expect(current(), Brightness.light);
+
+    await tester.tap(find.byKey(const Key('settings.theme.dark')));
+    await tester.pumpAndSettle();
+    expect(current(), Brightness.dark);
+    expect(stored.last.theme, AppTheme.dark);
+
+    await tester.tap(find.byKey(const Key('settings.theme.light')));
+    await tester.pumpAndSettle();
+    expect(current(), Brightness.light);
+    expect(stored.last.theme, AppTheme.light);
+  });
 
   testWidgets('External Riverpod updates synchronize the search controller', (
     tester,
@@ -279,4 +302,15 @@ void main() {
       );
     },
   );
+}
+
+class _MemorySettings implements SettingsRepository {
+  _MemorySettings(this.writes);
+  final List<AppSettings> writes;
+
+  @override
+  Future<AppSettings> load() async => const AppSettings();
+
+  @override
+  Future<void> save(AppSettings settings) async => writes.add(settings);
 }

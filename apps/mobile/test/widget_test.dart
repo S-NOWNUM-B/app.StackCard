@@ -252,8 +252,9 @@ void main() {
         Theme.of(tester.element(find.text('Приложение'))).brightness,
         Brightness.light,
       );
-      expect(find.text('Тёмная'), findsNothing);
-      expect(find.text('Системная'), findsNothing);
+      for (final label in ['Светлая', 'Тёмная', 'Системная']) {
+        expect(find.text(label), findsOneWidget);
+      }
       expect(find.text('English'), findsNothing);
       expect(
         tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig,

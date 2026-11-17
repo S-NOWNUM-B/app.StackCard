@@ -5,10 +5,17 @@ import 'package:path_provider/path_provider.dart';
 
 /// Раздельные коробки: восстановление source-кэша не затрагивает draft.
 final class LocalStorage {
-  LocalStorage._(this.githubResponses, this.portfolioDraft);
+  LocalStorage._(
+    this.githubResponses,
+    this.portfolioDraft,
+    this.portfolioHistory,
+  );
 
   final Box<dynamic> githubResponses;
   final Box<dynamic> portfolioDraft;
+
+  /// Локальная история версий; не критична, повреждённый файл сохраняется отдельно.
+  final Box<dynamic> portfolioHistory;
   Future<void>? _closeFuture;
 
   static Future<LocalStorage> open({Directory? directory}) async {
@@ -17,8 +24,17 @@ final class LocalStorage {
     await storage.create(recursive: true);
     final cache = await _openCache(storage);
     try {
-      final draft = await _openBox('portfolio_draft', storage);
-      return LocalStorage._(cache, draft);
+      final history = await _openRecoverable('portfolio_history', storage);
+      try {
+        final draft = await _openBox('portfolio_draft', storage);
+        return LocalStorage._(cache, draft, history);
+      } on Exception {
+        await history.close();
+        rethrow;
+      } on HiveError {
+        await history.close();
+        rethrow;
+      }
     } on Exception {
       await cache.close();
       rethrow;
@@ -28,15 +44,21 @@ final class LocalStorage {
     }
   }
 
-  static Future<Box<dynamic>> _openCache(Directory directory) async {
+  static Future<Box<dynamic>> _openCache(Directory directory) =>
+      _openRecoverable('github_responses', directory);
+
+  static Future<Box<dynamic>> _openRecoverable(
+    String name,
+    Directory directory,
+  ) async {
     try {
-      return await _openBox('github_responses', directory);
+      return await _openBox(name, directory);
     } on HiveError {
-      await _preserveCacheFile(directory);
+      await _preserveFile(name, directory);
     } on FileSystemException {
-      await _preserveCacheFile(directory);
+      await _preserveFile(name, directory);
     }
-    return _openBox('github_responses', directory);
+    return _openBox(name, directory);
   }
 
   static Future<Box<dynamic>> _openBox(String name, Directory directory) async {
@@ -50,8 +72,8 @@ final class LocalStorage {
     return boxes.first;
   }
 
-  static Future<void> _preserveCacheFile(Directory directory) async {
-    final file = File('${directory.path}/github_responses.hive');
+  static Future<void> _preserveFile(String name, Directory directory) async {
+    final file = File('${directory.path}/$name.hive');
     if (await file.exists()) {
       final stamp = DateTime.now().toUtc().microsecondsSinceEpoch;
       await file.rename('${file.path}.unreadable-$stamp');
@@ -64,6 +86,7 @@ final class LocalStorage {
     await Future.wait([
       if (githubResponses.isOpen) githubResponses.close(),
       if (portfolioDraft.isOpen) portfolioDraft.close(),
+      if (portfolioHistory.isOpen) portfolioHistory.close(),
     ]);
   }
 }

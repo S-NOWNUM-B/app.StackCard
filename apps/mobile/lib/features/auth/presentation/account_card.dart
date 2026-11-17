@@ -6,6 +6,7 @@ import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
+import '../../portfolio_draft/portfolio_history_providers.dart';
 import '../auth_providers.dart';
 import 'auth_controller.dart';
 import 'account_auth_form.dart';
@@ -30,9 +31,16 @@ class _AccountCardState extends ConsumerState<AccountCard> {
     try {
       final allowed = await widget.beforeSignOut?.call() ?? true;
       if (!mounted || !allowed) return;
+      final uid = ref.read(accountSessionProvider).value?.uid;
+      // Читаем до выхода: после редиректа виджет может быть уже снят.
+      final cleanup = ref.read(portfolioHistoryCleanupProvider);
       final success = await ref
           .read(accountAuthControllerProvider.notifier)
           .signOut();
+      // Локальные снимки версий этого UID не переживают выход.
+      if (success && uid != null) {
+        await cleanup?.call(uid).catchError((Object _) {});
+      }
       if (mounted && success) context.go('/sign-in');
     } finally {
       if (mounted) setState(() => _confirming = false);
@@ -72,11 +80,6 @@ class _AccountCardState extends ConsumerState<AccountCard> {
               ? 'account.signIn'
               : 'account.signOut',
         );
-        final actionIcon = session.hasError
-            ? Icons.refresh_rounded
-            : user == null
-            ? Icons.login_rounded
-            : Icons.logout_rounded;
         final VoidCallback? action = session.isLoading || busy
             ? null
             : session.hasError
@@ -84,6 +87,15 @@ class _AccountCardState extends ConsumerState<AccountCard> {
             : user == null
             ? () => context.go('/sign-in?from=%2Fsettings')
             : _signOut;
+        final sessionButton = StackCardButton(
+          key: const Key('account.sessionAction'),
+          label: actionLabel,
+          role: ready && user != null
+              ? StackCardButtonRole.dangerQuiet
+              : StackCardButtonRole.secondary,
+          loading: busy,
+          onPressed: action,
+        );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -143,47 +155,13 @@ class _AccountCardState extends ConsumerState<AccountCard> {
                           ),
                         ),
                       )
-                    else if (compact)
-                      IconButton(
-                        key: const Key('account.sessionAction'),
-                        tooltip: actionLabel,
-                        constraints: const BoxConstraints(
-                          minWidth: StackCardSize.touchTarget,
-                          minHeight: StackCardSize.touchTarget,
-                        ),
-                        onPressed: action,
-                        style: IconButton.styleFrom(
-                          foregroundColor: ready && user != null
-                              ? context.colors.error
-                              : context.colors.textPrimary,
-                        ),
-                        icon: busy
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: ready && user != null
-                                      ? context.colors.error
-                                      : context.colors.textPrimary,
-                                ),
-                              )
-                            : Icon(actionIcon, size: 24),
-                      )
-                    else
-                      StackCardButton(
-                        key: const Key('account.sessionAction'),
-                        label: actionLabel,
-                        role: ready && user != null
-                            ? StackCardButtonRole.dangerQuiet
-                            : StackCardButtonRole.quiet,
-                        loading: busy,
-                        onPressed: action,
-                      ),
+                    else if (!compact)
+                      sessionButton,
                   ],
                 ),
               ),
             ),
+            if (compact && !session.isLoading) sessionButton,
             if (ready && errorKey != null) ...[
               const SizedBox(height: StackCardSpacing.sm),
               Semantics(
