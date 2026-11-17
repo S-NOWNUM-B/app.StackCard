@@ -17,6 +17,7 @@ import {
 } from 'firebase/auth';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { firebaseServices } from '@/lib/firebase';
+import { browserHistoryStorage, clearHistory } from '@/lib/portfolio-history';
 import {
   registrationPasswordIssues,
   registrationPasswordMaximumLength,
@@ -391,6 +392,9 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
     clearDeletionJournal(localStorage, journal);
     setMessage('Сервис подтвердил удаление аккаунта и снятие документов с публикации');
     await signOut(firebaseServices().auth);
+    // Аккаунт удалён: локальные версии портфолио этого UID больше не нужны.
+    const storage = browserHistoryStorage();
+    if (storage) clearHistory(storage, user.uid);
     if (active.current) onSignedOut?.();
   }
   function deletionRequest(journal: AccountDeletionJournal) {

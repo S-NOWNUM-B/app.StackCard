@@ -11,6 +11,13 @@ import { AttachmentsEditor, emptyProject, ProjectForm } from './project-editor';
 import { GitHubImporter } from './github-importer';
 import { DocumentView } from './document-view';
 import { AccountSettings, ApplicationPreferences } from './account-settings';
+import { HealthCard, HealthDetails, healthEditorSection } from './portfolio-health';
+import {
+  HistoryList,
+  HistoryVersion,
+  historyDate,
+  type HistoryState,
+} from './portfolio-history-view';
 import { Inbox } from './inbox';
 import { AvatarEditor, PrivateImage } from './media-upload';
 import { useConfirmation } from './confirmation-dialog';
@@ -34,6 +41,16 @@ import {
   type OperationResult,
 } from '@/lib/publication';
 import { documentPreview } from '@/lib/preview';
+import { buildPortfolioHealth, type HealthSection } from '@/lib/portfolio-health';
+import {
+  browserHistoryStorage,
+  clearHistory,
+  listHistory,
+  staleHistoryOwner,
+  recordHistory,
+  restoreSnapshot,
+  type PortfolioSnapshot,
+} from '@/lib/portfolio-history';
 import {
   clearPublicationReceipt,
   readPublicationReceipt,
@@ -68,6 +85,9 @@ type View =
   | 'editor'
   | 'github-import'
   | 'settings'
+  | 'health'
+  | 'history'
+  | `history/${string}`
   | 'inbox'
   | `inbox/${string}`
   | `project/${string}`;
@@ -82,7 +102,7 @@ const canonicalGitHub = (value: string) => {
 const errorMessage = (error: unknown) => userErrorMessage(error);
 export function ownerView(value: string): View {
   if (
-    /^(home|projects|editor|github-import|settings|inbox|inbox\/[a-f0-9]{32}|project\/[A-Za-z0-9_-]+)$/.test(
+    /^(home|projects|editor|github-import|settings|health|history|history\/[A-Za-z0-9-]{1,100}|inbox|inbox\/[a-f0-9]{32}|project\/[A-Za-z0-9_-]+)$/.test(
       value,
     )
   )
@@ -102,6 +122,18 @@ export function Workspace({ initialView = 'home' }: { initialView?: string }) {
       router.replace(`/sign-in?returnTo=${encodeURIComponent(destination)}`);
     }
   }, [session, router]);
+  // Потеря сессии не через кнопку «Выйти» (другая вкладка, отзыв входа): снимки прежнего UID удаляются.
+  const lastUid = useRef<string | null>(null);
+  useEffect(() => {
+    if (session.loading || session.error) return;
+    const current = session.user?.uid ?? null;
+    const stale = staleHistoryOwner(lastUid.current, current);
+    if (stale) {
+      const storage = browserHistoryStorage();
+      if (storage) clearHistory(storage, stale);
+    }
+    lastUid.current = current;
+  }, [session]);
   if (session.loading)
     return (
       <>
@@ -150,7 +182,10 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     [conflict, setConflict] = useState(false),
     [shareMenu, setShareMenu] = useState(false),
     [cardOpen, setCardOpen] = useState(false),
-    [editorMode, setEditorMode] = useState<'form' | 'preview'>('form');
+    [editorMode, setEditorMode] = useState<'form' | 'preview'>('form'),
+    [history, setHistory] = useState<HistoryState>({ status: 'loading' }),
+    [historyReload, setHistoryReload] = useState(0),
+    [focusSection, setFocusSection] = useState<string | null>(null);
   const shareDialog = useRef<HTMLElement | null>(null);
   const initializationAttempt = useRef<{
     mutationId: string;
@@ -198,6 +233,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       ? publications?.publications.find((p) => p.documentId === savedMain.id)
       : undefined;
   const inboxView = view === 'inbox' || view.startsWith('inbox/');
+  const historyView = view === 'history' || view.startsWith('history/');
   const project = view.startsWith('project/')
     ? content.projects.find((p) => p.id === view.slice(8))
     : undefined;
@@ -308,6 +344,33 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       reloadVersion.current++;
     };
   }, [user.uid]);
+  // Версии читаются из localStorage при каждом входе на экран; сбой хранилища не ломает кабинет.
+  useEffect(() => {
+    if (!historyView) return;
+    try {
+      const storage = browserHistoryStorage();
+      if (!storage) throw new Error('storage');
+      setHistory({ status: 'ready', items: listHistory(storage, user.uid) });
+    } catch {
+      setHistory({ status: 'error' });
+    }
+  }, [historyView, user.uid, historyReload]);
+  // Совет здоровья ведёт к разделу редактора: прокрутка и фокус после отрисовки.
+  useEffect(() => {
+    if (view !== 'editor' || !focusSection || loading) return;
+    const frame = requestAnimationFrame(() => {
+      const element = document.getElementById(focusSection);
+      setFocusSection(null);
+      if (!element) return;
+      const reduce =
+        !!element.closest('[data-reduced-motion="true"]') ||
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      element.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      element.setAttribute('tabindex', '-1');
+      element.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [view, focusSection, loading]);
   useEffect(() => {
     function changed(event: StorageEvent) {
       if (event.key !== operationKey) return;
@@ -388,11 +451,12 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       previous?.focus();
     };
   }, [shareChoice]);
-  async function navigate(next: View, preserve = false) {
+  async function navigate(next: View, preserve = false, focus: string | null = null) {
     if (busy || avatarBusy) return;
     if (!preserve && dirty && !(await resolveUnsaved())) return;
     if (!owned()) return;
     setView(next);
+    setFocusSection(focus);
     setEditorMode('form');
     window.scrollTo({ top: 0 });
     setSearch('');
@@ -514,14 +578,26 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         );
       saveAttempt.current = null;
       setConflict(false);
+      // Версия только на этом устройстве; сбой хранилища не отменяет подтверждённый Save.
+      let historyFailed = false;
+      try {
+        const storage = browserHistoryStorage();
+        if (!storage) throw new Error('storage');
+        recordHistory(storage, user.uid, attempt.content, new Date());
+      } catch {
+        historyFailed = true;
+      }
+      const savedMessage = superseded
+        ? hasNewerInput
+          ? 'Сохранение подтверждено, но на сервере уже есть более новая версия с другого устройства. Более поздние правки остались в форме, Save заменит ими серверную версию'
+          : 'Сохранение подтверждено, но на сервере уже есть более новая версия с другого устройства. Форма показывает её'
+        : hasNewerInput
+          ? 'Сохранение подтверждено. Более поздние правки остались в форме; сохраните их отдельно'
+          : 'Сохранено и подтверждено сервером. Публикация не изменилась';
       setMessage(
-        superseded
-          ? hasNewerInput
-            ? 'Сохранение подтверждено, но на сервере уже есть более новая версия с другого устройства. Более поздние правки остались в форме, Save заменит ими серверную версию'
-            : 'Сохранение подтверждено, но на сервере уже есть более новая версия с другого устройства. Форма показывает её'
-          : hasNewerInput
-            ? 'Сохранение подтверждено. Более поздние правки остались в форме; сохраните их отдельно'
-            : 'Сохранено и подтверждено сервером. Публикация не изменилась',
+        historyFailed
+          ? joinMessages(savedMessage, 'Версию не удалось сохранить на этом устройстве')
+          : savedMessage,
       );
       return !hasNewerInput && !superseded;
     } catch (e) {
@@ -725,9 +801,40 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     if (!owned()) return;
     try {
       await signOut(firebaseServices().auth);
+      // Локальные версии принадлежат аккаунту и не остаются на устройстве после выхода.
+      const storage = browserHistoryStorage();
+      if (storage) clearHistory(storage, user.uid);
     } catch (e) {
       setError(errorMessage(e));
     }
+  }
+  function openHealthSection(section: HealthSection) {
+    if (section === 'publication') return void navigate('home');
+    void navigate('editor', false, healthEditorSection[section]);
+  }
+  // Версия попадает только в буфер редактора; сохранённое портфолио не меняется до Save.
+  async function restoreVersion(snapshot: PortfolioSnapshot) {
+    const current = mainDocument(content);
+    if (busy || avatarBusy || !owned() || !current) return;
+    const accepted = await confirmAction(
+      `Версия от ${historyDate(snapshot.savedAt)} откроется в Редакторе как несохранённые изменения. Нажмите «Сохранить», чтобы применить её; до этого сохранённое портфолио не меняется. Текущее фото останется${
+        dirty ? '. Несохранённые правки в Редакторе будут заменены' : ''
+      }`,
+      'Восстановить версию',
+    );
+    if (!accepted || !owned()) return;
+    const { document: restored, skippedProjects } = restoreSnapshot({
+      workspace: content,
+      current,
+      snapshot,
+    });
+    updateDocument(restored);
+    setMessage(
+      skippedProjects > 0
+        ? `Версия открыта в Редакторе. Проектов, которых уже нет в библиотеке, пропущено: ${skippedProjects}. Нажмите «Сохранить», чтобы применить её`
+        : 'Версия открыта в Редакторе. Нажмите «Сохранить», чтобы применить её',
+    );
+    await navigate('editor', true);
   }
   async function sharePublication(publication: Publication) {
     if (publication.state !== 'published' || !publication.url || !safeHttpUrl(publication.url))
@@ -989,6 +1096,21 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     />
   );
   const savedHasContent = !!savedMain && portfolioHasContent(savedWorkspace, savedMain);
+  // Оценка читает только сохранённую версию, как Главная; статус публикации известен после инвентаря.
+  const health = (() => {
+    if (!savedMain || !savedHasContent) return null;
+    try {
+      return buildPortfolioHealth({
+        content: resolveDocument(savedWorkspace, savedMain),
+        now: new Date(),
+        published: publications
+          ? activePublication?.state === 'published' && !!activePublication.url
+          : null,
+      });
+    } catch {
+      return null;
+    }
+  })();
   const query = search.trim().toLowerCase();
   const shownProjects = content.projects.filter((p) =>
     `${p.title} ${p.description} ${p.technologies.join(' ')}`.toLowerCase().includes(query),
@@ -1033,6 +1155,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
               disabled={busy || avatarBusy || onboarding || migrationNeeded}
               className={
                 view === n.key ||
+                (n.key === 'home' && (view === 'health' || historyView)) ||
                 (n.key === 'projects' && (view === 'github-import' || view.startsWith('project/')))
                   ? 'active'
                   : ''
@@ -1306,6 +1429,26 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                           onCopied={setMessage}
                         />
                       )}
+                      {savedMain && (
+                        <div className="summary-cards">
+                          {health && (
+                            <HealthCard health={health} onOpen={() => navigate('health')} />
+                          )}
+                          <button
+                            type="button"
+                            className="summary-card"
+                            onClick={() => navigate('history')}
+                          >
+                            <span className="summary-card-text">
+                              <span className="summary-card-title">История версий</span>
+                              <span className="muted">Прежние сохранения в этом браузере</span>
+                            </span>
+                            <span className="summary-card-chevron" aria-hidden="true">
+                              ›
+                            </span>
+                          </button>
+                        </div>
+                      )}
                       {savedMain && savedHasContent ? (
                         <div className="paper-frame">
                           <DocumentView
@@ -1336,6 +1479,36 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                         </div>
                       )}
                     </section>
+                  )}
+                  {view === 'health' && (
+                    <HealthDetails
+                      health={health}
+                      onBack={() => navigate('home')}
+                      onOpenSection={openHealthSection}
+                    />
+                  )}
+                  {view === 'history' && (
+                    <HistoryList
+                      state={history}
+                      onBack={() => navigate('home')}
+                      onRetry={() => {
+                        setHistory({ status: 'loading' });
+                        setHistoryReload((value) => value + 1);
+                      }}
+                      onOpen={(id) => navigate(`history/${id}`)}
+                    />
+                  )}
+                  {view.startsWith('history/') && (
+                    <HistoryVersion
+                      state={history}
+                      snapshotId={view.slice(8)}
+                      onBack={() => navigate('history')}
+                      onRetry={() => {
+                        setHistory({ status: 'loading' });
+                        setHistoryReload((value) => value + 1);
+                      }}
+                      onRestore={(snapshot) => void restoreVersion(snapshot)}
+                    />
                   )}
                   {view === 'editor' && workingMain && (
                     <section className={`editor-layout view-enter mode-${editorMode}`}>

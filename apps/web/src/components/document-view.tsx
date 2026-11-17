@@ -255,7 +255,7 @@ export function exampleDocumentContent(
       name: DEMO_PROFILE_NAME,
       username: '',
       headline: 'Flutter- и веб-разработчик',
-      bio: 'Создаю понятные цифровые продукты: от небольших мобильных приложений до интерфейсов для веба. Люблю чистую типографику, продуманные детали и код, который легко поддерживать.',
+      bio: 'Создаю понятные цифровые продукты: от небольших мобильных приложений до интерфейсов для веба. Люблю чистую типографику, продуманные детали и код, который легко поддерживать',
       locationText: 'Алматы, Казахстан',
       avatarUrl: portrait ? '/images/demo-portrait.png' : '',
     },
@@ -267,7 +267,7 @@ export function exampleDocumentContent(
       {
         id: 'demo-atlas',
         title: 'Atlas UI Kit',
-        description: 'Набор компонентов для спокойных и удобных интерфейсов.',
+        description: 'Набор компонентов для спокойных и удобных интерфейсов',
         contribution: '',
         technologies: ['Flutter', 'Dart', 'Дизайн интерфейсов'],
         repositoryUrl: '',
@@ -279,7 +279,7 @@ export function exampleDocumentContent(
       {
         id: 'demo-pocket',
         title: 'Pocket Tasks',
-        description: 'Небольшой планировщик, который помогает держать фокус.',
+        description: 'Небольшой планировщик, который помогает держать фокус',
         contribution: '',
         technologies: ['Flutter', 'Dart', 'Firebase'],
         repositoryUrl: '',
