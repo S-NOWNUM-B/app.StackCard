@@ -220,11 +220,12 @@ Sign In, GitHub Import и notes открываются отдельно. Соз�
 GitHub Import и auth forms публичны. `from` возвращает к разрешённому локальному
 пути после входа. `DemoSession` остаётся preview-механизмом и не авторизует аккаунт.
 
-После одобрения светлого web 2026-10-11 `MaterialApp` всегда использует light/ru.
+`MaterialApp` берёт `themeMode` из контроллера (system/light/dark, с 2026-11-16) и ru.
 [`AppearanceController`](../../apps/mobile/lib/core/state/appearance_controller.dart)
 через `ChangeNotifierProvider` сохраняет совместимый settings snapshot и управляет
-source descriptions/reduced motion с failure/retry. Legacy dark/system/en
-читаются без автоматического Save; переключатели темы и языка удалены.
+source descriptions/reduced motion с failure/retry. Тема (system/light/dark)
+меняется в Настройках и сохраняется в snapshot; переключателя языка нет. Legacy
+en preferences читаются без автоматического Save.
 Router сохраняет stateful roots независимо от preferences.
 
 [`project_filters.dart`](../../apps/mobile/lib/features/projects/presentation/project_filters.dart)
@@ -1149,7 +1150,12 @@ Suggestions остаются pure deterministic rules в [Portfolio Suggestions]
    блокируют private routes. Legacy `AuthRepository.openDemo` относится только
    к preview/tests без native account configuration.
 4. Stateful Shell открывает Главную/Проекты/Редактор. Главная показывает saved
-   main portfolio и два действия PDF/Share; Editor — working buffer. Library
+   main portfolio и два действия PDF/Share, а также карточку «Здоровье портфолио»
+   (третья нажимаемая зона по решению владельца 2026-11-16, открывает `/health`);
+   «История версий» (`/history`, `/history/:id`) открывается из редактора и
+   откатывает версию в буфер Editor; «Подбор под вакансию» (`/vacancy`) открывается
+   из Projects: локальный разбор текста без сохранения, «Применить порядок» только
+   в буфер Editor, PDF через существующий экспорт; Editor — working buffer. Library
    сохраняет собственный query, пустой workspace не копирует demo.
 5. Settings меняет AppearanceController и сохраняет цельный snapshot preferences,
    читает profile provider и держит preview loading/empty/error в session.

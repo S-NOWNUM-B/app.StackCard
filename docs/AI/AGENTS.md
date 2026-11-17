@@ -105,9 +105,10 @@
   раздельные Hive boxes для GitHub cache и portfolio draft, инициализирует
   Firebase Auth/Firestore до `StackCardApp`. Configuration failure не включает demo fallback.
   ThemeMode/Locale и простые preferences принадлежат Provider AppearanceController;
-  SharedPreferencesAsync сохраняет цельный settings snapshot. После одобрения
-  web 2026-10-11 native UI всегда light/ru; legacy theme/language fields читаются
-  без read-time rewrite, переключателей dark/system/en нет.
+  SharedPreferencesAsync сохраняет цельный settings snapshot. Тема с 2026-11-16
+  выбирается в Настройках (system/light/dark, владелец: тёмная тема обязательна);
+  язык — ru, переключателя языка нет. Legacy theme/language fields читаются
+  без read-time rewrite. Превью документа остаётся светлым.
   `portfolio_draft` — публичный API общей базы, private documents и notes.
   Profile/Projects — проекции working content, запись принадлежит только draft
   repository. Документы хранят собственные структурированные секции и связи с

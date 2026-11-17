@@ -49,8 +49,10 @@ categories/artwork требования не переопределяют Design
 ## Действующий runtime contract R8
 
 Функциональный контракт ADR 0005: «Главная / Проекты / Редактор», gear рядом
-с StackCard. На главной ровно два постоянных действия «Скачать портфолио» и
+с StackCard. На главной два постоянных действия «Скачать портфолио» и
 «Поделиться», затем сохранённый профиль и только непустые разделы.
+Исключение 2026-11-16 («Оставить на Home»): карточка «Здоровье портфолио»
+остаётся на Home третьей нажимаемой зоной и открывает `/health`.
 Phase 15: «Поделиться» открывает отправку ссылки либо Developer Card/QR;
 карточка standalone, без новой root-вкладки или третьего Home CTA. Белая
 outlined поверхность, Brand A, Manrope, avatar/name/role/username и existing
@@ -260,9 +262,10 @@ Web tokens/shared controls находятся в `apps/web/src/app/globals.css` 
 описывает StackCard. Web не предлагает dark и показывает старые документы в light
 без изменения shared `dark | light` schema. React не импортирует Flutter runtime.
 Пользователь одобрил web и поручил перенести этот референс в Flutter.
-Runtime mobile всегда light/ru; theme/language selectors удалены, legacy
-preferences читаются без перезаписи. PortfolioTheme dark/light остаётся
-в data contract, но оба preview используют light. Home получает редакционный
+Mobile в Настройках выбирает тему «Системная / Светлая / Тёмная» (сохраняется в
+AppSettings), язык — русский; legacy preferences читаются без перезаписи.
+Превью документа в приложении и PDF остаются светлыми. PortfolioTheme dark/light
+остаётся в data contract. Home получает редакционный
 заголовок, Shell — брендированную овальную навигацию, библиотеки — тонкие
 разделители и крупную типографику. При компактной высоте заголовок помещается
 в header рядом с compact Brand A; text scaling и targets48 сохраняются. Wide/narrow,

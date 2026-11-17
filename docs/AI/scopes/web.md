@@ -19,6 +19,13 @@ mobile Save. Profile остаётся первым, GitHub следует вме
   `sortable-list.tsx`, каталог технологий — `src/lib/technology-catalog.ts`
   (данные mobile `technology_catalog_data.dart`), QR визитки — `src/lib/qr-code.ts`.
   Новую функцию mobile переносить в web вместе с ней.
+  Паритет на 2026-11-17: «Здоровье портфолио» (`src/lib/portfolio-health.ts`,
+  `components/portfolio-health.tsx`) и «История версий» (`src/lib/portfolio-history.ts`,
+  `components/portfolio-history-view.tsx`) есть на web. История — только в
+  localStorage по ключу `stackcard.history.<uid>`, до 20 снимков, в Firestore не
+  пишется; очищается при выходе, удалении аккаунта и смене UID/потере сессии.
+  Открытый паритет: «Подбор под вакансию» (mobile `vacancy_match.dart`, `/vacancy`)
+  на web не реализован.
   Пунктуация владельца: в заголовках и в конце последнего предложения текстового
   блока (абзац, подпись, кнопка, сообщение) точки нет; точки между предложениями
   и знаки `?`/`!` сохраняются. Двухстрочные display-заголовки и надзаголовки
