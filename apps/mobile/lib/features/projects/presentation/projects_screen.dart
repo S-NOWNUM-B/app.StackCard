@@ -168,6 +168,13 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                               ],
                             ),
                     ),
+                    const SizedBox(height: StackCardSpacing.sm),
+                    StackCardButton(
+                      key: const ValueKey('projects.vacancy'),
+                      label: 'Подбор под вакансию',
+                      role: StackCardButtonRole.secondary,
+                      onPressed: () => context.push('/vacancy'),
+                    ),
                     const SizedBox(height: StackCardSpacing.lg),
                     StackCardInput(
                       key: const ValueKey('project_search'),

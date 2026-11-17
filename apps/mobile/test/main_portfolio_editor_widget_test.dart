@@ -1295,6 +1295,181 @@ void main() {
       },
     );
   }
+
+  testWidgets('Save records a local history snapshot', (tester) async {
+    final repository = await _repository(name: 'Первая');
+    final container = await _open(tester, repository);
+    final history = container.read(portfolioHistoryRepositoryProvider)!;
+    expect(await history.list(), isEmpty);
+    await _enter(tester, 'name', 'Вторая');
+    await _tap(tester, 'main.editor.save');
+    final list = await history.list();
+    expect(list, hasLength(1));
+    expect(list.single.content.profile.name, 'Вторая');
+    await _enter(tester, 'name', 'Третья');
+    await _tap(tester, 'main.editor.save');
+    expect((await history.list()).map((s) => s.content.profile.name), [
+      'Третья',
+      'Вторая',
+    ]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Restoring a version fills the buffer and does not save', (
+    tester,
+  ) async {
+    final repository = await _repository(name: 'Текущая');
+    final container = await _open(tester, repository);
+    final current = (await repository.read())!.content!;
+    final old = buildPortfolioSnapshot(
+      workspace: current.copyWith(
+        documents: [
+          mainPortfolioDocument(current)!.copyWith(
+            content: PortfolioContent(
+              profile: const PortfolioProfile(name: 'Из истории'),
+              skills: const [Skill(id: 's', name: 'Rust')],
+            ),
+          ),
+        ],
+      ),
+      at: DateTime.utc(2026, 11, 1),
+      id: 'old',
+    )!;
+    final revision = (await repository.read())!.revision;
+    container.read(mainPortfolioEditorRestoreProvider.notifier).request(old);
+    await tester.pumpAndSettle();
+    expect(_value(tester, 'main.editor.name'), 'Из истории');
+    expect(find.text('Есть несохранённые изменения'), findsOneWidget);
+    expect((await repository.read())!.revision, revision);
+    expect(container.read(mainPortfolioEditorRestoreProvider), isNull);
+    // Обычный Save создаёт новую версию, откат обратим.
+    await _tap(tester, 'main.editor.save');
+    final saved = mainPortfolioDocument((await repository.read())!.content!)!;
+    expect(saved.content.profile.name, 'Из истории');
+    expect(saved.content.skills.single.name, 'Rust');
+    final list = await container
+        .read(portfolioHistoryRepositoryProvider)!
+        .list();
+    expect(list.first.content.profile.name, 'Из истории');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('A health tip scrolls the Editor to its section', (tester) async {
+    final repository = await _largeRepository();
+    final container = await _open(tester, repository);
+    final scroll = tester.state<ScrollableState>(_editorScrollable());
+    expect(scroll.position.pixels, 0);
+    container
+        .read(mainPortfolioEditorFocusProvider.notifier)
+        .request(PortfolioHealthSection.education);
+    await tester.pumpAndSettle();
+    expect(scroll.position.pixels, greaterThan(0));
+    expect(container.read(mainPortfolioEditorFocusProvider), isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Vacancy order fills the buffer and is not saved by itself', (
+    tester,
+  ) async {
+    final repository = await _repository(
+      name: 'Имя',
+      projects: [
+        PortfolioProject(
+          id: 'one',
+          title: 'Первый',
+          description: 'd',
+          technologies: const ['React'],
+        ),
+        PortfolioProject(
+          id: 'two',
+          title: 'Второй',
+          description: 'd',
+          technologies: const ['Flutter'],
+        ),
+      ],
+      attachments: const [
+        PortfolioProjectAttachment(projectId: 'one'),
+        PortfolioProjectAttachment(projectId: 'two'),
+      ],
+    );
+    final container = await _open(tester, repository);
+    final revision = (await repository.read())!.revision;
+    container
+        .read(mainPortfolioEditorOrderProvider.notifier)
+        .request(
+          const VacancyOrder(
+            projects: ['two', 'one'],
+            sections: [
+              PortfolioBlockKind.featuredProjects,
+              PortfolioBlockKind.skills,
+              PortfolioBlockKind.experience,
+              PortfolioBlockKind.education,
+              PortfolioBlockKind.links,
+            ],
+          ),
+        );
+    await tester.pumpAndSettle();
+    expect(find.text('Есть несохранённые изменения'), findsOneWidget);
+    expect((await repository.read())!.revision, revision);
+    expect(container.read(mainPortfolioEditorOrderProvider), isNull);
+    await _tap(tester, 'main.editor.save');
+    final saved = mainPortfolioDocument((await repository.read())!.content!)!;
+    expect(saved.projects.map((p) => p.projectId), ['two', 'one']);
+    expect(
+      mainPortfolioSectionOrder(saved.content).first,
+      PortfolioBlockKind.featuredProjects,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'Vacancy order requested before the Editor exists is applied on mount',
+    (tester) async {
+      final repository = await _repository(
+        name: 'Имя',
+        projects: [
+          PortfolioProject(
+            id: 'one',
+            title: 'Первый',
+            description: 'd',
+            technologies: const ['React'],
+          ),
+          PortfolioProject(
+            id: 'two',
+            title: 'Второй',
+            description: 'd',
+            technologies: const ['Flutter'],
+          ),
+        ],
+        attachments: const [
+          PortfolioProjectAttachment(projectId: 'one'),
+          PortfolioProjectAttachment(projectId: 'two'),
+        ],
+      );
+      final container = await _open(
+        tester,
+        repository,
+        beforeMount: (container) => container
+            .read(mainPortfolioEditorOrderProvider.notifier)
+            .request(
+              const VacancyOrder(
+                projects: ['two', 'one'],
+                sections: [
+                  PortfolioBlockKind.featuredProjects,
+                  PortfolioBlockKind.skills,
+                  PortfolioBlockKind.experience,
+                  PortfolioBlockKind.education,
+                  PortfolioBlockKind.links,
+                ],
+              ),
+            ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Есть несохранённые изменения'), findsOneWidget);
+      expect(container.read(mainPortfolioEditorOrderProvider), isNull);
+      expect((await repository.read())!.revision, 1);
+    },
+  );
 }
 
 PortfolioDocument _document(
@@ -1379,11 +1554,13 @@ Future<ProviderContainer> _open(
   bool migration = false,
   double textScale = 1,
   bool shell = false,
+  void Function(ProviderContainer container)? beforeMount,
 }) async {
   final container = ProviderContainer(
     overrides: [portfolioDraftRepositoryProvider.overrideWithValue(repository)],
   );
   addTearDown(container.dispose);
+  beforeMount?.call(container);
   final router = GoRouter(
     initialLocation: migration ? '/portfolio/migrate' : '/editor',
     routes: [

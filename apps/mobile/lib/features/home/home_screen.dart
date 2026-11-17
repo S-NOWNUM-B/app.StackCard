@@ -341,6 +341,10 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
                                 ],
                               ),
                       ),
+                      if (nonempty) ...[
+                        const SizedBox(height: StackCardSpacing.lg),
+                        const PortfolioHealthCard(),
+                      ],
                       const SizedBox(height: StackCardSpacing.xl),
                       if (!nonempty)
                         Padding(

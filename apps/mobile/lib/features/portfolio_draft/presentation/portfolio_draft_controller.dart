@@ -10,6 +10,7 @@ import '../domain/portfolio_content.dart';
 import '../domain/portfolio_github_sync.dart' as github;
 import '../../auth/auth.dart';
 import '../portfolio_draft_providers.dart';
+import '../portfolio_history_providers.dart';
 import 'portfolio_draft_state.dart';
 
 // App session сохраняет введённые, но ещё не записанные заметки при навигации.
@@ -636,6 +637,7 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
       return false;
     }
     final operationRef = ref;
+    final history = ref.read(portfolioHistoryRepositoryProvider);
     final generation = ++_generation;
     final baseline = state.draft?.content ?? PortfolioContent();
     final baselineNotes = state.draft?.notes ?? '';
@@ -649,6 +651,14 @@ class PortfolioDraftController extends Notifier<PortfolioDraftState> {
         expectedRevision: durable?.revision ?? 0,
         notes: durable?.notes ?? '',
       );
+      // Локальный снимок для истории версий; сбой не отменяет Save.
+      final saved = draft.content;
+      if (saved != null) {
+        history
+            ?.record(saved, DateTime.now())
+            .catchError((Object _) {})
+            .ignore();
+      }
       if (!operationRef.mounted || generation != _generation) return false;
       state = state.copyWith(
         draft: draft,

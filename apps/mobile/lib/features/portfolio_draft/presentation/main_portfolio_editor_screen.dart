@@ -20,9 +20,15 @@ import '../../media/media.dart';
 import '../../projects/projects.dart';
 import '../domain/portfolio_content.dart';
 import '../domain/portfolio_draft_repository.dart';
+import '../domain/portfolio_health.dart';
+import '../domain/portfolio_history.dart';
 import '../domain/portfolio_sync.dart';
 import '../domain/portfolio_validation.dart';
 import '../portfolio_draft_providers.dart';
+import '../portfolio_health_providers.dart';
+import '../portfolio_history_providers.dart';
+import '../vacancy_providers.dart';
+import '../domain/vacancy_match.dart';
 import 'builder_editor_widgets.dart';
 import 'builder_tag_editor.dart';
 import 'portfolio_draft_controller.dart';
@@ -107,10 +113,168 @@ class _MainPortfolioEditorScreenState
   late final _navigationGuard = _canLeave;
   MainPortfolioEditorNavigation? _navigation;
 
+  // Порядок из подбора под вакансию: только буфер, Save остаётся за владельцем.
+  void _orderRequested(VacancyOrder? order) {
+    if (order == null) return;
+    ref.read(mainPortfolioEditorOrderProvider.notifier).consume();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _applyOrder(order);
+    });
+  }
+
+  void _applyOrder(VacancyOrder order) {
+    final messenger = ScaffoldMessenger.of(context);
+    if (!_sameOwner || _busy || _buffer == null) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Не удалось применить порядок')),
+      );
+      return;
+    }
+    final position = {
+      for (final entry in order.projects.indexed) entry.$2: entry.$1,
+    };
+    final original = [..._projects];
+    final sorted = [..._projects]
+      ..sort((a, b) {
+        final left = position[a.projectId] ?? order.projects.length;
+        final right = position[b.projectId] ?? order.projects.length;
+        final byOrder = left.compareTo(right);
+        // sort нестабилен: равные сохраняют прежний порядок.
+        return byOrder != 0
+            ? byOrder
+            : original.indexOf(a).compareTo(original.indexOf(b));
+      });
+    setState(() {
+      _projects = sorted;
+      _buffer = _buffer!.copyWith(
+        blocks: vacancyBlocks(_buffer!.blocks, order: order.sections),
+      );
+    });
+    _changed();
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Порядок применён в Редакторе. Нажмите «Сохранить», чтобы оставить его',
+        ),
+      ),
+    );
+  }
+
+  // Откат версии: снимок попадает только в буфер, Save остаётся за владельцем.
+  void _restoreRequested(PortfolioSnapshot? snapshot) {
+    if (snapshot == null) return;
+    ref.read(mainPortfolioEditorRestoreProvider.notifier).consume();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _applyRestore(snapshot);
+    });
+  }
+
+  void _applyRestore(PortfolioSnapshot snapshot) {
+    final workspace = ref.read(portfolioDraftControllerProvider).content;
+    final messenger = ScaffoldMessenger.of(context);
+    if (!_sameOwner ||
+        _busy ||
+        _buffer == null ||
+        _expected == null ||
+        workspace == null) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Не удалось открыть версию в Редакторе')),
+      );
+      return;
+    }
+    final result = restorePortfolioSnapshot(
+      workspace: workspace,
+      current: _document(),
+      snapshot: snapshot,
+    );
+    setState(() {
+      disposeBuilderFieldControllers(_fields);
+      _initialize(workspace, result.document);
+      _iconUpdates.clear();
+    });
+    _changed();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          result.skippedProjects == 0
+              ? 'Версия открыта в Редакторе. Нажмите «Сохранить», чтобы применить'
+              : 'Версия открыта без проектов, которых больше нет: ${result.skippedProjects}. Нажмите «Сохранить», чтобы применить',
+        ),
+      ),
+    );
+  }
+
+  // Совет здоровья портфолио: прокрутка к разделу после построения экрана.
+  void _focusRequested(PortfolioHealthSection? section) {
+    if (section == null) return;
+    ref.read(mainPortfolioEditorFocusProvider.notifier).consume();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _scrollToSection(section),
+    );
+  }
+
+  Future<void> _scrollToSection(PortfolioHealthSection section) async {
+    if (!mounted || !_scrollController.hasClients) return;
+    final kind = switch (section) {
+      PortfolioHealthSection.projects => PortfolioBlockKind.featuredProjects,
+      PortfolioHealthSection.experience => PortfolioBlockKind.experience,
+      PortfolioHealthSection.education => PortfolioBlockKind.education,
+      PortfolioHealthSection.skills => PortfolioBlockKind.skills,
+      PortfolioHealthSection.contacts => PortfolioBlockKind.links,
+      _ => null,
+    };
+    final position = _scrollController.position;
+    if (kind == null) {
+      // Профиль и фото находятся в начале экрана.
+      _scrollController.jumpTo(0);
+      return;
+    }
+    final target = ValueKey('main.editor.section.${kind.name}');
+    // Разделы строятся лениво: листаем вниз, пока нужный не появится.
+    for (var step = 0; step < 40 && mounted; step++) {
+      if (!_scrollController.hasClients) return;
+      final context = _findKeyed(target);
+      if (context != null) {
+        // ignore: use_build_context_synchronously
+        await Scrollable.ensureVisible(context, alignment: 0);
+        return;
+      }
+      if (position.pixels >= position.maxScrollExtent) return;
+      _scrollController.jumpTo(
+        (position.pixels + position.viewportDimension * .8).clamp(
+          0,
+          position.maxScrollExtent,
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      await WidgetsBinding.instance.endOfFrame;
+    }
+  }
+
+  BuildContext? _findKeyed(Key key) {
+    BuildContext? found;
+    void visit(Element element) {
+      if (found != null) return;
+      if (element.widget.key == key) {
+        found = element;
+        return;
+      }
+      element.visitChildren(visit);
+    }
+
+    (context as Element).visitChildren(visit);
+    return found;
+  }
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_extendDragCache);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusRequested(ref.read(mainPortfolioEditorFocusProvider));
+      _restoreRequested(ref.read(mainPortfolioEditorRestoreProvider));
+      _orderRequested(ref.read(mainPortfolioEditorOrderProvider));
+    });
     _navigation = ref.read(mainPortfolioEditorNavigationProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _navigation!.attach(_navigationGuard);
@@ -738,6 +902,18 @@ class _MainPortfolioEditorScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(
+      mainPortfolioEditorFocusProvider,
+      (_, next) => _focusRequested(next),
+    );
+    ref.listen(
+      mainPortfolioEditorOrderProvider,
+      (_, next) => _orderRequested(next),
+    );
+    ref.listen(
+      mainPortfolioEditorRestoreProvider,
+      (_, next) => _restoreRequested(next),
+    );
     final state = ref.watch(portfolioDraftControllerProvider);
     final owner = _owner(watch: true);
     if (_initialOwner != null && owner != _initialOwner && !_ownerInvalid) {
