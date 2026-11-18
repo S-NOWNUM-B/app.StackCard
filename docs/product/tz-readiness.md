@@ -10,7 +10,7 @@
 «Здоровье портфолио» (`/health`), «История версий» (`/history`), «Подбор под вакансию»
 (`/vacancy`, mobile), «ДНК стека» (`/stack-dna`, mobile). Web имеет здоровье, историю
 и подбор под вакансию; «ДНК стека» на web открыта.
-Открытые пункты: `npm audit` — high в транзитивной зависимости firebase не исправлен;
+Открытые пункты: `pnpm audit` — high в транзитивной зависимости firebase не исправлен;
 живая проверка на устройстве, вход Google и физический iPhone не пройдены.
 
 Статусы: **OK** — реализовано и есть проверяемое подтверждение; **частично** —
@@ -47,7 +47,7 @@
 | Firebase Auth: email | `firebase_account_auth_repository.dart:57,69` | `test/firebase_auth_repository_test.dart`, `integration_test/account_runtime_test.dart` | OK |
 | Firebase Auth: Google | `google_sign_in` в `pubspec.yaml`, `firebase_account_auth_repository.dart` | `test/firebase_auth_google_test.dart`, `integration_test/google_auth_runtime_test.dart` | OK |
 | Cloud Firestore для данных | `firebase/firestore.rules:627` (`accounts/{uid}` и подколлекции), mobile `test/firestore_draft_adapter_test.dart` | `integration_test/firestore_runtime_test.dart` | OK |
-| Security Rules | `firebase/firestore.rules`, `firebase/storage.rules` | `firebase/test/firestore_rules.test.mjs`, `storage_rules.test.mjs`; в CI `npm run test:all-rules` (job firebase) | OK |
+| Security Rules | `firebase/firestore.rules`, `firebase/storage.rules` | `firebase/test/firestore_rules.test.mjs`, `storage_rules.test.mjs`; в CI `pnpm run test:all-rules` (job firebase) | OK |
 | Firebase Cloud Messaging | Реализован (`firebase_messaging`, `lib/features/notifications`) | Phase 14 в product spec | исключено владельцем |
 | Google Maps и геолокация | Нет, ADR 0005: ручной город/страна | product spec Phase 12 | исключено владельцем |
 | ListView.builder | `lib/features/projects/presentation/projects_screen.dart:140` | `test/project_read_models_widget_test.dart` | OK |

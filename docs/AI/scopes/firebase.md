@@ -11,7 +11,7 @@ Scope и фактическая приёмка остаются в [product spec
   и Emulator Suite configuration; [package.json](../../../firebase/package.json)
   и lockfile — отдельными Rules tests. Mobile SDK dependencies находятся в
   `apps/mobile/pubspec.yaml`, generated app config — в `apps/mobile`.
-  Emulator CLI закреплён точной devDependency `firebase-tools`; `npm ci`
+  Emulator CLI закреплён точной devDependency `firebase-tools`; `pnpm install --frozen-lockfile`
   восстанавливает локальный executable для package scripts. CI использует
   только demo project; общий contract — [CI scope](ci.md).
 - Публичные mobile Firebase API keys ограничивать по Android package/signing
@@ -34,7 +34,7 @@ Scope и фактическая приёмка остаются в [product spec
   deep workspace validation/privacy projection, permanent ID, operation CAS/recovery,
   immutable public media и delete lifecycle. [Manifest](../../../firebase/functions/package.json)
   и [.env.example](../../../firebase/functions/.env.example) — runtime/commands/origin.
-  Live Spark использует `src/server.mjs` и `npm start` с private ADC/HMAC env;
+  Live Spark использует `src/server.mjs` и `pnpm start` с private ADC/HMAC env;
   `src/index.mjs` — прежний Functions adapter только для demo emulators.
   Cloud Functions/App Hosting/Storage/TTL live не развёртывать: требуют billing.
   Без Storage разрешён Publish с bounded Firestore avatar по ADR 0005.
@@ -131,8 +131,8 @@ Scope и фактическая приёмка остаются в [product spec
   `test:rules` сохраняет Firestore-only contract. Native media SDK acceptance
   использует Auth/Firestore emulators и отдельные named apps; системный picker,
   отказ permissions и live Firestore требуют отдельной приёмки. Billing/deploy
-  автоматически не выполняются; Spark-only правило обязательно. Для handler из `firebase/functions` — `npm run check`
-  и `npm test`; команды полного emulated integration берутся из actual manifest.
+  автоматически не выполняются; Spark-only правило обязательно. Для handler из `firebase/functions` — `pnpm run check`
+  и `pnpm test`; команды полного emulated integration берутся из actual manifest.
 - Native acceptance имеет explicit opt-in, отдельный test storage/disposable
   accounts и `--no-uninstall`; обычный app draft/session не очищаются.
 - Live web↔Android runner и его isolated named SDK/Hive harness описаны в

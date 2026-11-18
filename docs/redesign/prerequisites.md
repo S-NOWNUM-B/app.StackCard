@@ -359,8 +359,8 @@ Tests перечислены по actual source inventory, не объявляю
 
 Добавить содержательные cases: exact lossless mapping всех versions; crash journal phases; two-device idempotency; old/new ACK + pending payload; stale generation delete; private/public/foreignUID/anonymous/list; malicious nested payload direct SDK; contacts/account separation; base review override preservation; duplicate no publication; rename/unpublish/republish same ID; unknown operation read-resolution; new schema downgrade denial; cross-client fixtures; media linked published asset not deleted from draft removal.
 
-Обычные checks после разрешённого diff: macOS zsh/bash, cwd apps/mobile: dart format --output=none --set-exit-if-changed lib test integration_test, flutter analyze, flutter test; cwd firebase: npm run test:all-rules; cwd firebase/functions: npm run check и npm test;
-cwd apps/web: npm run typecheck, npm test и npm run build по actual manifests. Native Google/reset/iOS/media/Open/full device acceptance pending; Android Share sheet PASS; D048 разрешает
+Обычные checks после разрешённого diff: macOS zsh/bash, cwd apps/mobile: dart format --output=none --set-exit-if-changed lib test integration_test, flutter analyze, flutter test; cwd firebase: pnpm run test:all-rules; cwd firebase/functions: pnpm run check и pnpm test;
+cwd apps/web: pnpm run typecheck, pnpm test и pnpm run build по actual manifests. Native Google/reset/iOS/media/Open/full device acceptance pending; Android Share sheet PASS; D048 разрешает
 visual/browser/native checks, actual ограничения среды фиксируются отдельно.
 Headless tests этого не доказывают.
 

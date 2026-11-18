@@ -201,9 +201,9 @@ macOS — zsh/bash; Windows для dev — WSL/Ubuntu. Рабочая дирек
 Нужна поддерживаемая Node-версия из `package.json`.
 
 ```bash
-npm ci
+pnpm install --frozen-lockfile
 cp .env.example .env.local
-npm run dev
+pnpm run dev
 ```
 
 Заполните [публичный env example](.env.example) web config того же Firebase
@@ -219,14 +219,14 @@ npm run dev
 Без Firebase config можно просмотреть marketing и явно обозначенные примеры.
 
 ```bash
-npm run typecheck
-npm test
-npm run format:check
-npm run build
-npm start
+pnpm run typecheck
+pnpm test
+pnpm run format:check
+pnpm run build
+pnpm start
 ```
 
-`npm test` использует Node `--import tsx`, чтобы не создавать отдельный IPC
+`pnpm test` использует Node `--import tsx`, чтобы не создавать отдельный IPC
 socket CLI. Regression проверки редиректов поднимают короткоживущий HTTP-сервер
 на случайном loopback-порту. Production build не нужно выполнять параллельно с dev в одном
 `.next`: остановите dev перед сборкой. `.next`, `.env.local` и dependencies
@@ -292,7 +292,7 @@ owner после live-теста снято; оно не считается на
 Запуск backend из `firebase/functions`, macOS — zsh/bash, Windows — WSL/Ubuntu:
 
 ```bash
-npm ci
+pnpm install --frozen-lockfile
 node --env-file=.env.local src/server.mjs
 ```
 
@@ -300,8 +300,8 @@ node --env-file=.env.local src/server.mjs
 paths и origin самого Next.js сайта. Зарегистрируйте Web app в Firebase App Check
 с [reCAPTCHA Enterprise score key](https://firebase.google.com/docs/app-check/web/recaptcha-enterprise-provider),
 разрешив точный hostname сайта; ключ помещается в `NEXT_PUBLIC_APP_CHECK_SITE_KEY`.
-После заполнения `NEXT_PUBLIC_*` пересоберите сайт (`npm run build`), затем
-запустите `npm run start -- --hostname 127.0.0.1` за своим HTTPS reverse proxy.
+После заполнения `NEXT_PUBLIC_*` пересоберите сайт (`pnpm run build`), затем
+запустите `pnpm run start -- --hostname 127.0.0.1` за своим HTTPS reverse proxy.
 Клиент получает новый limited-use token на каждую отправку или retry, backend
 потребляет его и проверяет intended app ID. Auto-refresh выключен. Auth domain
 сайта должен быть разрешён в Firebase Authentication.

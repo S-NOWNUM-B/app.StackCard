@@ -608,7 +608,7 @@ python3 tools/redesign/check_imports.py --require-imported --require-brand
 Для headless regressions, macOS zsh/bash, cwd `apps/mobile`:
 
 Полный suite включает `web_workspace_contract_test.dart`: нужен Node из web
-manifest и установленные `apps/web` зависимости (`npm ci` из `apps/web`). Test
+manifest и установленные `apps/web` зависимости (`pnpm install --frozen-lockfile` из `apps/web`). Test
 проверяет actual codecs web→Dart→web без Firebase/emulators; [предусловия](../../../CONTRIBUTING.md#проверки).
 
 ```zsh

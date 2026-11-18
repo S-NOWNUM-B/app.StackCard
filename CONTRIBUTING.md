@@ -382,7 +382,7 @@ Cloud Functions/App Hosting/Storage/Firestore TTL live запрещены Spark-
 `src/index.mjs` остаётся demo Functions adapter; живой сервер — `src/server.mjs`.
 С private standard ADC (`GOOGLE_APPLICATION_CREDENTIALS`, не Git), explicit
 `GCLOUD_PROJECT`, `BACKEND_PORT`, origin/appId/HMAC из `.env.example`,
-macOS zsh/bash, cwd `firebase/functions`: `npm start`. Сервер слушает loopback;
+macOS zsh/bash, cwd `firebase/functions`: `pnpm start`. Сервер слушает loopback;
 HTTPS обеспечивает собственный reverse proxy или временный tunnel. `/health`
 проверяет запуск; API paths — `/contactInbox` и `/documentPublication`.
 Не создавайте service account keys для теста, когда есть стандартные user ADC.
@@ -415,9 +415,9 @@ APNs key в Firebase и физического устройства. Налич�
 подтверждает delivery. [Firebase Flutter receive](https://firebase.google.com/docs/cloud-messaging/flutter/receive-messages)
 задаёт permission, foreground, background/terminated tap scenarios.
 
-macOS zsh/bash, cwd `firebase/functions`: `npm run check` и `npm test`.
-macOS zsh/bash, cwd `firebase`: `npm run test:all-rules` запускает actual SDK Rules/
-service tests; focused `npm run test:contact` использует только Firestore emulator.
+macOS zsh/bash, cwd `firebase/functions`: `pnpm run check` и `pnpm test`.
+macOS zsh/bash, cwd `firebase`: `pnpm run test:all-rules` запускает actual SDK Rules/
+service tests; focused `pnpm run test:contact` использует только Firestore emulator.
 Не запускайте эти тесты поверх browser fixtures: они очищают demo Firestore.
 Для локального browser сценария, macOS zsh/bash, cwd `firebase`:
 
@@ -581,28 +581,28 @@ SSR/public props. Подробный data/lifecycle contract - в
 Functions используют Node22. macOS zsh/bash, cwd `apps/web`:
 
 ```zsh
-npm ci
-npm run format:check
-npm run typecheck
-npm test
-npm run build
+pnpm install --frozen-lockfile
+pnpm run format:check
+pnpm run typecheck
+pnpm test
+pnpm run build
 ```
 
 Для server handler, macOS zsh/bash, cwd `firebase/functions`:
 
 ```zsh
-npm ci
-npm run check
-npm test
+pnpm install --frozen-lockfile
+pnpm run check
+pnpm test
 ```
 
 `check` проверяет синтаксис server modules; `test` проверяет actual contract/
 security fixtures. Tests, требующие Emulator Suite, запускаются только по
 предусловиям actual scripts; unit/fake tests не доказывают production deployment.
-Полный emulator gate: macOS zsh/bash, cwd `firebase`, `npm run test:all-rules`
+Полный emulator gate: macOS zsh/bash, cwd `firebase`, `pnpm run test:all-rules`
 запускает Auth/Firestore/Storage и весь test glob, включая Rules и Admin-SDK
-publication service integration. Для focused service: `npm run test:service`;
-Rules-only: `npm run test:rules` (Firestore), `npm run test:storage` (Storage).
+publication service integration. Для focused service: `pnpm run test:service`;
+Rules-only: `pnpm run test:rules` (Firestore), `pnpm run test:storage` (Storage).
 `next build` не запускает browser/device и не подтверждает visual parity.
 
 Web setup: скопировать [.env.example](apps/web/.env.example) в локальный
@@ -632,14 +632,14 @@ recovery key до подтверждённого результата. Посл�
 `deletionStatus` продолжает только прежнюю operation; server хранит hash key.
 Local journal очищается после подтверждения captured UID.
 
-`npm run dev`/`npm start` находятся в web manifest для обычной локальной работы;
+`pnpm run dev`/`pnpm start` находятся в web manifest для обычной локальной работы;
 D048 browser/native/preview checks разрешены последующим явным ответом
 пользователя; результаты запуска фиксируются в product spec. Историческое
 no-preview/run не переопределяет это разрешение.
 Deploy Functions/Rules/web и billing требуют отдельного поручения. Generated
 native AppIcon assets не доказывают выполненный build/device acceptance.
 
-Для воспроизводимой проверки pinned native AppIcons после `npm ci` в
+Для воспроизводимой проверки pinned native AppIcons после `pnpm install --frozen-lockfile` в
 `firebase/functions`, macOS zsh/bash, cwd корень monorepo:
 
 ```zsh
@@ -684,7 +684,7 @@ Firebase/env contract описан в [разделе configuration](#firebase-c
 
 ## Проверки
 
-Перед полным Flutter suite установите зависимости web через `npm ci` в
+Перед полным Flutter suite установите зависимости web через `pnpm install --frozen-lockfile` в
 `apps/web` и обеспечьте Node из его manifest. Cross-client test
 `web_workspace_contract_test.dart` запускает actual TypeScript helpers через
 установленный `tsx`, затем Dart cloud codec и обратный web parser. Новых сервисов,
@@ -835,7 +835,7 @@ flutter test integration_test/google_auth_runtime_test.dart -d "<android-id>" --
 
 ### Firestore Rules и native sync acceptance
 
-Rules tests имеют отдельный npm manifest/lockfile в [firebase](firebase/).
+Rules tests имеют отдельный pnpm manifest/lockfile в [firebase](firebase/).
 Нужны Node, удовлетворяющий `engines` в [package.json](firebase/package.json),
 Firebase CLI и Java для Firestore Emulator. Launcher использует demo project
 и canonical emulator config, не подключается к live database. macOS — zsh/bash,
@@ -843,12 +843,12 @@ Firebase CLI и Java для Firestore Emulator. Launcher использует de
 
 ```sh
 cd firebase
-npm ci
-npm run test:rules
+pnpm install --frozen-lockfile
+pnpm run test:rules
 ```
 
-`test:rules` запускает Firestore Emulator, затем `npm run test:firestore` с client SDK Rules
-contexts и завершает сервис. Отдельный `npm test` требует уже запущенный emulator
+`test:rules` запускает Firestore Emulator, затем `pnpm run test:firestore` с client SDK Rules
+contexts и завершает сервис. Отдельный `pnpm test` требует уже запущенный emulator
 и корректный `FIRESTORE_EMULATOR_HOST`. Проверяются owner access, foreign/anonymous
 denial, public exact get/list denial, direct client public write denial,
 no-downgrade, deleted-document tombstones и account deletion lock. Trusted
@@ -926,7 +926,7 @@ avatar, billing/Storage bucket не нужны. Перед live использо
 macOS zsh/bash, cwd `firebase`, полный локальный gate:
 
 ```zsh
-npm run test:all-rules
+pnpm run test:all-rules
 ```
 
 Для native SDK проверки открыть Auth/Firestore demo emulators, cwd `firebase`:
@@ -1218,13 +1218,13 @@ flutter test --no-pub test/main_portfolio_journey_test.dart test/firestore_devel
 
 ```zsh
 # Из apps/web: contracts/helpers и TypeScript
-npm test
-npm run typecheck
+pnpm test
+pnpm run typecheck
 # Из firebase/functions: HTTP/domain и syntax checks; tests открывают localhost ports
-npm run check
-npm test
+pnpm run check
+pnpm test
 # Из firebase: actual client/Admin SDK, Rules и service tests только demo emulators
-npm run test:all-rules
+pnpm run test:all-rules
 ```
 
 Для настоящего browser journey нужны свободные localhost ports3800/3810,
@@ -1420,7 +1420,7 @@ flutter test --no-pub test/portfolio_document_base_review_test.dart test/portfol
 
 Проверяются сохранение local overrides и порядка, Apply/Cancel/Save/reopen,
 legacy без baseline, raw backups, UID transition и stale captured base. Rules
-проверяются отдельной командой `npm run test:rules` из `firebase`, включая все
+проверяются отдельной командой `pnpm run test:rules` из `firebase`, включая все
 все размеры0–21 документов с baseline и архивом. Headless результаты не доказывают visual/native или
 live sync нового payload. D048 visual/browser/native checks разрешены
 последующим явным ответом пользователя; результаты и ограничения среды отдельно.
@@ -1486,9 +1486,14 @@ Branch protection автоматически не меняется.
 [`.node-version`](.node-version) и [`.java-version`](.java-version).
 Flutter pin соответствует текущему SDK/Dart constraint; Node22 — backend
 runtime из `firebase/functions/package.json`, Java21 подходит Gradle/emulators.
-Версия npm закреплена `packageManager` во всех трёх npm manifests; workflow
-устанавливает её перед locked resolution. Canonical package manager — npm;
-неиспользуемые pnpm lock/workspace удалены при аудите, второй dependency graph не поддерживается.
+Canonical package manager — pnpm (решение владельца 2026-11-18). Версия `pnpm@12.18.0`
+закреплена полем `packageManager` в трёх manifests (`apps/web`, `firebase`,
+`firebase/functions`); workflow устанавливает её перед locked resolution. Один
+`pnpm-lock.yaml` на каждый проект; npm- и yarn-lock-файлы не поддерживаются и не
+должны коммититься. Настройки overrides/allowBuilds лежат в `pnpm-workspace.yaml`
+каждого проекта; это не workspace.
+Требование для разработчика: нужен pnpm 12.18.0. Установка: `corepack enable`
+(читает `packageManager`) или `npm install -g pnpm@12.18.0`; проверка: `pnpm --version`.
 FVM устанавливать необязательно: достаточно выбранного Flutter SDK.
 Команды ниже для macOS zsh/bash или Linux bash.
 
@@ -1500,15 +1505,15 @@ python3 -m unittest discover -s tools/testing -p 'test_*.py' -v
 python3 -m unittest discover -s tools/git -p 'test_*.py' -v
 python3 -m unittest discover -s tools/release -p 'test_*.py' -v
 # apps/web
-npm ci --no-audit --no-fund
-npm run format:check
-npm run check
+pnpm install --frozen-lockfile
+pnpm run format:check
+pnpm run check
 # firebase; локальный Firebase CLI также закреплён package-lock
-npm ci --no-audit --no-fund
-npm ci --prefix functions --no-audit --no-fund
-npm run check:functions
-npm run test:publication
-npm run test:all-rules
+pnpm install --frozen-lockfile
+pnpm install --frozen-lockfile --dir functions
+pnpm run check:functions
+pnpm run test:publication
+pnpm run test:all-rules
 # apps/mobile; web dependencies выше нужны cross-client tests
 flutter pub get --enforce-lockfile
 dart format --output=none --set-exit-if-changed lib test integration_test tool test_driver
@@ -1604,7 +1609,7 @@ demo runtime/harness. Перед будущим live запуском прове
 hosting; не включать Storage uploads, TTL, billing или mock success.
 
 Проверки: `flutter analyze`, полный `flutter test --coverage`, existing coverage
-checker, `npm run check` в web и backend/Rules suites выше. `npm audit --omit=dev`
+checker, `pnpm run check` в web и backend/Rules suites выше. `pnpm audit --prod`
 в web/functions проверяет актуальные production advisories; минимальный patch
 update проходит весь web gate. Source, demo Emulator Suite, native SDK и live
 diagnostic evidence записываются раздельно в product spec.

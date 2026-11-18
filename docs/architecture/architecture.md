@@ -323,7 +323,7 @@ document editors, anonymous `/d/[publicId]`. Общие data contracts связ�
 ### firebase
 
 [Каталог Firebase](../../firebase/) содержит Firestore Rules, indexes, Emulator
-Suite configuration и отдельные Rules tests с npm manifest/lockfile.
+Suite configuration и отдельные Rules tests с pnpm manifest/lockfile.
 `functions` владеет authenticated document publication, deep validation,
 immutable public media, operation recovery и delete lifecycle.
 Generated mobile configuration принадлежит `apps/mobile`; service-account

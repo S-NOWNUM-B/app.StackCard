@@ -305,7 +305,7 @@ Firebase CLI generation, provider setup и optional Auth/Firestore Emulator defi
 [разделе проверок](../../CONTRIBUTING.md#native-firebase-auth-acceptance).
 Rules Emulator Suite и native sync/restart pair — в
 [Firestore checks](../../CONTRIBUTING.md#firestore-rules-и-native-sync-acceptance).
-Rules/indexes/config и отдельный npm suite находятся в [firebase](../../firebase/),
+Rules/indexes/config и отдельный pnpm suite находятся в [firebase](../../firebase/),
 не смешиваются с Flutter manifest или generated Firebase configuration.
 
 Contact/Inbox/FCM сохранены для будущего подключения: постоянный бесплатный
