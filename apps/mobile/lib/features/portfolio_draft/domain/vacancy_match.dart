@@ -75,6 +75,7 @@ const defaultVacancyDictionary = <VacancyTerm>[
   VacancyTerm('git', 'Git', ['git']),
   VacancyTerm('linux', 'Linux', ['linux', 'линукс']),
   VacancyTerm('figma', 'Figma', ['figma', 'фигма']),
+  VacancyTerm('jest', 'Jest', ['jest']),
   VacancyTerm('testing', 'Тестирование', [
     'jest',
     'testing',
@@ -484,4 +485,26 @@ PortfolioContent buildVacancyExportContent(
       included: includedSections,
     ),
   );
+}
+
+/// Общее имя технологии для разных написаний («js» → «JavaScript»). Только
+/// точное совпадение имени с алиасом, id или подписью термина-технологии;
+/// null — имени нет в словаре (вызывающий оставляет написание пользователя).
+VacancyTerm? findVacancyTechnology(
+  String name, {
+  List<VacancyTerm> dictionary = defaultVacancyDictionary,
+}) {
+  final key = tokenizeVacancyText(name).join(' ');
+  if (key.isEmpty) return null;
+  for (final term in dictionary) {
+    if (term.role) continue;
+    if (key == term.id ||
+        key == tokenizeVacancyText(term.label).join(' ') ||
+        term.aliases.any(
+          (alias) => tokenizeVacancyText(alias).join(' ') == key,
+        )) {
+      return term;
+    }
+  }
+  return null;
 }

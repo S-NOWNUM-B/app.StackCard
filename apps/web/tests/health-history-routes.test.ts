@@ -13,6 +13,8 @@ test('адреса здоровья и истории распознаются, 
   assert.equal(ownerView('history/a/b'), 'home');
   assert.equal(ownerView('history/<script>'), 'home');
   assert.equal(ownerView('health/x'), 'home');
+  assert.equal(ownerView('vacancy'), 'vacancy');
+  assert.equal(ownerView('vacancy/x'), 'home');
 });
 
 test('каждый совет здоровья, кроме публикации, ведёт в существующий раздел редактора', () => {

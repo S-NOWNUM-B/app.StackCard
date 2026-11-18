@@ -12,6 +12,7 @@ import { GitHubImporter } from './github-importer';
 import { DocumentView } from './document-view';
 import { AccountSettings, ApplicationPreferences } from './account-settings';
 import { HealthCard, HealthDetails, healthEditorSection } from './portfolio-health';
+import { VacancyMatchView } from './vacancy-match-view';
 import {
   HistoryList,
   HistoryVersion,
@@ -42,6 +43,7 @@ import {
 } from '@/lib/publication';
 import { documentPreview } from '@/lib/preview';
 import { buildPortfolioHealth, type HealthSection } from '@/lib/portfolio-health';
+import { applyVacancyOrder, type VacancyOrder } from '@/lib/vacancy-match';
 import {
   browserHistoryStorage,
   clearHistory,
@@ -75,6 +77,7 @@ import {
   importGitHubProjects,
   rebaseLibraryChange,
   type DraftEnvelope,
+  type DocumentContent,
   type WorkspaceContent,
   type PortfolioDocument,
   type GitHubSource,
@@ -86,6 +89,7 @@ type View =
   | 'github-import'
   | 'settings'
   | 'health'
+  | 'vacancy'
   | 'history'
   | `history/${string}`
   | 'inbox'
@@ -102,7 +106,7 @@ const canonicalGitHub = (value: string) => {
 const errorMessage = (error: unknown) => userErrorMessage(error);
 export function ownerView(value: string): View {
   if (
-    /^(home|projects|editor|github-import|settings|health|history|history\/[A-Za-z0-9-]{1,100}|inbox|inbox\/[a-f0-9]{32}|project\/[A-Za-z0-9_-]+)$/.test(
+    /^(home|projects|editor|github-import|settings|health|vacancy|history|history\/[A-Za-z0-9-]{1,100}|inbox|inbox\/[a-f0-9]{32}|project\/[A-Za-z0-9_-]+)$/.test(
       value,
     )
   )
@@ -883,12 +887,13 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     afterPublish.current = 'share';
     void beginPublication('publish');
   }
-  async function download() {
+  // Общий путь PDF: сохранённое содержимое (или его вариант под вакансию), фото и скачивание.
+  async function exportPdf(capture: () => DocumentContent, filename: string, success: string) {
     if (busy || !savedMain || !owned()) return;
     setBusy(true);
     setError('');
     try {
-      const captured = resolveDocument(savedWorkspace, savedMain),
+      const captured = capture(),
         owner = user.uid;
       // Скрытый профиль не читает фото; недоступная legacy-ссылка даёт PDF без фото.
       const avatar = pdfAvatarSource(captured);
@@ -908,19 +913,42 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       const url = URL.createObjectURL(blob),
         link = document.createElement('a');
       link.href = url;
-      link.download = 'StackCard-portfolio.pdf';
+      link.download = filename;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 30000);
       setMessage(
         omitAvatar
           ? 'PDF подготовлен без фотографии: браузер не смог загрузить её по старой ссылке. Загрузите фото заново в редакторе'
-          : 'PDF подготовлен для скачивания',
+          : success,
       );
     } catch (e) {
       if (owned()) setError(errorMessage(e));
     } finally {
       if (owned()) setBusy(false);
     }
+  }
+  async function download() {
+    if (!savedMain) return;
+    await exportPdf(
+      () => resolveDocument(savedWorkspace, savedMain),
+      'StackCard-portfolio.pdf',
+      'PDF подготовлен для скачивания',
+    );
+  }
+  // Подбор под вакансию: PDF из выбранных проектов и разделов; сохранённое портфолио не меняется.
+  async function downloadVacancy(content: DocumentContent) {
+    await exportPdf(
+      () => content,
+      'StackCard-vacancy.pdf',
+      'PDF под вакансию подготовлен для скачивания',
+    );
+  }
+  // Порядок попадает только в буфер редактора; Save остаётся за владельцем.
+  function applyVacancy(order: VacancyOrder) {
+    if (busy || avatarBusy || !owned() || !workingMain) return;
+    updateDocument(applyVacancyOrder(workingMain, order));
+    setMessage('Порядок применён в Редакторе. Нажмите «Сохранить», чтобы оставить его');
+    void navigate('editor', true);
   }
   async function migrate() {
     if (busy || !owned()) return;
@@ -1096,21 +1124,25 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     />
   );
   const savedHasContent = !!savedMain && portfolioHasContent(savedWorkspace, savedMain);
-  // Оценка читает только сохранённую версию, как Главная; статус публикации известен после инвентаря.
-  const health = (() => {
+  // Разрешённое сохранённое основное портфолио: так читают Главная, здоровье и подбор под вакансию.
+  const savedResolved = (() => {
     if (!savedMain || !savedHasContent) return null;
     try {
-      return buildPortfolioHealth({
-        content: resolveDocument(savedWorkspace, savedMain),
-        now: new Date(),
-        published: publications
-          ? activePublication?.state === 'published' && !!activePublication.url
-          : null,
-      });
+      return resolveDocument(savedWorkspace, savedMain);
     } catch {
       return null;
     }
   })();
+  // Оценка читает только сохранённую версию, как Главная; статус публикации известен после инвентаря.
+  const health = savedResolved
+    ? buildPortfolioHealth({
+        content: savedResolved,
+        now: new Date(),
+        published: publications
+          ? activePublication?.state === 'published' && !!activePublication.url
+          : null,
+      })
+    : null;
   const query = search.trim().toLowerCase();
   const shownProjects = content.projects.filter((p) =>
     `${p.title} ${p.description} ${p.technologies.join(' ')}`.toLowerCase().includes(query),
@@ -1156,7 +1188,8 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
               className={
                 view === n.key ||
                 (n.key === 'home' && (view === 'health' || historyView)) ||
-                (n.key === 'projects' && (view === 'github-import' || view.startsWith('project/')))
+                (n.key === 'projects' &&
+                  (view === 'github-import' || view === 'vacancy' || view.startsWith('project/')))
                   ? 'active'
                   : ''
               }
@@ -1480,6 +1513,16 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                       )}
                     </section>
                   )}
+                  {view === 'vacancy' && (
+                    <VacancyMatchView
+                      saved={savedResolved}
+                      busy={busy || avatarBusy}
+                      onBack={() => navigate('projects', true)}
+                      onOpenEditor={() => navigate('editor')}
+                      onApply={applyVacancy}
+                      onExport={downloadVacancy}
+                    />
+                  )}
                   {view === 'health' && (
                     <HealthDetails
                       health={health}
@@ -1610,6 +1653,9 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                         >
                           <Icon name="plus" size={20} />
                           Создать проект
+                        </Button>
+                        <Button variant="secondary" onClick={() => navigate('vacancy', true)}>
+                          Подбор под вакансию
                         </Button>
                       </div>
                       {content.projects.length > 0 && (

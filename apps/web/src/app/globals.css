@@ -4538,3 +4538,54 @@ h2.section-heading,
     transition: none;
   }
 }
+
+/* Подбор под вакансию (перенос функции mobile). */
+.vacancy-view textarea {
+  min-height: 180px;
+  resize: vertical;
+}
+.vacancy-chips,
+.vacancy-experience {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vacancy-experience {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: var(--xs);
+  overflow-wrap: anywhere;
+}
+.vacancy-chip {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.vacancy-chip.is-ok span {
+  color: var(--success);
+}
+.vacancy-checks {
+  display: flex;
+  flex-direction: column;
+}
+.vacancy-check {
+  align-items: flex-start;
+  padding: var(--sm) 0;
+}
+.vacancy-check-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--xs);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.vacancy-result h2,
+.vacancy-result h3 {
+  margin: 0;
+}
+.vacancy-note,
+.vacancy-disclaimer {
+  overflow-wrap: anywhere;
+}
