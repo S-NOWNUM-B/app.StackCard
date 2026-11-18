@@ -1155,7 +1155,9 @@ Suggestions остаются pure deterministic rules в [Portfolio Suggestions]
    «История версий» (`/history`, `/history/:id`) открывается из редактора и
    откатывает версию в буфер Editor; «Подбор под вакансию» (`/vacancy`) открывается
    из Projects: локальный разбор текста без сохранения, «Применить порядок» только
-   в буфер Editor, PDF через существующий экспорт; Editor — working buffer. Library
+   в буфер Editor, PDF через существующий экспорт; «ДНК стека» (`/stack-dna`) открывается
+   из Projects и считает доли и динамику по годам из сохранённого портфолио без сети
+   и записи; Editor — working buffer. Library
    сохраняет собственный query, пустой workspace не копирует demo.
 5. Settings меняет AppearanceController и сохраняет цельный snapshot preferences,
    читает profile provider и держит preview loading/empty/error в session.

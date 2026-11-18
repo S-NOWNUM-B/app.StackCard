@@ -170,8 +170,10 @@ web — `.dialog-actions` и `confirmation-dialog.tsx`. Системный brows
 source для Material3 и shared widgets. После одобрения web 2026-10-11
 Flutter использует только light: белый фон, нейтральные поверхности, чёрный
 `primary` и белый `onPrimary`; error/destructive отделены от brand.
-Legacy `StackCardTheme.dark`/`StackCardColors.dark` — совместимые aliases к light,
-отдельной тёмной палитры нет. Manrope, original SVG и лицензии сохранены. Важный текст получает
+`StackCardColors.dark` — отдельная тёмная палитра с тем же набором токенов, что светлая;
+`StackCardTheme.dark` строится из неё. Светлая палитра остаётся принятой без изменений;
+gate `tools/redesign/check_imports.py` проверяет отдельность и полноту тёмной палитры
+(с 2026-11-18, раньше требовался alias Dark=Light). Manrope, original SVG и лицензии сохранены. Важный текст получает
 textPrimary/textSecondary/textMeta; accentText/successText и controlOutline/
 primaryOutline/focus проверяются по реальной поверхности и состоянию. Цвета
 брендов технологий не превращаются в цвета UI действий.

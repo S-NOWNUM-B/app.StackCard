@@ -32,6 +32,9 @@
   Design v2/Brand A/fonts и весь Simple Icons catalog проходят provenance,
   bytes/SHA256, точный inventory и безопасный vector parser. Нельзя обновлять
   хеши только ради прохождения gate; нужны источник и проверка изменения.
+  С 2026-11-18 gate также проверяет, что тёмная палитра `StackCardColors.dark` отдельная
+  и содержит тот же набор токенов, что светлая (`dark_palette_errors`); alias Dark=Light
+  больше не допускается. Светлая палитра не меняется.
   `tools/release/test_*.py` проверяет согласование выбранного Android Firebase
   client/Dart public key без изменения legacy/iOS и отказ чужого appId/token.
 - Actions закреплять полным commit SHA; `contents: read`, checkout без

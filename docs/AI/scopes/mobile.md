@@ -252,7 +252,13 @@ headless проверки не закрывают native visual, public/web ил
   текста вакансии RU/EN по словарю синонимов `defaultVacancyDictionary`, процент
   соответствия, совпавшие и отсутствующие требования, релевантность проектов.
   «Применить порядок» меняет только буфер Editor; PDF под вакансию идёт через
-  существующий экспорт (`buildVacancyExportContent`). Текст вакансии не сохраняется. UI использует русский каталог, совместимые ru/en
+  существующий экспорт (`buildVacancyExportContent`). Текст вакансии не сохраняется.
+  «ДНК стека» (`domain/stack_dna.dart`, `presentation/stack_dna_screen.dart`,
+  `stack_dna_providers.dart`, маршрут `/stack-dna`, вход из Projects): доли технологий
+  и динамика по годам из сохранённого портфолио (`stackDnaProjectsFrom`). Нормализация
+  через общий словарь `defaultVacancyDictionary` с «Подбором». Без сети, Hive и Firestore.
+  Пороги: минимум 3 проекта, главный стек до 3 технологий от 15%, «растёт» при росте доли
+  на 10 п.п. в двух последних годах, годы 2000–2100, показываются 6 технологий. UI использует русский каталог, совместимые ru/en
   переводы из [core/localization](../../../apps/mobile/lib/core/localization/);
   source content не переводится автоматически. Сравнение и учебные patches — в
   [state management guide](../../learning/state-management.md), вне runtime `lib`.

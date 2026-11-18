@@ -690,6 +690,10 @@ Firebase/env contract описан в [разделе configuration](#firebase-c
 установленный `tsx`, затем Dart cloud codec и обратный web parser. Новых сервисов,
 эмуляторов или production credentials для этого contract test не требуется.
 
+Урок 2026-11-18: перед push прогоняйте все шаги нужной CI-job, включая «Assets and
+tooling» (`check_imports.py`, `unittest` в `tools/redesign`, `tools/testing`, `tools/git`),
+а не только свои тесты: локально зелёный набор не гарантирует зелёный CI.
+
 Для изменения Flutter UI сначала разреши зависимости, затем проверь
 формат, анализ и значимое поведение. macOS — zsh/bash; Windows — WSL/Ubuntu.
 Рабочая директория — `apps/mobile`:
