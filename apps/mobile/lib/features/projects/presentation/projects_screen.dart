@@ -169,11 +169,38 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                             ),
                     ),
                     const SizedBox(height: StackCardSpacing.sm),
-                    StackCardButton(
-                      key: const ValueKey('projects.vacancy'),
-                      label: 'Подбор под вакансию',
-                      role: StackCardButtonRole.secondary,
-                      onPressed: () => context.push('/vacancy'),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final vacancy = StackCardButton(
+                          key: const ValueKey('projects.vacancy'),
+                          label: 'Подбор под вакансию',
+                          role: StackCardButtonRole.secondary,
+                          onPressed: () => context.push('/vacancy'),
+                        );
+                        final dna = StackCardButton(
+                          key: const ValueKey('projects.stackDna'),
+                          label: 'ДНК стека',
+                          role: StackCardButtonRole.secondary,
+                          onPressed: () => context.push('/stack-dna'),
+                        );
+                        return constraints.maxWidth >= 360 &&
+                                MediaQuery.textScalerOf(context).scale(1) <= 1.3
+                            ? Row(
+                                children: [
+                                  Expanded(child: vacancy),
+                                  const SizedBox(width: StackCardSpacing.sm),
+                                  Expanded(child: dna),
+                                ],
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  vacancy,
+                                  const SizedBox(height: StackCardSpacing.sm),
+                                  dna,
+                                ],
+                              );
+                      },
                     ),
                     const SizedBox(height: StackCardSpacing.lg),
                     StackCardInput(

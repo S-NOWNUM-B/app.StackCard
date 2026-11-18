@@ -199,6 +199,15 @@ void main() {
         expect(find.text(failureTitle), findsOneWidget);
         repository.failRead = false;
         await tester.ensureVisible(find.text('Повторить'));
+        if (route == '/projects') {
+          // Над списком теперь два ряда входов (подбор, ДНК стека): состояние
+          // ошибки лежит ниже и после ensureVisible остаётся у нижней панели.
+          await tester.drag(
+            find.byType(Scrollable).first,
+            const Offset(0, -150),
+          );
+          await tester.pumpAndSettle();
+        }
         await tester.tap(find.text('Повторить'));
         await tester.pumpAndSettle();
         expect(find.text(failureTitle), findsNothing);

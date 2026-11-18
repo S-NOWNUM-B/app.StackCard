@@ -74,6 +74,7 @@ String safeAuthDestination(String? value) {
       path == '/settings/about' ||
       path == '/health' ||
       path == '/vacancy' ||
+      path == '/stack-dna' ||
       path == '/history' ||
       RegExp(r'^/history/[0-9]+-[0-9]+$').hasMatch(path) ||
       path == '/inbox' ||
@@ -154,6 +155,11 @@ GoRouter createAppRouter({
     return null;
   },
   routes: [
+    GoRoute(
+      name: 'stackDna',
+      path: '/stack-dna',
+      builder: (_, _) => const StackDnaScreen(),
+    ),
     GoRoute(
       name: 'vacancy',
       path: '/vacancy',
