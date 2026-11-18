@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const document = await readDocument(publicId);
     if (!document)
       return {
-        title: { absolute: 'Документ недоступен | StackCard' },
+        title: { absolute: 'Страница недоступна · StackCard' },
         description: 'Ссылка не найдена или документ снят с публикации',
         robots: { index: false, follow: false },
       };

@@ -7,20 +7,31 @@ import type {
   PublicLinkKind,
 } from '@/lib/public-document';
 
+// Значение без служебной схемы mailto:/tel:; подпись, повторяющая значение, не показывается.
+export function contactDisplay(label: string, url: string): { text: string; showLabel: boolean } {
+  const text = url.replace(/^(mailto:|tel:)/i, '');
+  const same = (value: string) => value.trim().toLowerCase();
+  return {
+    text,
+    showLabel: label.trim() !== '' && same(label) !== same(text) && same(label) !== same(url),
+  };
+}
+
 function Contact({ label, url, kind }: { label: string; url: string; kind: PublicLinkKind }) {
   const href = safePublicHref(url, kind);
   if (!href) return null;
   const external = /^https?:/.test(href);
+  const display = contactDisplay(label, url);
   return (
     <div className="stack">
-      <p className="muted">{label}</p>
+      {display.showLabel && <p className="muted">{label}</p>}
       <a
         className="public-contact"
         href={href}
         rel={external ? 'noopener noreferrer nofollow' : undefined}
         target={external ? '_blank' : undefined}
       >
-        {url}
+        {display.text}
       </a>
     </div>
   );

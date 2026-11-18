@@ -30,6 +30,7 @@ import {
   type OperationResult,
 } from '@/lib/publication';
 import { Button, Field, Icon, LinkButton, Notice } from './ui';
+import { InlineIcon } from './inline-icon';
 import { useConfirmation } from './confirmation-dialog';
 
 export function linkedProviderIds(providers: readonly { providerId: string }[]): string[] {
@@ -450,7 +451,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
       <section className="section stack" aria-labelledby="account-login">
         <h3 id="account-login">Вход в аккаунт</h3>
         <div className="list-row">
-          <Icon name="user-round" />
+          <InlineIcon name="mail" />
           <div>
             <p>Почта для входа</p>
             <small className="muted">{email || 'Не указана'}</small>
@@ -496,7 +497,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
         />
         <details className="editor-section">
           <summary className="row">
-            <Icon name="user-round" />
+            <InlineIcon name="mail" />
             <span>Изменить почту для входа</span>
             <Icon name="chevron-down" />
           </summary>
@@ -532,7 +533,7 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
         </details>
         <details className="editor-section">
           <summary className="row">
-            <Icon name="user-round" />
+            <InlineIcon name="lock" />
             <span>{passwordLinked ? 'Изменить пароль' : 'Подключить вход по паролю'}</span>
             <Icon name="chevron-down" />
           </summary>
@@ -592,7 +593,13 @@ function AccountSettingsForUser({ user, onSignedOut }: { user: User; onSignedOut
         <h3 id="account-providers">Способы входа</h3>
         {providers.map((id) => (
           <div className="list-row" key={id}>
-            <Icon name="user-round" />
+            {id === 'password' ? (
+              <InlineIcon name="lock" />
+            ) : id === 'google.com' ? (
+              <InlineIcon name="globe" />
+            ) : (
+              <Icon name="user-round" />
+            )}
             <div>
               <p>{id === 'password' ? 'Почта и пароль' : id === 'google.com' ? 'Google' : id}</p>
               <small className="muted">Подключено</small>

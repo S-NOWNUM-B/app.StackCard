@@ -17,12 +17,10 @@ export function Inbox({
   user,
   requestId,
   onOpen,
-  onBack,
 }: {
   user: User;
   requestId?: string;
   onOpen: (id: string) => void;
-  onBack: () => void;
 }) {
   const [requests, setRequests] = useState<ContactRequest[]>([]),
     [request, setRequest] = useState<ContactRequest | null>(null),
@@ -94,9 +92,6 @@ export function Inbox({
   return (
     <section className="section stack" aria-busy={loading || busy}>
       <div className="row">
-        <Button variant="quiet" onClick={onBack}>
-          {requestId ? 'К входящим' : 'К настройкам'}
-        </Button>
         <Button variant="secondary" disabled={busy} onClick={() => void refresh()}>
           Обновить
         </Button>

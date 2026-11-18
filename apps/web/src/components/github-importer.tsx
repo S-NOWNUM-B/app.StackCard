@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Button, Field, Icon, Notice } from './ui';
+import { Button, Field, Icon, Notice, PageHeader } from './ui';
 import type { GitHubSource, Project } from '@/lib/model';
 import {
   loadGitHubPage,
@@ -105,10 +105,10 @@ export function GitHubImporter({
   );
   return (
     <section className="stack">
-      <Button variant="quiet" onClick={onBack} disabled={busy}>
-        Назад к проектам
-      </Button>
-      <h1>Импортировать из GitHub</h1>
+      <PageHeader
+        title="Импортировать из GitHub"
+        back={{ label: 'Назад к проектам', onClick: onBack, disabled: busy }}
+      />
       {!username ? (
         <>
           <p className="muted">Добавьте GitHub-профиль в настройках, чтобы импортировать проекты</p>

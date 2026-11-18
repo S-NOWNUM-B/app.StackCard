@@ -17,6 +17,12 @@ const shapes = {
       <circle cx="4" cy="4" r="2" />
     </>
   ),
+  lock: (
+    <>
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </>
+  ),
   mail: (
     <>
       <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" />

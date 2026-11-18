@@ -3,7 +3,7 @@ import { signOut, type User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from './auth-session';
-import { Button, Field, Header, Icon, LinkButton, Notice } from './ui';
+import { Button, Field, Header, Icon, LinkButton, Notice, PageHeader } from './ui';
 import { InlineIcon } from './inline-icon';
 import { DeveloperCardDialog } from './developer-card';
 import { ContentEditor } from './content-editor';
@@ -1416,10 +1416,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                 <fieldset className="workspace-fieldset" disabled={busy && !saving}>
                   {view === 'home' && (
                     <section className="stack portfolio-home view-enter">
-                      <div className="view-heading">
-                        <h1>Главная</h1>
-                        <p className="muted">Сохранённая версия портфолио</p>
-                      </div>
+                      <PageHeader title="Главная" subtitle="Сохранённая версия портфолио" />
                       <div className="portfolio-actions">
                         <Button
                           variant="secondary"
@@ -1556,25 +1553,27 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                   {view === 'editor' && workingMain && (
                     <section className={`editor-layout view-enter mode-${editorMode}`}>
                       <div className="editor-column">
-                        <div className="view-heading editor-heading">
-                          <h1>Редактор</h1>
-                          <div className="mode-switch" role="group" aria-label="Режим редактора">
-                            <Button
-                              variant="quiet"
-                              aria-pressed={editorMode === 'form'}
-                              onClick={() => setEditorMode('form')}
-                            >
-                              Форма
-                            </Button>
-                            <Button
-                              variant="quiet"
-                              aria-pressed={editorMode === 'preview'}
-                              onClick={() => setEditorMode('preview')}
-                            >
-                              Предпросмотр
-                            </Button>
-                          </div>
-                        </div>
+                        <PageHeader
+                          title="Редактор"
+                          actions={
+                            <div className="mode-switch" role="group" aria-label="Режим редактора">
+                              <Button
+                                variant="quiet"
+                                aria-pressed={editorMode === 'form'}
+                                onClick={() => setEditorMode('form')}
+                              >
+                                Форма
+                              </Button>
+                              <Button
+                                variant="quiet"
+                                aria-pressed={editorMode === 'preview'}
+                                onClick={() => setEditorMode('preview')}
+                              >
+                                Предпросмотр
+                              </Button>
+                            </div>
+                          }
+                        />
                         <div className="editor-form">
                           <ContentEditor
                             content={workingMain.content}
@@ -1633,12 +1632,10 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                   )}
                   {view === 'projects' && (
                     <section className="stack view-enter">
-                      <div className="view-heading">
-                        <h1>Проекты</h1>
-                        <p className="muted">
-                          Библиотека проектов. В портфолио попадают только выбранные в Редакторе
-                        </p>
-                      </div>
+                      <PageHeader
+                        title="Проекты"
+                        subtitle="Библиотека проектов. В портфолио попадают только выбранные в Редакторе"
+                      />
                       <div className="portfolio-actions">
                         <Button variant="secondary" onClick={() => navigate('github-import', true)}>
                           <Icon name="github" size={20} />
@@ -1736,29 +1733,27 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                   )}
                   {view.startsWith('project/') && !project && (
                     <section className="stack">
-                      <h1>Проект не найден</h1>
-                      <p className="muted">Возможно, он удалён на другом устройстве</p>
-                      <Button variant="secondary" onClick={() => navigate('projects', true)}>
-                        Назад к проектам
-                      </Button>
+                      <PageHeader
+                        title="Проект не найден"
+                        subtitle="Возможно, он удалён на другом устройстве"
+                        back={{
+                          label: 'Назад к проектам',
+                          onClick: () => navigate('projects', true),
+                        }}
+                      />
                     </section>
                   )}
                   {view.startsWith('project/') && project && (
                     <section className="stack view-enter project-view">
-                      <Button
-                        variant="quiet"
-                        className="back-link"
-                        onClick={() => navigate('projects')}
-                      >
-                        <Icon name="arrow-left" size={20} />
-                        Назад к проектам
-                      </Button>
-                      <div className="view-heading">
-                        <h1>Редактор проекта</h1>
-                        {project.source === 'github' && (
-                          <p className="muted">Импортирован из GitHub. Ваши правки сохраняются</p>
-                        )}
-                      </div>
+                      <PageHeader
+                        title="Редактор проекта"
+                        subtitle={
+                          project.source === 'github'
+                            ? 'Импортирован из GitHub. Ваши правки сохраняются'
+                            : undefined
+                        }
+                        back={{ label: 'Назад к проектам', onClick: () => navigate('projects') }}
+                      />
                       <div className="editor-card project-card">
                         <ProjectForm
                           project={project}
@@ -1785,7 +1780,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                   )}
                   {view === 'settings' && (
                     <section className="stack">
-                      <h1>Настройки</h1>
+                      <PageHeader title="Настройки" />
                       <AccountSettings user={user} />
                       <section className="editor-group stack">
                         <h2>GitHub</h2>
@@ -1836,12 +1831,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                       <hr className="account-divider" />
                       <div className="account-bottom">
                         <span>{user.displayName || user.email}</span>
-                        <Button
-                          variant="quiet"
-                          className="text-danger"
-                          disabled={busy}
-                          onClick={() => void exit()}
-                        >
+                        <Button variant="danger" disabled={busy} onClick={() => void exit()}>
                           Выйти
                         </Button>
                       </div>
@@ -1849,13 +1839,18 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                   )}
                   {inboxView && (
                     <section className="stack">
-                      <h1>Входящие</h1>
+                      <PageHeader
+                        title="Входящие"
+                        back={{
+                          label: view === 'inbox' ? 'Назад к настройкам' : 'Назад ко входящим',
+                          onClick: () => navigate(view === 'inbox' ? 'settings' : 'inbox', true),
+                        }}
+                      />
                       <Inbox
                         key={`${user.uid}:${view}`}
                         user={user}
                         requestId={view.startsWith('inbox/') ? view.slice(6) : undefined}
                         onOpen={(id) => navigate(`inbox/${id}`, true)}
-                        onBack={() => navigate(view === 'inbox' ? 'settings' : 'inbox', true)}
                       />
                     </section>
                   )}

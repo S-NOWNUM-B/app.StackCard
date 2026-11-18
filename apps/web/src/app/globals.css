@@ -26,17 +26,17 @@
   color-scheme: light;
   --background: #ffffff;
   --surface: #ffffff;
-  --surface-elevated: #f7f8fa;
-  --primary: #17181b;
+  --surface-elevated: #f7f7f8;
+  --primary: #151518;
   --on-primary: #ffffff;
-  --text: #17181b;
-  --muted: #666a73;
-  --border: #e7e8ec;
-  --outline: #888c96;
-  --danger: #be2943;
-  --success: #167747;
+  --text: #151518;
+  --muted: #606067;
+  --border: #e4e4e7;
+  --outline: #676c77;
+  --danger: #c92d45;
+  --success: #168449;
   --link: #454951;
-  --focus: #5863ab;
+  --focus: #151518;
   --source: #0b6570;
   --accent: var(--primary);
   --xs: 4px;
@@ -48,7 +48,7 @@
   --xxl: 32px;
   --xxxl: 48px;
   --radius-sm: 8px;
-  --radius: 10px;
+  --radius: 12px;
   --radius-lg: 16px;
 }
 * {
@@ -158,7 +158,7 @@ hr {
   padding: 10px 16px;
   border: 1px solid transparent;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.4;
   text-align: center;
@@ -176,8 +176,8 @@ hr {
   border-color: var(--primary);
 }
 .button.primary:hover {
-  background: #35373e;
-  border-color: #35373e;
+  background: #333338;
+  border-color: #333338;
 }
 .button.secondary {
   background: var(--surface);
@@ -191,6 +191,13 @@ hr {
   background: var(--surface-elevated);
   color: var(--muted);
   border-color: var(--outline);
+}
+.button.danger:disabled {
+  /* Опасное действие остаётся красным контуром, пока недоступно */
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
+  opacity: 0.55;
 }
 .row {
   display: flex;
@@ -834,7 +841,6 @@ select {
 }
 .header-actions .button {
   min-height: 48px;
-  font-size: 12px;
 }
 .mobile-menu {
   display: none;
@@ -852,7 +858,7 @@ select {
 .marketing-main em {
   font-style: normal;
   font-weight: 400;
-  color: #7b7f88;
+  color: #71717a;
 }
 .landing-hero {
   position: relative;
@@ -863,7 +869,7 @@ select {
   display: inline-flex;
   gap: 10px;
   align-items: center;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   padding: 8px 14px;
   border: 1px solid var(--border);
@@ -885,7 +891,7 @@ select {
 }
 .landing-hero h1 em {
   font-style: italic;
-  color: #7b7f88;
+  color: #71717a;
 }
 .landing-hero > p {
   max-width: 580px;
@@ -1567,11 +1573,13 @@ h2.section-heading,
   margin-bottom: 12px;
 }
 .footer-top > div > a {
-  display: block;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 12px;
   color: var(--muted);
   width: fit-content;
-  padding-block: 7px;
+  padding-block: 0;
 }
 .footer-bottom {
   display: flex;
@@ -1587,6 +1595,11 @@ h2.section-heading,
 .footer-bottom small,
 .footer-bottom a {
   font-size: 10px;
+}
+.footer-bottom a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 .page-intro {
   text-align: center;
@@ -1811,8 +1824,8 @@ h2.section-heading,
   box-shadow: 0 12px 50px #20274405;
 }
 .auth-container h1 {
-  font-size: 30px;
-  letter-spacing: -1px;
+  font-size: 28px;
+  letter-spacing: -0.6px;
 }
 .auth-container .field input {
   border-color: var(--border);
@@ -1880,7 +1893,7 @@ h2.section-heading,
   min-height: 48px;
   padding-inline: 16px;
   font-size: 13px;
-  border-radius: 10px;
+  border-radius: var(--radius);
 }
 .workspace-nav .active {
   background: #eef0f7;
@@ -2084,7 +2097,6 @@ h2.section-heading,
     gap: 10px;
   }
   .marketing-actions .button {
-    font-size: 12px;
     padding-inline: 18px;
     gap: 12px;
   }
@@ -2285,9 +2297,6 @@ h2.section-heading,
   .footer-brand {
     grid-column: 1 / -1;
   }
-  .footer-top > div > a {
-    padding-block: 10px;
-  }
   .footer-bottom {
     margin-top: 35px;
   }
@@ -2455,7 +2464,8 @@ h2.section-heading,
   min-width: 0;
 }
 .single-portfolio-workspace h1 {
-  font-size: 24px;
+  font-size: 28px;
+  letter-spacing: -0.6px;
 }
 .single-portfolio-workspace h2 {
   font-size: 20px;
@@ -3039,14 +3049,45 @@ h2.section-heading,
 .single-portfolio-workspace .button:not(:disabled):active {
   transform: scale(0.98);
 }
-.view-heading {
+/* Единый заголовок страниц кабинета: стрелка «назад», h1 28/700, подпись; высота строки постоянна. */
+.page-header {
   display: flex;
   flex-direction: column;
   gap: var(--xs);
+  min-width: 0;
 }
-.view-heading h1 {
+.page-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--sm);
+  min-height: 48px;
+  min-width: 0;
+}
+.page-header h1 {
+  /* Слово не сжимается: если рядом не хватает места, кнопки переходят на следующую строку */
+  flex: 1 1 0;
+  min-width: min-content;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  margin: 0;
   font-size: 28px;
+  line-height: 1.2;
   letter-spacing: -0.6px;
+  overflow-wrap: normal;
+}
+.page-header .muted {
+  margin: 0;
+}
+.page-back {
+  flex-shrink: 0;
+  width: 48px;
+  padding: 0;
+  margin-left: calc(var(--sm) * -1);
+}
+.page-header-actions {
+  margin-left: auto;
 }
 .view-enter {
   animation: workspace-enter 240ms var(--workspace-ease, ease-out) both;
@@ -3138,16 +3179,18 @@ h2.section-heading,
 }
 .editor-card-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--sm);
   min-height: 48px;
 }
 .editor-card-header h2 {
+  flex: 1 1 0;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.2px;
-  overflow-wrap: anywhere;
-  min-width: 0;
+  overflow-wrap: normal;
+  min-width: min-content;
 }
 .editor-card-count {
   display: inline-flex;
@@ -3288,7 +3331,7 @@ h2.section-heading,
 .sortable-item.is-dragging {
   z-index: 5;
   background: var(--surface);
-  box-shadow: 0 10px 28px #17181b24;
+  box-shadow: 0 10px 28px #15151824;
 }
 .sortable-content {
   flex: 1;
@@ -3334,12 +3377,23 @@ h2.section-heading,
     opacity: 0;
     transition: opacity 180ms ease;
   }
+  /* На узком экране «Вверх/Вниз» накладываются на строку и не занимают место: иначе текст
+     значения сжимается до одной буквы. */
+  @media (max-width: 640px) {
+    .sortable-steps {
+      position: absolute;
+      top: 50%;
+      right: calc(var(--xs) * 2 + 44px);
+      z-index: 1;
+      transform: translateY(-50%);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      box-shadow: 0 0 0 1px var(--border);
+    }
+  }
   .sortable-item:hover .sortable-steps,
   .sortable-item:focus-within .sortable-steps {
     opacity: 1;
-  }
-  .sortable-step {
-    width: 36px;
   }
 }
 .single-portfolio-workspace .tag-editor-list,
@@ -3490,7 +3544,7 @@ h2.section-heading,
   animation: workspace-dialog 200ms var(--workspace-ease, ease-out) both;
 }
 .single-portfolio-workspace dialog::backdrop {
-  background: #17181b8c;
+  background: #1515188c;
 }
 @keyframes workspace-dialog {
   from {
@@ -3540,7 +3594,7 @@ h2.section-heading,
 }
 .is-published .publication-dot {
   background: var(--success);
-  box-shadow: 0 0 0 4px #16774722;
+  box-shadow: 0 0 0 4px #16844922;
 }
 .publication-title {
   font-weight: 700;
@@ -3657,10 +3711,6 @@ h2.section-heading,
 .single-portfolio-workspace .search-field input {
   padding-left: 48px;
 }
-.back-link {
-  align-self: flex-start;
-  padding-inline: var(--sm);
-}
 .project-card {
   padding: var(--xl) var(--lg);
 }
@@ -3680,13 +3730,6 @@ h2.section-heading,
   flex-direction: column;
   gap: var(--lg);
   min-width: 0;
-}
-.editor-heading {
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sm);
 }
 .single-portfolio-workspace .mode-switch {
   display: inline-flex;
@@ -3957,17 +4000,13 @@ h2.section-heading,
     gap: var(--md);
     min-height: 48px;
     padding-inline: var(--lg);
-    font-size: 14px;
   }
   .single-portfolio-workspace .workspace-nav .button:not(.active):not(:disabled):hover {
     background: var(--surface-elevated);
   }
   .single-portfolio-workspace .workspace-main {
-    width: min(100%, 880px);
+    width: min(100%, 1048px);
     padding: var(--xxl) var(--xxl) calc(var(--save-height) + 48px);
-  }
-  .single-portfolio-workspace[data-view='editor'] .workspace-main {
-    width: min(100%, 1480px);
   }
   .single-portfolio-workspace .workspace-footer.save-bar {
     left: calc(var(--nav-width) + (100% - var(--nav-width)) / 2);
@@ -4018,6 +4057,10 @@ h2.section-heading,
   }
 }
 @media (min-width: 1600px) {
+  /* Единственное исключение колонки: двухпанельный редактор получает больше места. */
+  .single-portfolio-workspace[data-view='editor'] .workspace-main {
+    width: min(100%, 1480px);
+  }
   .editor-layout {
     grid-template-columns: minmax(0, 760px) minmax(420px, 1fr);
   }
@@ -4128,7 +4171,7 @@ h2.section-heading,
 }
 .release-status.is-available {
   background: #e8f4ee;
-  color: var(--success);
+  color: #147b44; /* successText mobile: --success даёт на этой подложке меньше 4.5:1 */
 }
 .example-pdf {
   margin-top: var(--xl);
@@ -4155,10 +4198,10 @@ h2.section-heading,
     transform 180ms ease;
 }
 :is(.marketing-main, .web-header, .auth-screen, .container) .button.primary:hover {
-  box-shadow: 0 8px 22px #17181b24;
+  box-shadow: 0 8px 22px #15151824;
 }
 :is(.marketing-main, .web-header, .auth-screen, .container) .button.secondary:hover {
-  border-color: #c9ccd4;
+  border-color: #b8bbc4;
 }
 :is(.marketing-main, .web-header, .auth-screen, .container) .button:active:not(:disabled) {
   transform: scale(0.97);
@@ -4207,7 +4250,7 @@ h2.section-heading,
   text-decoration: none;
 }
 .hero-note:hover {
-  border-color: #c9ccd4;
+  border-color: #b8bbc4;
 }
 .header-marketing .header-navigation > a {
   color: var(--muted);
@@ -4278,7 +4321,7 @@ h2.section-heading,
 }
 .demo-add:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px #17181b2e;
+  box-shadow: 0 6px 16px #1515182e;
 }
 .demo-add:active,
 .demo-switch button:active {
@@ -4362,9 +4405,6 @@ h2.section-heading,
 }
 
 /* Здоровье портфолио и история версий (перенос функций mobile). */
-.back-button {
-  align-self: flex-start;
-}
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
@@ -4588,4 +4628,43 @@ h2.section-heading,
 .vacancy-note,
 .vacancy-disclaimer {
   overflow-wrap: anywhere;
+}
+
+/* Цели касания не меньше 44px: область нажатия растёт min-height и padding, вид не раздувается. */
+.header-navigation > a,
+.mobile-menu nav > a,
+.help-nav a,
+.auth-forgot,
+.auth-switch a,
+.hero-note,
+.demo-open {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.list-row input[type='checkbox'],
+.checkbox input {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+
+/* Настройки: текст строки сразу после иконки, кнопки секций по содержимому (на узком экране во всю ширину). */
+.list-row > div {
+  flex: 1;
+  min-width: 0;
+}
+@media (min-width: 481px) {
+  .editor-group > .button,
+  .editor-group > a.button {
+    align-self: flex-start;
+  }
+}
+
+/* Ссылки внутри текста: область нажатия вырастает по вертикали padding, строка не меняется. */
+main p:not(.auth-switch) a:not(.button),
+main li a:not(.button) {
+  padding-block: 12px;
+  margin-block: -12px;
 }

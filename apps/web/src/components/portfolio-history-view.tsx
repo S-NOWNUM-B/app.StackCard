@@ -1,5 +1,5 @@
 'use client';
-import { Button } from './ui';
+import { Button, PageHeader } from './ui';
 import { DocumentView } from './document-view';
 import {
   historyLimit,
@@ -57,12 +57,7 @@ function Frame({
 }) {
   return (
     <section className="stack history-view view-enter">
-      <Button variant="quiet" className="back-button" onClick={onBack}>
-        {backLabel}
-      </Button>
-      <div className="view-heading">
-        <h1>{title}</h1>
-      </div>
+      <PageHeader title={title} back={{ label: backLabel, onClick: onBack }} />
       {children}
     </section>
   );

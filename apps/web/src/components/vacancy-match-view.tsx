@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Button, Field } from './ui';
+import { Button, Field, PageHeader } from './ui';
 import type { DocumentContent, MainPortfolioSectionKind } from '@/lib/model';
 import {
   buildVacancyExportContent,
@@ -95,12 +95,10 @@ export function VacancyMatchView({
 
   return (
     <section className="stack vacancy-view view-enter">
-      <Button variant="quiet" className="back-button" onClick={onBack}>
-        Назад к проектам
-      </Button>
-      <div className="view-heading">
-        <h1>Подбор под вакансию</h1>
-      </div>
+      <PageHeader
+        title="Подбор под вакансию"
+        back={{ label: 'Назад к проектам', onClick: onBack }}
+      />
       {!saved ? (
         <div className="empty-state">
           <p className="empty-state-title">Сначала заполните портфолио</p>

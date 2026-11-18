@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import { Header, LinkButton } from '@/components/ui';
+
+export const metadata: Metadata = { title: 'Страница недоступна' };
 export default function NotFound() {
   return (
     <>

@@ -1,5 +1,5 @@
 'use client';
-import { Button } from './ui';
+import { Button, PageHeader } from './ui';
 import {
   healthCheckId,
   healthSectionFraction,
@@ -76,13 +76,11 @@ export function HealthDetails({
 }) {
   return (
     <section className="stack health-view view-enter">
-      <Button variant="quiet" className="back-button" onClick={onBack}>
-        Назад на Главную
-      </Button>
-      <div className="view-heading">
-        <h1>Здоровье портфолио</h1>
-        <p className="muted">Оценка только читает сохранённую версию и ничего не меняет</p>
-      </div>
+      <PageHeader
+        title="Здоровье портфолио"
+        subtitle="Оценка только читает сохранённую версию и ничего не меняет"
+        back={{ label: 'Назад на Главную', onClick: onBack }}
+      />
       {!health ? (
         <div className="empty-state">
           <p className="empty-state-title">Пока нечего оценивать</p>
