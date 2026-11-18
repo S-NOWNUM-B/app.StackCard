@@ -3,7 +3,7 @@ import { signOut, type User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from './auth-session';
-import { Button, Field, Header, Icon, LinkButton, Notice } from './ui';
+import { Button, Field, Header, Icon, LinkButton, Notice, PageHeader } from './ui';
 import { InlineIcon } from './inline-icon';
 import { DeveloperCardDialog } from './developer-card';
 import { ContentEditor } from './content-editor';
@@ -11,6 +11,14 @@ import { AttachmentsEditor, emptyProject, ProjectForm } from './project-editor';
 import { GitHubImporter } from './github-importer';
 import { DocumentView } from './document-view';
 import { AccountSettings, ApplicationPreferences } from './account-settings';
+import { HealthCard, HealthDetails, healthEditorSection } from './portfolio-health';
+import { VacancyMatchView } from './vacancy-match-view';
+import {
+  HistoryList,
+  HistoryVersion,
+  historyDate,
+  type HistoryState,
+} from './portfolio-history-view';
 import { Inbox } from './inbox';
 import { AvatarEditor, PrivateImage } from './media-upload';
 import { useConfirmation } from './confirmation-dialog';
@@ -34,6 +42,17 @@ import {
   type OperationResult,
 } from '@/lib/publication';
 import { documentPreview } from '@/lib/preview';
+import { buildPortfolioHealth, type HealthSection } from '@/lib/portfolio-health';
+import { applyVacancyOrder, type VacancyOrder } from '@/lib/vacancy-match';
+import {
+  browserHistoryStorage,
+  clearHistory,
+  listHistory,
+  staleHistoryOwner,
+  recordHistory,
+  restoreSnapshot,
+  type PortfolioSnapshot,
+} from '@/lib/portfolio-history';
 import {
   clearPublicationReceipt,
   readPublicationReceipt,
@@ -58,6 +77,7 @@ import {
   importGitHubProjects,
   rebaseLibraryChange,
   type DraftEnvelope,
+  type DocumentContent,
   type WorkspaceContent,
   type PortfolioDocument,
   type GitHubSource,
@@ -68,6 +88,10 @@ type View =
   | 'editor'
   | 'github-import'
   | 'settings'
+  | 'health'
+  | 'vacancy'
+  | 'history'
+  | `history/${string}`
   | 'inbox'
   | `inbox/${string}`
   | `project/${string}`;
@@ -82,7 +106,7 @@ const canonicalGitHub = (value: string) => {
 const errorMessage = (error: unknown) => userErrorMessage(error);
 export function ownerView(value: string): View {
   if (
-    /^(home|projects|editor|github-import|settings|inbox|inbox\/[a-f0-9]{32}|project\/[A-Za-z0-9_-]+)$/.test(
+    /^(home|projects|editor|github-import|settings|health|vacancy|history|history\/[A-Za-z0-9-]{1,100}|inbox|inbox\/[a-f0-9]{32}|project\/[A-Za-z0-9_-]+)$/.test(
       value,
     )
   )
@@ -102,6 +126,18 @@ export function Workspace({ initialView = 'home' }: { initialView?: string }) {
       router.replace(`/sign-in?returnTo=${encodeURIComponent(destination)}`);
     }
   }, [session, router]);
+  // Потеря сессии не через кнопку «Выйти» (другая вкладка, отзыв входа): снимки прежнего UID удаляются.
+  const lastUid = useRef<string | null>(null);
+  useEffect(() => {
+    if (session.loading || session.error) return;
+    const current = session.user?.uid ?? null;
+    const stale = staleHistoryOwner(lastUid.current, current);
+    if (stale) {
+      const storage = browserHistoryStorage();
+      if (storage) clearHistory(storage, stale);
+    }
+    lastUid.current = current;
+  }, [session]);
   if (session.loading)
     return (
       <>
@@ -150,7 +186,10 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     [conflict, setConflict] = useState(false),
     [shareMenu, setShareMenu] = useState(false),
     [cardOpen, setCardOpen] = useState(false),
-    [editorMode, setEditorMode] = useState<'form' | 'preview'>('form');
+    [editorMode, setEditorMode] = useState<'form' | 'preview'>('form'),
+    [history, setHistory] = useState<HistoryState>({ status: 'loading' }),
+    [historyReload, setHistoryReload] = useState(0),
+    [focusSection, setFocusSection] = useState<string | null>(null);
   const shareDialog = useRef<HTMLElement | null>(null);
   const initializationAttempt = useRef<{
     mutationId: string;
@@ -198,6 +237,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       ? publications?.publications.find((p) => p.documentId === savedMain.id)
       : undefined;
   const inboxView = view === 'inbox' || view.startsWith('inbox/');
+  const historyView = view === 'history' || view.startsWith('history/');
   const project = view.startsWith('project/')
     ? content.projects.find((p) => p.id === view.slice(8))
     : undefined;
@@ -308,6 +348,33 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       reloadVersion.current++;
     };
   }, [user.uid]);
+  // Версии читаются из localStorage при каждом входе на экран; сбой хранилища не ломает кабинет.
+  useEffect(() => {
+    if (!historyView) return;
+    try {
+      const storage = browserHistoryStorage();
+      if (!storage) throw new Error('storage');
+      setHistory({ status: 'ready', items: listHistory(storage, user.uid) });
+    } catch {
+      setHistory({ status: 'error' });
+    }
+  }, [historyView, user.uid, historyReload]);
+  // Совет здоровья ведёт к разделу редактора: прокрутка и фокус после отрисовки.
+  useEffect(() => {
+    if (view !== 'editor' || !focusSection || loading) return;
+    const frame = requestAnimationFrame(() => {
+      const element = document.getElementById(focusSection);
+      setFocusSection(null);
+      if (!element) return;
+      const reduce =
+        !!element.closest('[data-reduced-motion="true"]') ||
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      element.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      element.setAttribute('tabindex', '-1');
+      element.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [view, focusSection, loading]);
   useEffect(() => {
     function changed(event: StorageEvent) {
       if (event.key !== operationKey) return;
@@ -388,11 +455,12 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       previous?.focus();
     };
   }, [shareChoice]);
-  async function navigate(next: View, preserve = false) {
+  async function navigate(next: View, preserve = false, focus: string | null = null) {
     if (busy || avatarBusy) return;
     if (!preserve && dirty && !(await resolveUnsaved())) return;
     if (!owned()) return;
     setView(next);
+    setFocusSection(focus);
     setEditorMode('form');
     window.scrollTo({ top: 0 });
     setSearch('');
@@ -514,14 +582,26 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
         );
       saveAttempt.current = null;
       setConflict(false);
+      // Версия только на этом устройстве; сбой хранилища не отменяет подтверждённый Save.
+      let historyFailed = false;
+      try {
+        const storage = browserHistoryStorage();
+        if (!storage) throw new Error('storage');
+        recordHistory(storage, user.uid, attempt.content, new Date());
+      } catch {
+        historyFailed = true;
+      }
+      const savedMessage = superseded
+        ? hasNewerInput
+          ? 'Сохранение подтверждено, но на сервере уже есть более новая версия с другого устройства. Более поздние правки остались в форме, Save заменит ими серверную версию'
+          : 'Сохранение подтверждено, но на сервере уже есть более новая версия с другого устройства. Форма показывает её'
+        : hasNewerInput
+          ? 'Сохранение подтверждено. Более поздние правки остались в форме; сохраните их отдельно'
+          : 'Сохранено и подтверждено сервером. Публикация не изменилась';
       setMessage(
-        superseded
-          ? hasNewerInput
-            ? 'Сохранение подтверждено, но на сервере уже есть более новая версия с другого устройства. Более поздние правки остались в форме, Save заменит ими серверную версию'
-            : 'Сохранение подтверждено, но на сервере уже есть более новая версия с другого устройства. Форма показывает её'
-          : hasNewerInput
-            ? 'Сохранение подтверждено. Более поздние правки остались в форме; сохраните их отдельно'
-            : 'Сохранено и подтверждено сервером. Публикация не изменилась',
+        historyFailed
+          ? joinMessages(savedMessage, 'Версию не удалось сохранить на этом устройстве')
+          : savedMessage,
       );
       return !hasNewerInput && !superseded;
     } catch (e) {
@@ -725,9 +805,40 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     if (!owned()) return;
     try {
       await signOut(firebaseServices().auth);
+      // Локальные версии принадлежат аккаунту и не остаются на устройстве после выхода.
+      const storage = browserHistoryStorage();
+      if (storage) clearHistory(storage, user.uid);
     } catch (e) {
       setError(errorMessage(e));
     }
+  }
+  function openHealthSection(section: HealthSection) {
+    if (section === 'publication') return void navigate('home');
+    void navigate('editor', false, healthEditorSection[section]);
+  }
+  // Версия попадает только в буфер редактора; сохранённое портфолио не меняется до Save.
+  async function restoreVersion(snapshot: PortfolioSnapshot) {
+    const current = mainDocument(content);
+    if (busy || avatarBusy || !owned() || !current) return;
+    const accepted = await confirmAction(
+      `Версия от ${historyDate(snapshot.savedAt)} откроется в Редакторе как несохранённые изменения. Нажмите «Сохранить», чтобы применить её; до этого сохранённое портфолио не меняется. Текущее фото останется${
+        dirty ? '. Несохранённые правки в Редакторе будут заменены' : ''
+      }`,
+      'Восстановить версию',
+    );
+    if (!accepted || !owned()) return;
+    const { document: restored, skippedProjects } = restoreSnapshot({
+      workspace: content,
+      current,
+      snapshot,
+    });
+    updateDocument(restored);
+    setMessage(
+      skippedProjects > 0
+        ? `Версия открыта в Редакторе. Проектов, которых уже нет в библиотеке, пропущено: ${skippedProjects}. Нажмите «Сохранить», чтобы применить её`
+        : 'Версия открыта в Редакторе. Нажмите «Сохранить», чтобы применить её',
+    );
+    await navigate('editor', true);
   }
   async function sharePublication(publication: Publication) {
     if (publication.state !== 'published' || !publication.url || !safeHttpUrl(publication.url))
@@ -776,12 +887,13 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     afterPublish.current = 'share';
     void beginPublication('publish');
   }
-  async function download() {
+  // Общий путь PDF: сохранённое содержимое (или его вариант под вакансию), фото и скачивание.
+  async function exportPdf(capture: () => DocumentContent, filename: string, success: string) {
     if (busy || !savedMain || !owned()) return;
     setBusy(true);
     setError('');
     try {
-      const captured = resolveDocument(savedWorkspace, savedMain),
+      const captured = capture(),
         owner = user.uid;
       // Скрытый профиль не читает фото; недоступная legacy-ссылка даёт PDF без фото.
       const avatar = pdfAvatarSource(captured);
@@ -801,19 +913,42 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
       const url = URL.createObjectURL(blob),
         link = document.createElement('a');
       link.href = url;
-      link.download = 'StackCard-portfolio.pdf';
+      link.download = filename;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 30000);
       setMessage(
         omitAvatar
           ? 'PDF подготовлен без фотографии: браузер не смог загрузить её по старой ссылке. Загрузите фото заново в редакторе'
-          : 'PDF подготовлен для скачивания',
+          : success,
       );
     } catch (e) {
       if (owned()) setError(errorMessage(e));
     } finally {
       if (owned()) setBusy(false);
     }
+  }
+  async function download() {
+    if (!savedMain) return;
+    await exportPdf(
+      () => resolveDocument(savedWorkspace, savedMain),
+      'StackCard-portfolio.pdf',
+      'PDF подготовлен для скачивания',
+    );
+  }
+  // Подбор под вакансию: PDF из выбранных проектов и разделов; сохранённое портфолио не меняется.
+  async function downloadVacancy(content: DocumentContent) {
+    await exportPdf(
+      () => content,
+      'StackCard-vacancy.pdf',
+      'PDF под вакансию подготовлен для скачивания',
+    );
+  }
+  // Порядок попадает только в буфер редактора; Save остаётся за владельцем.
+  function applyVacancy(order: VacancyOrder) {
+    if (busy || avatarBusy || !owned() || !workingMain) return;
+    updateDocument(applyVacancyOrder(workingMain, order));
+    setMessage('Порядок применён в Редакторе. Нажмите «Сохранить», чтобы оставить его');
+    void navigate('editor', true);
   }
   async function migrate() {
     if (busy || !owned()) return;
@@ -989,6 +1124,25 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
     />
   );
   const savedHasContent = !!savedMain && portfolioHasContent(savedWorkspace, savedMain);
+  // Разрешённое сохранённое основное портфолио: так читают Главная, здоровье и подбор под вакансию.
+  const savedResolved = (() => {
+    if (!savedMain || !savedHasContent) return null;
+    try {
+      return resolveDocument(savedWorkspace, savedMain);
+    } catch {
+      return null;
+    }
+  })();
+  // Оценка читает только сохранённую версию, как Главная; статус публикации известен после инвентаря.
+  const health = savedResolved
+    ? buildPortfolioHealth({
+        content: savedResolved,
+        now: new Date(),
+        published: publications
+          ? activePublication?.state === 'published' && !!activePublication.url
+          : null,
+      })
+    : null;
   const query = search.trim().toLowerCase();
   const shownProjects = content.projects.filter((p) =>
     `${p.title} ${p.description} ${p.technologies.join(' ')}`.toLowerCase().includes(query),
@@ -1033,7 +1187,9 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
               disabled={busy || avatarBusy || onboarding || migrationNeeded}
               className={
                 view === n.key ||
-                (n.key === 'projects' && (view === 'github-import' || view.startsWith('project/')))
+                (n.key === 'home' && (view === 'health' || historyView)) ||
+                (n.key === 'projects' &&
+                  (view === 'github-import' || view === 'vacancy' || view.startsWith('project/')))
                   ? 'active'
                   : ''
               }
@@ -1260,10 +1416,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                 <fieldset className="workspace-fieldset" disabled={busy && !saving}>
                   {view === 'home' && (
                     <section className="stack portfolio-home view-enter">
-                      <div className="view-heading">
-                        <h1>Главная</h1>
-                        <p className="muted">Сохранённая версия портфолио</p>
-                      </div>
+                      <PageHeader title="Главная" subtitle="Сохранённая версия портфолио" />
                       <div className="portfolio-actions">
                         <Button
                           variant="secondary"
@@ -1306,6 +1459,26 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                           onCopied={setMessage}
                         />
                       )}
+                      {savedMain && (
+                        <div className="summary-cards">
+                          {health && (
+                            <HealthCard health={health} onOpen={() => navigate('health')} />
+                          )}
+                          <button
+                            type="button"
+                            className="summary-card"
+                            onClick={() => navigate('history')}
+                          >
+                            <span className="summary-card-text">
+                              <span className="summary-card-title">История версий</span>
+                              <span className="muted">Прежние сохранения в этом браузере</span>
+                            </span>
+                            <span className="summary-card-chevron" aria-hidden="true">
+                              ›
+                            </span>
+                          </button>
+                        </div>
+                      )}
                       {savedMain && savedHasContent ? (
                         <div className="paper-frame">
                           <DocumentView
@@ -1337,28 +1510,70 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                       )}
                     </section>
                   )}
+                  {view === 'vacancy' && (
+                    <VacancyMatchView
+                      saved={savedResolved}
+                      busy={busy || avatarBusy}
+                      onBack={() => navigate('projects', true)}
+                      onOpenEditor={() => navigate('editor')}
+                      onApply={applyVacancy}
+                      onExport={downloadVacancy}
+                    />
+                  )}
+                  {view === 'health' && (
+                    <HealthDetails
+                      health={health}
+                      onBack={() => navigate('home')}
+                      onOpenSection={openHealthSection}
+                    />
+                  )}
+                  {view === 'history' && (
+                    <HistoryList
+                      state={history}
+                      onBack={() => navigate('home')}
+                      onRetry={() => {
+                        setHistory({ status: 'loading' });
+                        setHistoryReload((value) => value + 1);
+                      }}
+                      onOpen={(id) => navigate(`history/${id}`)}
+                    />
+                  )}
+                  {view.startsWith('history/') && (
+                    <HistoryVersion
+                      state={history}
+                      snapshotId={view.slice(8)}
+                      onBack={() => navigate('history')}
+                      onRetry={() => {
+                        setHistory({ status: 'loading' });
+                        setHistoryReload((value) => value + 1);
+                      }}
+                      onRestore={(snapshot) => void restoreVersion(snapshot)}
+                    />
+                  )}
                   {view === 'editor' && workingMain && (
                     <section className={`editor-layout view-enter mode-${editorMode}`}>
                       <div className="editor-column">
-                        <div className="view-heading editor-heading">
-                          <h1>Редактор</h1>
-                          <div className="mode-switch" role="group" aria-label="Режим редактора">
-                            <Button
-                              variant="quiet"
-                              aria-pressed={editorMode === 'form'}
-                              onClick={() => setEditorMode('form')}
-                            >
-                              Форма
-                            </Button>
-                            <Button
-                              variant="quiet"
-                              aria-pressed={editorMode === 'preview'}
-                              onClick={() => setEditorMode('preview')}
-                            >
-                              Предпросмотр
-                            </Button>
-                          </div>
-                        </div>
+                        <PageHeader
+                          title="Редактор"
+                          actions={
+                            <div className="mode-switch" role="group" aria-label="Режим редактора">
+                              <Button
+                                variant="quiet"
+                                aria-pressed={editorMode === 'form'}
+                                onClick={() => setEditorMode('form')}
+                              >
+                                Форма
+                              </Button>
+                              <Button
+                                variant="quiet"
+                                aria-pressed={editorMode === 'preview'}
+                                onClick={() => setEditorMode('preview')}
+                              >
+                                Предпросмотр
+                              </Button>
+                            </div>
+                          }
+                        />
                         <div className="editor-form">
                           <ContentEditor
                             content={workingMain.content}
@@ -1417,12 +1632,10 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                   )}
                   {view === 'projects' && (
                     <section className="stack view-enter">
-                      <div className="view-heading">
-                        <h1>Проекты</h1>
-                        <p className="muted">
-                          Библиотека проектов. В портфолио попадают только выбранные в Редакторе
-                        </p>
-                      </div>
+                      <PageHeader
+                        title="Проекты"
+                        subtitle="Библиотека проектов. В портфолио попадают только выбранные в Редакторе"
+                      />
                       <div className="portfolio-actions">
                         <Button variant="secondary" onClick={() => navigate('github-import', true)}>
                           <Icon name="github" size={20} />
@@ -1437,6 +1650,9 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                         >
                           <Icon name="plus" size={20} />
                           Создать проект
+                        </Button>
+                        <Button variant="secondary" onClick={() => navigate('vacancy', true)}>
+                          Подбор под вакансию
                         </Button>
                       </div>
                       {content.projects.length > 0 && (
@@ -1517,29 +1733,27 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                   )}
                   {view.startsWith('project/') && !project && (
                     <section className="stack">
-                      <h1>Проект не найден</h1>
-                      <p className="muted">Возможно, он удалён на другом устройстве</p>
-                      <Button variant="secondary" onClick={() => navigate('projects', true)}>
-                        Назад к проектам
-                      </Button>
+                      <PageHeader
+                        title="Проект не найден"
+                        subtitle="Возможно, он удалён на другом устройстве"
+                        back={{
+                          label: 'Назад к проектам',
+                          onClick: () => navigate('projects', true),
+                        }}
+                      />
                     </section>
                   )}
                   {view.startsWith('project/') && project && (
                     <section className="stack view-enter project-view">
-                      <Button
-                        variant="quiet"
-                        className="back-link"
-                        onClick={() => navigate('projects')}
-                      >
-                        <Icon name="arrow-left" size={20} />
-                        Назад к проектам
-                      </Button>
-                      <div className="view-heading">
-                        <h1>Редактор проекта</h1>
-                        {project.source === 'github' && (
-                          <p className="muted">Импортирован из GitHub. Ваши правки сохраняются</p>
-                        )}
-                      </div>
+                      <PageHeader
+                        title="Редактор проекта"
+                        subtitle={
+                          project.source === 'github'
+                            ? 'Импортирован из GitHub. Ваши правки сохраняются'
+                            : undefined
+                        }
+                        back={{ label: 'Назад к проектам', onClick: () => navigate('projects') }}
+                      />
                       <div className="editor-card project-card">
                         <ProjectForm
                           project={project}
@@ -1566,7 +1780,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                   )}
                   {view === 'settings' && (
                     <section className="stack">
-                      <h1>Настройки</h1>
+                      <PageHeader title="Настройки" />
                       <AccountSettings user={user} />
                       <section className="editor-group stack">
                         <h2>GitHub</h2>
@@ -1617,12 +1831,7 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                       <hr className="account-divider" />
                       <div className="account-bottom">
                         <span>{user.displayName || user.email}</span>
-                        <Button
-                          variant="quiet"
-                          className="text-danger"
-                          disabled={busy}
-                          onClick={() => void exit()}
-                        >
+                        <Button variant="danger" disabled={busy} onClick={() => void exit()}>
                           Выйти
                         </Button>
                       </div>
@@ -1630,13 +1839,18 @@ function OwnerWorkspace({ user, initialView }: { user: User; initialView: string
                   )}
                   {inboxView && (
                     <section className="stack">
-                      <h1>Входящие</h1>
+                      <PageHeader
+                        title="Входящие"
+                        back={{
+                          label: view === 'inbox' ? 'Назад к настройкам' : 'Назад ко входящим',
+                          onClick: () => navigate(view === 'inbox' ? 'settings' : 'inbox', true),
+                        }}
+                      />
                       <Inbox
                         key={`${user.uid}:${view}`}
                         user={user}
                         requestId={view.startsWith('inbox/') ? view.slice(6) : undefined}
                         onOpen={(id) => navigate(`inbox/${id}`, true)}
-                        onBack={() => navigate(view === 'inbox' ? 'settings' : 'inbox', true)}
                       />
                     </section>
                   )}

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/localization/app_strings.dart';
 import '../../core/theme/stackcard_colors.dart';
 import '../../core/theme/stackcard_tokens.dart';
 import '../../shared/widgets/stackcard_button.dart';
-import '../../shared/widgets/stackcard_icon.dart';
+import '../../shared/widgets/stackcard_screen_header.dart';
 
 /// Общая шапка и неподвижная панель настроек; содержимое прокручивается отдельно.
 class SettingsEditorScaffold extends StatelessWidget {
@@ -31,34 +30,10 @@ class SettingsEditorScaffold extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: StackCardSpacing.lg,
-                  vertical: StackCardSpacing.md,
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      tooltip: context.strings.tr('common.back'),
-                      onPressed:
-                          onBack ??
-                          () => context.canPop()
-                              ? context.pop()
-                              : context.go('/settings'),
-                      icon: const StackCardIcon(name: 'arrow-left'),
-                    ),
-                    const SizedBox(width: StackCardSpacing.md),
-                    Expanded(
-                      child: Semantics(
-                        header: true,
-                        child: Text(
-                          title,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              StackCardScreenHeader(
+                title: title,
+                onBack: onBack,
+                fallbackPath: '/settings',
               ),
               Expanded(
                 child: SingleChildScrollView(

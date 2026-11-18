@@ -15,13 +15,23 @@
   [`.java-version`](../../../.java-version). Версии менять вместе с проверкой
   actual manifests, lockfiles и локального эквивалента CI. Gradle/AGP/SDK/NDK
   остаются у Android/Flutter; их отдельный дубликат в workflow не вводить.
-- Использовать `npm ci` для web, firebase и functions, Flutter
-  `pub get --enforce-lockfile`. npm остаётся canonical package manager CI;
-  неиспользуемые pnpm lock/workspace удалены, второй dependency graph не поддерживается. Firebase CLI — точная
-  devDependency в `firebase/package.json`, без global/latest установки CLI.
-  npm закреплён `packageManager` в трёх package manifests; workflow устанавливает
-  эту версию до `npm ci`, backend и firebase используют одну версию.
-- Cross-client Flutter tests требуют предварительного `npm ci` в `apps/web`.
+- Менеджер пакетов JS — pnpm (решение владельца 2026-11-18, заменило прежнее
+  правило «npm canonical»). Использовать `pnpm install --frozen-lockfile` для
+  web, firebase и functions, Flutter `pub get --enforce-lockfile`. Три проекта
+  независимы, workspace не вводится: у каждого свой `pnpm-lock.yaml`;
+  `package-lock.json` и второй dependency graph не поддерживаются. Firebase CLI —
+  точная devDependency в `firebase/package.json`, без global/latest установки CLI.
+  pnpm закреплён `packageManager` в трёх package manifests одной версией
+  (`pnpm@12.18.0`: pnpm 12 поддерживает Node 22 по официальной таблице
+  совместимости); workflow ставит её через `pnpm/action-setup` (читает manifest).
+  Файл `pnpm-workspace.yaml` в каждом проекте хранит только настройки: `overrides`
+  (перенесены из npm `overrides`) и явный `allowBuilds` (build-скрипты разрешены
+  лишь `esbuild` в web и `re2` в firebase, остальные запрещены явно; защита
+  скриптов не отключается). Команды: `pnpm run`, `pnpm --dir functions`, `pnpm exec`.
+  Обновления зависимостей (в том числе Dependabot, если подключат) — только в
+  формате pnpm и с обновлением соответствующего `pnpm-lock.yaml`.
+- Cross-client Flutter tests требуют предварительного `pnpm install --frozen-lockfile`
+  в `apps/web`.
   Формат проверяется для `lib test integration_test tool test_driver`, анализ —
   для приложения, полный suite пишет настоящий LCOV. Существующий checker
   требует строго **>40%**, без фильтров и изменения denominator.
@@ -32,6 +42,9 @@
   Design v2/Brand A/fonts и весь Simple Icons catalog проходят provenance,
   bytes/SHA256, точный inventory и безопасный vector parser. Нельзя обновлять
   хеши только ради прохождения gate; нужны источник и проверка изменения.
+  С 2026-11-18 gate также проверяет, что тёмная палитра `StackCardColors.dark` отдельная
+  и содержит тот же набор токенов, что светлая (`dark_palette_errors`); alias Dark=Light
+  больше не допускается. Светлая палитра не меняется.
   `tools/release/test_*.py` проверяет согласование выбранного Android Firebase
   client/Dart public key без изменения legacy/iOS и отказ чужого appId/token.
 - Actions закреплять полным commit SHA; `contents: read`, checkout без

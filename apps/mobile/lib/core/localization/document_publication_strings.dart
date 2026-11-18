@@ -30,7 +30,8 @@ const russianDocumentPublicationStrings = <String, String>{
   'documentPublication.summaryHint': 'Имя, описание, выбранные секции и проекты. Только разрешённые в общей базе и видимые в документе контакты.',
   'documentPublication.consent': 'Публикация сделает выбранные сведения доступными всем, у кого есть ссылка.',
   'documentPublication.guest': 'Для публикации войдите в аккаунт. Гостевые документы сохраняются на устройстве.',
-  'documentPublication.unconfigured': 'Публикация недоступна.',
+  'documentPublication.unconfigured':
+      'Публикация недоступна: сервер публикации не настроен в этой сборке',
   'documentPublication.loading': 'Проверяем публикации…',
   'documentPublication.unknown': 'Результат операции неизвестен',
   'documentPublication.unknownHint': 'Сервер мог завершить действие. Проверьте статус или повторите тот же запрос; подтверждённая публичная версия пока не установлена.',
@@ -62,7 +63,8 @@ const russianDocumentPublicationStrings = <String, String>{
   'documentPublication.error.deleted': 'Этот документ уже удалён на сервере.',
   'documentPublication.error.accountDeleting':
       'Аккаунт удаляется; новые публикации закрыты.',
-  'documentPublication.error.configurationRequired': 'Публикация недоступна.',
+  'documentPublication.error.configurationRequired':
+      'Публикация недоступна: сервер публикации не настроен',
   'documentPublication.error.reauthenticationRequired':
       'Перед удалением подтвердите вход в аккаунт повторно.',
   'documentPublication.error.unknown':
@@ -126,7 +128,8 @@ const englishDocumentPublicationStrings = <String, String>{
   'documentPublication.consent': 'Publishing makes the selected information accessible to anyone with the link.',
   'documentPublication.guest':
       'Sign in to publish. Guest documents stay on your device.',
-  'documentPublication.unconfigured': 'Publication unavailable.',
+  'documentPublication.unconfigured':
+      'Publication unavailable: the publishing server is not configured',
   'documentPublication.loading': 'Checking publications…',
   'documentPublication.unknown': 'Operation result unknown',
   'documentPublication.unknownHint': 'The server may have completed this action. Check its status or retry the same request; the public state is not confirmed yet.',
@@ -159,7 +162,8 @@ const englishDocumentPublicationStrings = <String, String>{
       'This document was already deleted on the server.',
   'documentPublication.error.accountDeleting':
       'Your account is being deleted; new publications are blocked.',
-  'documentPublication.error.configurationRequired': 'Publication unavailable.',
+  'documentPublication.error.configurationRequired':
+      'Publication unavailable: the publishing server is not configured',
   'documentPublication.error.reauthenticationRequired':
       'Confirm your sign-in again before deletion.',
   'documentPublication.error.unknown':

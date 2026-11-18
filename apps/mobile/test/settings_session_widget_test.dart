@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
@@ -126,6 +127,7 @@ Future<void> _openSettings(
   _SessionAuth auth, {
   Map<String?, PortfolioDraftRepository>? drafts,
   _PublicationSpy? publication,
+  List<Override> extraOverrides = const [],
 }) async {
   final repositories = drafts ?? <String?, PortfolioDraftRepository>{};
   addTearDown(() async {
@@ -145,6 +147,7 @@ Future<void> _openSettings(
           documentPublicationRepositoryFactoryProvider.overrideWithValue(
             (_) => publication,
           ),
+        ...extraOverrides,
       ],
     ),
   );
@@ -447,7 +450,7 @@ void main() {
         ),
       ]) {
         testWidgets(
-          'Session stays horizontal at $width scale $scale for ${fixture.user?.uid ?? "guest"}',
+          'Session action is one StackCardButton at $width scale $scale for ${fixture.user?.uid ?? "guest"}',
           (tester) async {
             _setViewport(tester, width, scale);
             await _openSettings(tester, _SessionAuth(fixture.user));
@@ -477,9 +480,24 @@ void main() {
             );
             expect(icon.size, const Size(24, 24));
             expect(icon.right, lessThanOrEqualTo(identity.left));
-            expect(identity.right, lessThanOrEqualTo(action.left));
-            expect(identity.top, lessThan(action.bottom));
-            expect(identity.bottom, greaterThan(action.top));
+            // Узкая ширина или крупный текст: кнопка того же вида — отдельной
+            // строкой на всю ширину; иначе справа от имени.
+            final compact = width < 340 || scale > 1.25;
+            if (compact) {
+              expect(identity.bottom, lessThanOrEqualTo(action.top));
+              expect(action.width, greaterThan(width / 2));
+            } else {
+              expect(identity.right, lessThanOrEqualTo(action.left));
+              expect(identity.top, lessThan(action.bottom));
+              expect(identity.bottom, greaterThan(action.top));
+            }
+            expect(
+              find.descendant(
+                of: find.byKey(_sessionAction),
+                matching: find.byType(FilledButton),
+              ),
+              findsOneWidget,
+            );
             expect(action.right, lessThanOrEqualTo(width));
             expect(action.height, greaterThanOrEqualTo(48));
             expect(tester.takeException(), isNull);
@@ -495,17 +513,16 @@ void main() {
     _setViewport(tester, 390, 1);
     await _openSettings(tester, _SessionAuth(const AuthUser(uid: 'owner')));
     final heights = <double>[];
-    for (final removed in ['profile', 'contacts', 'privacy']) {
-      expect(find.byKey(Key('settings.group.$removed')), findsNothing);
-    }
-    for (final group in [
-      'account',
-      'github',
-      'appearance',
+    for (final removed in [
+      'profile',
+      'contacts',
+      'privacy',
       'inbox',
       'notifications',
-      'about',
     ]) {
+      expect(find.byKey(Key('settings.group.$removed')), findsNothing);
+    }
+    for (final group in ['account', 'github', 'appearance', 'about']) {
       final row = find.byKey(Key('settings.group.$group'));
       await tester.ensureVisible(row);
       await tester.pumpAndSettle();
@@ -547,6 +564,33 @@ void main() {
     expect(auth.signOutCalls, 1);
     expect(find.byType(SignInScreen), findsOneWidget);
     expect((await account.read())!.notes, 'Durable notes');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Sign-out clears local history snapshots of that UID only', (
+    tester,
+  ) async {
+    _setViewport(tester, 390, 1);
+    final cleaned = <String>[];
+    final auth = _SessionAuth(const AuthUser(uid: 'owner'));
+    await _openSettings(
+      tester,
+      auth,
+      extraOverrides: [
+        portfolioHistoryCleanupProvider.overrideWithValue((uid) async {
+          cleaned.add(uid);
+        }),
+      ],
+    );
+    // По дизайн-доке выход — красный текст без заливки (dangerQuiet).
+    expect(
+      tester.widget<StackCardButton>(find.byKey(_sessionAction)).role,
+      StackCardButtonRole.dangerQuiet,
+    );
+    await _tap(tester, find.byKey(_sessionAction), settle: false);
+    await tester.pumpAndSettle();
+    expect(auth.signOutCalls, 1);
+    expect(cleaned, ['owner']);
     expect(tester.takeException(), isNull);
   });
 }

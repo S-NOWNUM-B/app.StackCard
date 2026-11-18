@@ -62,16 +62,10 @@ class SettingsScreen extends riverpod.ConsumerWidget {
           onPressed: () => context.push('/settings/appearance'),
         ),
         _SettingsRow(
-          key: const Key('settings.group.inbox'),
-          icon: Icons.inbox_outlined,
-          title: strings.tr('inbox.title'),
-          onPressed: () => context.push('/inbox'),
-        ),
-        _SettingsRow(
-          key: const Key('settings.group.notifications'),
-          icon: Icons.notifications_none_rounded,
-          title: strings.tr('settings.notifications'),
-          onPressed: () => context.push('/settings/notifications'),
+          key: const Key('settings.group.history'),
+          icon: Icons.history_rounded,
+          title: 'История версий',
+          onPressed: () => context.push('/history'),
         ),
         _SettingsRow(
           key: const Key('settings.group.about'),
@@ -137,6 +131,44 @@ class _SettingsAppearanceState
     return _SettingsPage(
       titleKey: 'settings.application',
       children: [
+        Text(
+          strings.tr('settings.theme'),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: StackCardSpacing.sm),
+        SegmentedButton<ThemeMode>(
+          key: const Key('settings.theme'),
+          showSelectedIcon: false,
+          style: const ButtonStyle(
+            padding: WidgetStatePropertyAll(
+              EdgeInsets.symmetric(horizontal: StackCardSpacing.sm),
+            ),
+          ),
+          segments: [
+            for (final (mode, key) in const [
+              (ThemeMode.system, 'system'),
+              (ThemeMode.light, 'light'),
+              (ThemeMode.dark, 'dark'),
+            ])
+              ButtonSegment(
+                value: mode,
+                // Подпись в одну строку: на 320dp слово не рвётся посреди.
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    strings.tr('settings.theme.$key'),
+                    key: Key('settings.theme.$key'),
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                ),
+              ),
+          ],
+          selected: {appearance.themeMode},
+          onSelectionChanged: (selection) =>
+              appearance.setThemeMode(selection.first),
+        ),
+        const SizedBox(height: StackCardSpacing.md),
         SwitchListTile.adaptive(
           key: const Key('settings.reducedMotion'),
           contentPadding: EdgeInsets.zero,
@@ -186,6 +218,7 @@ class _SettingsAppearanceState
         StackCardButton(
           key: const Key('settings.clearCache'),
           label: 'Очистить кэш GitHub',
+          role: StackCardButtonRole.secondary,
           loading: _clearing,
           onPressed:
               ref.watch(githubResponseCacheProvider)
@@ -360,6 +393,7 @@ class _SettingsGitHubState
         StackCardButton(
           key: const Key('settings.github.save'),
           label: 'Сохранить',
+          role: StackCardButtonRole.primary,
           loading: _saving,
           onPressed: draft.canEdit ? _save : null,
         ),
@@ -408,6 +442,7 @@ class SettingsAboutScreen extends StatelessWidget {
       const SizedBox(height: StackCardSpacing.xl),
       StackCardButton(
         label: 'Лицензии',
+        role: StackCardButtonRole.secondary,
         onPressed: () =>
             showLicensePage(context: context, applicationName: 'StackCard'),
       ),

@@ -494,6 +494,9 @@ class _MainContact extends ConsumerWidget {
               ),
               child: Text(
                 link.label,
+                // Адрес не рвётся посреди слова: одна строка с многоточием.
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyLarge
                     ?.copyWith(decoration: TextDecoration.underline),
               ),

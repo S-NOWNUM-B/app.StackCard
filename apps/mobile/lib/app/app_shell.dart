@@ -189,7 +189,11 @@ class AppShell extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(StackCardRadius.xlarge),
                   boxShadow: [
                     BoxShadow(
-                      color: context.colors.ink.withValues(alpha: .05),
+                      color:
+                          (Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.black
+                                  : context.colors.ink)
+                              .withValues(alpha: .05),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
                     ),

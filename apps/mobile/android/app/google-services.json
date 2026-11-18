@@ -61,6 +61,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "713694392116-1p1eotmk5en3d7ogjkqkc9785urdjaga.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "dev.snownumb.stackcard",
+            "certificate_hash": "9ac8d319bc46104e0555351f9daae856bad40c09"
+          }
+        },
+        {
           "client_id": "713694392116-85hkkrtns11it2okhijcj14q2llngbuv.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

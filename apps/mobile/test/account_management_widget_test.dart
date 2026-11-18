@@ -151,6 +151,7 @@ Future<ProviderContainer> _open(
   List<String> cleanup, {
   String? pending,
   String initialLocation = '/settings/account',
+  ThemeData? theme,
 }) async {
   final router = GoRouter(
     initialLocation: initialLocation,
@@ -184,7 +185,7 @@ Future<ProviderContainer> _open(
       container: container,
       child: MaterialApp.router(
         routerConfig: router,
-        theme: StackCardTheme.dark,
+        theme: theme ?? StackCardTheme.dark,
         locale: const Locale('ru'),
         supportedLocales: AppStrings.supportedLocales,
         localizationsDelegates: const [
@@ -210,6 +211,47 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
 
 void main() {
   final key = List.filled(64, 'a').join();
+  for (final entry in {
+    'light': StackCardTheme.light,
+    'dark': StackCardTheme.dark,
+  }.entries) {
+    testWidgets(
+      'account actions share one button look at 320dp in ${entry.key} theme',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 1800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await _open(
+          tester,
+          _Auth(const AuthUser(uid: 'owner')),
+          _Management(),
+          _Journal(null),
+          _Backend(),
+          <String>[],
+          theme: entry.value,
+        );
+        expect(find.byType(TextButton), findsNothing);
+        final buttons = find.descendant(
+          of: find.byType(SettingsAccountScreen),
+          matching: find.byType(FilledButton),
+        );
+        expect(buttons, findsAtLeastNWidgets(4));
+        final sizes = [
+          for (final element in buttons.evaluate())
+            tester.getSize(find.byWidget(element.widget)),
+        ];
+        // На 320 кнопки занимают всю ширину контейнера (карточка 240, страница
+        // 280); минимальная высота общая, длинный текст переносится, не режется.
+        for (final size in sizes) {
+          expect(size.width, anyOf(240, 280));
+          expect(size.height, greaterThanOrEqualTo(40));
+        }
+        expect(sizes.map((size) => size.height), contains(40));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets('sign-in exposes pending deletion recovery after restart', (
     tester,
   ) async {

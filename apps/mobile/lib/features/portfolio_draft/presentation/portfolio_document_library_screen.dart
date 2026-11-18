@@ -114,7 +114,7 @@ class PortfolioDocumentCard extends ConsumerWidget {
     final publication = publicationState.forDocument(document.id);
     final unknown = publicationState.pending?.documentId == document.id;
     final url = unknown ? null : publication?.shareableUrl;
-    void openPublication() => Navigator.of(context).push(
+    void openPublication() => Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) =>
             PortfolioDocumentPublicationScreen(documentId: document.id),

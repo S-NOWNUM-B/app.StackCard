@@ -52,16 +52,17 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: apps/web/package.json
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: .node-version
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
-      - name: Use manifest-pinned npm
-        run: npm install --global "$(node --print 'require("./package.json").packageManager')"
-      - run: npm ci --no-audit --no-fund
-      - run: npm run format:check
-      - run: npm run check
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run format:check
+      - run: pnpm run check
 
   firebase:
     name: Backend and emulator Rules
@@ -74,25 +75,26 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: firebase/package.json
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: .node-version
-          cache: npm
+          cache: pnpm
           cache-dependency-path: |
-            firebase/package-lock.json
-            firebase/functions/package-lock.json
+            firebase/pnpm-lock.yaml
+            firebase/functions/pnpm-lock.yaml
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
           java-version-file: .java-version
-      - name: Use manifest-pinned npm
-        run: npm install --global "$(node --print 'require("./package.json").packageManager')"
-      - run: npm ci --no-audit --no-fund
-      - run: npm ci --prefix functions --no-audit --no-fund
-      - run: npm run check:functions
-      - run: npm run test:publication
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --dir functions
+      - run: pnpm run check:functions
+      - run: pnpm run test:publication
       - name: Test actual Auth, Firestore and Storage emulators
-        run: npm run test:all-rules
+        run: pnpm run test:all-rules
 
   mobile:
     name: Flutter tests and coverage
@@ -107,16 +109,16 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: apps/web/package.json
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: .node-version
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
-      - name: Use manifest-pinned npm
-        working-directory: apps/web
-        run: npm install --global "$(node --print 'require("./package.json").packageManager')"
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
       - name: Install actual web codecs for cross-client tests
-        run: npm ci --prefix ../web --no-audit --no-fund
+        run: pnpm install --frozen-lockfile --dir ../web
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version-file: .fvmrc

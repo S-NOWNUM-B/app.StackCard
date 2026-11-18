@@ -71,19 +71,21 @@ class StackCardTechnologyIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Плитка — фирменный знак: тёмная в обеих темах, иконки подобраны под ink.
+    const tile = StackCardColors.light;
     final colors = context.colors;
     final info = findTechnology(label);
     final slug = info?.slug;
     final Widget icon;
     if (info == null) {
-      icon = StackCardIcon(name: 'folder', size: 18, color: colors.paper);
+      icon = StackCardIcon(name: 'folder', size: 18, color: tile.paper);
     } else if (slug == null && _multicolor.contains(info.title)) {
       // Официальные многоцветные знаки Design v2 рисуются без перекраски.
       icon = StackCardIcon(name: info.title.toLowerCase(), size: 18);
     } else {
       // Одноцветный SVG получает фирменный цвет; слишком тёмный не читается на ink.
       final brand = info.brandColor;
-      final color = brand.computeLuminance() < 0.15 ? colors.paper : brand;
+      final color = brand.computeLuminance() < 0.15 ? tile.paper : brand;
       icon = SvgPicture.asset(
         slug == null
             ? 'assets/icons/technology/${info.title.toLowerCase()}.svg'
@@ -96,7 +98,8 @@ class StackCardTechnologyIcon extends StatelessWidget {
     }
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.ink,
+        color: tile.ink,
+        border: Border.all(color: colors.border),
         borderRadius: BorderRadius.circular(4),
       ),
       child: SizedBox.square(dimension: 24, child: Center(child: icon)),

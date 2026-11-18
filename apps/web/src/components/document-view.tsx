@@ -7,20 +7,31 @@ import type {
   PublicLinkKind,
 } from '@/lib/public-document';
 
+// Значение без служебной схемы mailto:/tel:; подпись, повторяющая значение, не показывается.
+export function contactDisplay(label: string, url: string): { text: string; showLabel: boolean } {
+  const text = url.replace(/^(mailto:|tel:)/i, '');
+  const same = (value: string) => value.trim().toLowerCase();
+  return {
+    text,
+    showLabel: label.trim() !== '' && same(label) !== same(text) && same(label) !== same(url),
+  };
+}
+
 function Contact({ label, url, kind }: { label: string; url: string; kind: PublicLinkKind }) {
   const href = safePublicHref(url, kind);
   if (!href) return null;
   const external = /^https?:/.test(href);
+  const display = contactDisplay(label, url);
   return (
     <div className="stack">
-      <p className="muted">{label}</p>
+      {display.showLabel && <p className="muted">{label}</p>}
       <a
         className="public-contact"
         href={href}
         rel={external ? 'noopener noreferrer nofollow' : undefined}
         target={external ? '_blank' : undefined}
       >
-        {url}
+        {display.text}
       </a>
     </div>
   );
@@ -255,7 +266,7 @@ export function exampleDocumentContent(
       name: DEMO_PROFILE_NAME,
       username: '',
       headline: 'Flutter- и веб-разработчик',
-      bio: 'Создаю понятные цифровые продукты: от небольших мобильных приложений до интерфейсов для веба. Люблю чистую типографику, продуманные детали и код, который легко поддерживать.',
+      bio: 'Создаю понятные цифровые продукты: от небольших мобильных приложений до интерфейсов для веба. Люблю чистую типографику, продуманные детали и код, который легко поддерживать',
       locationText: 'Алматы, Казахстан',
       avatarUrl: portrait ? '/images/demo-portrait.png' : '',
     },
@@ -267,7 +278,7 @@ export function exampleDocumentContent(
       {
         id: 'demo-atlas',
         title: 'Atlas UI Kit',
-        description: 'Набор компонентов для спокойных и удобных интерфейсов.',
+        description: 'Набор компонентов для спокойных и удобных интерфейсов',
         contribution: '',
         technologies: ['Flutter', 'Dart', 'Дизайн интерфейсов'],
         repositoryUrl: '',
@@ -279,7 +290,7 @@ export function exampleDocumentContent(
       {
         id: 'demo-pocket',
         title: 'Pocket Tasks',
-        description: 'Небольшой планировщик, который помогает держать фокус.',
+        description: 'Небольшой планировщик, который помогает держать фокус',
         contribution: '',
         technologies: ['Flutter', 'Dart', 'Firebase'],
         repositoryUrl: '',

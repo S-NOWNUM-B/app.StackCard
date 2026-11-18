@@ -1733,6 +1733,7 @@ class _ResumePreview extends StatelessWidget {
   const _ResumePreview({required this.content});
   final PortfolioContent content;
 
+  /// Превью резюме = опубликованный вид: всегда светлое, как PortfolioContentView.
   @override
   Widget build(BuildContext context) => Theme(
     data: StackCardTheme.light,

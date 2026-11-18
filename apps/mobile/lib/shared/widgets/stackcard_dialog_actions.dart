@@ -42,7 +42,7 @@ class StackCardDialogActions extends StatelessWidget {
     );
     // Диалог считает intrinsic-размеры, поэтому без LayoutBuilder: по экрану и шрифту.
     final narrow =
-        MediaQuery.sizeOf(context).width < 320 ||
+        MediaQuery.sizeOf(context).width <= 320 ||
         MediaQuery.textScalerOf(context).scale(1) > 1.3;
     if (narrow) {
       // Узкое окно или крупный шрифт: ряд по содержимому, перенос — столбцом.

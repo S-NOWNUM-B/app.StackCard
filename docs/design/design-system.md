@@ -49,8 +49,10 @@ categories/artwork требования не переопределяют Design
 ## Действующий runtime contract R8
 
 Функциональный контракт ADR 0005: «Главная / Проекты / Редактор», gear рядом
-с StackCard. На главной ровно два постоянных действия «Скачать портфолио» и
+с StackCard. На главной два постоянных действия «Скачать портфолио» и
 «Поделиться», затем сохранённый профиль и только непустые разделы.
+Исключение 2026-11-16 («Оставить на Home»): карточка «Здоровье портфолио»
+остаётся на Home третьей нажимаемой зоной и открывает `/health`.
 Phase 15: «Поделиться» открывает отправку ссылки либо Developer Card/QR;
 карточка standalone, без новой root-вкладки или третьего Home CTA. Белая
 outlined поверхность, Brand A, Manrope, avatar/name/role/username и existing
@@ -168,8 +170,10 @@ web — `.dialog-actions` и `confirmation-dialog.tsx`. Системный brows
 source для Material3 и shared widgets. После одобрения web 2026-10-11
 Flutter использует только light: белый фон, нейтральные поверхности, чёрный
 `primary` и белый `onPrimary`; error/destructive отделены от brand.
-Legacy `StackCardTheme.dark`/`StackCardColors.dark` — совместимые aliases к light,
-отдельной тёмной палитры нет. Manrope, original SVG и лицензии сохранены. Важный текст получает
+`StackCardColors.dark` — отдельная тёмная палитра с тем же набором токенов, что светлая;
+`StackCardTheme.dark` строится из неё. Светлая палитра остаётся принятой без изменений;
+gate `tools/redesign/check_imports.py` проверяет отдельность и полноту тёмной палитры
+(с 2026-11-18, раньше требовался alias Dark=Light). Manrope, original SVG и лицензии сохранены. Важный текст получает
 textPrimary/textSecondary/textMeta; accentText/successText и controlOutline/
 primaryOutline/focus проверяются по реальной поверхности и состоянию. Цвета
 брендов технологий не превращаются в цвета UI действий.
@@ -252,6 +256,11 @@ Google provider. «Выйти» — красный текст без фона, �
 При узком экране или увеличенном шрифте действия становятся иконками с tooltip,
 а длинное имя ограничивается двумя строками без вытеснения кнопок.
 
+Аудит единого стиля 2026-11-18: эталон — светлая палитра mobile (`StackCardColors.light`),
+фиксируемая gate `tools/redesign/check_imports.py`. Web-токены в `globals.css` подогнаны под неё
+(error, success, border, серые по ролям, focus-кольцо ink, радиус полей, шрифт кнопки). Цели
+касания на web не меньше 44px. Заголовок страниц кабинета — `PageHeader`, на mobile — shared
+`StackCardScreenHeader` с кнопкой «назад». Новые web-токены сверяются с mobile light.
 Web tokens/shared controls находятся в `apps/web/src/app/globals.css` и
 `src/components/ui.tsx`, original Manrope/Brand A — в `apps/web/public`.
 Поручение 2026-10-11 переопределяет web target R6:
@@ -260,9 +269,10 @@ Web tokens/shared controls находятся в `apps/web/src/app/globals.css` 
 описывает StackCard. Web не предлагает dark и показывает старые документы в light
 без изменения shared `dark | light` schema. React не импортирует Flutter runtime.
 Пользователь одобрил web и поручил перенести этот референс в Flutter.
-Runtime mobile всегда light/ru; theme/language selectors удалены, legacy
-preferences читаются без перезаписи. PortfolioTheme dark/light остаётся
-в data contract, но оба preview используют light. Home получает редакционный
+Mobile в Настройках выбирает тему «Системная / Светлая / Тёмная» (сохраняется в
+AppSettings), язык — русский; legacy preferences читаются без перезаписи.
+Превью документа в приложении и PDF остаются светлыми. PortfolioTheme dark/light
+остаётся в data contract. Home получает редакционный
 заголовок, Shell — брендированную овальную навигацию, библиотеки — тонкие
 разделители и крупную типографику. При компактной высоте заголовок помещается
 в header рядом с compact Brand A; text scaling и targets48 сохраняются. Wide/narrow,

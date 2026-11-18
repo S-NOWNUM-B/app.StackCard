@@ -58,17 +58,17 @@ void main() {
     tester,
   ) async {
     await _open(tester, await _seed(), '/settings');
-    for (final group in [
-      'account',
-      'github',
-      'appearance',
-      'inbox',
-      'notifications',
-      'about',
-    ]) {
+    for (final group in ['account', 'github', 'appearance', 'about']) {
       expect(find.byKey(Key('settings.group.$group')), findsOneWidget);
     }
-    for (final group in ['profile', 'contacts', 'privacy']) {
+    // Входящие и уведомления исключены из объёма: пунктов в настройках нет.
+    for (final group in [
+      'profile',
+      'contacts',
+      'privacy',
+      'inbox',
+      'notifications',
+    ]) {
       expect(find.byKey(Key('settings.group.$group')), findsNothing);
     }
     expect(find.text('Гостевой'), findsNothing);

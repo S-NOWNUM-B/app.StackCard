@@ -569,11 +569,11 @@ px не смешиваются в отчётах. Figma keyboard/focus/semantics
 На R8/R9 команды берутся из фактического [CONTRIBUTING](../../CONTRIBUTING.md#проверки).
 macOS, zsh/bash, cwd `apps/mobile`: `dart format --output=none --set-exit-if-changed lib test integration_test`,
 `flutter analyze`, `flutter test` с релевантными файлами.
-Rules tests из cwd `firebase`: `npm run test:rules` только при отдельно разрешённом
+Rules tests из cwd `firebase`: `pnpm run test:rules` только при отдельно разрешённом
 изменении backend contract. Native live acceptance имеет отдельные предусловия
 и opt-in; обычный test не доказывает Android/iOS/web readiness.
-Web: cwd `apps/web`, `npm run typecheck`, `npm test`, `npm run build`; handler:
-cwd `firebase/functions`, `npm run check`, `npm test`. Commands/env - в CONTRIBUTING.
+Web: cwd `apps/web`, `pnpm run typecheck`, `pnpm test`, `pnpm run build`; handler:
+cwd `firebase/functions`, `pnpm run check`, `pnpm test`. Commands/env - в CONTRIBUTING.
 Headless build не является запуском browser или live deployment.
 
 ### Фактические результаты R0

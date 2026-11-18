@@ -59,6 +59,7 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
       _generation++;
       _busy = false;
       _prepared = null;
+      _progress = 0;
       _failure = null;
       _operationRepository = null;
       if (wasBusy) {
@@ -128,11 +129,17 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
       await _upload(repository, generation);
     } on PortfolioMediaFailure catch (failure) {
       if (!_current(repository, generation)) return;
-      setState(() => _failure = failure.kind);
+      setState(() {
+        _failure = failure.kind;
+        _progress = 0;
+      });
       _setBusy(false);
     } catch (_) {
       if (!_current(repository, generation)) return;
-      setState(() => _failure = PortfolioMediaFailureKind.unavailable);
+      setState(() {
+        _failure = PortfolioMediaFailureKind.unavailable;
+        _progress = 0;
+      });
       _setBusy(false);
     }
   }
@@ -182,7 +189,11 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
       }
       final replaced = widget.paths;
       _created[path] = repository;
-      setState(() => _prepared = null);
+      // Репозиторий мог не сообщить финальный прогресс (одна транзакция).
+      setState(() {
+        _prepared = null;
+        _progress = 1;
+      });
       _setBusy(false);
       widget.onChanged(List.unmodifiable([path]));
       for (final previous in replaced) {
@@ -193,11 +204,17 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
       }
     } on PortfolioMediaFailure catch (failure) {
       if (!_current(repository, generation)) return;
-      setState(() => _failure = failure.kind);
+      setState(() {
+        _failure = failure.kind;
+        _progress = 0;
+      });
       _setBusy(false);
     } catch (_) {
       if (!_current(repository, generation)) return;
-      setState(() => _failure = PortfolioMediaFailureKind.unavailable);
+      setState(() {
+        _failure = PortfolioMediaFailureKind.unavailable;
+        _progress = 0;
+      });
       _setBusy(false);
     }
   }
@@ -404,7 +421,11 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
             liveRegion: true,
             child: Text(
               context.strings.tr(
-                _picking ? 'media.preparing' : 'media.uploading',
+                _picking
+                    ? 'media.preparing'
+                    : _progress > 0
+                    ? 'media.uploading'
+                    : 'media.uploadingWait',
                 {'percent': (_progress * 100).round()},
               ),
             ),
@@ -412,7 +433,8 @@ class PortfolioMediaEditorState extends ConsumerState<PortfolioMediaEditor> {
           const SizedBox(height: StackCardSpacing.sm),
           LinearProgressIndicator(
             key: const ValueKey('media_upload_progress'),
-            value: _picking ? null : _progress,
+            // Пока репозиторий не сообщил прогресс, индикатор неопределённый, не «0%».
+            value: _picking || _progress <= 0 ? null : _progress,
           ),
         ],
         if (_failure != null) ...[

@@ -114,7 +114,7 @@ Copy/Open/Share повторно проверяют публикацию; native
 Phase 14 Contact/Inbox/FCM — [ADR 0004](../../decisions/0004-contact-inbox-notifications.md).
 `features/inbox` владеет ContactRequest и UID-bound repository; `features/notifications`
 владеет pure messaging/device contracts и controller, SDK только в data adapters.
-LocalRuntime создаёт dependencies; Inbox standalone из Settings, без пятого root.
+LocalRuntime создаёт dependencies; Inbox открывается маршрутом вне Settings UI, без пятого root.
 Permissions запрашиваются явно, disabled/unavailable не означают FCM enabled.
 Token cleanup/registration сериализованы, captured UID/generation защищают late
 responses и tap. Captured register UID/token остаётся в памяти до backend revoke
@@ -236,10 +236,33 @@ headless проверки не закрывают native visual, public/web ил
   provider остаётся совместимым для других callers, не скрывает Projects records.
   GitHub Import имеет отдельный search/filter contract. Не дублировать state
   в widget state или router callbacks.
-  Provider ограничивается базовыми app settings. Native runtime всегда
-  `ThemeMode.light`/`Locale(ru)`; переключателей темы и языка нет. Legacy
-  dark/system/en preferences читаются без автоматической записи; persistence
-  contract сохраняется. UI использует русский каталог, совместимые ru/en
+  Provider ограничивается базовыми app settings. Native `ThemeMode` выбирается
+  в Настройках (system/light/dark, с 2026-11-16), `Locale(ru)`; переключателя
+  языка нет. Legacy en preferences читаются без автоматической записи;
+  persistence contract сохраняется. Настройки больше не показывают «Входящие» и
+  «Уведомления»: push/FCM вне текущего объёма, код и маршруты `inbox`/`notifications`
+  сохранены. Ответ 2026-11-16 не расширяет FCM.
+  Здоровье портфолио (`portfolio_health.dart`, `/health`) — pure domain оценки 0–100
+  с презентацией на Home; «История версий» — отдельная Hive box `portfolio_history`,
+  до 20 снимков на владельца, гостевая и UID-история раздельны, в Firestore не
+  пишется. Откат открывает версию и кладёт её в буфер Editor. Очистка: при удалении
+  аккаунта и при переносе гостевого draft; выход из аккаунта историю не удаляет.
+  «Подбор под вакансию» (`domain/vacancy_match.dart`, `presentation/vacancy_match_screen.dart`,
+  `vacancy_providers.dart`, маршрут `/vacancy`, вход из Projects): локальный разбор
+  текста вакансии RU/EN по словарю синонимов `defaultVacancyDictionary`, процент
+  соответствия, совпавшие и отсутствующие требования, релевантность проектов.
+  «Применить порядок» меняет только буфер Editor; PDF под вакансию идёт через
+  существующий экспорт (`buildVacancyExportContent`). Текст вакансии не сохраняется.
+  «ДНК стека» (`domain/stack_dna.dart`, `presentation/stack_dna_screen.dart`,
+  `stack_dna_providers.dart`, маршрут `/stack-dna`, вход из Projects): доли технологий
+  и динамика по годам из сохранённого портфолио (`stackDnaProjectsFrom`). Нормализация
+  через общий словарь `defaultVacancyDictionary` с «Подбором». Без сети, Hive и Firestore.
+  Пороги: минимум 3 проекта, главный стек до 3 технологий от 15%, «растёт» при росте доли
+  на 10 п.п. в двух последних годах, годы 2000–2100, показываются 6 технологий.
+  Аудит единого стиля 2026-11-18: светлая палитра `StackCardColors.light` — эталон для web,
+  её фиксирует gate `check_imports.py`. Единый заголовок экрана — `StackCardScreenHeader`
+  (`shared/widgets/stackcard_screen_header.dart`) с кнопкой «назад»; карточки статуса
+  используют общий стиль, «Визитка» и «Публикация» без двойной шапки. UI использует русский каталог, совместимые ru/en
   переводы из [core/localization](../../../apps/mobile/lib/core/localization/);
   source content не переводится автоматически. Сравнение и учебные patches — в
   [state management guide](../../learning/state-management.md), вне runtime `lib`.
@@ -589,7 +612,7 @@ python3 tools/redesign/check_imports.py --require-imported --require-brand
 Для headless regressions, macOS zsh/bash, cwd `apps/mobile`:
 
 Полный suite включает `web_workspace_contract_test.dart`: нужен Node из web
-manifest и установленные `apps/web` зависимости (`npm ci` из `apps/web`). Test
+manifest и установленные `apps/web` зависимости (`pnpm install --frozen-lockfile` из `apps/web`). Test
 проверяет actual codecs web→Dart→web без Firebase/emulators; [предусловия](../../../CONTRIBUTING.md#проверки).
 
 ```zsh

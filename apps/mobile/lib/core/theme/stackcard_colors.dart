@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Светлый StackCard: белые поверхности, чернильный текст и нейтральные controls.
+/// StackCard: светлая (белые поверхности, чернильный текст) и тёмная палитры
+/// с теми же ролями и нейтральными controls; пары текст/фон проходят WCAG AA.
 @immutable
 class StackCardColors extends ThemeExtension<StackCardColors> {
   const StackCardColors({
@@ -46,8 +47,39 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
        successText = successText ?? success,
        primaryOutline = primaryOutline ?? onPrimary ?? ink;
 
-  // Совместимость прежних callers; отдельной тёмной палитры больше нет.
-  static const dark = light;
+  /// Тёмная палитра: те же роли, что у light; ink/paper меняются местами.
+  static const dark = StackCardColors(
+    background: Color(0xFF0E0E10),
+    surface: Color(0xFF151518),
+    surfaceElevated: Color(0xFF1C1C20),
+    surfaceHover: Color(0xFF26262B),
+    border: Color(0xFF34343A),
+    borderSubtle: Color(0xFF26262B),
+    textPrimary: Color(0xFFF4F4F6),
+    textSecondary: Color(0xFFADADB6),
+    textMuted: Color(0xFF9A9AA4),
+    accent: Color(0xFFF4F4F6),
+    accentHover: Color(0xFFD4D4D9),
+    accentSoft: Color(0xFF26262B),
+    acid: Color(0xFF1C1C20),
+    cyan: Color(0xFF1B1E21),
+    pink: Color(0xFF211B1F),
+    ink: Color(0xFFF4F4F6),
+    success: Color(0xFF4CCB84),
+    warning: Color(0xFFE8B04A),
+    error: Color(0xFFFF7A8A),
+    primary: Color(0xFFF4F4F6),
+    onPrimary: Color(0xFF151518),
+    borderStrong: Color(0xFF6A6A74),
+    paper: Color(0xFF151518),
+    sourceText: Color(0xFFADADB6),
+    focus: Color(0xFFF4F4F6),
+    textMeta: Color(0xFF9A9AA4),
+    controlOutline: Color(0xFF85858F),
+    accentText: Color(0xFFF4F4F6),
+    successText: Color(0xFF5FD893),
+    primaryOutline: Color(0xFFF4F4F6),
+  );
 
   static const light = StackCardColors(
     background: Color(0xFFFFFFFF),

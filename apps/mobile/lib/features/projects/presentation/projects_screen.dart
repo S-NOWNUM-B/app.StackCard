@@ -152,12 +152,15 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                       builder: (context, constraints) =>
                           constraints.maxWidth >= 360 &&
                               MediaQuery.textScalerOf(context).scale(1) <= 1.3
-                          ? Row(
-                              children: [
-                                Expanded(child: importButton),
-                                const SizedBox(width: StackCardSpacing.sm),
-                                Expanded(child: createButton),
-                              ],
+                          ? IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(child: importButton),
+                                  const SizedBox(width: StackCardSpacing.sm),
+                                  Expanded(child: createButton),
+                                ],
+                              ),
                             )
                           : Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -167,6 +170,44 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                                 createButton,
                               ],
                             ),
+                    ),
+                    const SizedBox(height: StackCardSpacing.sm),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final vacancy = StackCardButton(
+                          key: const ValueKey('projects.vacancy'),
+                          label: context.strings.tr('projects.vacancy'),
+                          role: StackCardButtonRole.secondary,
+                          onPressed: () => context.push('/vacancy'),
+                        );
+                        final dna = StackCardButton(
+                          key: const ValueKey('projects.stackDna'),
+                          label: context.strings.tr('projects.stackDna'),
+                          role: StackCardButtonRole.secondary,
+                          onPressed: () => context.push('/stack-dna'),
+                        );
+                        return constraints.maxWidth >= 360 &&
+                                MediaQuery.textScalerOf(context).scale(1) <= 1.3
+                            ? IntrinsicHeight(
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(child: vacancy),
+                                    const SizedBox(width: StackCardSpacing.sm),
+                                    Expanded(child: dna),
+                                  ],
+                                ),
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  vacancy,
+                                  const SizedBox(height: StackCardSpacing.sm),
+                                  dna,
+                                ],
+                              );
+                      },
                     ),
                     const SizedBox(height: StackCardSpacing.lg),
                     StackCardInput(

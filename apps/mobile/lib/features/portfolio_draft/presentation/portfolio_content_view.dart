@@ -20,59 +20,61 @@ class PortfolioContentView extends StatelessWidget {
   final PortfolioContent content;
   final bool showAllProjects;
 
+  /// Содержимое — то, что увидят на публичной светлой странице: всегда light,
+  /// хром экрана вокруг следует выбранной теме.
   @override
   Widget build(BuildContext context) => Theme(
     data: StackCardTheme.light,
-    child: Builder(
-      builder: (context) {
-        final sections = <Widget>[];
-        for (final block in content.blocks.where((item) => item.visible)) {
-          final children = _block(context, block.kind);
-          if (children.isEmpty) continue;
-          if (sections.isNotEmpty) {
-            sections.add(const SizedBox(height: StackCardSpacing.xl));
-          }
-          sections.add(
-            Column(
-              key: ValueKey('portfolio_block_${block.kind.name}'),
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (!{
-                  PortfolioBlockKind.profile,
-                  PortfolioBlockKind.about,
-                }.contains(block.kind)) ...[
-                  Text(
-                    context.strings.tr('builder.block.${block.kind.name}'),
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: StackCardSpacing.md),
-                ],
-                ...children,
-              ],
-            ),
-          );
-        }
-        return ColoredBox(
-          color: context.colors.surface,
-          child: Padding(
-            padding: const EdgeInsets.all(StackCardSpacing.cardPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: sections.isEmpty
-                  ? [
-                      StackCardStateView(
-                        kind: StackCardViewState.empty,
-                        title: context.strings.tr('builder.previewEmpty'),
-                        message: context.strings.tr('builder.previewEmptyHint'),
-                      ),
-                    ]
-                  : sections,
-            ),
-          ),
-        );
-      },
-    ),
+    child: Builder(builder: _buildDocument),
   );
+
+  Widget _buildDocument(BuildContext context) {
+    final sections = <Widget>[];
+    for (final block in content.blocks.where((item) => item.visible)) {
+      final children = _block(context, block.kind);
+      if (children.isEmpty) continue;
+      if (sections.isNotEmpty) {
+        sections.add(const SizedBox(height: StackCardSpacing.xl));
+      }
+      sections.add(
+        Column(
+          key: ValueKey('portfolio_block_${block.kind.name}'),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!{
+              PortfolioBlockKind.profile,
+              PortfolioBlockKind.about,
+            }.contains(block.kind)) ...[
+              Text(
+                context.strings.tr('builder.block.${block.kind.name}'),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: StackCardSpacing.md),
+            ],
+            ...children,
+          ],
+        ),
+      );
+    }
+    return ColoredBox(
+      color: context.colors.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(StackCardSpacing.cardPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: sections.isEmpty
+              ? [
+                  StackCardStateView(
+                    kind: StackCardViewState.empty,
+                    title: context.strings.tr('builder.previewEmpty'),
+                    message: context.strings.tr('builder.previewEmptyHint'),
+                  ),
+                ]
+              : sections,
+        ),
+      ),
+    );
+  }
 
   List<Widget> _block(BuildContext context, PortfolioBlockKind kind) {
     final profile = content.profile;

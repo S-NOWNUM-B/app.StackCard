@@ -381,6 +381,72 @@ void main() {
       },
     );
   }
+
+  LinearProgressIndicator indicator(WidgetTester tester) =>
+      tester.widget(find.byKey(const ValueKey('media_upload_progress')));
+
+  testWidgets(
+    'Upload without reported progress is indeterminate, not stuck at 0%',
+    (tester) async {
+      final media = _MediaRepository()
+        ..silentProgress = true
+        ..pending = Completer<String>();
+      await _pump(tester, media: media);
+      await _tap(tester, 'media_gallery', settle: false);
+      await tester.pump();
+      // Фото уже в кружке, но процент не выдумывается.
+      expect(
+        find.byKey(const ValueKey('media_prepared_preview')),
+        findsOneWidget,
+      );
+      expect(find.text('Загрузка: 0%'), findsNothing);
+      expect(find.text('Загрузка фото'), findsOneWidget);
+      expect(indicator(tester).value, isNull);
+      media.pending!.complete(_path('owner', 'a'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('media_upload_progress')), findsNothing);
+      expect(find.text('Загрузка фото'), findsNothing);
+    },
+  );
+
+  testWidgets('Reported progress is determinate and hides after completion', (
+    tester,
+  ) async {
+    final media = _MediaRepository()..pending = Completer<String>();
+    await _pump(tester, media: media);
+    await _tap(tester, 'media_gallery', settle: false);
+    media.progress?.call(.45);
+    await tester.pump();
+    expect(indicator(tester).value, closeTo(.45, 1e-9));
+    media.progress?.call(1);
+    await tester.pump();
+    expect(indicator(tester).value, 1);
+    media.pending!.complete(_path('owner', 'a'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('media_upload_progress')), findsNothing);
+  });
+
+  testWidgets('Failure and cancel reset progress and hide the indicator', (
+    tester,
+  ) async {
+    final media = _MediaRepository()
+      ..failNext = true
+      ..pending = Completer<String>();
+    await _pump(tester, media: media);
+    await _tap(tester, 'media_gallery');
+    expect(find.byKey(const ValueKey('media_upload_error')), findsOneWidget);
+    expect(find.byKey(const ValueKey('media_upload_progress')), findsNothing);
+
+    // Повтор начинается с неопределённого индикатора, не со старого процента.
+    await _tap(tester, 'media_retry', settle: false);
+    await tester.pump();
+    expect(indicator(tester).value, closeTo(.2, 1e-9));
+    await _tap(tester, 'builder_form_cancel');
+    expect(find.byKey(const ValueKey('media_upload_progress')), findsNothing);
+    media.pending!.complete(_path('owner', 'a'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('media_upload_progress')), findsNothing);
+  });
 }
 
 String _path(String owner, String hex) =>
@@ -511,6 +577,8 @@ class _MediaRepository implements PortfolioMediaRepository {
   Completer<String>? pending;
   void Function(double)? progress;
   bool failNext = false;
+  // Как Firestore-репозиторий: одна транзакция, промежуточного прогресса нет.
+  bool silentProgress = false;
   bool readFailure = false;
   int uploads = 0;
   final deleted = <String>[];
@@ -522,7 +590,7 @@ class _MediaRepository implements PortfolioMediaRepository {
   }) async {
     uploads++;
     progress = onProgress;
-    onProgress(.2);
+    onProgress(silentProgress ? 0 : .2);
     if (failNext) {
       failNext = false;
       throw const PortfolioMediaFailure(PortfolioMediaFailureKind.unavailable);

@@ -17,6 +17,8 @@ import '../core/state/settings_repository.dart';
 import '../core/storage/local_storage.dart';
 import '../features/github_import/data/hive_github_response_cache.dart';
 import '../features/portfolio_draft/data/hive_portfolio_draft_repository.dart';
+import '../features/portfolio_draft/data/hive_portfolio_history_repository.dart';
+import '../features/portfolio_draft/domain/portfolio_history.dart';
 import '../features/portfolio_draft/data/local_draft_accounts.dart';
 import '../features/portfolio_draft/data/firestore_portfolio_draft_repository.dart';
 import '../features/portfolio_draft/data/hive_portfolio_sync_metadata_store.dart';
@@ -99,6 +101,8 @@ final class LocalRuntime {
     }
     _deletedAccountUids.add(uid);
     await draftAccounts.clearConfirmedDeletedUser(uid);
+    // Локальная история не должна блокировать удаление: сбой чистки не критичен.
+    await clearHistoryForUser(uid).catchError((Object _) {});
     await publicationOperationStoreForUser(uid).clear();
     await accountDeletionJournalForUser(uid).clear();
   }
@@ -192,6 +196,13 @@ final class LocalRuntime {
   late final HivePortfolioDraftRepository draftRepository =
       draftAccounts.guestRepository;
 
+  PortfolioHistoryRepository historyRepositoryForUser(String? uid) =>
+      HivePortfolioHistoryRepository(storage.portfolioHistory, uid: uid);
+
+  /// Выход и удаление аккаунта очищают локальные снимки именно этого UID.
+  Future<void> clearHistoryForUser(String uid) =>
+      historyRepositoryForUser(uid).clear();
+
   PortfolioDraftRepository repositoryForUser(String? uid) {
     if (uid == null) return draftAccounts.guestRepository;
     final local = draftAccounts.repositoryForUser(uid);
@@ -213,7 +224,13 @@ final class LocalRuntime {
     );
   }
 
+  /// Перенос забирает гостевой draft, поэтому гостевая история тоже уходит.
   Future<void> transferGuestToUser(String uid) async {
+    await _transferGuestToUser(uid);
+    await historyRepositoryForUser(null).clear().catchError((Object _) {});
+  }
+
+  Future<void> _transferGuestToUser(String uid) async {
     final database = firestore;
     final auth = accountAuth;
     if (database == null || auth == null) {

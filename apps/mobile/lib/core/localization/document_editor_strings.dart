@@ -60,7 +60,8 @@ const russianDocumentEditorStrings = <String, String>{
   'documentEditor.back': 'Назад',
   'documentEditor.cancel': 'Отмена',
   'documentEditor.publish': 'К публикации',
-  'documentEditor.publishUnavailable': 'Публикация недоступна.',
+  'documentEditor.publishUnavailable':
+      'Публикация недоступна: нужен аккаунт и настроенный сервер публикации',
   'documentEditor.leaveTitle': 'Сохранить изменения?',
   'documentEditor.leaveHint': 'Без сохранения изменения будут потеряны.',
   'documentEditor.discard': 'Не сохранять',
@@ -138,7 +139,7 @@ const englishDocumentEditorStrings = <String, String>{
   'documentEditor.back': 'Back',
   'documentEditor.cancel': 'Cancel',
   'documentEditor.publish': 'Publish',
-  'documentEditor.publishUnavailable': 'Publication unavailable.',
+  'documentEditor.publishUnavailable': 'Publication unavailable: an account and a configured publishing server are required',
   'documentEditor.leaveTitle': 'Save changes?',
   'documentEditor.leaveHint': 'Unsaved changes will be lost.',
   'documentEditor.discard': 'Discard',

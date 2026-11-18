@@ -42,7 +42,7 @@ export function QrCode({ url, size = 200 }: { url: string; size?: number }) {
       aria-label="QR-код публичной ссылки"
     >
       <rect width={total} height={total} fill="#ffffff" />
-      <path d={qrPath(matrix)} fill="#17181b" />
+      <path d={qrPath(matrix)} fill="#151518" />
     </svg>
   );
 }

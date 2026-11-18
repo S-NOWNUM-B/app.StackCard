@@ -85,6 +85,12 @@ class _StackCardBootstrapState extends State<StackCardBootstrap> {
             portfolioDraftRepositoryFactoryProvider.overrideWithValue(
               runtime.repositoryForUser,
             ),
+            portfolioHistoryRepositoryFactoryProvider.overrideWithValue(
+              runtime.historyRepositoryForUser,
+            ),
+            portfolioHistoryCleanupProvider.overrideWithValue(
+              runtime.clearHistoryForUser,
+            ),
             portfolioMediaRepositoryFactoryProvider.overrideWithValue(
               runtime.mediaRepositoryForUser,
             ),
@@ -137,6 +143,7 @@ class _StackCardBootstrapState extends State<StackCardBootstrap> {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: StackCardTheme.light,
+        darkTheme: StackCardTheme.dark,
         locale: const Locale('ru'),
         supportedLocales: AppStrings.supportedLocales,
         localizationsDelegates: const [
@@ -343,8 +350,9 @@ class _RoutedStackCardAppState
         title: 'StackCard',
         debugShowCheckedModeBanner: false,
         theme: StackCardTheme.light,
-        // Старые preferences читаются без перезаписи; runtime всегда light/ru.
-        themeMode: ThemeMode.light,
+        darkTheme: StackCardTheme.dark,
+        // Выбор темы хранится в AppearanceController; язык интерфейса — ru.
+        themeMode: appearance.$1,
         locale: const Locale('ru'),
         supportedLocales: AppStrings.supportedLocales,
         localizationsDelegates: const [

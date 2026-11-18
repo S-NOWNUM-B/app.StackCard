@@ -5,8 +5,7 @@ import 'stackcard_tokens.dart';
 
 abstract final class StackCardTheme {
   static final light = _build(Brightness.light, StackCardColors.light);
-  // Сохранённые dark документы читаются без миграции и отображаются в light.
-  static final dark = light;
+  static final dark = _build(Brightness.dark, StackCardColors.dark);
 
   /// Формы входа используют спокойные controls без ярких рекламных поверхностей.
   static ThemeData authentication(ThemeData base) {
@@ -125,8 +124,8 @@ abstract final class StackCardTheme {
       inverseSurface: colors.ink,
       onInverseSurface: colors.paper,
       inversePrimary: colors.primary,
-      shadow: colors.ink,
-      scrim: colors.ink,
+      shadow: isDark ? Colors.black : colors.ink,
+      scrim: isDark ? Colors.black : colors.ink,
       surfaceTint: Colors.transparent,
     );
     // Manrope связывает редакционную типографику web с мобильными экранами.
@@ -196,6 +195,34 @@ abstract final class StackCardTheme {
           textStyle: textTheme.labelLarge,
         ),
       ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(
+            Size(0, StackCardSize.touchTarget),
+          ),
+          // Выбранный сегмент виден не только заливкой слабого оттенка.
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? colors.primary
+                : Colors.transparent,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? colors.onPrimary
+                : colors.textPrimary,
+          ),
+          side: WidgetStatePropertyAll(
+            BorderSide(color: colors.controlOutline),
+          ),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(StackCardRadius.xlarge),
+        ),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.background,
         foregroundColor: colors.textPrimary,
@@ -223,7 +250,7 @@ abstract final class StackCardTheme {
           color: colors.textMeta,
         ),
         hintStyle: textTheme.bodyLarge?.copyWith(color: colors.textMeta),
-        // Сообщение остаётся читаемым и на фоне страницы в light.
+        // Сообщение остаётся читаемым и на фоне страницы в обеих темах.
         errorStyle: textTheme.bodySmall?.copyWith(color: colors.error),
         errorMaxLines: 3,
         border: controlBorder,

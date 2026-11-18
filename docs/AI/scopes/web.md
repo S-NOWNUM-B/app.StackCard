@@ -14,11 +14,25 @@ mobile Save. Profile остаётся первым, GitHub следует вме
 
 - Runtime — `apps/web/src/app`, shared controls — `src/components/ui.tsx`, tokens —
   `src/app/globals.css`.
+  Эталон стиля — светлая палитра mobile (`StackCardColors.light` в `core/theme`), которую
+  фиксирует gate `tools/redesign/check_imports.py`. Web-токены приведены к ней: error,
+  success, border, три серых по ролям, focus-кольцо ink, радиус полей и шрифт кнопки.
+  Будущие правки web-токенов сверяются с mobile light; отдельную web-палитру не вводить.
+  Заголовок страниц кабинета — общий `PageHeader` из `src/components/ui.tsx`; цели касания
+  на web не меньше 44px (`min-height: 44px` в `globals.css`).
   Кабинет (2026-10-26) повторяет функции mobile Editor/Home/Projects, вёрстка своя:
   разделы — `editor-card.tsx`, перестановка мышью/touch/клавиатурой —
   `sortable-list.tsx`, каталог технологий — `src/lib/technology-catalog.ts`
   (данные mobile `technology_catalog_data.dart`), QR визитки — `src/lib/qr-code.ts`.
   Новую функцию mobile переносить в web вместе с ней.
+  Паритет на 2026-11-17: «Здоровье портфолио» (`src/lib/portfolio-health.ts`,
+  `components/portfolio-health.tsx`) и «История версий» (`src/lib/portfolio-history.ts`,
+  `components/portfolio-history-view.tsx`) есть на web. История — только в
+  localStorage по ключу `stackcard.history.<uid>`, до 20 снимков, в Firestore не
+  пишется; очищается при выходе, удалении аккаунта и смене UID/потере сессии.
+  «Подбор под вакансию» на web есть (`src/lib/vacancy-match.ts`,
+  `components/vacancy-match-view.tsx`); текст вакансии хранится только в состоянии
+  компонента. Открытый паритет: «ДНК стека» (mobile `domain/stack_dna.dart`, `/stack-dna`).
   Пунктуация владельца: в заголовках и в конце последнего предложения текстового
   блока (абзац, подпись, кнопка, сообщение) точки нет; точки между предложениями
   и знаки `?`/`!` сохраняются. Двухстрочные display-заголовки и надзаголовки
@@ -99,7 +113,7 @@ mobile Save. Profile остаётся первым, GitHub следует вме
   После awaited чтения проверять UID и generation; browser push не подключён.
 - Проверять typecheck, meaningful contract tests и build из `apps/web`.
   CI использует корневую `.node-version`, `packageManager` из manifest и
-  `npm ci` по package-lock; общий workflow — [CI scope](ci.md).
+  `pnpm install --frozen-lockfile` по pnpm-lock.yaml; общий workflow — [CI scope](ci.md).
   Prettier config/scripts в `apps/web` задают формат новых TS/CSS. `agentRules:false`
   в Next config сохраняет тонкий AGENTS adapter; AI guidance остаётся в `docs/AI`.
   По D048 пользователь разрешил browser/dev server и native проверки в этой задаче.

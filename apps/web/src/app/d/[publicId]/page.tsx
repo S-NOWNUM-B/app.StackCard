@@ -25,8 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const document = await readDocument(publicId);
     if (!document)
       return {
-        title: { absolute: 'Документ недоступен | StackCard' },
-        description: 'Ссылка не найдена или документ снят с публикации.',
+        title: { absolute: 'Страница недоступна · StackCard' },
+        description: 'Ссылка не найдена или документ снят с публикации',
         robots: { index: false, follow: false },
       };
     const metadata = publicDocumentMetadata(document);
@@ -73,7 +73,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   } catch {
     return {
       title: { absolute: 'Документ временно недоступен | StackCard' },
-      description: 'Не удалось загрузить документ. Попробуйте открыть страницу снова.',
+      description: 'Не удалось загрузить документ. Попробуйте открыть страницу снова',
       robots: { index: false, follow: false },
     };
   }

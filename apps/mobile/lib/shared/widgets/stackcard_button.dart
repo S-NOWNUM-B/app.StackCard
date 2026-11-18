@@ -220,7 +220,7 @@ class _StackCardButtonState extends State<StackCardButton> {
     }
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         button,
         const SizedBox(height: StackCardSpacing.xs),

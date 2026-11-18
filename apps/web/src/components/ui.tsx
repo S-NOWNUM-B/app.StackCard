@@ -49,6 +49,41 @@ export function Field({
     </label>
   );
 }
+// Единый заголовок страниц кабинета: «назад» стрелкой в одной строке с h1, поэтому заголовок
+// не меняет высоту между экранами; подпись и действия справа необязательны.
+export function PageHeader({
+  title,
+  subtitle,
+  back,
+  actions,
+}: {
+  title: string;
+  subtitle?: ReactNode;
+  back?: { label: string; onClick: () => void; disabled?: boolean };
+  actions?: ReactNode;
+}) {
+  return (
+    <header className="page-header">
+      <div className="page-header-row">
+        {back && (
+          <button
+            type="button"
+            className="button quiet page-back"
+            aria-label={back.label}
+            title={back.label}
+            disabled={back.disabled}
+            onClick={back.onClick}
+          >
+            <Icon name="arrow-left" size={24} />
+          </button>
+        )}
+        <h1>{title}</h1>
+        {actions && <div className="page-header-actions">{actions}</div>}
+      </div>
+      {subtitle && <p className="muted">{subtitle}</p>}
+    </header>
+  );
+}
 export function Icon({ name, size = 24 }: { name: string; size?: number }) {
   return (
     <span className="icon" style={{ width: size, height: size }} aria-hidden="true">

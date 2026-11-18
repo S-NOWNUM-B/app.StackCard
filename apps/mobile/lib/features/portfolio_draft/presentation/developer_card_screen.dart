@@ -10,7 +10,8 @@ import '../../../shared/widgets/stackcard_avatar.dart';
 import '../../../shared/widgets/stackcard_brand.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
-import '../../../shared/widgets/stackcard_icon.dart';
+import '../../../shared/widgets/stackcard_screen_header.dart';
+import '../../../shared/widgets/stackcard_status_card.dart';
 import '../../../shared/widgets/stackcard_technology_badge.dart';
 import '../developer_card_providers.dart';
 import '../document_publication_providers.dart';
@@ -137,122 +138,119 @@ class _DeveloperCardScreenState extends ConsumerState<DeveloperCardScreen> {
     final repository = ref.watch(developerCardRepositoryProvider);
     final ownerChanged = !identical(_owner, repository);
     final card = ref.watch(developerCardProvider(widget.documentId));
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Визитка'),
-        leading: IconButton(
-          tooltip: 'Назад',
-          icon: const StackCardIcon(name: 'arrow-left'),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      bottomNavigationBar: _message == null
+    return StackCardPageScaffold(
+      title: 'Визитка',
+      onBack: () => Navigator.pop(context),
+      footer: _message == null
           ? null
           : SafeArea(
               minimum: const EdgeInsets.all(StackCardSpacing.lg),
               child: Semantics(liveRegion: true, child: Text(_message!)),
             ),
-      body: SafeArea(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: StackCardSize.contentMaxWidth,
-            ),
-            child: ListView(
-              padding: const EdgeInsets.all(StackCardSpacing.lg),
-              children: [
-                if (ownerChanged)
-                  const Text(
-                    'Аккаунт изменился. Закройте карточку и откройте её заново.',
-                  )
-                else if (repository == null)
-                  const Text(
-                    'Карточка недоступна: нужен аккаунт и настроенная публикация.',
-                  )
-                else
-                  card.when(
-                    skipLoadingOnRefresh: false,
-                    skipLoadingOnReload: false,
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, _) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(switch (error) {
-                          DeveloperCardFailure(
-                            kind: DeveloperCardFailureKind.unpublished,
-                          ) =>
-                            'Портфолио ещё не опубликовано или снято с публикации. QR-код появится после подтверждённой публикации.',
-                          DeveloperCardFailure(
-                            kind: DeveloperCardFailureKind.unknown,
-                          ) =>
-                            'Результат публикации неизвестен. Сначала восстановите предыдущую операцию.',
-                          DeveloperCardFailure(
-                            kind: DeveloperCardFailureKind.stale,
-                          ) =>
-                            'Публичная версия изменилась. Обновите карточку.',
-                          _ => 'Не удалось проверить опубликованное портфолио. Подключитесь к сети и повторите.',
-                        }),
-                        const SizedBox(height: StackCardSpacing.md),
-                        StackCardButton(
-                          label: 'Повторить проверку',
-                          role: StackCardButtonRole.outlined,
-                          onPressed: _busy ? null : _retry,
-                        ),
-                        const SizedBox(height: StackCardSpacing.sm),
-                        StackCardButton(
-                          label: 'Управлять публикацией',
-                          onPressed: _busy
-                              ? null
-                              : () async {
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (_) =>
-                                          PortfolioDocumentPublicationScreen(
-                                            documentId: widget.documentId,
-                                          ),
-                                    ),
-                                  );
-                                  if (_active) await _retry();
-                                },
-                        ),
-                      ],
-                    ),
-                    data: (data) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Опубликованная версия',
-                          style: TextStyle(color: context.colors.textSecondary),
-                        ),
-                        const SizedBox(height: StackCardSpacing.md),
-                        DeveloperCardView(card: data),
-                        const SizedBox(height: StackCardSpacing.lg),
-                        for (final item in const [
-                          ('copy', 'Копировать ссылку'),
-                          ('open', 'Открыть портфолио'),
-                          ('share', 'Поделиться ссылкой'),
-                        ]) ...[
-                          StackCardButton(
-                            key: ValueKey('developerCard.${item.$1}'),
-                            label: item.$2,
-                            role: item.$1 == 'share'
-                                ? StackCardButtonRole.primary
-                                : StackCardButtonRole.outlined,
-                            onPressed: _busy
-                                ? null
-                                : () => _action(item.$1, data),
-                          ),
-                          const SizedBox(height: StackCardSpacing.sm),
-                        ],
-                      ],
-                    ),
+      body: ListView(
+        padding: const EdgeInsets.all(StackCardSpacing.lg),
+        children: [
+          if (ownerChanged)
+            const Text(
+              'Аккаунт изменился. Закройте карточку и откройте её заново.',
+            )
+          else if (repository == null)
+            const Text(
+              'Карточка недоступна: нужен аккаунт и настроенная публикация.',
+            )
+          else
+            card.when(
+              skipLoadingOnRefresh: false,
+              skipLoadingOnReload: false,
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  StackCardStatusCard(
+                    tone: _unpublished(error)
+                        ? StackCardStatusTone.neutral
+                        : StackCardStatusTone.error,
+                    message: switch (error) {
+                      DeveloperCardFailure(
+                        kind: DeveloperCardFailureKind.unpublished,
+                      ) =>
+                        'Портфолио ещё не опубликовано или снято с публикации. QR-код появится после подтверждённой публикации.',
+                      DeveloperCardFailure(
+                        kind: DeveloperCardFailureKind.unknown,
+                      ) =>
+                        'Результат публикации неизвестен. Сначала восстановите предыдущую операцию.',
+                      DeveloperCardFailure(
+                        kind: DeveloperCardFailureKind.stale,
+                      ) =>
+                        'Публичная версия изменилась. Обновите карточку.',
+                      _ => 'Не удалось проверить опубликованное портфолио. Подключитесь к сети и повторите.',
+                    },
                   ),
-              ],
+                  const SizedBox(height: StackCardSpacing.md),
+                  StackCardButton(
+                    key: const Key('card.retry'),
+                    label: 'Повторить проверку',
+                    // Снято с публикации: повтор не поможет, главное действие —
+                    // управление публикацией.
+                    role: _unpublished(error)
+                        ? StackCardButtonRole.outlined
+                        : StackCardButtonRole.primary,
+                    onPressed: _busy ? null : _retry,
+                  ),
+                  const SizedBox(height: StackCardSpacing.sm),
+                  StackCardButton(
+                    label: 'Управлять публикацией',
+                    role: _unpublished(error)
+                        ? StackCardButtonRole.primary
+                        : StackCardButtonRole.secondary,
+                    onPressed: _busy
+                        ? null
+                        : () async {
+                            await Navigator.of(
+                              context,
+                              rootNavigator: true,
+                            ).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) =>
+                                    PortfolioDocumentPublicationScreen(
+                                      documentId: widget.documentId,
+                                    ),
+                              ),
+                            );
+                            if (_active) await _retry();
+                          },
+                  ),
+                ],
+              ),
+              data: (data) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Опубликованная версия',
+                    style: TextStyle(color: context.colors.textSecondary),
+                  ),
+                  const SizedBox(height: StackCardSpacing.md),
+                  DeveloperCardView(card: data),
+                  const SizedBox(height: StackCardSpacing.lg),
+                  for (final item in const [
+                    ('copy', 'Копировать ссылку'),
+                    ('open', 'Открыть портфолио'),
+                    ('share', 'Поделиться ссылкой'),
+                  ]) ...[
+                    StackCardButton(
+                      key: ValueKey('developerCard.${item.$1}'),
+                      label: item.$2,
+                      role: item.$1 == 'share'
+                          ? StackCardButtonRole.primary
+                          : StackCardButtonRole.outlined,
+                      onPressed: _busy ? null : () => _action(item.$1, data),
+                    ),
+                    const SizedBox(height: StackCardSpacing.sm),
+                  ],
+                ],
+              ),
             ),
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -346,3 +344,7 @@ class DeveloperCardView extends StatelessWidget {
     );
   }
 }
+
+bool _unpublished(Object error) =>
+    error is DeveloperCardFailure &&
+    error.kind == DeveloperCardFailureKind.unpublished;
