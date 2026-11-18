@@ -1,0 +1,8 @@
+overrides:
+  '@grpc/grpc-js': 1.14.5
+
+# Скрипты сборки: разрешён только re2 (нативный модуль firebase-tools), остальные заблокированы явно
+allowBuilds:
+  re2: true
+  '@firebase/util': false
+  protobufjs: false

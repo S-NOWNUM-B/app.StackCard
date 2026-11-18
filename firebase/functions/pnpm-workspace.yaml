@@ -1,0 +1,4 @@
+# Скрипты сборки: в functions нет нативных пакетов, все скрипты зависимостей заблокированы явно
+allowBuilds:
+  '@firebase/util': false
+  protobufjs: false
