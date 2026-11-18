@@ -6,6 +6,7 @@ import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
+import '../../../shared/widgets/stackcard_screen_header.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/portfolio_health.dart';
 import '../portfolio_health_providers.dart';
@@ -172,119 +173,99 @@ class PortfolioHealthScreen extends ConsumerWidget {
     final draft = ref.watch(portfolioDraftControllerProvider);
     final colors = context.colors;
     final text = Theme.of(context).textTheme;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Здоровье портфолио'),
-        leading: IconButton(
-          tooltip: 'Назад',
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/home'),
-        ),
-      ),
-      body: SafeArea(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: StackCardSize.contentMaxWidth,
-            ),
-            child: health == null && (draft.loading || !draft.loaded)
-                ? SingleChildScrollView(
-                    child: draft.failure != null && !draft.loading
-                        ? StackCardStateView(
-                            kind: StackCardViewState.error,
-                            title: 'Не удалось прочитать портфолио',
-                            onRetry: ref
-                                .read(portfolioDraftControllerProvider.notifier)
-                                .load,
-                          )
-                        : const StackCardStateView(
-                            kind: StackCardViewState.loading,
-                            title: 'Загрузка',
-                          ),
-                  )
-                : health == null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(StackCardSpacing.xl),
+    return StackCardPageScaffold(
+      title: 'Здоровье портфолио',
+      body: health == null && (draft.loading || !draft.loaded)
+          ? SingleChildScrollView(
+              child: draft.failure != null && !draft.loading
+                  ? StackCardStateView(
+                      kind: StackCardViewState.error,
+                      title: 'Не удалось прочитать портфолио',
+                      onRetry: ref
+                          .read(portfolioDraftControllerProvider.notifier)
+                          .load,
+                    )
+                  : const StackCardStateView(
+                      kind: StackCardViewState.loading,
+                      title: 'Загрузка',
+                    ),
+            )
+          : health == null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(StackCardSpacing.xl),
+                child: Text(
+                  'Заполните и сохраните портфолио в Редакторе, чтобы увидеть оценку',
+                  key: const Key('health.empty'),
+                  textAlign: TextAlign.center,
+                  style: text.bodyLarge,
+                ),
+              ),
+            )
+          : ListView(
+              padding: const EdgeInsets.all(StackCardSpacing.lg),
+              children: [
+                Row(
+                  children: [
+                    _ScoreRing(score: health.score, size: 72),
+                    const SizedBox(width: StackCardSpacing.lg),
+                    Expanded(
                       child: Text(
-                        'Заполните и сохраните портфолио в Редакторе, чтобы увидеть оценку',
-                        key: const Key('health.empty'),
-                        textAlign: TextAlign.center,
-                        style: text.bodyLarge,
+                        health.isPerfect
+                            ? 'Отлично, советов нет'
+                            : 'Советов: ${health.improvements.length}',
+                        key: const Key('health.summary'),
+                        style: text.titleLarge,
                       ),
                     ),
-                  )
-                : ListView(
-                    padding: const EdgeInsets.all(StackCardSpacing.lg),
-                    children: [
-                      Row(
+                  ],
+                ),
+                const SizedBox(height: StackCardSpacing.xl),
+                for (final section in PortfolioHealthSection.values)
+                  if (health.sectionFraction(section) != null) ...[
+                    _SectionRow(health: health, section: section),
+                    const SizedBox(height: StackCardSpacing.md),
+                  ],
+                if (!health.isPerfect) ...[
+                  const SizedBox(height: StackCardSpacing.md),
+                  Text('Что улучшить', style: text.titleLarge),
+                  const SizedBox(height: StackCardSpacing.md),
+                  for (final check in health.improvements) ...[
+                    StackCardCard(
+                      outlined: true,
+                      key: Key('health.tip.${check.section.name}.${check.id}'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _ScoreRing(score: health.score, size: 72),
-                          const SizedBox(width: StackCardSpacing.lg),
-                          Expanded(
-                            child: Text(
-                              health.isPerfect
-                                  ? 'Отлично, советов нет'
-                                  : 'Советов: ${health.improvements.length}',
-                              key: const Key('health.summary'),
-                              style: text.titleLarge,
+                          Text(
+                            portfolioHealthSectionTitle(check.section),
+                            style: text.bodySmall?.copyWith(
+                              color: colors.textMeta,
+                            ),
+                          ),
+                          const SizedBox(height: StackCardSpacing.xs),
+                          Text(
+                            portfolioHealthTip(check),
+                            style: text.titleSmall,
+                          ),
+                          const SizedBox(height: StackCardSpacing.md),
+                          StackCardButton(
+                            label: _actionLabel(check.section),
+                            role: StackCardButtonRole.secondary,
+                            onPressed: () => openPortfolioHealthSection(
+                              context,
+                              ref,
+                              check.section,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: StackCardSpacing.xl),
-                      for (final section in PortfolioHealthSection.values)
-                        if (health.sectionFraction(section) != null) ...[
-                          _SectionRow(health: health, section: section),
-                          const SizedBox(height: StackCardSpacing.md),
-                        ],
-                      if (!health.isPerfect) ...[
-                        const SizedBox(height: StackCardSpacing.md),
-                        Text('Что улучшить', style: text.titleLarge),
-                        const SizedBox(height: StackCardSpacing.md),
-                        for (final check in health.improvements) ...[
-                          StackCardCard(
-                            outlined: true,
-                            key: Key(
-                              'health.tip.${check.section.name}.${check.id}',
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  portfolioHealthSectionTitle(check.section),
-                                  style: text.bodySmall?.copyWith(
-                                    color: colors.textMeta,
-                                  ),
-                                ),
-                                const SizedBox(height: StackCardSpacing.xs),
-                                Text(
-                                  portfolioHealthTip(check),
-                                  style: text.titleSmall,
-                                ),
-                                const SizedBox(height: StackCardSpacing.md),
-                                StackCardButton(
-                                  label: _actionLabel(check.section),
-                                  role: StackCardButtonRole.secondary,
-                                  onPressed: () => openPortfolioHealthSection(
-                                    context,
-                                    ref,
-                                    check.section,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: StackCardSpacing.md),
-                        ],
-                      ],
-                    ],
-                  ),
-          ),
-        ),
-      ),
+                    ),
+                    const SizedBox(height: StackCardSpacing.md),
+                  ],
+                ],
+              ],
+            ),
     );
   }
 }

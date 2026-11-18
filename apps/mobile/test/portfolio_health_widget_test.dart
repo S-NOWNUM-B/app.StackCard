@@ -90,6 +90,14 @@ void main() {
     expect(find.byType(PortfolioHealthScreen), findsOneWidget);
   });
 
+  testWidgets('Details use the shared screen header with a localized Back', (
+    tester,
+  ) async {
+    await _open(tester, health: _partial(), path: '/health');
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.byTooltip('Назад'), findsOneWidget);
+  });
+
   testWidgets('Card is hidden while there is no saved portfolio', (
     tester,
   ) async {

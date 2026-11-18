@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/stackcard_colors.dart';
 import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
+import '../../../shared/widgets/stackcard_screen_header.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/stack_dna.dart';
 import '../stack_dna_providers.dart';
@@ -94,27 +95,10 @@ class StackDnaScreen extends ConsumerWidget {
     } else {
       body = _Content(dna: dna);
     }
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ДНК стека'),
-        leading: IconButton(
-          tooltip: 'Назад',
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/projects'),
-        ),
-      ),
-      body: SafeArea(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: StackCardSize.contentMaxWidth,
-            ),
-            child: body,
-          ),
-        ),
-      ),
+    return StackCardPageScaffold(
+      title: 'ДНК стека',
+      fallbackPath: '/projects',
+      body: body,
     );
   }
 }
@@ -208,30 +192,32 @@ class _Content extends StatelessWidget {
                           other: index >= stackDnaTopCount,
                         ),
                         borderRadius: BorderRadius.circular(3),
-                        border: Border.all(color: colors.border),
+                        border: Border.all(color: colors.controlOutline),
                       ),
                     ),
                   ),
                   Expanded(
-                    child: Text(
-                      item.label,
-                      key: Key('dna.item.${item.id}'),
-                      style: text.bodyLarge,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.label,
+                          key: Key('dna.item.${item.id}'),
+                          style: text.bodyLarge,
+                        ),
+                        Text(
+                          '${item.count} ${_projectsWord(item.count)}${_years(item)}',
+                          style: text.bodySmall?.copyWith(
+                            color: colors.textMeta,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: StackCardSpacing.sm),
                   Text(stackDnaPercent(item.share), style: text.titleSmall),
                 ],
               ),
-            ),
-          ),
-        const SizedBox(height: StackCardSpacing.xs),
-        for (final item in dna.all)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 2),
-            child: Text(
-              '${item.label}: ${item.count} ${_projectsWord(item.count)}${_years(item)}',
-              style: text.bodySmall?.copyWith(color: colors.textMeta),
             ),
           ),
         if (dna.years.isNotEmpty) ...[
@@ -342,7 +328,9 @@ class _Bar extends StatelessWidget {
         borderRadius: BorderRadius.circular(height / 2),
         child: SizedBox(
           height: height,
+          // stretch: без него ColoredBox без child схлопывается до высоты 0.
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final (index, segment) in segments.indexed) ...[
                 // Зазор между сегментами: различимость не только по оттенку.

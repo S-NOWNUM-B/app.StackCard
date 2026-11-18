@@ -139,6 +139,11 @@ class _SettingsAppearanceState
         SegmentedButton<ThemeMode>(
           key: const Key('settings.theme'),
           showSelectedIcon: false,
+          style: const ButtonStyle(
+            padding: WidgetStatePropertyAll(
+              EdgeInsets.symmetric(horizontal: StackCardSpacing.sm),
+            ),
+          ),
           segments: [
             for (final (mode, key) in const [
               (ThemeMode.system, 'system'),
@@ -147,9 +152,15 @@ class _SettingsAppearanceState
             ])
               ButtonSegment(
                 value: mode,
-                label: Text(
-                  strings.tr('settings.theme.$key'),
-                  key: Key('settings.theme.$key'),
+                // Подпись в одну строку: на 320dp слово не рвётся посреди.
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    strings.tr('settings.theme.$key'),
+                    key: Key('settings.theme.$key'),
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
                 ),
               ),
           ],

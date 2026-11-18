@@ -9,6 +9,8 @@ import '../../../shared/widgets/stackcard_dialog_actions.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_icon.dart';
+import '../../../shared/widgets/stackcard_screen_header.dart';
+import '../../../shared/widgets/stackcard_status_card.dart';
 import '../../auth/auth.dart';
 import '../document_publication_providers.dart';
 import '../domain/document_publication.dart';
@@ -173,253 +175,10 @@ class _PortfolioDocumentPublicationScreenState
         ? 'unknown'
         : publication?.visibility.name ?? 'draft';
     final controller = ref.read(documentPublicationControllerProvider.notifier);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_tr('title')),
-        leading: IconButton(
-          tooltip: context.strings.tr('documentEditor.back'),
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const StackCardIcon(name: 'arrow-left'),
-        ),
-      ),
-      body: SafeArea(
-        bottom: false,
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: StackCardSize.contentMaxWidth,
-            ),
-            child: ListView(
-              padding: const EdgeInsets.all(StackCardSpacing.cardPadding),
-              children: [
-                if (document != null) ...[
-                  StackCardCard(
-                    outlined: true,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            StackCardIcon(
-                              name:
-                                  document.kind == PortfolioDocumentKind.resume
-                                  ? 'file-text'
-                                  : 'panels-top-left',
-                              size: 20,
-                              color: context.colors.accentText,
-                            ),
-                            const SizedBox(width: StackCardSpacing.sm),
-                            Expanded(
-                              child: Text(
-                                document.title,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: StackCardSpacing.md),
-                        Text(
-                          document.content.profile.headline,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: context.colors.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: StackCardSpacing.lg),
-                ],
-                _statusCard(
-                  status,
-                  '${status}Hint',
-                  confirmed:
-                      !unknownDocument &&
-                      publication?.visibility ==
-                          DocumentPublicationVisibility.published,
-                ),
-                const SizedBox(height: StackCardSpacing.lg),
-                if (document != null && !dirty) ...[
-                  _statusCard('localSaved', 'localSavedHint'),
-                  const SizedBox(height: StackCardSpacing.lg),
-                ],
-                if (dirty) ...[
-                  _statusCard('saveFirst', 'saveFirstHint'),
-                  const SizedBox(height: StackCardSpacing.lg),
-                ] else if (expectedMutation != null) ...[
-                  _statusCard(
-                    'synced',
-                    'syncedHint',
-                    confirmed: true,
-                    sync: true,
-                  ),
-                  const SizedBox(height: StackCardSpacing.lg),
-                ] else if (account != null &&
-                    repository != null &&
-                    !deleted) ...[
-                  _statusCard('pendingSync', 'pendingSyncHint'),
-                  StackCardButton(
-                    key: const ValueKey('publication.retrySync'),
-                    label: _tr('retrySync'),
-                    onPressed: ref
-                        .watch(portfolioSyncRepositoryProvider)
-                        ?.retry,
-                  ),
-                  const SizedBox(height: StackCardSpacing.lg),
-                ],
-                if (account == null || repository == null) ...[
-                  Text(reason),
-                  const SizedBox(height: StackCardSpacing.lg),
-                ],
-                if (publicationState.loading) ...[
-                  Semantics(liveRegion: true, child: Text(_tr('loading'))),
-                  const LinearProgressIndicator(),
-                  const SizedBox(height: StackCardSpacing.lg),
-                ],
-                if (pending != null) ...[
-                  if (!unknownDocument) _statusCard('unknown', 'unknownHint'),
-                  const SizedBox(height: StackCardSpacing.md),
-                  Wrap(
-                    spacing: StackCardSpacing.sm,
-                    runSpacing: StackCardSpacing.sm,
-                    children: [
-                      StackCardButton(
-                        key: const ValueKey('publication.checkStatus'),
-                        label: _tr('checkStatus'),
-                        loading: publicationState.busy,
-                        onPressed: publicationState.busy
-                            ? null
-                            : controller.checkOperation,
-                      ),
-                      StackCardButton(
-                        key: const ValueKey('publication.retryOperation'),
-                        label: _tr('retryOperation'),
-                        onPressed: publicationState.busy
-                            ? null
-                            : controller.retryOperation,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: StackCardSpacing.lg),
-                ],
-                if (publicationState.failure case final failure?) ...[
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      _tr('error.${failure.kind.name}'),
-                      style: TextStyle(color: context.colors.error),
-                    ),
-                  ),
-                  const SizedBox(height: StackCardSpacing.md),
-                ],
-                if (repository != null)
-                  StackCardButton(
-                    label: _tr('refresh'),
-                    onPressed: publicationState.busy || publicationState.loading
-                        ? null
-                        : controller.load,
-                  ),
-                if (url != null) ...[
-                  const SizedBox(height: StackCardSpacing.lg),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 48),
-                    child: SelectableText(url.toString()),
-                  ),
-                  const SizedBox(height: StackCardSpacing.md),
-                  StackCardButton(
-                    key: const ValueKey('publication.copy'),
-                    label: _tr(_copied ? 'copied' : 'copy'),
-                    iconWidget: const StackCardIcon(name: 'copy', size: 20),
-                    onPressed: _linkBusy
-                        ? null
-                        : () => _linkAction('copy', url),
-                  ),
-                  const SizedBox(height: StackCardSpacing.sm),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: StackCardButton(
-                          key: const ValueKey('publication.open'),
-                          label: _tr('open'),
-                          onPressed:
-                              _linkBusy ||
-                                  ref.watch(documentLinkActionsProvider) == null
-                              ? null
-                              : () => _linkAction('open', url),
-                        ),
-                      ),
-                      const SizedBox(width: StackCardSpacing.sm),
-                      Expanded(
-                        child: StackCardButton(
-                          key: const ValueKey('publication.share'),
-                          label: _tr('share'),
-                          onPressed:
-                              _linkBusy ||
-                                  ref.watch(documentLinkActionsProvider) == null
-                              ? null
-                              : () => _linkAction('share', url),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (ref.watch(documentLinkActionsProvider) == null)
-                    Text(_tr('linkActionsUnavailable')),
-                  if (_linkError)
-                    Text(
-                      _tr('actionFailed'),
-                      style: TextStyle(color: context.colors.error),
-                    ),
-                  const SizedBox(height: StackCardSpacing.md),
-                  Text(_tr('linkHint')),
-                ],
-                if (document != null && !deleted) ...[
-                  const SizedBox(height: StackCardSpacing.lg),
-                  StackCardCard(
-                    outlined: true,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          _tr('summary'),
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: StackCardSpacing.md),
-                        Text(_tr('summaryHint')),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: StackCardSpacing.lg),
-                  Text(_tr('consent')),
-                  if (publication?.visibility ==
-                      DocumentPublicationVisibility.published)
-                    StackCardButton(
-                      key: const ValueKey('publication.unpublish'),
-                      label: _tr('unpublish'),
-                      role: StackCardButtonRole.danger,
-                      onPressed: canWithdraw
-                          ? () => _confirm(DocumentPublicationAction.unpublish)
-                          : null,
-                      unavailableReason: canWithdraw ? null : reason,
-                    ),
-                  StackCardButton(
-                    key: const ValueKey('publication.delete'),
-                    label: _tr('delete'),
-                    role: StackCardButtonRole.danger,
-                    onPressed: canDelete
-                        ? () =>
-                              _confirm(DocumentPublicationAction.deleteDocument)
-                        : null,
-                    unavailableReason: draft.saving
-                        ? context.strings.tr('builder.saving')
-                        : null,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: document == null || deleted
+    return StackCardPageScaffold(
+      title: _tr('title'),
+      onBack: () => Navigator.of(context).pop(),
+      footer: document == null || deleted
           ? null
           : ColoredBox(
               color: context.colors.surface,
@@ -461,6 +220,219 @@ class _PortfolioDocumentPublicationScreenState
                 ),
               ),
             ),
+      body: ListView(
+        padding: const EdgeInsets.all(StackCardSpacing.cardPadding),
+        children: [
+          if (document != null) ...[
+            StackCardCard(
+              outlined: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      StackCardIcon(
+                        name: document.kind == PortfolioDocumentKind.resume
+                            ? 'file-text'
+                            : 'panels-top-left',
+                        size: 20,
+                        color: context.colors.accentText,
+                      ),
+                      const SizedBox(width: StackCardSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          document.title,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: StackCardSpacing.md),
+                  Text(
+                    document.content.profile.headline,
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: context.colors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: StackCardSpacing.lg),
+          ],
+          _statusCard(
+            status,
+            '${status}Hint',
+            confirmed:
+                !unknownDocument &&
+                publication?.visibility ==
+                    DocumentPublicationVisibility.published,
+          ),
+          const SizedBox(height: StackCardSpacing.lg),
+          if (document != null && !dirty) ...[
+            _statusCard('localSaved', 'localSavedHint'),
+            const SizedBox(height: StackCardSpacing.lg),
+          ],
+          if (dirty) ...[
+            _statusCard('saveFirst', 'saveFirstHint'),
+            const SizedBox(height: StackCardSpacing.lg),
+          ] else if (expectedMutation != null) ...[
+            _statusCard('synced', 'syncedHint', confirmed: true, sync: true),
+            const SizedBox(height: StackCardSpacing.lg),
+          ] else if (account != null && repository != null && !deleted) ...[
+            _statusCard('pendingSync', 'pendingSyncHint'),
+            StackCardButton(
+              key: const ValueKey('publication.retrySync'),
+              label: _tr('retrySync'),
+              onPressed: ref.watch(portfolioSyncRepositoryProvider)?.retry,
+            ),
+            const SizedBox(height: StackCardSpacing.lg),
+          ],
+          if (account == null || repository == null) ...[
+            Text(reason),
+            const SizedBox(height: StackCardSpacing.lg),
+          ],
+          if (publicationState.loading) ...[
+            Semantics(liveRegion: true, child: Text(_tr('loading'))),
+            const LinearProgressIndicator(),
+            const SizedBox(height: StackCardSpacing.lg),
+          ],
+          if (pending != null) ...[
+            if (!unknownDocument) _statusCard('unknown', 'unknownHint'),
+            const SizedBox(height: StackCardSpacing.md),
+            Wrap(
+              spacing: StackCardSpacing.sm,
+              runSpacing: StackCardSpacing.sm,
+              children: [
+                StackCardButton(
+                  key: const ValueKey('publication.checkStatus'),
+                  label: _tr('checkStatus'),
+                  loading: publicationState.busy,
+                  onPressed: publicationState.busy
+                      ? null
+                      : controller.checkOperation,
+                ),
+                StackCardButton(
+                  key: const ValueKey('publication.retryOperation'),
+                  label: _tr('retryOperation'),
+                  onPressed: publicationState.busy
+                      ? null
+                      : controller.retryOperation,
+                ),
+              ],
+            ),
+            const SizedBox(height: StackCardSpacing.lg),
+          ],
+          if (publicationState.failure case final failure?) ...[
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                _tr('error.${failure.kind.name}'),
+                style: TextStyle(color: context.colors.error),
+              ),
+            ),
+            const SizedBox(height: StackCardSpacing.md),
+          ],
+          if (repository != null)
+            StackCardButton(
+              label: _tr('refresh'),
+              onPressed: publicationState.busy || publicationState.loading
+                  ? null
+                  : controller.load,
+            ),
+          if (url != null) ...[
+            const SizedBox(height: StackCardSpacing.lg),
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: SelectableText(url.toString()),
+            ),
+            const SizedBox(height: StackCardSpacing.md),
+            StackCardButton(
+              key: const ValueKey('publication.copy'),
+              label: _tr(_copied ? 'copied' : 'copy'),
+              iconWidget: const StackCardIcon(name: 'copy', size: 20),
+              onPressed: _linkBusy ? null : () => _linkAction('copy', url),
+            ),
+            const SizedBox(height: StackCardSpacing.sm),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: StackCardButton(
+                    key: const ValueKey('publication.open'),
+                    label: _tr('open'),
+                    onPressed:
+                        _linkBusy ||
+                            ref.watch(documentLinkActionsProvider) == null
+                        ? null
+                        : () => _linkAction('open', url),
+                  ),
+                ),
+                const SizedBox(width: StackCardSpacing.sm),
+                Expanded(
+                  child: StackCardButton(
+                    key: const ValueKey('publication.share'),
+                    label: _tr('share'),
+                    onPressed:
+                        _linkBusy ||
+                            ref.watch(documentLinkActionsProvider) == null
+                        ? null
+                        : () => _linkAction('share', url),
+                  ),
+                ),
+              ],
+            ),
+            if (ref.watch(documentLinkActionsProvider) == null)
+              Text(_tr('linkActionsUnavailable')),
+            if (_linkError)
+              Text(
+                _tr('actionFailed'),
+                style: TextStyle(color: context.colors.error),
+              ),
+            const SizedBox(height: StackCardSpacing.md),
+            Text(_tr('linkHint')),
+          ],
+          if (document != null && !deleted) ...[
+            const SizedBox(height: StackCardSpacing.lg),
+            StackCardCard(
+              outlined: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    _tr('summary'),
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: StackCardSpacing.md),
+                  Text(_tr('summaryHint')),
+                ],
+              ),
+            ),
+            const SizedBox(height: StackCardSpacing.lg),
+            Text(_tr('consent')),
+            if (publication?.visibility ==
+                DocumentPublicationVisibility.published)
+              StackCardButton(
+                key: const ValueKey('publication.unpublish'),
+                label: _tr('unpublish'),
+                role: StackCardButtonRole.danger,
+                onPressed: canWithdraw
+                    ? () => _confirm(DocumentPublicationAction.unpublish)
+                    : null,
+                unavailableReason: canWithdraw ? null : reason,
+              ),
+            StackCardButton(
+              key: const ValueKey('publication.delete'),
+              label: _tr('delete'),
+              role: StackCardButtonRole.danger,
+              onPressed: canDelete
+                  ? () => _confirm(DocumentPublicationAction.deleteDocument)
+                  : null,
+              unavailableReason: draft.saving
+                  ? context.strings.tr('builder.saving')
+                  : null,
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -469,44 +441,13 @@ class _PortfolioDocumentPublicationScreenState
     String hint, {
     bool confirmed = false,
     bool sync = false,
-  }) => StackCardCard(
-    elevated: true,
-    padding: const EdgeInsets.all(StackCardSpacing.md),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            if (confirmed) ...[
-              StackCardIcon(
-                name: 'check',
-                color: sync
-                    ? context.colors.successText
-                    : context.colors.accentText,
-              ),
-              const SizedBox(width: StackCardSpacing.sm),
-            ],
-            Expanded(
-              child: Text(
-                _tr(heading),
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: confirmed
-                      ? sync
-                            ? context.colors.successText
-                            : context.colors.accentText
-                      : context.colors.textPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: StackCardSpacing.sm),
-        Text(
-          _tr(hint),
-          style: Theme.of(context).textTheme.bodyMedium
-              ?.copyWith(color: context.colors.textSecondary),
-        ),
-      ],
-    ),
+  }) => StackCardStatusCard(
+    title: _tr(heading),
+    message: _tr(hint),
+    tone: !confirmed
+        ? StackCardStatusTone.neutral
+        : sync
+        ? StackCardStatusTone.success
+        : StackCardStatusTone.neutral,
   );
 }

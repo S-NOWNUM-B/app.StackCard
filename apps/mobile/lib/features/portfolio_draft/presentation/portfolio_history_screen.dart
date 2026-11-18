@@ -8,6 +8,7 @@ import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_dialog_actions.dart';
+import '../../../shared/widgets/stackcard_screen_header.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../domain/portfolio_history.dart';
 import '../portfolio_history_providers.dart';
@@ -40,26 +41,15 @@ String portfolioHistoryChange(PortfolioSnapshotChange change) =>
       PortfolioSnapshotChangeKind.layout => 'изменён порядок разделов',
     };
 
-Widget _frame(BuildContext context, String title, Widget body) => Scaffold(
-  appBar: AppBar(
-    title: Text(title),
-    leading: IconButton(
-      tooltip: 'Назад',
-      icon: const Icon(Icons.arrow_back_rounded),
-      onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
-    ),
-  ),
-  body: SafeArea(
-    child: Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: StackCardSize.contentMaxWidth,
-        ),
-        child: body is ListView ? body : SingleChildScrollView(child: body),
-      ),
-    ),
-  ),
+Widget _frame(
+  BuildContext context,
+  String title,
+  Widget body, {
+  String fallback = '/settings',
+}) => StackCardPageScaffold(
+  title: title,
+  fallbackPath: fallback,
+  body: body is ListView ? body : SingleChildScrollView(child: body),
 );
 
 /// Список локальных версий: дата, числа и что изменилось. Только чтение.
@@ -216,6 +206,7 @@ class PortfolioHistoryVersionScreen extends ConsumerWidget {
     return _frame(
       context,
       'Версия',
+      fallback: '/history',
       history.when(
         loading: () => const StackCardStateView(
           kind: StackCardViewState.loading,

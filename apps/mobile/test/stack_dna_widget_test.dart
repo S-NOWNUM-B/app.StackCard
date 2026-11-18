@@ -122,6 +122,40 @@ void main() {
     expect(find.byKey(const Key('dna.year.2024')), findsOneWidget);
   });
 
+  testWidgets('Bar segments are actually painted (non-zero height)', (
+    tester,
+  ) async {
+    await _open(tester, _rich);
+    final boxes = find.descendant(
+      of: find.byKey(const Key('dna.bar')),
+      matching: find.byType(ColoredBox),
+    );
+    expect(boxes, findsWidgets);
+    for (final element in boxes.evaluate()) {
+      final size = tester.getSize(find.byWidget(element.widget));
+      expect(size.height, greaterThan(10));
+    }
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('dna.year.2024')),
+      300,
+    );
+    for (final element
+        in find
+            .descendant(
+              of: find.byKey(const Key('dna.year.2024')),
+              matching: find.byType(ColoredBox),
+            )
+            .evaluate()) {
+      expect(
+        tester.getSize(find.byWidget(element.widget)).height,
+        greaterThan(5),
+      );
+    }
+    // Единая шапка и локализованный «Назад».
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.byTooltip('Назад'), findsOneWidget);
+  });
+
   testWidgets('The chart has a text description for screen readers', (
     tester,
   ) async {

@@ -6,6 +6,8 @@ import 'package:app_stackcard/core/theme/stackcard_theme.dart';
 import 'package:app_stackcard/features/portfolio_draft/data/developer_card_codec.dart';
 import 'package:app_stackcard/features/portfolio_draft/portfolio_draft.dart';
 import 'package:app_stackcard/features/portfolio_draft/presentation/developer_card_qr.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_button.dart';
+import 'package:app_stackcard/shared/widgets/stackcard_screen_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -92,6 +94,24 @@ void main() {
       expect(find.byType(DeveloperCardQr), findsNothing);
       expect(find.byKey(const ValueKey('developerCard.share')), findsNothing);
       expect(find.textContaining('ещё не опубликовано'), findsOneWidget);
+      // Снято с публикации: повтор не поможет, главное — управление.
+      expect(
+        tester
+            .widget<StackCardButton>(find.byKey(const Key('card.retry')))
+            .role,
+        StackCardButtonRole.outlined,
+      );
+      expect(
+        tester
+            .widget<StackCardButton>(
+              find.widgetWithText(StackCardButton, 'Управлять публикацией'),
+            )
+            .role,
+        StackCardButtonRole.primary,
+      );
+      // Единая шапка вторичного экрана, без AppBar.
+      expect(find.byType(StackCardScreenHeader), findsOneWidget);
+      expect(find.byType(AppBar), findsNothing);
     },
   );
   testWidgets(

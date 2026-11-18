@@ -164,6 +164,14 @@ void main() {
     expect(find.byKey(const Key('vacancy.input')), findsNothing);
   });
 
+  testWidgets('Vacancy screen uses the shared header with a localized Back', (
+    tester,
+  ) async {
+    await _open(tester);
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.byTooltip('Назад'), findsOneWidget);
+  });
+
   testWidgets('A short text is rejected and Compare stays disabled', (
     tester,
   ) async {

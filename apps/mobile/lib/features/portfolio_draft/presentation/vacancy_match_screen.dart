@@ -8,6 +8,7 @@ import '../../../core/theme/stackcard_tokens.dart';
 import '../../../shared/widgets/stackcard_button.dart';
 import '../../../shared/widgets/stackcard_card.dart';
 import '../../../shared/widgets/stackcard_input.dart';
+import '../../../shared/widgets/stackcard_screen_header.dart';
 import '../../../shared/widgets/stackcard_states.dart';
 import '../../media/media.dart';
 import '../domain/portfolio_content.dart';
@@ -236,27 +237,10 @@ class _VacancyMatchState extends ConsumerState<VacancyMatchScreen> {
         ],
       );
     }
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Подбор под вакансию'),
-        leading: IconButton(
-          tooltip: 'Назад',
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/projects'),
-        ),
-      ),
-      body: SafeArea(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: StackCardSize.contentMaxWidth,
-            ),
-            child: body is ListView ? body : SingleChildScrollView(child: body),
-          ),
-        ),
-      ),
+    return StackCardPageScaffold(
+      title: 'Подбор под вакансию',
+      fallbackPath: '/projects',
+      body: body is ListView ? body : SingleChildScrollView(child: body),
     );
   }
 
@@ -337,7 +321,7 @@ class _VacancyMatchState extends ConsumerState<VacancyMatchScreen> {
         const SizedBox(height: StackCardSpacing.xl),
         Semantics(
           header: true,
-          child: Text('Проекты: релевантность и PDF', style: text.titleMedium),
+          child: Text('Проекты и PDF', style: text.titleMedium),
         ),
         const SizedBox(height: StackCardSpacing.sm),
         for (final item in relevantProjects)
@@ -372,7 +356,7 @@ class _VacancyMatchState extends ConsumerState<VacancyMatchScreen> {
       const SizedBox(height: StackCardSpacing.xl),
       Semantics(
         header: true,
-        child: Text('Разделы: порядок и PDF', style: text.titleMedium),
+        child: Text('Разделы и PDF', style: text.titleMedium),
       ),
       const SizedBox(height: StackCardSpacing.sm),
       for (final kind in match.sectionOrder)

@@ -120,6 +120,14 @@ Future<ProviderContainer> _open(
 }
 
 void main() {
+  testWidgets('History uses the shared screen header with a localized Back', (
+    tester,
+  ) async {
+    await _open(tester, repository: MemoryPortfolioHistoryRepository());
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.byTooltip('Назад'), findsOneWidget);
+  });
+
   testWidgets('Empty history explains when versions appear', (tester) async {
     await _open(tester, repository: MemoryPortfolioHistoryRepository());
     expect(find.text('Пока нет сохранённых версий'), findsOneWidget);
@@ -243,7 +251,13 @@ void main() {
         );
         expect(find.byKey(const Key('history.list')), findsOneWidget);
         expect(tester.takeException(), isNull);
-        await tester.tap(find.byType(InkWell).first);
+        await tester.tap(
+          find
+              .byWidgetPredicate(
+                (widget) => widget.key.toString().contains('history.item.'),
+              )
+              .first,
+        );
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('history.restore')), findsOneWidget);
         expect(tester.takeException(), isNull);

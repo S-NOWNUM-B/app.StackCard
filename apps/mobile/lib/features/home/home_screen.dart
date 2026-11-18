@@ -150,7 +150,7 @@ class _HomeScreenState extends ConsumerState<_HomeBody> {
     if (choice == 'share') {
       await _share(documentId);
     } else if (choice == 'card') {
-      await Navigator.of(context).push(
+      await Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute<void>(
           builder: (_) => DeveloperCardScreen(documentId: documentId),
         ),

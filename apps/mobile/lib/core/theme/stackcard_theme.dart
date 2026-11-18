@@ -195,6 +195,34 @@ abstract final class StackCardTheme {
           textStyle: textTheme.labelLarge,
         ),
       ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(
+            Size(0, StackCardSize.touchTarget),
+          ),
+          // Выбранный сегмент виден не только заливкой слабого оттенка.
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? colors.primary
+                : Colors.transparent,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? colors.onPrimary
+                : colors.textPrimary,
+          ),
+          side: WidgetStatePropertyAll(
+            BorderSide(color: colors.controlOutline),
+          ),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(StackCardRadius.xlarge),
+        ),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.background,
         foregroundColor: colors.textPrimary,

@@ -444,6 +444,10 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
             )
           else ...[
             StackCardCard(
+              // Горизонтальный отступ задаёт страница: контент на 16dp как везде.
+              padding: const EdgeInsets.symmetric(
+                vertical: StackCardSpacing.cardPadding,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -462,7 +466,9 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
                   ),
                   const SizedBox(height: StackCardSpacing.md),
                   StackCardButton(
-                    label: context.strings.tr('settings.changeLoginEmail'),
+                    label: context.strings.tr(
+                      'settings.changeLoginEmailAction',
+                    ),
                     onPressed: _busy || _deletion != null ? null : _changeEmail,
                     role: StackCardButtonRole.secondary,
                   ),
@@ -488,6 +494,10 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
             ),
             const SizedBox(height: StackCardSpacing.lg),
             StackCardCard(
+              // Горизонтальный отступ задаёт страница: контент на 16dp как везде.
+              padding: const EdgeInsets.symmetric(
+                vertical: StackCardSpacing.cardPadding,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -579,6 +589,10 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
               ),
             const SizedBox(height: StackCardSpacing.lg),
             StackCardCard(
+              // Горизонтальный отступ задаёт страница: контент на 16dp как везде.
+              padding: const EdgeInsets.symmetric(
+                vertical: StackCardSpacing.cardPadding,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -592,7 +606,7 @@ class _SettingsAccountScreenState extends ConsumerState<SettingsAccountScreen> {
                   if (_deletion == null)
                     StackCardButton(
                       key: const Key('settings.account.delete'),
-                      label: context.strings.tr('settings.deleteAccount'),
+                      label: context.strings.tr('settings.deleteAccountAction'),
                       role: StackCardButtonRole.danger,
                       unavailableReason: publication == null
                           ? context.strings.tr(

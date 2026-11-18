@@ -77,6 +77,9 @@ class BuilderTagsEditor extends StatelessWidget {
                 Flexible(
                   child: Text(
                     items[index],
+                    // Контакт/навык не рвётся посреди слова.
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.labelLarge,
                   ),
                 ),
