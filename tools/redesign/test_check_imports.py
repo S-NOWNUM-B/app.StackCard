@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from check_imports import technology_icons_evidence
+from check_imports import dark_palette_errors, technology_icons_evidence
 
 
 class TechnologyIntegrityTest(unittest.TestCase):
@@ -69,6 +69,30 @@ class TechnologyIntegrityTest(unittest.TestCase):
         self.save_manifest()
         with self.assertRaisesRegex(ValueError, 'source drift'):
             technology_icons_evidence(self.mobile)
+
+
+class DarkPaletteGateTest(unittest.TestCase):
+    LIGHT = 'static const light = StackCardColors(\n  background: Color(0xFFFFFFFF),\n  textMuted: Color(0xFF71717A),\n);\n'
+    DARK = 'static const dark = StackCardColors(\n  background: Color(0xFF0E0E10),\n  textMuted: Color(0xFF9A9AA4),\n);\n'
+    THEME = ('static final light = _build(Brightness.light, StackCardColors.light);\n'
+             'static final dark = _build(Brightness.dark, StackCardColors.dark);\n')
+
+    def test_separate_complete_palette_passes_without_matching_light(self):
+        self.assertEqual(dark_palette_errors(self.LIGHT + self.DARK, self.THEME), [])
+
+    def test_alias_of_light_fails(self):
+        errors = dark_palette_errors(self.LIGHT + 'static const dark = light;\n', self.THEME)
+        self.assertTrue(any('separate palette' in error for error in errors))
+
+    def test_missing_and_unknown_tokens_fail(self):
+        short = self.DARK.replace('  textMuted: Color(0xFF9A9AA4),\n', '')
+        self.assertTrue(any('lacks tokens: textMuted' in e for e in dark_palette_errors(self.LIGHT + short, self.THEME)))
+        extra = self.DARK.replace('  background', '  invented: Color(0xFF000000),\n  background')
+        self.assertTrue(any('unknown tokens: invented' in e for e in dark_palette_errors(self.LIGHT + extra, self.THEME)))
+
+    def test_themes_must_use_their_own_palettes(self):
+        theme = self.THEME.replace('Brightness.dark, StackCardColors.dark', 'Brightness.dark, StackCardColors.light')
+        self.assertTrue(dark_palette_errors(self.LIGHT + self.DARK, theme))
 
 
 if __name__ == '__main__':

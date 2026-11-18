@@ -90,7 +90,7 @@ class StackCardColors extends ThemeExtension<StackCardColors> {
     borderSubtle: Color(0xFFEDEDEF),
     textPrimary: Color(0xFF151518),
     textSecondary: Color(0xFF606067),
-    textMuted: Color(0xFF686872),
+    textMuted: Color(0xFF71717A),
     accent: Color(0xFF151518),
     accentHover: Color(0xFF333338),
     accentSoft: Color(0xFFF1F1F3),

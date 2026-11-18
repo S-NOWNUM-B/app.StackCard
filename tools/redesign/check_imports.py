@@ -152,6 +152,35 @@ def technology_icons_evidence(mobile):
     return len(slugs)
 
 
+def dark_palette_errors(colors_text, theme_text):
+    """Тёмная тема (решение владельца): отдельная палитра с тем же набором
+    токенов, без требования совпадения со светлой. Светлая палитра сверяется
+    с принятыми значениями отдельно."""
+    errors = []
+    field = re.compile(r'(\w+):\s*Color\(0x([0-9a-fA-F]{8})\)')
+
+    def palette(name):
+        block = re.search(r'static const ' + name + r'\s*=\s*StackCardColors\((.*?)\n\s*\);',
+                          colors_text, re.S)
+        return dict(field.findall(block[1])) if block else {}
+
+    if re.search(r'static const dark\s*=\s*light\s*;', colors_text) or \
+            re.search(r'static const dark\s*=\s*StackCardColors\(', colors_text) is None:
+        errors.append('Dark colors must be a separate palette, not an alias of Light')
+    light_fields, dark_fields = palette('light'), palette('dark')
+    missing = sorted(set(light_fields) - set(dark_fields))
+    extra = sorted(set(dark_fields) - set(light_fields))
+    if missing:
+        errors.append('Dark palette lacks tokens: ' + ', '.join(missing))
+    if extra:
+        errors.append('Dark palette has unknown tokens: ' + ', '.join(extra))
+    if not (re.search(r'static final light\s*=\s*_build\(Brightness.light,\s*StackCardColors.light\)', theme_text)
+            and re.search(r'static final dark\s*=\s*_build\(Brightness.dark,\s*StackCardColors.dark\)', theme_text)):
+        errors.append('Light and Dark themes must be built from their own palettes')
+    return errors
+
+
+
 def validate(repo, require_brand=True):
     mobile = repo / 'apps/mobile'
     manifest_path = mobile / 'assets/design_v2/source-manifest.json'
@@ -365,12 +394,7 @@ def validate(repo, require_brand=True):
         check(accepted_styles.get('headlineLarge') ==
               {'size': 32, 'weight': 800, 'lineHeight': 1.2, 'letterSpacing': -0.9},
               'Accepted headlineLarge metrics drift')
-        check(re.search(r'static const dark\s*=\s*light\s*;', colors_text) is not None
-              and re.search(r'static const dark\s*=\s*StackCardColors\(', colors_text) is None,
-              'Dark colors must alias Light without a separate palette')
-        check(re.search(r'static final dark\s*=\s*light\s*;', theme_text) is not None
-              and re.search(r'static final light\s*=\s*_build\(Brightness.light,\s*StackCardColors.light\)', theme_text) is not None,
-              'Dark theme must alias the accepted Light theme')
+        errors.extend(dark_palette_errors(colors_text, theme_text))
         modes = ('Light',)
     for mode in modes:
         block = re.search(r'static const ' + mode.lower() + r'\s*=\s*StackCardColors\((.*?)\n\s*\);', colors_text, re.S)
