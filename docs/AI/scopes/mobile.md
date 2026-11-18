@@ -258,7 +258,11 @@ headless проверки не закрывают native visual, public/web ил
   и динамика по годам из сохранённого портфолио (`stackDnaProjectsFrom`). Нормализация
   через общий словарь `defaultVacancyDictionary` с «Подбором». Без сети, Hive и Firestore.
   Пороги: минимум 3 проекта, главный стек до 3 технологий от 15%, «растёт» при росте доли
-  на 10 п.п. в двух последних годах, годы 2000–2100, показываются 6 технологий. UI использует русский каталог, совместимые ru/en
+  на 10 п.п. в двух последних годах, годы 2000–2100, показываются 6 технологий.
+  Аудит единого стиля 2026-11-18: светлая палитра `StackCardColors.light` — эталон для web,
+  её фиксирует gate `check_imports.py`. Единый заголовок экрана — `StackCardScreenHeader`
+  (`shared/widgets/stackcard_screen_header.dart`) с кнопкой «назад»; карточки статуса
+  используют общий стиль, «Визитка» и «Публикация» без двойной шапки. UI использует русский каталог, совместимые ru/en
   переводы из [core/localization](../../../apps/mobile/lib/core/localization/);
   source content не переводится автоматически. Сравнение и учебные patches — в
   [state management guide](../../learning/state-management.md), вне runtime `lib`.

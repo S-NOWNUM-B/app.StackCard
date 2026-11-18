@@ -14,6 +14,12 @@ mobile Save. Profile остаётся первым, GitHub следует вме
 
 - Runtime — `apps/web/src/app`, shared controls — `src/components/ui.tsx`, tokens —
   `src/app/globals.css`.
+  Эталон стиля — светлая палитра mobile (`StackCardColors.light` в `core/theme`), которую
+  фиксирует gate `tools/redesign/check_imports.py`. Web-токены приведены к ней: error,
+  success, border, три серых по ролям, focus-кольцо ink, радиус полей и шрифт кнопки.
+  Будущие правки web-токенов сверяются с mobile light; отдельную web-палитру не вводить.
+  Заголовок страниц кабинета — общий `PageHeader` из `src/components/ui.tsx`; цели касания
+  на web не меньше 44px (`min-height: 44px` в `globals.css`).
   Кабинет (2026-10-26) повторяет функции mobile Editor/Home/Projects, вёрстка своя:
   разделы — `editor-card.tsx`, перестановка мышью/touch/клавиатурой —
   `sortable-list.tsx`, каталог технологий — `src/lib/technology-catalog.ts`

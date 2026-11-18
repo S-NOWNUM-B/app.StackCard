@@ -256,6 +256,11 @@ Google provider. «Выйти» — красный текст без фона, �
 При узком экране или увеличенном шрифте действия становятся иконками с tooltip,
 а длинное имя ограничивается двумя строками без вытеснения кнопок.
 
+Аудит единого стиля 2026-11-18: эталон — светлая палитра mobile (`StackCardColors.light`),
+фиксируемая gate `tools/redesign/check_imports.py`. Web-токены в `globals.css` подогнаны под неё
+(error, success, border, серые по ролям, focus-кольцо ink, радиус полей, шрифт кнопки). Цели
+касания на web не меньше 44px. Заголовок страниц кабинета — `PageHeader`, на mobile — shared
+`StackCardScreenHeader` с кнопкой «назад». Новые web-токены сверяются с mobile light.
 Web tokens/shared controls находятся в `apps/web/src/app/globals.css` и
 `src/components/ui.tsx`, original Manrope/Brand A — в `apps/web/public`.
 Поручение 2026-10-11 переопределяет web target R6:
